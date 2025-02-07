@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: msa
+  datasource:
+    url: jdbc:mysql://localhost:3306/msa
+    username: root
+    password: ''
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: anhquan20102003@gmail.com
+    password: gofrptljwgjptmmg
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+server:
+  port: 1081
+  servlet:
+    context-path: /msa/api
+jwt:
+  signerKey: "FH7jrUqilRiuOZJnYs!B49FiV3BRG2EKW/xrC!BvuIHeQdy6fmnw3bZD3c2GycRDqbUYgL-Z4L6rkKMU8FrQzaLvzKQFOSZmhss2?37HqiCozilTgcQd-/iqfpQGwMLZ!OjQ-O8jVfhf73CxoPDR2bhg2LWIHluwxt293ezeX/Zc0ijLJyTCBIO!-QjdBlryikLZYxzzHj/gwz8-vguokfXzpQPJbw8e8VYfLTThTlqj8plRVm1BeuPzRJgDWsy?"
+  valid-duration: 3600 # in second
+  refreshable-duration: 36000 # in seconds
+
+zerobounce:
+  api:
+    key: 5497d5ce12ee486da7951f94d381b2c4

@@ -5,6 +5,7 @@ import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.DeliveryDetailMapper;
 import com.market.MSA.models.DeliveryDetail;
 import com.market.MSA.repositories.DeliveryDetailRepository;
+import com.market.MSA.repositories.DeliveryInfoRepository;
 import com.market.MSA.requests.DeliveryDetailRequest;
 import com.market.MSA.responses.DeliveryDetailResponse;
 import java.util.List;
@@ -22,12 +23,22 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DeliveryDetailService {
-  DeliveryDetailRepository deliveryDetailRepository;
-  DeliveryDetailMapper deliveryDetailMapper;
+  final EntityFinderService entityFinderService;
+
+  final DeliveryDetailRepository deliveryDetailRepository;
+  final DeliveryInfoRepository deliveryInfoRepository;
+
+  final DeliveryDetailMapper deliveryDetailMapper;
 
   @Transactional
   public DeliveryDetailResponse createDeliveryDetail(DeliveryDetailRequest request) {
     DeliveryDetail deliveryDetail = deliveryDetailMapper.toDeliveryDetail(request);
+    deliveryDetail.setDeliveryInfo(
+        entityFinderService.findByIdOrThrow(
+            deliveryInfoRepository,
+            request.getDeliveryInfoId(),
+            ErrorCode.DELIVERY_INFO_NOT_FOUND));
+
     deliveryDetailRepository.save(deliveryDetail);
     return deliveryDetailMapper.toDeliveryDetailResponse(deliveryDetail);
   }
@@ -38,6 +49,11 @@ public class DeliveryDetailService {
     if (existingDeliveryDetail.isPresent()) {
       DeliveryDetail deliveryDetail = existingDeliveryDetail.get();
       deliveryDetailMapper.updateDeliveryDetailFromRequest(request, deliveryDetail);
+      deliveryDetail.setDeliveryInfo(
+          entityFinderService.findByIdOrThrow(
+              deliveryInfoRepository,
+              request.getDeliveryInfoId(),
+              ErrorCode.DELIVERY_INFO_NOT_FOUND));
       deliveryDetailRepository.save(deliveryDetail);
       return deliveryDetailMapper.toDeliveryDetailResponse(deliveryDetail);
     } else {

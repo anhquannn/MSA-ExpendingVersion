@@ -34,7 +34,10 @@ public class OrderController {
     return ApiResponse.<OrderResponse>builder()
         .result(
             orderService.createOrder(
-                request.getUserId(), request.getCartId(), request.getPromoCode()))
+                request.getUserId(),
+                request.getCartId(),
+                request.getBranchId(),
+                request.getPromoCode()))
         .build();
   }
 

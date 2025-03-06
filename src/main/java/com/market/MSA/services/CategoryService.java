@@ -21,9 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CategoryService {
+  final EntityFinderService entityFinderService;
 
-  private final CategoryRepository categoryRepository;
-  private final CategoryMapper categoryMapper;
+  final CategoryRepository categoryRepository;
+  final CategoryMapper categoryMapper;
 
   @Transactional
   public CategoryResponse createCategory(CategoryRequest request) {
@@ -31,9 +32,10 @@ public class CategoryService {
 
     if (request.getParentCategoryId() != null) {
       category.setParentCategory(
-          categoryRepository
-              .findById(request.getParentCategoryId())
-              .orElseThrow(() -> new AppException(ErrorCode.PARENT_CATEGORY_NOT_FOUND)));
+          entityFinderService.findByIdOrThrow(
+              categoryRepository,
+              request.getParentCategoryId(),
+              ErrorCode.PARENT_CATEGORY_NOT_FOUND));
     }
 
     category = categoryRepository.save(category);
@@ -50,9 +52,10 @@ public class CategoryService {
 
     if (request.getParentCategoryId() != null) {
       category.setParentCategory(
-          categoryRepository
-              .findById(request.getParentCategoryId())
-              .orElseThrow(() -> new AppException(ErrorCode.PARENT_CATEGORY_NOT_FOUND)));
+          entityFinderService.findByIdOrThrow(
+              categoryRepository,
+              request.getParentCategoryId(),
+              ErrorCode.PARENT_CATEGORY_NOT_FOUND));
     }
 
     category = categoryRepository.save(category);

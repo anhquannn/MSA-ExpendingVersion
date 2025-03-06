@@ -44,8 +44,8 @@ import org.springframework.util.CollectionUtils;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService {
-  UserRepository userRepo;
-  InvalidatedTokenRepository invalidatedTokenRepository;
+  final UserRepository userRepo;
+  final InvalidatedTokenRepository invalidatedTokenRepository;
 
   @NonFinal
   @Value("${jwt.signerKey}")
@@ -97,7 +97,7 @@ public class AuthenticationService {
     JWTClaimsSet jwtClaimSet =
         new JWTClaimsSet.Builder()
             .subject(user.getEmail())
-            .issuer("com")
+            .issuer("com.msa")
             .issueTime(new Date())
             .expirationTime(
                 new Date(Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
@@ -125,10 +125,7 @@ public class AuthenticationService {
       Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
 
       InvalidatedToken invalidatedToken =
-          InvalidatedToken.builder()
-              .invalidatedTokenId(Integer.parseInt(jit))
-              .expiryTime(expiryTime)
-              .build();
+          InvalidatedToken.builder().invalidatedTokenId(jit).expiryTime(expiryTime).build();
       invalidatedTokenRepository.save(invalidatedToken);
     } catch (AppException e) {
       log.info("Token already expired");
@@ -143,10 +140,7 @@ public class AuthenticationService {
     var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
     InvalidatedToken invalidatedToken =
-        InvalidatedToken.builder()
-            .invalidatedTokenId(Integer.parseInt(jit))
-            .expiryTime(expiryTime)
-            .build();
+        InvalidatedToken.builder().invalidatedTokenId(jit).expiryTime(expiryTime).build();
     invalidatedTokenRepository.save(invalidatedToken);
 
     var email = signedJWT.getJWTClaimsSet().getSubject();
@@ -198,8 +192,7 @@ public class AuthenticationService {
       throw new AppException(ErrorCode.USER_UNAUTHENTICATED);
     }
 
-    if (invalidatedTokenRepository.existsById(
-        Long.parseLong(signedJWT.getJWTClaimsSet().getJWTID()))) {
+    if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
       throw new AppException(ErrorCode.USER_UNAUTHENTICATED);
     }
 

@@ -19,9 +19,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class BranchService {
-  BranchRepository branchRepository;
+  final BranchRepository branchRepository;
 
-  BranchMapper branchMapper;
+  final BranchMapper branchMapper;
 
   // Create Branch
   public BranchResponse createBranch(BranchRequest branchRequest) {

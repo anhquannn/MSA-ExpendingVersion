@@ -5,6 +5,8 @@ import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.OrderDetailMapper;
 import com.market.MSA.models.OrderDetail;
 import com.market.MSA.repositories.OrderDetailRepository;
+import com.market.MSA.repositories.OrderRepository;
+import com.market.MSA.repositories.ProductRepository;
 import com.market.MSA.requests.OrderDetailRequest;
 import com.market.MSA.responses.OrderDetailResponse;
 import java.util.List;
@@ -21,13 +23,25 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderDetailService {
-  private final OrderDetailRepository orderDetailRepository;
-  private final OrderDetailMapper orderDetailMapper;
+  final EntityFinderService entityFinderService;
+
+  final OrderDetailRepository orderDetailRepository;
+  final OrderRepository orderRepository;
+  final ProductRepository productRepository;
+
+  final OrderDetailMapper orderDetailMapper;
 
   // Tạo chi tiết đơn hàng
   @Transactional
   public OrderDetailResponse createOrderDetail(OrderDetailRequest request) {
     OrderDetail orderDetail = orderDetailMapper.toOrderDetail(request);
+    orderDetail.setOrder(
+        entityFinderService.findByIdOrThrow(
+            orderRepository, request.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
+    orderDetail.setProduct(
+        entityFinderService.findByIdOrThrow(
+            productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
+
     OrderDetail savedOrderDetail = orderDetailRepository.save(orderDetail);
     return orderDetailMapper.toOrderDetailResponse(savedOrderDetail);
   }
@@ -45,6 +59,12 @@ public class OrderDetailService {
         orderDetailRepository
             .findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.ORDER_DETAIL_NOT_FOUND));
+    orderDetail.setOrder(
+        entityFinderService.findByIdOrThrow(
+            orderRepository, request.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
+    orderDetail.setProduct(
+        entityFinderService.findByIdOrThrow(
+            productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
 
     orderDetailMapper.updateOrderDetailFromRequest(request, orderDetail);
     OrderDetail updatedOrderDetail = orderDetailRepository.save(orderDetail);

@@ -4,6 +4,9 @@ import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.ProductMapper;
 import com.market.MSA.models.Product;
+import com.market.MSA.repositories.BranchRepository;
+import com.market.MSA.repositories.CategoryRepository;
+import com.market.MSA.repositories.ManufacturerRepository;
 import com.market.MSA.repositories.ProductRepository;
 import com.market.MSA.requests.ProductRequest;
 import com.market.MSA.responses.ProductResponse;
@@ -13,6 +16,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,13 +26,29 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductService {
+  final EntityFinderService entityFinderService;
 
-  private final ProductRepository productRepository;
-  private final ProductMapper productMapper;
+  final ProductRepository productRepository;
+  final BranchRepository branchRepository;
+  final ManufacturerRepository manufacturerRepository;
+  final CategoryRepository categoryRepository;
+
+  final ProductMapper productMapper;
 
   // Tạo sản phẩm
   public ProductResponse createProduct(ProductRequest request) {
     Product product = productMapper.toProduct(request);
+
+    product.setBranch(
+        entityFinderService.findByIdOrThrow(
+            branchRepository, request.getBranchId(), ErrorCode.BRANCH_NOT_FOUND));
+    product.setManufacturer(
+        entityFinderService.findByIdOrThrow(
+            manufacturerRepository, request.getManufactureId(), ErrorCode.MANUFACTURER_NOT_FOUND));
+    product.setCategory(
+        entityFinderService.findByIdOrThrow(
+            categoryRepository, request.getCategoryId(), ErrorCode.CATEGORY_NOT_FOUND));
+
     Product savedProduct = productRepository.save(product);
     return productMapper.toProductResponse(savedProduct);
   }
@@ -38,6 +59,16 @@ public class ProductService {
         productRepository
             .findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+
+    product.setBranch(
+        entityFinderService.findByIdOrThrow(
+            branchRepository, request.getBranchId(), ErrorCode.BRANCH_NOT_FOUND));
+    product.setManufacturer(
+        entityFinderService.findByIdOrThrow(
+            manufacturerRepository, request.getManufactureId(), ErrorCode.MANUFACTURER_NOT_FOUND));
+    product.setCategory(
+        entityFinderService.findByIdOrThrow(
+            categoryRepository, request.getCategoryId(), ErrorCode.CATEGORY_NOT_FOUND));
 
     productMapper.updateProductFromRequest(request, product);
     Product updatedProduct = productRepository.save(product);
@@ -111,13 +142,11 @@ public class ProductService {
   }
 
   // Tìm kiếm sản phẩm theo tên
-  public List<ProductResponse> searchProductsByName(String name, int page, int pageSize) {
-    return productRepository.findAll().stream()
-        .filter(p -> p.getName().toLowerCase().contains(name.toLowerCase()))
-        .skip((long) (page - 1) * pageSize)
-        .limit(pageSize)
-        .map(productMapper::toProductResponse)
-        .collect(Collectors.toList());
+  public List<ProductResponse> searchProductsByName(String keyword, int page, int pageSize) {
+    Pageable pageable = PageRequest.of(page - 1, pageSize); // Tạo Pageable đúng cách
+    List<Product> products = productRepository.searchByKeyword(keyword, pageable);
+
+    return products.stream().map(productMapper::toProductResponse).collect(Collectors.toList());
   }
 
   // Lọc & sắp xếp sản phẩm

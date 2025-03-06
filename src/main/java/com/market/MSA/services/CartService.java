@@ -21,12 +21,19 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CartService {
-  CartRepository cartRepository;
-  CartMapper cartMapper;
-  UserRepository userRepository;
+  final EntityFinderService entityFinderService;
+
+  final CartRepository cartRepository;
+  final UserRepository userRepository;
+
+  final CartMapper cartMapper;
 
   public CartResponse createCart(CartRequest request) {
     Cart cart = cartMapper.toCartItem(request);
+    cart.setUser(
+        entityFinderService.findByIdOrThrow(
+            userRepository, request.getUserId(), ErrorCode.CART_NOT_FOUND));
+
     cart = cartRepository.save(cart);
     return cartMapper.toCartResponse(cart);
   }
@@ -36,6 +43,9 @@ public class CartService {
     if (existingCart.isPresent()) {
       Cart cart = existingCart.get();
       cartMapper.updateCartFromRequest(request, cart);
+      cart.setUser(
+          entityFinderService.findByIdOrThrow(
+              userRepository, request.getUserId(), ErrorCode.CART_NOT_FOUND));
       cartRepository.save(cart);
       return cartMapper.toCartResponse(cart);
     }

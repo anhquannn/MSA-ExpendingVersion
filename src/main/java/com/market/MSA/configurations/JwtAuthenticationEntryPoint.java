@@ -28,6 +28,9 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             + " Request: "
             + request.getRequestURL());
 
+    System.out.println("Request URL: " + request.getRequestURL());
+    System.out.println("Authorization Header: " + request.getHeader("Authorization"));
+
     response.setStatus(errorCode.getStatusCode().value());
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 

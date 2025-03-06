@@ -21,8 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ManufacturerService {
-  private final ManufacturerRepository manufacturerRepository;
-  private final ManufacturerMapper manufacturerMapper;
+  final ManufacturerRepository manufacturerRepository;
+  final ManufacturerMapper manufacturerMapper;
 
   @Transactional
   public ManufacturerResponse createManufacturer(ManufacturerRequest request) {

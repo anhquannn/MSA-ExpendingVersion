@@ -21,8 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PromoCodeService {
-  PromoCodeRepository promoCodeRepository;
-  PromoCodeMapper promoCodeMapper;
+  final PromoCodeRepository promoCodeRepository;
+  final PromoCodeMapper promoCodeMapper;
 
   // Tạo PromoCode
   @Transactional

@@ -5,6 +5,8 @@ import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.DeliveryInfoMapper;
 import com.market.MSA.models.DeliveryInfo;
 import com.market.MSA.repositories.DeliveryInfoRepository;
+import com.market.MSA.repositories.OrderRepository;
+import com.market.MSA.repositories.UserRepository;
 import com.market.MSA.requests.DeliveryInfoRequest;
 import com.market.MSA.responses.DeliveryInfoResponse;
 import java.util.Optional;
@@ -19,13 +21,25 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DeliveryInfoService {
-  DeliveryInfoRepository deliveryInfoRepository;
-  DeliveryInfoMapper deliveryInfoMapper;
+  final EntityFinderService entityFinderService;
+
+  final DeliveryInfoRepository deliveryInfoRepository;
+  final UserRepository userRepository;
+  final OrderRepository orderRepository;
+
+  final DeliveryInfoMapper deliveryInfoMapper;
 
   // Create DeliveryInfo and set status to "delivering"
   public DeliveryInfoResponse createDeliveryInfo(DeliveryInfoRequest request) {
     DeliveryInfo deliveryInfo = deliveryInfoMapper.toDeliveryInfo(request);
     deliveryInfo.setStatus("delivering"); // Set status to "delivering" on creation
+    deliveryInfo.setOrder(
+        entityFinderService.findByIdOrThrow(
+            orderRepository, request.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
+    deliveryInfo.setUser(
+        entityFinderService.findByIdOrThrow(
+            userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
+
     DeliveryInfo savedDeliveryInfo = deliveryInfoRepository.save(deliveryInfo);
     return deliveryInfoMapper.toDeliveryInfoResponse(savedDeliveryInfo);
   }
@@ -37,6 +51,13 @@ public class DeliveryInfoService {
     if (existingDeliveryInfoOpt.isPresent()) {
       DeliveryInfo existingDeliveryInfo = existingDeliveryInfoOpt.get();
       deliveryInfoMapper.updateDeliveryInfoFromRequest(request, existingDeliveryInfo);
+      existingDeliveryInfo.setOrder(
+          entityFinderService.findByIdOrThrow(
+              orderRepository, request.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
+      existingDeliveryInfo.setUser(
+          entityFinderService.findByIdOrThrow(
+              userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
+
       DeliveryInfo updatedDeliveryInfo = deliveryInfoRepository.save(existingDeliveryInfo);
       return deliveryInfoMapper.toDeliveryInfoResponse(updatedDeliveryInfo);
     }

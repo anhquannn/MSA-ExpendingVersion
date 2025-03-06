@@ -3,12 +3,14 @@ package com.market.MSA.services;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.OrderMapper;
+import com.market.MSA.models.Branch;
 import com.market.MSA.models.Cart;
 import com.market.MSA.models.Order;
 import com.market.MSA.models.OrderDetail;
 import com.market.MSA.models.Product;
 import com.market.MSA.models.PromoCode;
 import com.market.MSA.models.User;
+import com.market.MSA.repositories.BranchRepository;
 import com.market.MSA.repositories.CartRepository;
 import com.market.MSA.repositories.OrderDetailRepository;
 import com.market.MSA.repositories.OrderRepository;
@@ -35,19 +37,20 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderService {
-  OrderRepository orderRepository;
-  CartService cartService;
-  CartRepository cartRepository;
-  CartItemService cartItemService;
-  PromoCodeService promoCodeService;
-  UserRepository userRepository;
-  EmailService emailService;
-  ProductService productService;
-  OrderDetailRepository orderDetailRepository;
-  OrderDetailService orderDetailService;
-  OrderMapper orderMapper;
+  final OrderRepository orderRepository;
+  final CartService cartService;
+  final CartRepository cartRepository;
+  final BranchRepository branchRepository;
+  final CartItemService cartItemService;
+  final PromoCodeService promoCodeService;
+  final UserRepository userRepository;
+  final EmailService emailService;
+  final ProductService productService;
+  final OrderDetailRepository orderDetailRepository;
+  final OrderDetailService orderDetailService;
+  final OrderMapper orderMapper;
 
-  public OrderResponse createOrder(Long userId, Long cartId, String promoCode)
+  public OrderResponse createOrder(Long userId, Long branchId, Long cartId, String promoCode)
       throws MessagingException {
     // Tính toán tổng tiền đơn hàng và giảm giá
     OrderResponse orderSummary = calculateOrderSummary(userId, cartId, promoCode);
@@ -65,9 +68,20 @@ public class OrderService {
             .findById(cartId)
             .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
 
+    Branch br =
+        branchRepository
+            .findById(branchId)
+            .orElseThrow(() -> new AppException(ErrorCode.BRANCH_NOT_FOUND));
+
     // Tạo đơn hàng mới
     Order order =
-        Order.builder().user(user).cart(cart).grandTotal(grandTotal).status("PENDING").build();
+        Order.builder()
+            .user(user)
+            .cart(cart)
+            .branch(br)
+            .grandTotal(grandTotal)
+            .status("PENDING")
+            .build();
 
     order = orderRepository.save(order);
 
@@ -121,7 +135,7 @@ public class OrderService {
     double discount = 0.0;
     double grandTotal = totalCost;
 
-    if (!promoCode.isEmpty()) {
+    if (promoCode != null && !promoCode.isEmpty()) {
       PromoCodeResponse promo = promoCodeService.getPromoCodeByCode(promoCode);
       if (totalCost >= promo.getMinimumOrderValue()) {
         discount = totalCost * (promo.getDiscountPercentage() / 100);

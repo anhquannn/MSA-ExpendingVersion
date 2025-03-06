@@ -22,8 +22,8 @@ import lombok.experimental.FieldDefaults;
 @Entity
 public class InvalidatedToken {
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long invalidatedTokenId;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  String invalidatedTokenId;
 
   Date expiryTime;
 }

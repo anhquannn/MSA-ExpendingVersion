@@ -23,7 +23,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,14 +41,12 @@ public class UserService {
   static final String CHARACTERS =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()";
 
-  @Autowired UserRepository userRepository;
-
-  UserMapper userMapper;
-  RoleRepository roleRepository;
-  EmailService emailService;
-  AuthenticationService authenticationService;
-
-  @Autowired PasswordEncoder passwordEncoder;
+  final UserRepository userRepository;
+  final UserMapper userMapper;
+  final RoleRepository roleRepository;
+  final EmailService emailService;
+  final AuthenticationService authenticationService;
+  final PasswordEncoder passwordEncoder;
 
   public String registerUser(UserRequest request) {
     if (!emailService.verifyEmail(request.getEmail())) {

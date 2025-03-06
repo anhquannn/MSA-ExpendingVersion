@@ -5,6 +5,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.security.SecureRandom;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -12,11 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@Slf4j
 public class EmailService {
 
-  private final JavaMailSender mailSender;
-  private final ConcurrentHashMap<String, String> otpStore = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, String> passwordStore = new ConcurrentHashMap<>();
+  final JavaMailSender mailSender;
+  final ConcurrentHashMap<String, String> otpStore = new ConcurrentHashMap<>();
+  final ConcurrentHashMap<String, String> passwordStore = new ConcurrentHashMap<>();
 
   @Value("${spring.mail.username}")
   private String fromEmail;
@@ -49,10 +51,17 @@ public class EmailService {
 
   // Kiểm tra OTP hợp lệ
   public String validateOTP(String otp) {
-    String email = otpStore.remove(otp);
-    if (email == null) {
+    otp = otp.trim();
+    log.info("Received OTP: '{}'", otp);
+    log.info("Current OTP Store: {}", otpStore);
+
+    if (!otpStore.containsKey(otp)) {
+      log.error("OTP not found in store! Received: '{}', Store: {}", otp, otpStore);
       throw new IllegalArgumentException("Invalid OTP");
     }
+
+    String email = otpStore.remove(otp);
+    log.info("OTP verified for email: {}", email);
     return email;
   }
 

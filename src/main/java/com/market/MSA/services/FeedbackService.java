@@ -5,6 +5,8 @@ import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.FeedbackMapper;
 import com.market.MSA.models.Feedback;
 import com.market.MSA.repositories.FeedbackRepository;
+import com.market.MSA.repositories.ProductRepository;
+import com.market.MSA.repositories.UserRepository;
 import com.market.MSA.requests.FeedbackRequest;
 import com.market.MSA.responses.FeedbackResponse;
 import java.util.List;
@@ -21,12 +23,23 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class FeedbackService {
-  FeedbackRepository feedbackRepository;
-  FeedbackMapper feedbackMapper;
+  final EntityFinderService entityFinderService;
+  final FeedbackRepository feedbackRepository;
+  final UserRepository userRepository;
+  final ProductRepository productRepository;
+
+  final FeedbackMapper feedbackMapper;
 
   // Create Feedback
   public FeedbackResponse createFeedback(FeedbackRequest request) {
     Feedback feedback = feedbackMapper.toFeedback(request);
+    feedback.setProduct(
+        entityFinderService.findByIdOrThrow(
+            productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
+    feedback.setUser(
+        entityFinderService.findByIdOrThrow(
+            userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
+
     Feedback savedFeedback = feedbackRepository.save(feedback);
     return feedbackMapper.toFeedbackResponse(savedFeedback);
   }
@@ -37,6 +50,13 @@ public class FeedbackService {
     if (existingFeedbackOpt.isPresent()) {
       Feedback existingFeedback = existingFeedbackOpt.get();
       feedbackMapper.updateFeedbackFromRequest(request, existingFeedback);
+      existingFeedback.setProduct(
+          entityFinderService.findByIdOrThrow(
+              productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
+      existingFeedback.setUser(
+          entityFinderService.findByIdOrThrow(
+              userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
+
       Feedback updatedFeedback = feedbackRepository.save(existingFeedback);
       return feedbackMapper.toFeedbackResponse(updatedFeedback);
     }

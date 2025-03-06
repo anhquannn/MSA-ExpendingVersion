@@ -25,11 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ReturnOrderService {
-  ReturnOrderRepository returnOrderRepository;
-  OrderRepository orderRepository;
-  OrderDetailRepository orderDetailRepository;
-  ProductService productService;
-  ReturnOrderMapper returnOrderMapper;
+  final ReturnOrderRepository returnOrderRepository;
+  final OrderRepository orderRepository;
+  final OrderDetailRepository orderDetailRepository;
+  final ProductService productService;
+  final ReturnOrderMapper returnOrderMapper;
 
   @Transactional
   public ReturnOrderResponse createReturnOrder(ReturnOrderRequest request) {
@@ -43,9 +43,15 @@ public class ReturnOrderService {
     orderRepository.save(order);
 
     // Lưu đơn trả hàng vào cơ sở dữ liệu
-    ReturnOrder returnOrder = returnOrderMapper.toReturnOrder(request);
-    returnOrder.setOrder(order);
-    returnOrder.setStatus("success");
+    ReturnOrder returnOrder =
+        ReturnOrder.builder()
+            .dateReturn(request.getDateReturn())
+            .reason(request.getReason())
+            .order(order)
+            .refundamount(order.getGrandTotal())
+            .status("success")
+            .build();
+
     returnOrder = returnOrderRepository.save(returnOrder);
 
     // Lấy chi tiết sản phẩm trong đơn hàng gốc

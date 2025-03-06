@@ -1,7 +1,9 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.requests.AuthenticationRequest;
 import com.market.MSA.requests.UpdateUserRequest;
 import com.market.MSA.requests.UserRequest;
+import com.market.MSA.requests.VerifyOtpRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.UserResponse;
 import com.market.MSA.services.UserService;
@@ -25,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/user")
 @Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -38,19 +40,24 @@ public class UserController {
   }
 
   @PostMapping("/login")
-  ApiResponse<String> login(@RequestParam String email, @RequestParam String password)
+  ApiResponse<String> login(@RequestBody @Valid AuthenticationRequest requests)
       throws MessagingException {
-    return ApiResponse.<String>builder().result(userService.login(email, password)).build();
+    return ApiResponse.<String>builder()
+        .result(userService.login(requests.getEmail(), requests.getPassword()))
+        .build();
   }
 
   @PostMapping("/verify-otp")
-  ApiResponse<String> verifyOtp(@RequestParam String otp) {
-    return ApiResponse.<String>builder().result(userService.verifyOtp(otp)).build();
+  ApiResponse<String> verifyOtp(@RequestBody @Valid VerifyOtpRequest requests) {
+    return ApiResponse.<String>builder().result(userService.verifyOtp(requests.getOtp())).build();
   }
 
   @PostMapping("/reset-password")
-  ApiResponse<String> resetPassword(@RequestParam String email) throws MessagingException {
-    return ApiResponse.<String>builder().result(userService.resetPassword(email)).build();
+  ApiResponse<String> resetPassword(@RequestBody @Valid UserRequest requests)
+      throws MessagingException {
+    return ApiResponse.<String>builder()
+        .result(userService.resetPassword(requests.getEmail()))
+        .build();
   }
 
   @PostMapping("/login/google")

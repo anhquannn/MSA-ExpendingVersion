@@ -31,6 +31,7 @@ public class ProductController {
 
   @PostMapping
   public ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request) {
+    System.out.println("Received request: " + request);
     return ApiResponse.<ProductResponse>builder()
         .result(productService.createProduct(request))
         .build();

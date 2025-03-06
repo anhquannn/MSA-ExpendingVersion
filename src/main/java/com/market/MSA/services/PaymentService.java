@@ -3,9 +3,7 @@ package com.market.MSA.services;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.PaymentMapper;
-import com.market.MSA.models.Order;
 import com.market.MSA.models.Payment;
-import com.market.MSA.models.User;
 import com.market.MSA.repositories.OrderRepository;
 import com.market.MSA.repositories.PaymentRepository;
 import com.market.MSA.repositories.UserRepository;
@@ -25,24 +23,21 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PaymentService {
-  PaymentRepository paymentRepository;
-  UserRepository userRepository;
-  OrderRepository orderRepository;
-  PaymentMapper paymentMapper;
+  final EntityFinderService entityFinderService;
+  final PaymentRepository paymentRepository;
+  final UserRepository userRepository;
+  final OrderRepository orderRepository;
+  final PaymentMapper paymentMapper;
 
   @Transactional
   public PaymentResponse createPayment(PaymentRequest request) {
-    User user =
-        userRepository
-            .findById(request.getUserId())
-            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-    Order order =
-        orderRepository
-            .findById(request.getOrderId())
-            .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
     Payment payment = paymentMapper.toPayment(request);
-    payment.setUser(user);
-    payment.setOrder(order);
+    payment.setUser(
+        entityFinderService.findByIdOrThrow(
+            userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
+    payment.setOrder(
+        entityFinderService.findByIdOrThrow(
+            orderRepository, request.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
 
     return paymentMapper.toPaymentResponse(paymentRepository.save(payment));
   }
@@ -53,6 +48,12 @@ public class PaymentService {
         paymentRepository
             .findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
+    payment.setUser(
+        entityFinderService.findByIdOrThrow(
+            userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
+    payment.setOrder(
+        entityFinderService.findByIdOrThrow(
+            orderRepository, request.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
 
     paymentMapper.updatePaymentFromRequest(request, payment);
     return paymentMapper.toPaymentResponse(paymentRepository.save(payment));

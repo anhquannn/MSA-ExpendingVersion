@@ -25,13 +25,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
   AuthenticationService authenService;
 
-  @PostMapping("/login")
+  @PostMapping("/login-non")
   ApiResponse<AuthenticationResponse> authen(@RequestBody AuthenticationRequest request) {
     var result = authenService.authenticate(request);
     return ApiResponse.<AuthenticationResponse>builder().result(result).build();
   }
 
-  @PostMapping("/verify")
+  @PostMapping("/verify-non")
   ApiResponse<IntrospectResponse> verify(@RequestBody IntrospectRequest request)
       throws JOSEException, ParseException {
     var result = authenService.introspect(request);

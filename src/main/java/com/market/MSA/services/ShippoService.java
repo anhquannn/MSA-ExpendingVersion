@@ -11,6 +11,7 @@ import com.market.MSA.repositories.DeliveryInfoRepository;
 import com.market.MSA.requests.AddressRequest;
 import com.market.MSA.requests.ParcelRequest;
 import com.market.MSA.requests.ShippoRequest;
+import com.market.MSA.responses.ShippoApiResponse;
 import com.market.MSA.responses.ShippoResponse;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -83,11 +84,55 @@ public class ShippoService {
 
     try {
       String responseBody = response.getBody();
-      if(responseBody != null) {
+      if (responseBody != null) {
         deliveryInfo.setStatus("shipping");
         deliveryInfoRepository.save(deliveryInfo);
       }
       return objectMapper.readValue(responseBody, ShippoResponse.class);
+    } catch (JsonProcessingException e) {
+      throw new AppException(ErrorCode.PARSE_SHIPPO_RESPONSE_ERROR);
+    }
+  }
+
+  public ShippoResponse getShippo(String objectId) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("Authorization", "ShippoToken " + API_KEY);
+
+    String URL = API_URL + "/" + objectId;
+
+    HttpEntity<String> requestEntity = new HttpEntity<>(objectId, headers);
+    ResponseEntity<String> response =
+        restTemplate.exchange(URL, HttpMethod.GET, requestEntity, String.class);
+
+    try {
+      String responseBody = response.getBody();
+      return objectMapper.readValue(responseBody, ShippoResponse.class);
+    } catch (JsonProcessingException e) {
+      throw new AppException(ErrorCode.PARSE_SHIPPO_RESPONSE_ERROR);
+    }
+  }
+
+  public List<ShippoResponse> getShippos() {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("Authorization", "ShippoToken " + API_KEY);
+    HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+
+    ResponseEntity<String> response =
+        restTemplate.exchange(API_URL, HttpMethod.GET, requestEntity, String.class);
+
+    log.info("Shippo response: {}", response.getBody());
+
+    String responseBody = response.getBody();
+    if (responseBody == null || responseBody.trim().isEmpty()) {
+      throw new AppException(ErrorCode.PARSE_SHIPPO_RESPONSE_ERROR);
+    }
+
+    try {
+      // Parse response thành ShippoApiResponse
+      ShippoApiResponse apiResponse = objectMapper.readValue(responseBody, ShippoApiResponse.class);
+      return apiResponse.getResults();
     } catch (JsonProcessingException e) {
       throw new AppException(ErrorCode.PARSE_SHIPPO_RESPONSE_ERROR);
     }

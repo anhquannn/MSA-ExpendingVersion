@@ -12,30 +12,30 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ShippoAddress {
-    @JsonProperty("name")
-     String name;
+  @JsonProperty("name")
+  String name;
 
-    @JsonProperty("street1")
-     String street1;
+  @JsonProperty("street1")
+  String street1;
 
-    @JsonProperty("city")
-     String city;
+  @JsonProperty("city")
+  String city;
 
-    @JsonProperty("state")
-     String state;
+  @JsonProperty("state")
+  String state;
 
-    @JsonProperty("zip")
-     String zip;
+  @JsonProperty("zip")
+  String zip;
 
-    @JsonProperty("country")
-     String country;
+  @JsonProperty("country")
+  String country;
 
-    @JsonProperty("phone")
-     String phone;
+  @JsonProperty("phone")
+  String phone;
 
-    @JsonProperty("email")
-     String email;
+  @JsonProperty("email")
+  String email;
 
-    @JsonProperty("object_id")
-     String objectId;
+  @JsonProperty("object_id")
+  String objectId;
 }

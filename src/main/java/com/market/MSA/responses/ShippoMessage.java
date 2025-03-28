@@ -12,12 +12,12 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ShippoMessage {
-    @JsonProperty("source")
-    String source;
+  @JsonProperty("source")
+  String source;
 
-    @JsonProperty("code")
-    String code;
+  @JsonProperty("code")
+  String code;
 
-    @JsonProperty("text")
-    String text;
+  @JsonProperty("text")
+  String text;
 }

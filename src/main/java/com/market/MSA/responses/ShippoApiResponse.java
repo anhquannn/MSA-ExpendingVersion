@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -11,22 +12,13 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ShippoRate {
-  @JsonProperty("amount")
-  String amount;
+public class ShippoApiResponse {
+    @JsonProperty("results")
+    List<ShippoResponse> results;
 
-  @JsonProperty("currency")
-  String currency;
+    @JsonProperty("next")
+    String next;
 
-  @JsonProperty("provider")
-  String provider;
-
-  @JsonProperty("object_id")
-  String object_id;
-
-  @JsonProperty("shipment")
-  String shipment;
-
-  @JsonProperty("estimated_days")
-  String estimated_days;
+    @JsonProperty("previous")
+    String previous;
 }

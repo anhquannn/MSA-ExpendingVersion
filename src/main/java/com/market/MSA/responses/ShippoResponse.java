@@ -2,11 +2,10 @@ package com.market.MSA.responses;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
 import java.util.List;
 import java.util.Map;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
 @NoArgsConstructor
@@ -16,53 +15,53 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ShippoResponse {
   @JsonProperty("object_id")
-   String objectId;
+  String objectId;
 
   @JsonProperty("object_created")
-   String objectCreated;
+  String objectCreated;
 
   @JsonProperty("object_updated")
-   String objectUpdated;
+  String objectUpdated;
 
   @JsonProperty("object_owner")
-   String objectOwner;
+  String objectOwner;
 
   @JsonProperty("test")
-   boolean test;
+  boolean test;
 
   @JsonProperty("metadata")
-   String metadata;
+  String metadata;
 
   @JsonProperty("messages")
-   List<ShippoMessage> messages;
+  List<ShippoMessage> messages;
 
   @JsonProperty("extra")
-   Map<String, Object> extra;
+  Map<String, Object> extra;
 
   @JsonProperty("order")
-   String order;
+  String order;
 
   @JsonProperty("carrier_accounts")
-   List<String> carrierAccounts;
+  List<String> carrierAccounts;
 
   @JsonProperty("address_from")
-   ShippoAddress addressFrom;
+  ShippoAddress addressFrom;
 
   @JsonProperty("address_to")
-   ShippoAddress addressTo;
+  ShippoAddress addressTo;
 
   @JsonProperty("parcels")
-   List<ShippoParcel> parcels;
+  List<ShippoParcel> parcels;
 
   @JsonProperty("status")
-   String status;
+  String status;
 
   @JsonProperty("shipment_date")
-   String shipmentDate;
+  String shipmentDate;
 
   @JsonProperty("rates")
-   List<ShippoRate> rates;
+  List<ShippoRate> rates;
 
   @JsonProperty("address_return")
-   ShippoAddress addressReturn;
+  ShippoAddress addressReturn;
 }

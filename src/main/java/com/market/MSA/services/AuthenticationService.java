@@ -144,6 +144,7 @@ public class AuthenticationService {
     invalidatedTokenRepository.save(invalidatedToken);
 
     var email = signedJWT.getJWTClaimsSet().getSubject();
+    log.info("Email: " + email);
     var user =
         userRepo
             .findByEmail(email)

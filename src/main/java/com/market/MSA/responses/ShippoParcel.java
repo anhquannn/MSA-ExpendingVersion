@@ -12,24 +12,24 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ShippoParcel {
-    @JsonProperty("object_owner")
-     String objectOwner;
+  @JsonProperty("object_owner")
+  String objectOwner;
 
-    @JsonProperty("mass_unit")
-     String massUnit;
+  @JsonProperty("mass_unit")
+  String massUnit;
 
-    @JsonProperty("distance_unit")
-     String distanceUnit;
+  @JsonProperty("distance_unit")
+  String distanceUnit;
 
-    @JsonProperty("length")
-     String length;
+  @JsonProperty("length")
+  String length;
 
-    @JsonProperty("width")
-     String width;
+  @JsonProperty("width")
+  String width;
 
-    @JsonProperty("height")
-     String height;
+  @JsonProperty("height")
+  String height;
 
-    @JsonProperty("weight")
-     String weight;
+  @JsonProperty("weight")
+  String weight;
 }

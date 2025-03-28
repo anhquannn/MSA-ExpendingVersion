@@ -17,12 +17,12 @@ public class ShippoRequest {
   public static AddressRequest getDefaultAddressFrom() {
     return new AddressRequest(
         "MSA",
-        "215 Clayton St.",
-        "San Francisco",
+        "1092 Indian Summer Ct",
+        "San Jose",
         "CA",
-        "94117",
+        "95122",
         "US",
-        "0937974995",
+        "4159876543",
         "nguyenanhquan20102003@gmail.com");
   }
 }

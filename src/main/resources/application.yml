@@ -30,7 +30,7 @@ jwt:
   refreshable-duration: 36000 # in seconds
 
 shippo:
-  apikey: "shippo_test_82834d7d8f5005ffadae3a6a6af5d51e5f3b6ef2"
+  apikey: "shippo_test_ecd9f00cb3e0d0b284e7f1cff2d3a76d1471826f"
   url: "https://api.goshippo.com/shipments"
 
 zero-bounce:

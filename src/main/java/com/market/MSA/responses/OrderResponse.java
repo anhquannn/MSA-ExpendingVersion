@@ -2,7 +2,6 @@ package com.market.MSA.responses;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,9 +27,9 @@ public class OrderResponse {
   CartResponse cart;
   UserResponse user;
 
+  DeliveryInfoResponse deliveryInfo;
   List<ReturnOrderResponse> returnOrders;
   List<PaymentResponse> payments;
-  List<DeliveryInfoResponse> deliveryInfos;
-  Set<PromoCodeResponse> promoCodes;
+  List<PromoCodeResponse> promoCodes;
   List<OrderDetailResponse> orderDetails;
 }

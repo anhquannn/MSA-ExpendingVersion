@@ -1,10 +1,6 @@
 package com.market.MSA.requests;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Data
@@ -12,14 +8,13 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class DeliveryInfoRequest {
+public class AddressRequest {
+  String name;
   String street1;
   String city;
   String state;
   String zip;
   String country;
-  String weight;
-  String status;
-
-  long orderId;
+  String phone;
+  String email;
 }

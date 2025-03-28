@@ -55,18 +55,11 @@ public class CartItemService {
   }
 
   public CartItemResponse updateCartItem(Long cartItemId, CartItemRequest request) {
+    cartItemRepository.updateCartItem(cartItemId, request.getStatus(), request.getQuantity());
     CartItem cartItem =
         cartItemRepository
             .findById(cartItemId)
             .orElseThrow(() -> new AppException(ErrorCode.CART_ITEM_NOT_FOUND));
-    cartItem.setCart(
-        entityFinderService.findByIdOrThrow(
-            cartRepository, request.getCartId(), ErrorCode.CART_NOT_FOUND));
-    cartItem.setProduct(
-        entityFinderService.findByIdOrThrow(
-            productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
-    cartItemMapper.updateCartItemFromRequest(request, cartItem);
-    cartItemRepository.save(cartItem);
     return cartItemMapper.toCartItemResponse(cartItem);
   }
 

@@ -9,8 +9,10 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface DeliveryInfoMapper {
+
   DeliveryInfo toDeliveryInfo(DeliveryInfoRequest request);
 
+  @Mapping(target = "orderId", source = "order.orderId")
   DeliveryInfoResponse toDeliveryInfoResponse(DeliveryInfo deliveryInfo);
 
   @Mapping(target = "deliveryInfoId", ignore = true)

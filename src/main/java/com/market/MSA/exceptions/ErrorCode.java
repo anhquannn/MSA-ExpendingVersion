@@ -21,7 +21,7 @@ public enum ErrorCode {
   INVALID_EMAIL(109, "Invalid email", HttpStatus.NOT_FOUND),
   INVALID_CREDENTIALS(110, "Wrong password", HttpStatus.BAD_REQUEST),
   INVALID_GOOGLE_TOKEN(111, "Getting google token failed!", HttpStatus.BAD_REQUEST),
-  PARSE_GOOGLE_RESPONSE_ERROR(112, "Invalid google response!", HttpStatus.FORBIDDEN),
+  PARSE_GOOGLE_RESPONSE_ERROR(112, "Error parsing google response!", HttpStatus.FORBIDDEN),
 
   ORDER_NOT_FOUND(113, "Order not found!", HttpStatus.NOT_FOUND),
   CART_NOT_FOUND(114, "Cart not found!", HttpStatus.NOT_FOUND),
@@ -37,13 +37,15 @@ public enum ErrorCode {
   ORDER_DETAIL_NOT_FOUND(124, "Order detail not found!", HttpStatus.NOT_FOUND),
   PAYMENT_NOT_FOUND(125, "Payment not found!", HttpStatus.NOT_FOUND),
   PROMO_CODE_NOT_FOUND(126, "Promo code not found!", HttpStatus.NOT_FOUND),
-  RETURN_ORDER_NOT_FOUND(127, "Return order not found!", HttpStatus.NOT_FOUND);
+  RETURN_ORDER_NOT_FOUND(127, "Return order not found!", HttpStatus.NOT_FOUND),
 
-  private int code;
-  private String message;
-  private HttpStatusCode statusCode;
+  PARSE_SHIPPO_RESPONSE_ERROR(128, "Error parsing shipment response!", HttpStatus.FORBIDDEN);
 
-  private ErrorCode(int code, String message, HttpStatusCode statusCode) {
+  private final int code;
+  private final String message;
+  private final HttpStatusCode statusCode;
+
+  ErrorCode(int code, String message, HttpStatusCode statusCode) {
     this.code = code;
     this.message = message;
     this.statusCode = statusCode;

@@ -30,10 +30,11 @@ public class ApplicationinitConfig {
           roleRepository
               .findById((long) 1)
               .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
-      if (userRepository.findByEmail("admin").isEmpty()) {
+      if (userRepository.findByEmail("nguyenanhquan20102003@gmail.com").isEmpty()) {
         User user =
             User.builder()
-                .email("admin")
+                .email("nguyenanhquan20102003@gmail.com")
+                .fullName("admin")
                 .password(passwordEncoder.encode("admin"))
                 .roles(Set.of(adminRole))
                 .build();

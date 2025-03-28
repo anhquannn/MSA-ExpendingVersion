@@ -12,18 +12,18 @@ import org.springframework.transaction.annotation.Transactional;
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
   @Transactional
   @Modifying
-  @Query("DELETE FROM CartItem c WHERE c.id = :cartItemId")
+  @Query("DELETE FROM CartItem c WHERE c.cartItemId = :cartItemId")
   void deleteCartItem(@Param("cartItemId") Long cartItemId);
 
   @Transactional
   @Modifying
-  @Query("DELETE FROM CartItem c WHERE c.cart.id = :cartId AND c.status = :status")
+  @Query("DELETE FROM CartItem c WHERE c.cart.cartId = :cartId AND c.status = :status")
   void clearCart(@Param("cartId") Long cartId, @Param("status") String status);
 
   @Transactional
   @Modifying
   @Query(
-      "UPDATE CartItem c SET c.status = :status, c.quantity = :quantity WHERE c.id = :cartItemId")
+      "UPDATE CartItem c SET c.status = :status, c.quantity = :quantity WHERE c.cartItemId = :cartItemId")
   void updateCartItem(
       @Param("cartItemId") Long cartItemId,
       @Param("status") String status,
@@ -31,25 +31,26 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
   @Transactional
   @Modifying
-  @Query("UPDATE CartItem c SET c.status = :status WHERE c.id IN :cartItemIds")
+  @Query("UPDATE CartItem c SET c.status = :status WHERE c.cartItemId IN :cartItemIds")
   void updateCartItemsStatus(
       @Param("cartItemIds") List<Long> cartItemIds, @Param("status") String status);
 
-  @Query("SELECT c FROM CartItem c WHERE c.cart.id = :cartId AND c.product.id = :productId")
+  @Query(
+      "SELECT c FROM CartItem c WHERE c.cart.cartId = :cartId AND c.product.productId = :productId")
   Optional<CartItem> findByCart_CartIdAndProduct_ProductId(
       @Param("cartId") Long cartId, @Param("productId") Long productId);
 
-  @Query("SELECT c FROM CartItem c WHERE c.cart.id = :cartId AND c.status = :status")
+  @Query("SELECT c FROM CartItem c WHERE c.cart.cartId = :cartId AND c.status = :status")
   List<CartItem> findByCart_CartIdAndStatus(
       @Param("cartId") Long cartId, @Param("status") String status);
 
-  @Query("SELECT c FROM CartItem c WHERE c.cart.id = :cartId")
+  @Query("SELECT c FROM CartItem c WHERE c.cart.cartId = :cartId")
   List<CartItem> findByCart_CartId(@Param("cartId") Long cartId);
 
-  @Query("SELECT c FROM CartItem c WHERE c.id = :id")
+  @Query("SELECT c FROM CartItem c WHERE c.cartItemId = :id")
   Optional<CartItem> getCartItemByID(@Param("id") Long id);
 
   @Query(
-      "SELECT SUM(c.price * c.quantity) FROM CartItem c WHERE c.cart.id = :cartId AND c.status = 'available'")
+      "SELECT COALESCE(SUM(c.price * c.quantity), 0) FROM CartItem c WHERE c.cart.cartId = :cartId AND c.status = 'available'")
   Double calculateCartTotal(@Param("cartId") Long cartId);
 }

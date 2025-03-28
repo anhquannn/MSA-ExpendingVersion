@@ -1,6 +1,7 @@
 package com.market.MSA.requests;
 
 import java.util.Date;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,5 +22,6 @@ public class OrderRequest {
   long branchId;
   long cartId;
   long userId;
-  String promoCode;
+  List<String> promoCodes;
+  DeliveryInfoRequest deliveryInfo;
 }

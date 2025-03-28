@@ -6,7 +6,6 @@ import com.market.MSA.mappers.DeliveryInfoMapper;
 import com.market.MSA.models.DeliveryInfo;
 import com.market.MSA.repositories.DeliveryInfoRepository;
 import com.market.MSA.repositories.OrderRepository;
-import com.market.MSA.repositories.UserRepository;
 import com.market.MSA.requests.DeliveryInfoRequest;
 import com.market.MSA.responses.DeliveryInfoResponse;
 import java.util.Optional;
@@ -22,9 +21,7 @@ import org.springframework.stereotype.Service;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DeliveryInfoService {
   final EntityFinderService entityFinderService;
-
   final DeliveryInfoRepository deliveryInfoRepository;
-  final UserRepository userRepository;
   final OrderRepository orderRepository;
 
   final DeliveryInfoMapper deliveryInfoMapper;
@@ -32,13 +29,10 @@ public class DeliveryInfoService {
   // Create DeliveryInfo and set status to "delivering"
   public DeliveryInfoResponse createDeliveryInfo(DeliveryInfoRequest request) {
     DeliveryInfo deliveryInfo = deliveryInfoMapper.toDeliveryInfo(request);
-    deliveryInfo.setStatus("delivering"); // Set status to "delivering" on creation
+    deliveryInfo.setStatus("pending");
     deliveryInfo.setOrder(
         entityFinderService.findByIdOrThrow(
             orderRepository, request.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
-    deliveryInfo.setUser(
-        entityFinderService.findByIdOrThrow(
-            userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
 
     DeliveryInfo savedDeliveryInfo = deliveryInfoRepository.save(deliveryInfo);
     return deliveryInfoMapper.toDeliveryInfoResponse(savedDeliveryInfo);
@@ -54,10 +48,6 @@ public class DeliveryInfoService {
       existingDeliveryInfo.setOrder(
           entityFinderService.findByIdOrThrow(
               orderRepository, request.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
-      existingDeliveryInfo.setUser(
-          entityFinderService.findByIdOrThrow(
-              userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
-
       DeliveryInfo updatedDeliveryInfo = deliveryInfoRepository.save(existingDeliveryInfo);
       return deliveryInfoMapper.toDeliveryInfoResponse(updatedDeliveryInfo);
     }
@@ -65,11 +55,11 @@ public class DeliveryInfoService {
   }
 
   // Delete DeliveryInfo
-  public boolean deleteDeliveryInfo(long deliveryInfoId) {
+  public void deleteDeliveryInfo(long deliveryInfoId) {
     Optional<DeliveryInfo> deliveryInfoOpt = deliveryInfoRepository.findById(deliveryInfoId);
     if (deliveryInfoOpt.isPresent()) {
       deliveryInfoRepository.delete(deliveryInfoOpt.get());
-      return true;
+      return;
     }
     throw new AppException(ErrorCode.DELIVERY_INFO_NOT_FOUND); // Or throw an exception if not found
   }

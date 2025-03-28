@@ -17,11 +17,11 @@ public class ShippoRequest {
   public static AddressRequest getDefaultAddressFrom() {
     return new AddressRequest(
         "MSA",
-        "123 Đường ABC",
-        "Thành phố Hồ Chí Minh",
-        "SG",
-        "100000",
-        "VN",
+        "215 Clayton St.",
+        "San Francisco",
+        "CA",
+        "94117",
+        "US",
         "0937974995",
         "nguyenanhquan20102003@gmail.com");
   }

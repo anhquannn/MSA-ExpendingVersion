@@ -64,9 +64,9 @@ public class ShippoService {
             .parcels(
                 List.of(
                     ParcelRequest.builder()
-                        .length("10")
-                        .width("10")
-                        .height("10")
+                        .length("1")
+                        .width("1")
+                        .height("1")
                         .distance_unit("cm")
                         .weight(deliveryInfo.getWeight())
                         .mass_unit("kg")
@@ -83,6 +83,10 @@ public class ShippoService {
 
     try {
       String responseBody = response.getBody();
+      if(responseBody != null) {
+        deliveryInfo.setStatus("shipping");
+        deliveryInfoRepository.save(deliveryInfo);
+      }
       return objectMapper.readValue(responseBody, ShippoResponse.class);
     } catch (JsonProcessingException e) {
       throw new AppException(ErrorCode.PARSE_SHIPPO_RESPONSE_ERROR);

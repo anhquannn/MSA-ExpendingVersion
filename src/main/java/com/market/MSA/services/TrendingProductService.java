@@ -29,7 +29,9 @@ public class TrendingProductService {
 
   @Transactional
   @Scheduled(cron = "0 0 0 * * *")
-  public void updatePromoCodeStatus() {}
+  public void updatePromoCodeStatus() {
+    
+  }
 
   // Tạo TrendingProduct
   @Transactional

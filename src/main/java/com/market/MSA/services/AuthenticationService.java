@@ -134,7 +134,7 @@ public class AuthenticationService {
 
   @Transactional
   @Scheduled(cron = "0 0 0 * * *")
-  public void updatePromoCodeStatus() {
+  public void updateExpiryTime() {
     Date currentDate = new Date();
     List<InvalidatedToken> invalidatedTokens = invalidatedTokenRepository.findAll();
     for (InvalidatedToken invalidatedToken : invalidatedTokens) {

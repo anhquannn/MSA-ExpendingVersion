@@ -9,13 +9,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/permission")
@@ -41,9 +35,17 @@ public class PermissionController {
   }
 
   @DeleteMapping("/{permissionId}")
-  ApiResponse<Void> delete(@PathVariable long permissionId) {
+  ApiResponse<Void> deletePermission(@PathVariable long permissionId) {
     permissionService.delete(permissionId);
 
     return ApiResponse.<Void>builder().build();
+  }
+
+  @PutMapping("/{id}")
+  public ApiResponse<PermissionResponse> updatePermission(
+      @PathVariable Long id, @RequestBody PermissionRequest request) {
+    return ApiResponse.<PermissionResponse>builder()
+        .result(permissionService.updatePermission(id, request))
+        .build();
   }
 }

@@ -48,6 +48,7 @@ public enum ErrorCode {
   PROMO_CODE_EXPIRED(133, "Promo code expired!", HttpStatus.BAD_REQUEST),
   WRONG_PROMO_CODE(134, "Wrong promo code!", HttpStatus.BAD_REQUEST),
   CANNOT_SEND_EMAIL(135, "Can not send email!", HttpStatus.BAD_REQUEST),
+  PERMISSION_NOT_FOUND(136, "Permission not found!", HttpStatus.NOT_FOUND),
   ;
 
   private final int code;

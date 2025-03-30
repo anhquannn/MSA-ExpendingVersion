@@ -1,5 +1,7 @@
 package com.market.MSA.services;
 
+import com.market.MSA.exceptions.AppException;
+import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.PermissionMapper;
 import com.market.MSA.models.Permission;
 import com.market.MSA.repositories.PermissionRepository;
@@ -11,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ public class PermissionService {
   final PermissionRepository permissionRepository;
   final PermissionMapper permissionMapper;
 
+  @Transactional
   public PermissionResponse createPermission(PermissionRequest request) {
     Permission permission = permissionMapper.toPermission(request);
     permission = permissionRepository.save(permission);
@@ -27,11 +31,25 @@ public class PermissionService {
     return permissionMapper.toPermissionResponse(permission);
   }
 
+  @Transactional
+  public PermissionResponse updatePermission(Long id, PermissionRequest request) {
+    Permission permission =
+        permissionRepository
+            .findById(id)
+            .orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
+
+    permissionMapper.updatePermissionFromRequest(request, permission);
+
+    Permission updatedPermission = permissionRepository.save(permission);
+    return permissionMapper.toPermissionResponse(updatedPermission);
+  }
+
   public List<PermissionResponse> getAll() {
     var permissions = permissionRepository.findAll();
     return permissions.stream().map(permissionMapper::toPermissionResponse).toList();
   }
 
+  @Transactional
   public void delete(long id) {
     permissionRepository.deleteById(id);
   }

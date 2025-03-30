@@ -30,8 +30,8 @@ public class PromoCodeService {
   final PromoCodeMapper promoCodeMapper;
 
   @Transactional
-    @Scheduled(cron = "0 0 0 * * *")
-//  @Scheduled(cron = "0/5 * * * * *") // Chạy lúc 0h
+  @Scheduled(cron = "0 0 0 * * *")
+  //  @Scheduled(cron = "0/5 * * * * *") // Chạy lúc 0h
   public void updatePromoCodeStatus() {
     Date currentDate = new Date();
     promoCodeRepository.updateActivePromoCodes(currentDate);

@@ -1,13 +1,13 @@
 package com.market.MSA.controllers;
 
 import com.market.MSA.requests.ReturnOrderRequest;
+import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.ReturnOrderResponse;
 import com.market.MSA.services.ReturnOrderService;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,30 +25,38 @@ public class ReturnOrderController {
   ReturnOrderService returnOrderService;
 
   @PostMapping
-  public ResponseEntity<ReturnOrderResponse> createReturnOrder(
+  public ApiResponse<ReturnOrderResponse> createReturnOrder(
       @RequestBody ReturnOrderRequest request) {
-    return ResponseEntity.ok(returnOrderService.createReturnOrder(request));
+    return ApiResponse.<ReturnOrderResponse>builder()
+        .result(returnOrderService.createReturnOrder(request))
+        .build();
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<ReturnOrderResponse> updateReturnOrder(
+  public ApiResponse<ReturnOrderResponse> updateReturnOrder(
       @PathVariable Long id, @RequestBody ReturnOrderRequest request) {
-    return ResponseEntity.ok(returnOrderService.updateReturnOrder(id, request));
+    return ApiResponse.<ReturnOrderResponse>builder()
+        .result(returnOrderService.updateReturnOrder(id, request))
+        .build();
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteReturnOrder(@PathVariable Long id) {
+  public ApiResponse<String> deleteReturnOrder(@PathVariable Long id) {
     returnOrderService.deleteReturnOrder(id);
-    return ResponseEntity.noContent().build();
+    return ApiResponse.<String>builder().result("Success").build();
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ReturnOrderResponse> getReturnOrderById(@PathVariable Long id) {
-    return ResponseEntity.ok(returnOrderService.getReturnOrderById(id));
+  public ApiResponse<ReturnOrderResponse> getReturnOrderById(@PathVariable Long id) {
+    return ApiResponse.<ReturnOrderResponse>builder()
+        .result(returnOrderService.getReturnOrderById(id))
+        .build();
   }
 
   @GetMapping
-  public ResponseEntity<List<ReturnOrderResponse>> getAllReturnOrders() {
-    return ResponseEntity.ok(returnOrderService.getAllReturnOrders());
+  public ApiResponse<List<ReturnOrderResponse>> getAllReturnOrders() {
+    return ApiResponse.<List<ReturnOrderResponse>>builder()
+        .result(returnOrderService.getAllReturnOrders())
+        .build();
   }
 }

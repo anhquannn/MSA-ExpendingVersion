@@ -168,6 +168,7 @@ public class OrderService {
         .build();
   }
 
+  @Transactional
   public OrderResponse updateOrder(Long orderId, OrderRequest request) {
     Optional<Order> existingOrder = orderRepository.findById(orderId);
     if (existingOrder.isPresent()) {
@@ -186,6 +187,7 @@ public class OrderService {
     orderRepository.deleteById(orderId);
   }
 
+  @Transactional
   public OrderResponse getOrderById(Long orderId) {
     return orderRepository
         .findById(orderId)

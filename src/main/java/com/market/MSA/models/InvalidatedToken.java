@@ -1,8 +1,6 @@
 package com.market.MSA.models;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import java.util.Date;
 import lombok.AccessLevel;
@@ -21,8 +19,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 public class InvalidatedToken {
-  @Id
-  String invalidatedTokenId;
+  @Id String invalidatedTokenId;
 
   Date expiryTime;
 }

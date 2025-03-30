@@ -36,6 +36,7 @@ public class ProductService {
   final ProductMapper productMapper;
 
   // Tạo sản phẩm
+  @Transactional
   public ProductResponse createProduct(ProductRequest request) {
     Product product = productMapper.toProduct(request);
 
@@ -54,6 +55,7 @@ public class ProductService {
   }
 
   // Cập nhật sản phẩm
+  @Transactional
   public ProductResponse updateProduct(Long id, ProductRequest request) {
     Product product =
         productRepository
@@ -76,6 +78,7 @@ public class ProductService {
   }
 
   // Xóa sản phẩm
+  @Transactional
   public void deleteProduct(Long id) {
     if (!productRepository.existsById(id)) {
       throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);

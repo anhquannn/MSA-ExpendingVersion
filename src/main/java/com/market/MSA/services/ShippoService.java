@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
@@ -43,6 +44,7 @@ public class ShippoService {
     this.deliveryInfoRepository = deliveryInfoRepository;
   }
 
+  @Transactional
   public ShippoResponse createShippo(Long deliveryInfoId) {
     DeliveryInfo deliveryInfo =
         deliveryInfoRepository

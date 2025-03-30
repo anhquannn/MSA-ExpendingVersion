@@ -31,6 +31,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -48,6 +49,7 @@ public class UserService {
   final AuthenticationService authenticationService;
   final PasswordEncoder passwordEncoder;
 
+  @Transactional
   public String registerUser(UserRequest request) {
     if (!emailService.verifyEmail(request.getEmail())) {
       throw new AppException(ErrorCode.INVALID_EMAIL);
@@ -91,6 +93,7 @@ public class UserService {
     return emailService.generateAndSendOTP(email);
   }
 
+  @Transactional
   public String loginWithGoogle(String accessToken) {
     // Gọi API Google để lấy thông tin người dùng
     RestTemplate restTemplate = new RestTemplate();
@@ -158,6 +161,7 @@ public class UserService {
     }
   }
 
+  @Transactional
   public UserResponse createUser(UserRequest request) {
     User user = userMapper.toUser(request);
     user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -233,6 +237,7 @@ public class UserService {
     return "Password sent via email and updated successfully";
   }
 
+  @Transactional
   public UserResponse updateUser(long userId, UpdateUserRequest request) {
     User user = getUserEntityByID(userId);
 
@@ -246,6 +251,7 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
+  @Transactional
   public void deleteUser(long userId) {
     userRepository.deleteById(userId);
   }

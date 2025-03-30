@@ -27,15 +27,11 @@ public class ShippoController {
 
   @GetMapping("/{objectId}")
   public ApiResponse<ShippoResponse> getShipment(@PathVariable String objectId) {
-    return ApiResponse.<ShippoResponse>builder()
-            .result(shippoService.getShippo(objectId))
-            .build();
+    return ApiResponse.<ShippoResponse>builder().result(shippoService.getShippo(objectId)).build();
   }
 
   @GetMapping
   public ApiResponse<List<ShippoResponse>> getShipments() {
-    return ApiResponse.<List<ShippoResponse>>builder()
-            .result(shippoService.getShippos())
-            .build();
+    return ApiResponse.<List<ShippoResponse>>builder().result(shippoService.getShippos()).build();
   }
 }

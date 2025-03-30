@@ -113,7 +113,7 @@ public class AuthenticationService {
       jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
       return jwsObject.serialize();
     } catch (JOSEException e) {
-      throw new RuntimeException(e);
+      throw new AppException(ErrorCode.GENERATE_TOKEN_FALSE);
     }
   }
 
@@ -128,7 +128,7 @@ public class AuthenticationService {
           InvalidatedToken.builder().invalidatedTokenId(jit).expiryTime(expiryTime).build();
       invalidatedTokenRepository.save(invalidatedToken);
     } catch (AppException e) {
-      log.info("Token already expired");
+      throw new AppException(ErrorCode.LOGOUT_FALSE);
     }
   }
 
@@ -144,7 +144,6 @@ public class AuthenticationService {
     invalidatedTokenRepository.save(invalidatedToken);
 
     var email = signedJWT.getJWTClaimsSet().getSubject();
-    log.info("Email: " + email);
     var user =
         userRepo
             .findByEmail(email)

@@ -9,6 +9,9 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  jackson:
+    deserialization:
+      adjust-dates-to-context-time-zone: false
   mail:
     host: smtp.gmail.com
     port: 587

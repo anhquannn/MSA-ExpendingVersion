@@ -1,16 +1,18 @@
 package com.market.MSA.responses;
 
+import java.util.Date;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Getter
-@Setter
-@Builder
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class OrderSummaryResponse {
-  double totalCost;
-  double discount;
-  double grandTotal;
+public class TrendingProductResponse {
+  long trendId;
+  double trendScore;
+  Date timestamp;
+
+  ProductResponse product;
 }

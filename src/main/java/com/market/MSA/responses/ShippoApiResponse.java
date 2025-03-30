@@ -2,9 +2,9 @@ package com.market.MSA.responses;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -13,12 +13,12 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ShippoApiResponse {
-    @JsonProperty("results")
-    List<ShippoResponse> results;
+  @JsonProperty("results")
+  List<ShippoResponse> results;
 
-    @JsonProperty("next")
-    String next;
+  @JsonProperty("next")
+  String next;
 
-    @JsonProperty("previous")
-    String previous;
+  @JsonProperty("previous")
+  String previous;
 }

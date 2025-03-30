@@ -1,5 +1,6 @@
 package com.market.MSA.services;
 
+import com.market.MSA.constants.PromocodeStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.PromoCodeMapper;
@@ -7,12 +8,14 @@ import com.market.MSA.models.PromoCode;
 import com.market.MSA.repositories.PromoCodeRepository;
 import com.market.MSA.requests.PromoCodeRequest;
 import com.market.MSA.responses.PromoCodeResponse;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,10 +27,21 @@ public class PromoCodeService {
   final PromoCodeRepository promoCodeRepository;
   final PromoCodeMapper promoCodeMapper;
 
+  @Transactional
+  //  @Scheduled(cron = "0 0 0 * * *")
+  @Scheduled(cron = "0/5 * * * * *") // Chạy lúc 0h
+  public void updatePromoCodeStatus() {
+    Date currentDate = new Date();
+    promoCodeRepository.updateActivePromoCodes(currentDate);
+    promoCodeRepository.updateExpiredPromoCodes(currentDate);
+  }
+
   // Tạo PromoCode
   @Transactional
   public PromoCodeResponse createPromoCode(PromoCodeRequest request) {
     PromoCode promoCode = promoCodeMapper.toPromoCode(request);
+    promoCode.setDiscountType("percentage");
+    promoCode.setStatus(PromocodeStatus.PROMO_CODE_STATUS_3.getStatus());
     PromoCode savedPromoCode = promoCodeRepository.save(promoCode);
     return promoCodeMapper.toPromoCodeResponse(savedPromoCode);
   }
@@ -75,6 +89,7 @@ public class PromoCodeService {
         promoCodeRepository
             .findByCode(code)
             .orElseThrow(() -> new AppException(ErrorCode.PROMO_CODE_NOT_FOUND));
+    validatePromoCode(promoCode);
     return promoCode;
   }
 
@@ -83,5 +98,17 @@ public class PromoCodeService {
     return promoCodeRepository.findAll().stream()
         .map(promoCodeMapper::toPromoCodeResponse)
         .collect(Collectors.toList());
+  }
+
+  void validatePromoCode(PromoCode promoCode) {
+    Date currentDate = new Date();
+    if (promoCode.getStartDate().after(currentDate)) {
+      throw new AppException(ErrorCode.PROMO_CODE_NOT_YET_ACTIVE);
+    }
+    if (promoCode.getEndDate().before(currentDate)) {
+      promoCode.setStatus(PromocodeStatus.PROMO_CODE_STATUS_2.getStatus());
+      promoCodeRepository.save(promoCode);
+      throw new AppException(ErrorCode.PROMO_CODE_EXPIRED);
+    }
   }
 }

@@ -1,0 +1,22 @@
+package com.market.MSA.constants;
+
+import lombok.Getter;
+
+@Getter
+public enum OrderStatus {
+  ORDER_STATUS_1("pending"),
+  ORDER_STATUS_2("paying"),
+  ORDER_STATUS_3("paid"),
+  ORDER_STATUS_4("delivering"),
+  ORDER_STATUS_5("shipped"),
+  ORDER_STATUS_6("returning"),
+  ORDER_STATUS_7("returned"),
+  ORDER_STATUS_8("success"),
+  ;
+
+  private final String status;
+
+  OrderStatus(String status) {
+    this.status = status;
+  }
+}

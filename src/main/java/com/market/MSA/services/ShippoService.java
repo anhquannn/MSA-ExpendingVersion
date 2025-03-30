@@ -4,6 +4,7 @@ import static com.market.MSA.requests.ShippoRequest.getDefaultAddressFrom;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.models.DeliveryInfo;
@@ -85,7 +86,7 @@ public class ShippoService {
     try {
       String responseBody = response.getBody();
       if (responseBody != null) {
-        deliveryInfo.setStatus("shipping");
+        deliveryInfo.setStatus(OrderStatus.ORDER_STATUS_4.getStatus());
         deliveryInfoRepository.save(deliveryInfo);
       }
       return objectMapper.readValue(responseBody, ShippoResponse.class);
@@ -121,8 +122,6 @@ public class ShippoService {
 
     ResponseEntity<String> response =
         restTemplate.exchange(API_URL, HttpMethod.GET, requestEntity, String.class);
-
-    log.info("Shippo response: {}", response.getBody());
 
     String responseBody = response.getBody();
     if (responseBody == null || responseBody.trim().isEmpty()) {

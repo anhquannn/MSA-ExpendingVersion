@@ -1,5 +1,6 @@
 package com.market.MSA.services;
 
+import com.market.MSA.constants.CartStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.CartMapper;
@@ -33,7 +34,7 @@ public class CartService {
     cart.setUser(
         entityFinderService.findByIdOrThrow(
             userRepository, request.getUserId(), ErrorCode.CART_NOT_FOUND));
-
+    cart.setStatus(CartStatus.CART_STATUS_1.toString());
     cart = cartRepository.save(cart);
     return cartMapper.toCartResponse(cart);
   }
@@ -78,7 +79,7 @@ public class CartService {
     Cart newCart =
         Cart.builder()
             .user(user) // Use the fetched User entity
-            .status("active")
+            .status(CartStatus.CART_STATUS_1.toString())
             .build();
 
     cartRepository.save(newCart);

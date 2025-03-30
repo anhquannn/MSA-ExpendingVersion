@@ -15,6 +15,8 @@ public enum ErrorCode {
 
   INVALID_TOKEN(105, "Invalid token", HttpStatus.BAD_REQUEST),
   UNAUTHORIZED(106, "You do not have permission", HttpStatus.FORBIDDEN),
+  GENERATE_TOKEN_FALSE(131, "Generate token false", HttpStatus.INTERNAL_SERVER_ERROR),
+  LOGOUT_FALSE(132, "Logout false", HttpStatus.INTERNAL_SERVER_ERROR),
   ROLE_NOT_FOUND(107, "Role not found", HttpStatus.NOT_FOUND),
   INVALID_DOB(108, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
 
@@ -32,14 +34,19 @@ public enum ErrorCode {
   CATEGORY_NOT_FOUND(119, "Category not found!", HttpStatus.NOT_FOUND),
   DELIVERY_DETAIL_NOT_FOUND(120, "Delivery detail not found!", HttpStatus.NOT_FOUND),
   DELIVERY_INFO_NOT_FOUND(121, "Delivery info not found!", HttpStatus.NOT_FOUND),
-  FEEDBACK_NOT_FOUND(122, "Feedback not found!", HttpStatus.NOT_FOUND),
+  PARSE_SHIPPO_RESPONSE_ERROR(122, "Error parsing shipment response!", HttpStatus.FORBIDDEN),
   MANUFACTURER_NOT_FOUND(123, "Manufacturer not found!", HttpStatus.NOT_FOUND),
   ORDER_DETAIL_NOT_FOUND(124, "Order detail not found!", HttpStatus.NOT_FOUND),
   PAYMENT_NOT_FOUND(125, "Payment not found!", HttpStatus.NOT_FOUND),
   PROMO_CODE_NOT_FOUND(126, "Promo code not found!", HttpStatus.NOT_FOUND),
   RETURN_ORDER_NOT_FOUND(127, "Return order not found!", HttpStatus.NOT_FOUND),
+  FEEDBACK_NOT_FOUND(128, "Feedback not found!", HttpStatus.NOT_FOUND),
 
-  PARSE_SHIPPO_RESPONSE_ERROR(128, "Error parsing shipment response!", HttpStatus.FORBIDDEN);
+  TRENDING_PRODUCT_NOT_FOUND(129, "Trending product not found!", HttpStatus.NOT_FOUND),
+  USER_BEHAVIOR_NOT_FOUND(130, "User behavior not found!", HttpStatus.NOT_FOUND),
+  PROMO_CODE_NOT_YET_ACTIVE(132, "Promo code not yet active!", HttpStatus.BAD_REQUEST),
+  PROMO_CODE_EXPIRED(133, "Promo code expired!", HttpStatus.BAD_REQUEST),
+  WRONG_PROMO_CODE(134, "Wrong promo code!", HttpStatus.BAD_REQUEST),;
 
   private final int code;
   private final String message;

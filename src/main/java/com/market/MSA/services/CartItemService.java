@@ -1,5 +1,6 @@
 package com.market.MSA.services;
 
+import com.market.MSA.constants.CartStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.CartItemMapper;
@@ -72,7 +73,7 @@ public class CartItemService {
   }
 
   public void clearCart(Long cartId) {
-    cartItemRepository.clearCart(cartId, "available");
+    cartItemRepository.clearCart(cartId, CartStatus.CART_ITEM_STATUS_2.getStatus());
   }
 
   public CartItemResponse getCartItemById(Long id) {
@@ -84,7 +85,9 @@ public class CartItemService {
   }
 
   public List<CartItemResponse> getCartItemsByCartId(Long cartId) {
-    List<CartItem> cartItems = cartItemRepository.findByCart_CartIdAndStatus(cartId, "available");
+    List<CartItem> cartItems =
+        cartItemRepository.findByCart_CartIdAndStatus(
+            cartId, CartStatus.CART_ITEM_STATUS_2.getStatus());
     return cartItems.stream().map(cartItemMapper::toCartItemResponse).collect(Collectors.toList());
   }
 
@@ -118,7 +121,7 @@ public class CartItemService {
             .cart(cart)
             .product(product)
             .quantity(quantity)
-            .status("unavailable")
+            .status(CartStatus.CART_ITEM_STATUS_1.getStatus())
             .price(product.getPrice())
             .build();
 

@@ -17,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
   private final String[] PUBLIC_ENDPOINTS = {
-    "/user/register", "/user/login", "/user/verify-otp", "/user/login/google", "/auth/refresh"
+    "/user/register", "/user/login", "/user/verify-otp", "/user/login/google", "/user/refresh"
   };
 
   @Autowired private CustomJwtDecoder customJwtDecoder;

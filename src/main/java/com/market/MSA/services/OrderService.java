@@ -1,5 +1,7 @@
 package com.market.MSA.services;
 
+import com.market.MSA.constants.OrderStatus;
+import com.market.MSA.constants.PromocodeStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.OrderMapper;
@@ -57,8 +59,6 @@ public class OrderService {
       throws MessagingException {
     // Tính toán tổng tiền và giảm giá
     OrderResponse orderSummary = calculateOrderSummary(userId, cartId, promoCodes);
-    double discount = orderSummary.getDiscount();
-    double totalCost = orderSummary.getTotalCost();
     double grandTotal = orderSummary.getGrandTotal();
 
     // Lấy thông tin user, cart, branch
@@ -84,7 +84,7 @@ public class OrderService {
             .cart(cart)
             .branch(branch)
             .grandTotal(grandTotal)
-            .status("pending")
+            .status(OrderStatus.ORDER_STATUS_1.getStatus())
             .build();
 
     order = orderRepository.save(order);
@@ -97,7 +97,9 @@ public class OrderService {
 
       for (String promoCode : promoCodes) {
         PromoCode promo = promoCodeService.findPromoCodeByCode(promoCode);
-        order.getPromoCodes().add(promo);
+        if (!promo.getStatus().equals(PromocodeStatus.PROMO_CODE_STATUS_2.getStatus())) {
+          order.getPromoCodes().add(promo);
+        }
       }
     }
 
@@ -146,12 +148,17 @@ public class OrderService {
     if (promoCodes != null && !promoCodes.isEmpty()) {
       for (String promoCode : promoCodes) {
         PromoCodeResponse promo = promoCodeService.getPromoCodeByCode(promoCode);
-        if (totalCost >= promo.getMinimumOrderValue()) {
+        if (totalCost >= promo.getMinimumOrderValue()
+            && !promo.getStatus().equals(PromocodeStatus.PROMO_CODE_STATUS_2.getStatus())) {
           double currentDiscount = totalCost * (promo.getDiscountPercentage() / 100);
           discount += currentDiscount;
           grandTotal -= currentDiscount;
         }
       }
+    }
+
+    if(grandTotal < 0){
+      throw new AppException(ErrorCode.WRONG_PROMO_CODE);
     }
 
     return OrderResponse.builder()

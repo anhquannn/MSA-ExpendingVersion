@@ -144,7 +144,7 @@ public class UserService {
                           "Your password is: " + randomPassword);
                     } catch (MessagingException e) {
                       // TODO Auto-generated catch block
-                      e.printStackTrace();
+                      throw new AppException(ErrorCode.CANNOT_SEND_EMAIL);
                     }
 
                     return savedUser;
@@ -228,7 +228,7 @@ public class UserService {
     try {
       emailService.sendEmail(email, "Your New Password", "Your new password is: " + newPassword);
     } catch (MessagingException e) {
-      e.printStackTrace();
+      throw new AppException(ErrorCode.CANNOT_SEND_EMAIL);
     }
     return "Password sent via email and updated successfully";
   }

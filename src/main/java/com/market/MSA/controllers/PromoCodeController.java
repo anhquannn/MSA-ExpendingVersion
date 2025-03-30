@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/promocode")
+@RequestMapping("/promo-code")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PromoCodeController {
@@ -72,7 +72,7 @@ public class PromoCodeController {
   public ApiResponse<List<PromoCodeResponse>> getAllPromoCodes(
       @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int pageSize) {
     return ApiResponse.<List<PromoCodeResponse>>builder()
-        .result(promoCodeService.getAllPromoCodes())
+        .result(promoCodeService.getAllPromoCodes(page, pageSize))
         .build();
   }
 }

@@ -157,7 +157,7 @@ public class OrderService {
       }
     }
 
-    if(grandTotal < 0){
+    if (grandTotal < 0) {
       throw new AppException(ErrorCode.WRONG_PROMO_CODE);
     }
 

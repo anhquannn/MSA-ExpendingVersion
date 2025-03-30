@@ -11,10 +11,14 @@ import org.springframework.stereotype.Component;
 @Mapper(componentModel = "spring")
 @Component
 public interface OrderMapper {
+
+  @Mapping(source = "promoCodes", target = "promoCodes", ignore = true)
   Order toOrder(OrderRequest request);
 
+  @Mapping(source = "promoCodes", target = "promoCodes", ignore = true)
   OrderResponse toOrderResponse(Order order);
 
   @Mapping(target = "orderId", ignore = true)
+  @Mapping(source = "promoCodes", target = "promoCodes", ignore = true)
   void updateOrderFromRequest(OrderRequest request, @MappingTarget Order order);
 }

@@ -1,5 +1,6 @@
 package com.market.MSA.services;
 
+import com.market.MSA.constants.CartStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.CartItemMapper;
@@ -55,18 +56,11 @@ public class CartItemService {
   }
 
   public CartItemResponse updateCartItem(Long cartItemId, CartItemRequest request) {
+    cartItemRepository.updateCartItem(cartItemId, request.getStatus(), request.getQuantity());
     CartItem cartItem =
         cartItemRepository
             .findById(cartItemId)
             .orElseThrow(() -> new AppException(ErrorCode.CART_ITEM_NOT_FOUND));
-    cartItem.setCart(
-        entityFinderService.findByIdOrThrow(
-            cartRepository, request.getCartId(), ErrorCode.CART_NOT_FOUND));
-    cartItem.setProduct(
-        entityFinderService.findByIdOrThrow(
-            productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
-    cartItemMapper.updateCartItemFromRequest(request, cartItem);
-    cartItemRepository.save(cartItem);
     return cartItemMapper.toCartItemResponse(cartItem);
   }
 
@@ -79,7 +73,7 @@ public class CartItemService {
   }
 
   public void clearCart(Long cartId) {
-    cartItemRepository.clearCart(cartId, "available");
+    cartItemRepository.clearCart(cartId, CartStatus.CART_ITEM_STATUS_2.getStatus());
   }
 
   public CartItemResponse getCartItemById(Long id) {
@@ -91,7 +85,9 @@ public class CartItemService {
   }
 
   public List<CartItemResponse> getCartItemsByCartId(Long cartId) {
-    List<CartItem> cartItems = cartItemRepository.findByCart_CartIdAndStatus(cartId, "available");
+    List<CartItem> cartItems =
+        cartItemRepository.findByCart_CartIdAndStatus(
+            cartId, CartStatus.CART_ITEM_STATUS_2.getStatus());
     return cartItems.stream().map(cartItemMapper::toCartItemResponse).collect(Collectors.toList());
   }
 
@@ -125,7 +121,7 @@ public class CartItemService {
             .cart(cart)
             .product(product)
             .quantity(quantity)
-            .status("unavailable")
+            .status(CartStatus.CART_ITEM_STATUS_1.getStatus())
             .price(product.getPrice())
             .build();
 

@@ -1,16 +1,6 @@
 package com.market.MSA.models;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import java.util.Date;
-import java.util.List;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,17 +22,15 @@ public class DeliveryInfo {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   long deliveryInfoId;
 
-  Date deliveryDate;
+  String street1;
+  String city;
+  String state;
+  String zip;
+  String country;
+  String weight;
   String status;
 
-  @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
-  User user;
-
-  @ManyToOne
-  @JoinColumn(name = "orderId", nullable = false)
+  @OneToOne
+  @JoinColumn(name = "orderId", nullable = false, unique = true)
   Order order;
-
-  @OneToMany(mappedBy = "deliveryInfo", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<DeliveryDetail> deliveryDetails;
 }

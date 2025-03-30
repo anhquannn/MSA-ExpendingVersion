@@ -1,18 +1,8 @@
 package com.market.MSA.models;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -50,16 +40,16 @@ public class Order {
   @JoinColumn(name = "userId", nullable = false)
   User user;
 
+  @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  DeliveryInfo deliveryInfo;
+
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   List<ReturnOrder> returnOrders;
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   List<Payment> payments;
 
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<DeliveryInfo> deliveryInfos;
-
-  @ManyToMany Set<PromoCode> promoCodes;
+  @ManyToMany List<PromoCode> promoCodes;
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   List<OrderDetail> orderDetails;

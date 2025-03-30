@@ -3,6 +3,7 @@ package com.market.MSA.controllers;
 import com.market.MSA.requests.OrderRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.OrderResponse;
+import com.market.MSA.responses.OrderSummaryResponse;
 import com.market.MSA.services.OrderService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
@@ -37,13 +38,13 @@ public class OrderController {
                 request.getUserId(),
                 request.getCartId(),
                 request.getBranchId(),
-                request.getPromoCode()))
+                request.getPromoCodes()))
         .build();
   }
 
   @PutMapping("/{orderId}")
   public ApiResponse<OrderResponse> updateOrder(
-      @PathVariable Long orderId, @RequestBody @Valid OrderRequest request) {
+      @PathVariable Long orderId, @RequestBody(required = false) @Valid OrderRequest request) {
     return ApiResponse.<OrderResponse>builder()
         .result(orderService.updateOrder(orderId, request))
         .build();
@@ -77,11 +78,21 @@ public class OrderController {
   }
 
   @GetMapping("/preview")
-  public ApiResponse<OrderResponse> previewOrder(
-      @RequestParam Long userId, @RequestParam Long cartId, @RequestParam String promoCode) {
-    return ApiResponse.<OrderResponse>builder()
-        .result(orderService.calculateOrderSummary(userId, cartId, promoCode))
-        .build();
+  public ApiResponse<OrderSummaryResponse> previewOrder(
+      @RequestParam Long userId,
+      @RequestParam Long cartId,
+      @RequestParam(required = false) List<String> promoCodes) {
+
+    OrderResponse orderSummary = orderService.calculateOrderSummary(userId, cartId, promoCodes);
+
+    OrderSummaryResponse response =
+        OrderSummaryResponse.builder()
+            .totalCost(orderSummary.getTotalCost())
+            .discount(orderSummary.getDiscount())
+            .grandTotal(orderSummary.getGrandTotal())
+            .build();
+
+    return ApiResponse.<OrderSummaryResponse>builder().result(response).build();
   }
 
   @GetMapping

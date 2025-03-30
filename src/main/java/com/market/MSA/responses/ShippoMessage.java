@@ -1,0 +1,23 @@
+package com.market.MSA.responses;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ShippoMessage {
+  @JsonProperty("source")
+  String source;
+
+  @JsonProperty("code")
+  String code;
+
+  @JsonProperty("text")
+  String text;
+}

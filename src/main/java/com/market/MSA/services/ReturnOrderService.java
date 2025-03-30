@@ -1,5 +1,6 @@
 package com.market.MSA.services;
 
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.ReturnOrderMapper;
@@ -39,7 +40,7 @@ public class ReturnOrderService {
             .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
     // Cập nhật trạng thái đơn hàng gốc
-    order.setStatus("returned");
+    order.setStatus(OrderStatus.ORDER_STATUS_7.getStatus());
     orderRepository.save(order);
 
     // Lưu đơn trả hàng vào cơ sở dữ liệu
@@ -49,7 +50,7 @@ public class ReturnOrderService {
             .reason(request.getReason())
             .order(order)
             .refundamount(order.getGrandTotal())
-            .status("success")
+            .status(OrderStatus.ORDER_STATUS_8.getStatus())
             .build();
 
     returnOrder = returnOrderRepository.save(returnOrder);

@@ -9,6 +9,9 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  jackson:
+    deserialization:
+      adjust-dates-to-context-time-zone: false
   mail:
     host: smtp.gmail.com
     port: 587
@@ -29,6 +32,10 @@ jwt:
   valid-duration: 3600 # in second
   refreshable-duration: 36000 # in seconds
 
-zerobounce:
+shippo:
+  apikey: "shippo_test_ecd9f00cb3e0d0b284e7f1cff2d3a76d1471826f"
+  url: "https://api.goshippo.com/shipments"
+
+zero-bounce:
   api:
     key: 5497d5ce12ee486da7951f94d381b2c4

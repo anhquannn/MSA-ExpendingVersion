@@ -1,20 +1,20 @@
 package com.market.MSA.controllers;
 
-import com.market.MSA.requests.AuthenticationRequest;
-import com.market.MSA.requests.UpdateUserRequest;
-import com.market.MSA.requests.UserRequest;
-import com.market.MSA.requests.VerifyOtpRequest;
+import com.market.MSA.requests.*;
 import com.market.MSA.responses.ApiResponse;
+import com.market.MSA.responses.AuthenticationResponse;
 import com.market.MSA.responses.UserResponse;
+import com.market.MSA.services.AuthenticationService;
 import com.market.MSA.services.UserService;
+import com.nimbusds.jose.JOSEException;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
+import java.text.ParseException;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,7 +32,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserController {
-  @Autowired private UserService userService;
+  UserService userService;
+  AuthenticationService authenticationService;
 
   @PostMapping("/register")
   ApiResponse<String> registerUser(@RequestBody @Valid UserRequest request) {
@@ -73,7 +74,6 @@ public class UserController {
   @GetMapping
   ApiResponse<List<UserResponse>> getUsers() {
     var authentication = SecurityContextHolder.getContext().getAuthentication();
-    log.info("Username: {}", authentication.getName());
     authentication
         .getAuthorities()
         .forEach(grantedAuthority -> log.info(grantedAuthority.getAuthority()));
@@ -122,5 +122,19 @@ public class UserController {
     return ApiResponse.<UserResponse>builder()
         .result(userService.updateUser(userId, request))
         .build();
+  }
+
+  @PostMapping("/logout")
+  ApiResponse<Void> logout(@RequestBody LogoutRequest request)
+      throws JOSEException, ParseException {
+    authenticationService.logout(request);
+    return ApiResponse.<Void>builder().build();
+  }
+
+  @PostMapping("/refresh")
+  ApiResponse<AuthenticationResponse> refresh(@RequestBody RefreshRequest request)
+      throws JOSEException, ParseException {
+    var result = authenticationService.refreshToken(request);
+    return ApiResponse.<AuthenticationResponse>builder().result(result).build();
   }
 }

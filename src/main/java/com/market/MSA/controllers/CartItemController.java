@@ -1,6 +1,7 @@
 package com.market.MSA.controllers;
 
 import com.market.MSA.requests.CartItemRequest;
+import com.market.MSA.requests.CartItemStatusRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.CartItemResponse;
 import com.market.MSA.services.CartItemService;
@@ -51,8 +52,8 @@ public class CartItemController {
 
   @PutMapping("/update-status")
   ApiResponse<String> updateCartItemsStatus(
-      @RequestBody List<Long> cartItemIds, @RequestParam String status) {
-    cartItemService.updateCartItemsStatus(cartItemIds, status);
+      @RequestBody CartItemStatusRequest request, @RequestParam String status) {
+    cartItemService.updateCartItemsStatus(request.getCartItemIds(), status);
     return ApiResponse.<String>builder().result("Cart items status updated").build();
   }
 

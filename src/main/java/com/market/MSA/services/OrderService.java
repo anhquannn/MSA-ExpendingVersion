@@ -1,5 +1,7 @@
 package com.market.MSA.services;
 
+import com.market.MSA.constants.OrderStatus;
+import com.market.MSA.constants.PromocodeStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.OrderMapper;
@@ -21,6 +23,7 @@ import com.market.MSA.responses.CartResponse;
 import com.market.MSA.responses.OrderResponse;
 import com.market.MSA.responses.PromoCodeResponse;
 import jakarta.mail.MessagingException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -50,14 +54,14 @@ public class OrderService {
   final OrderDetailService orderDetailService;
   final OrderMapper orderMapper;
 
-  public OrderResponse createOrder(Long userId, Long branchId, Long cartId, String promoCode)
+  @Transactional
+  public OrderResponse createOrder(Long userId, Long branchId, Long cartId, List<String> promoCodes)
       throws MessagingException {
-    // Tính toán tổng tiền đơn hàng và giảm giá
-    OrderResponse orderSummary = calculateOrderSummary(userId, cartId, promoCode);
-    double discount = orderSummary.getDiscount();
+    // Tính toán tổng tiền và giảm giá
+    OrderResponse orderSummary = calculateOrderSummary(userId, cartId, promoCodes);
     double grandTotal = orderSummary.getGrandTotal();
 
-    // Lấy thông tin người dùng
+    // Lấy thông tin user, cart, branch
     User user =
         userRepository
             .findById(userId)
@@ -68,7 +72,7 @@ public class OrderService {
             .findById(cartId)
             .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
 
-    Branch br =
+    Branch branch =
         branchRepository
             .findById(branchId)
             .orElseThrow(() -> new AppException(ErrorCode.BRANCH_NOT_FOUND));
@@ -78,32 +82,38 @@ public class OrderService {
         Order.builder()
             .user(user)
             .cart(cart)
-            .branch(br)
+            .branch(branch)
             .grandTotal(grandTotal)
-            .status("PENDING")
+            .status(OrderStatus.ORDER_STATUS_1.getStatus())
             .build();
 
     order = orderRepository.save(order);
 
     // Nếu có mã giảm giá, lưu vào bảng OrderPromoCode
-    if (discount > 0) {
-      PromoCode promo = promoCodeService.findPromoCodeByCode(promoCode);
-      order.getPromoCodes().add(promo);
+    if (promoCodes != null && !promoCodes.isEmpty()) {
+      if (order.getPromoCodes() == null) {
+        order.setPromoCodes(new ArrayList<>()); // Khởi tạo nếu bị null
+      }
+
+      for (String promoCode : promoCodes) {
+        PromoCode promo = promoCodeService.findPromoCodeByCode(promoCode);
+        if (!promo.getStatus().equals(PromocodeStatus.PROMO_CODE_STATUS_2.getStatus())) {
+          order.getPromoCodes().add(promo);
+        }
+      }
     }
 
     // Lấy danh sách sản phẩm từ giỏ hàng
     List<CartItemResponse> cartItems = cartItemService.getCartItemsByCartId(cartId);
 
     for (CartItemResponse cartItem : cartItems) {
-      // Lấy Product từ database dựa vào productId
       Product product = productService.findProductById(cartItem.getProduct().getProductId());
 
       // Tạo chi tiết đơn hàng
       OrderDetail orderDetail =
           OrderDetail.builder()
               .order(order)
-              .product(product) // Dùng Product thay vì
-              // ProductResponse
+              .product(product)
               .quantity(cartItem.getQuantity())
               .unitPrice(product.getPrice())
               .totalPrice(cartItem.getQuantity() * product.getPrice())
@@ -124,10 +134,10 @@ public class OrderService {
     return orderMapper.toOrderResponse(order);
   }
 
-  public OrderResponse calculateOrderSummary(Long userId, Long cartId, String promoCode) {
+  public OrderResponse calculateOrderSummary(Long userId, Long cartId, List<String> promoCodes) {
     CartResponse cart = cartService.getCartById(cartId);
 
-    if (cart == null) {
+    if (cart == null || cart.getUser().getUserId() != userId) {
       throw new AppException(ErrorCode.CART_NOT_FOUND);
     }
 
@@ -135,13 +145,22 @@ public class OrderService {
     double discount = 0.0;
     double grandTotal = totalCost;
 
-    if (promoCode != null && !promoCode.isEmpty()) {
-      PromoCodeResponse promo = promoCodeService.getPromoCodeByCode(promoCode);
-      if (totalCost >= promo.getMinimumOrderValue()) {
-        discount = totalCost * (promo.getDiscountPercentage() / 100);
-        grandTotal -= discount;
+    if (promoCodes != null && !promoCodes.isEmpty()) {
+      for (String promoCode : promoCodes) {
+        PromoCodeResponse promo = promoCodeService.getPromoCodeByCode(promoCode);
+        if (totalCost >= promo.getMinimumOrderValue()
+            && !promo.getStatus().equals(PromocodeStatus.PROMO_CODE_STATUS_2.getStatus())) {
+          double currentDiscount = totalCost * (promo.getDiscountPercentage() / 100);
+          discount += currentDiscount;
+          grandTotal -= currentDiscount;
+        }
       }
     }
+
+    if(grandTotal < 0){
+      throw new AppException(ErrorCode.WRONG_PROMO_CODE);
+    }
+
     return OrderResponse.builder()
         .totalCost(totalCost)
         .discount(discount)

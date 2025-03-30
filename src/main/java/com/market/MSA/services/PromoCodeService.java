@@ -15,6 +15,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,8 +30,8 @@ public class PromoCodeService {
   final PromoCodeMapper promoCodeMapper;
 
   @Transactional
-  //  @Scheduled(cron = "0 0 0 * * *")
-  @Scheduled(cron = "0/5 * * * * *") // Chạy lúc 0h
+  @Scheduled(cron = "0 0 0 * * *")
+  //  @Scheduled(cron = "0/5 * * * * *") // Chạy lúc 0h
   public void updatePromoCodeStatus() {
     Date currentDate = new Date();
     promoCodeRepository.updateActivePromoCodes(currentDate);
@@ -94,8 +96,9 @@ public class PromoCodeService {
   }
 
   // Lấy danh sách tất cả PromoCode
-  public List<PromoCodeResponse> getAllPromoCodes() {
-    return promoCodeRepository.findAll().stream()
+  public List<PromoCodeResponse> getAllPromoCodes(int page, int pageSize) {
+    Pageable pageable = PageRequest.of(page - 1, pageSize);
+    return promoCodeRepository.findAll(pageable).stream()
         .map(promoCodeMapper::toPromoCodeResponse)
         .collect(Collectors.toList());
   }

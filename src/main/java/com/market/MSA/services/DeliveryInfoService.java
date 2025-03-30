@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -27,6 +28,7 @@ public class DeliveryInfoService {
   final DeliveryInfoMapper deliveryInfoMapper;
 
   // Create DeliveryInfo and set status to "delivering"
+  @Transactional
   public DeliveryInfoResponse createDeliveryInfo(DeliveryInfoRequest request) {
     DeliveryInfo deliveryInfo = deliveryInfoMapper.toDeliveryInfo(request);
     deliveryInfo.setStatus("pending");
@@ -39,6 +41,7 @@ public class DeliveryInfoService {
   }
 
   // Update DeliveryInfo
+  @Transactional
   public DeliveryInfoResponse updateDeliveryInfo(long deliveryInfoId, DeliveryInfoRequest request) {
     Optional<DeliveryInfo> existingDeliveryInfoOpt =
         deliveryInfoRepository.findById(deliveryInfoId);
@@ -55,6 +58,7 @@ public class DeliveryInfoService {
   }
 
   // Delete DeliveryInfo
+  @Transactional
   public void deleteDeliveryInfo(long deliveryInfoId) {
     Optional<DeliveryInfo> deliveryInfoOpt = deliveryInfoRepository.findById(deliveryInfoId);
     if (deliveryInfoOpt.isPresent()) {

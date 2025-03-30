@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -31,6 +32,7 @@ public class FeedbackService {
   final FeedbackMapper feedbackMapper;
 
   // Create Feedback
+  @Transactional
   public FeedbackResponse createFeedback(FeedbackRequest request) {
     Feedback feedback = feedbackMapper.toFeedback(request);
     feedback.setProduct(
@@ -45,6 +47,7 @@ public class FeedbackService {
   }
 
   // Update Feedback
+  @Transactional
   public FeedbackResponse updateFeedback(long feedbackId, FeedbackRequest request) {
     Optional<Feedback> existingFeedbackOpt = feedbackRepository.findById(feedbackId);
     if (existingFeedbackOpt.isPresent()) {
@@ -64,12 +67,14 @@ public class FeedbackService {
   }
 
   // Delete Feedback
-  public boolean deleteFeedback(long feedbackId) {
+  @Transactional
+  public void deleteFeedback(long feedbackId) {
     Optional<Feedback> feedbackOpt = feedbackRepository.findById(feedbackId);
     if (feedbackOpt.isPresent()) {
       feedbackRepository.delete(feedbackOpt.get());
-      return true;
+      return;
     }
+
     throw new AppException(ErrorCode.FEEDBACK_NOT_FOUND); // Or throw an exception if not found
   }
 

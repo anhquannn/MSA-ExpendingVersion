@@ -46,7 +46,10 @@ public enum ErrorCode {
   USER_BEHAVIOR_NOT_FOUND(130, "User behavior not found!", HttpStatus.NOT_FOUND),
   PROMO_CODE_NOT_YET_ACTIVE(132, "Promo code not yet active!", HttpStatus.BAD_REQUEST),
   PROMO_CODE_EXPIRED(133, "Promo code expired!", HttpStatus.BAD_REQUEST),
-  WRONG_PROMO_CODE(134, "Wrong promo code!", HttpStatus.BAD_REQUEST),;
+  WRONG_PROMO_CODE(134, "Wrong promo code!", HttpStatus.BAD_REQUEST),
+  CANNOT_SEND_EMAIL(135, "Can not send email!", HttpStatus.BAD_REQUEST),
+  PERMISSION_NOT_FOUND(136, "Permission not found!", HttpStatus.NOT_FOUND),
+  ;
 
   private final int code;
   private final String message;

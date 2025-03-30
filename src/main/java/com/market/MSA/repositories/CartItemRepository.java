@@ -12,11 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
   @Transactional
   @Modifying
-  @Query("DELETE FROM CartItem c WHERE c.cartItemId = :cartItemId")
-  void deleteCartItem(@Param("cartItemId") Long cartItemId);
-
-  @Transactional
-  @Modifying
   @Query("DELETE FROM CartItem c WHERE c.cart.cartId = :cartId AND c.status = :status")
   void clearCart(@Param("cartId") Long cartId, @Param("status") String status);
 
@@ -46,9 +41,6 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
   @Query("SELECT c FROM CartItem c WHERE c.cart.cartId = :cartId")
   List<CartItem> findByCart_CartId(@Param("cartId") Long cartId);
-
-  @Query("SELECT c FROM CartItem c WHERE c.cartItemId = :id")
-  Optional<CartItem> getCartItemByID(@Param("id") Long id);
 
   @Query(
       "SELECT COALESCE(SUM(c.price * c.quantity), 0) FROM CartItem c WHERE c.cart.cartId = :cartId AND c.status = 'available'")

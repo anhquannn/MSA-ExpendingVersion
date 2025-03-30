@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
 
     String enumKey =
         ex.getFieldError() != null ? ex.getFieldError().getDefaultMessage() : "UNKNOWN_ERROR";
-    ErrorCode errorCode = ErrorCode.INVALID_TOKEN;
+    ErrorCode errorCode;
     Map<String, Object> attributes = null;
 
     try {

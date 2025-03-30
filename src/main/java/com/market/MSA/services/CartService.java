@@ -34,7 +34,7 @@ public class CartService {
     cart.setUser(
         entityFinderService.findByIdOrThrow(
             userRepository, request.getUserId(), ErrorCode.CART_NOT_FOUND));
-    cart.setStatus(CartStatus.CART_STATUS_1.toString());
+    cart.setStatus(CartStatus.CART_STATUS_1.getStatus());
     cart = cartRepository.save(cart);
     return cartMapper.toCartResponse(cart);
   }
@@ -79,7 +79,7 @@ public class CartService {
     Cart newCart =
         Cart.builder()
             .user(user) // Use the fetched User entity
-            .status(CartStatus.CART_STATUS_1.toString())
+            .status(CartStatus.CART_STATUS_1.getStatus())
             .build();
 
     cartRepository.save(newCart);

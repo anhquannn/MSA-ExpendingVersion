@@ -17,7 +17,7 @@ public class ReturnOrderRequest {
   Date dateReturn;
   String status;
   String reason;
-  double refundamount;
+  double refundAmount;
 
   long orderId;
 }

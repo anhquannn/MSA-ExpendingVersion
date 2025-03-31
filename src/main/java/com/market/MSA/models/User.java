@@ -33,7 +33,7 @@ public class User {
   long userId;
 
   @Column(
-      name = "fullname",
+      name = "fullName",
       unique = true,
       columnDefinition = "varchar(255) collate utf8mb4_unicode_ci")
   String fullName;

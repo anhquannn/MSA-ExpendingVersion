@@ -23,7 +23,7 @@ public class EmailService {
   @Value("${spring.mail.username}")
   private String fromEmail;
 
-  @Value("${zerobounce.api.key}")
+  @Value("${zero-bounce.api.key}")
   private String zeroBounceApiKey;
 
   public EmailService(JavaMailSender mailSender) {

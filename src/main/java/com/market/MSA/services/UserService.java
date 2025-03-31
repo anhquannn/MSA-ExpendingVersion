@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,12 +50,9 @@ public class UserService {
 
   @Transactional
   public String registerUser(UserRequest request) {
-    if (!emailService.verifyEmail(request.getEmail())) {
-      throw new AppException(ErrorCode.INVALID_EMAIL);
-    }
-    if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-      throw new AppException(ErrorCode.USER_EXISTED);
-    }
+    //      if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+    //      throw new AppException(ErrorCode.USER_EXISTED);
+    //    }
     User user = userMapper.toUser(request);
     Role customerRole =
         roleRepository
@@ -199,7 +195,7 @@ public class UserService {
         .orElseThrow(() -> new RuntimeException("User not found"));
   }
 
-  @PostAuthorize("returnObject.username == authentication.name")
+  // @PostAuthorize("returnObject.username == authentication.name")
   public UserResponse getUserByID(long userId) {
     log.info("In method get user by ID");
     User user = getUserEntityByID(userId);

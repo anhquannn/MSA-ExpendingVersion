@@ -49,7 +49,7 @@ public class ReturnOrderService {
             .dateReturn(request.getDateReturn())
             .reason(request.getReason())
             .order(order)
-            .refundamount(order.getGrandTotal())
+            .refundAmount(order.getGrandTotal())
             .status(OrderStatus.ORDER_STATUS_8.getStatus())
             .build();
 

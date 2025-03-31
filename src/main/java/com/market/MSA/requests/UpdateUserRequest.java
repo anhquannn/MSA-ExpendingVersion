@@ -14,14 +14,14 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateUserRequest {
-  String fullname;
+  String fullName;
 
   String email;
-  String phonenumber;
+  String phoneNumber;
   String birthday;
   String password;
   String address;
-  String googleid;
+  String googleId;
 
   List<Long> roles;
 }

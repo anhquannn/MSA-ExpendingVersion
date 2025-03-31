@@ -31,7 +31,7 @@ public class PromoCodeService {
 
   @Transactional
   @Scheduled(cron = "0 0 0 * * *")
-  //  @Scheduled(cron = "0/5 * * * * *") // Chạy lúc 0h
+  //  @Scheduled(cron = "0/5 * * * * *")
   public void updatePromoCodeStatus() {
     Date currentDate = new Date();
     promoCodeRepository.updateActivePromoCodes(currentDate);

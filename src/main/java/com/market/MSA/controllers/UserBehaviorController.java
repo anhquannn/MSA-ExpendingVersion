@@ -25,7 +25,6 @@ public class UserBehaviorController {
   @PostMapping
   public ApiResponse<UserBehaviorResponse> createUserBehavior(
       @RequestBody @Valid UserBehaviorRequest request) {
-    log.info("Received request to create user behavior: {}", request);
     return ApiResponse.<UserBehaviorResponse>builder()
         .result(userBehaviorService.createUserBehavior(request))
         .build();
@@ -35,7 +34,6 @@ public class UserBehaviorController {
   @PutMapping("/{userBehaviorId}")
   public ApiResponse<UserBehaviorResponse> updateUserBehavior(
       @PathVariable long userBehaviorId, @RequestBody @Valid UserBehaviorRequest request) {
-    log.info("Updating user behavior with ID: {}", userBehaviorId);
     return ApiResponse.<UserBehaviorResponse>builder()
         .result(userBehaviorService.updateUserBehavior(userBehaviorId, request))
         .build();
@@ -44,7 +42,6 @@ public class UserBehaviorController {
   // Xóa UserBehavior
   @DeleteMapping("/{userBehaviorId}")
   public ApiResponse<String> deleteUserBehavior(@PathVariable long userBehaviorId) {
-    log.info("Deleting user behavior with ID: {}", userBehaviorId);
     userBehaviorService.deleteUserBehavior(userBehaviorId);
     return ApiResponse.<String>builder().result("User behavior has been deleted").build();
   }
@@ -52,7 +49,6 @@ public class UserBehaviorController {
   // Lấy UserBehavior theo ID
   @GetMapping("/{userBehaviorId}")
   public ApiResponse<UserBehaviorResponse> getUserBehaviorById(@PathVariable long userBehaviorId) {
-    log.info("Fetching user behavior with ID: {}", userBehaviorId);
     return ApiResponse.<UserBehaviorResponse>builder()
         .result(userBehaviorService.getUserBehaviorById(userBehaviorId))
         .build();
@@ -62,7 +58,6 @@ public class UserBehaviorController {
   @GetMapping
   public ApiResponse<List<UserBehaviorResponse>> getAllUserBehaviors(
       @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int pageSize) {
-    log.info("Fetching all user behaviors, page: {}, pageSize: {}", page, pageSize);
     return ApiResponse.<List<UserBehaviorResponse>>builder()
         .result(userBehaviorService.getAllUserBehaviors(page, pageSize))
         .build();
@@ -74,8 +69,6 @@ public class UserBehaviorController {
       @PathVariable long userId,
       @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "10") int pageSize) {
-    log.info(
-        "Fetching user behaviors for userId: {}, page: {}, pageSize: {}", userId, page, pageSize);
     return ApiResponse.<List<UserBehaviorResponse>>builder()
         .result(userBehaviorService.getUserBehaviorsByUserId(userId, page, pageSize))
         .build();

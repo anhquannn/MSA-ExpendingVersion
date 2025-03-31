@@ -32,7 +32,7 @@ public class ReturnOrder {
   Date dateReturn;
   String status;
   String reason;
-  double refundamount;
+  double refundAmount;
 
   @ManyToOne
   @JoinColumn(name = "orderId", nullable = false)

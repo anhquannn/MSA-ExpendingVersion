@@ -2,6 +2,7 @@ package com.market.MSA.configurations;
 
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
+import com.market.MSA.models.Role;
 import com.market.MSA.models.User;
 import com.market.MSA.repositories.RoleRepository;
 import com.market.MSA.repositories.UserRepository;
@@ -26,6 +27,12 @@ public class ApplicationinitConfig {
   ApplicationRunner applicationRunner(
       UserRepository userRepository, RoleRepository roleRepository) {
     return args -> {
+      if (roleRepository.findByName("ADMIN").isEmpty()) {
+        roleRepository.save(Role.builder().name("ADMIN").build());
+      }
+      if (roleRepository.findByName("CUSTOMER").isEmpty()) {
+        roleRepository.save(Role.builder().name("CUSTOMER").build());
+      }
       var adminRole =
           roleRepository
               .findById((long) 1)

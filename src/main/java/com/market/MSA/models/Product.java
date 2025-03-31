@@ -57,7 +57,7 @@ public class Product {
   Category category;
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<CartItem> cartitems;
+  List<CartItem> cartItems;
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
   List<Feedback> feedbacks;

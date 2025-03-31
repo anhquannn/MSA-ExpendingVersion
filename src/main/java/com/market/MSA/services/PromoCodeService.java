@@ -17,7 +17,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,15 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class PromoCodeService {
   final PromoCodeRepository promoCodeRepository;
   final PromoCodeMapper promoCodeMapper;
-
-  @Transactional
-  @Scheduled(cron = "0 0 0 * * *")
-  //  @Scheduled(cron = "0/5 * * * * *")
-  public void updatePromoCodeStatus() {
-    Date currentDate = new Date();
-    promoCodeRepository.updateActivePromoCodes(currentDate);
-    promoCodeRepository.updateExpiredPromoCodes(currentDate);
-  }
 
   // Tạo PromoCode
   @Transactional

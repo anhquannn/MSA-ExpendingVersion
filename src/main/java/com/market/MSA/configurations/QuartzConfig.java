@@ -1,0 +1,148 @@
+package com.market.MSA.configurations;
+
+import com.market.MSA.jobs.TrendingProductJob;
+import com.market.MSA.jobs.UpdateExpiryTimeJob;
+import com.market.MSA.jobs.UpdatePromoCodeStatusJob;
+import javax.sql.DataSource;
+import lombok.extern.slf4j.Slf4j;
+import org.quartz.*;
+import org.quartz.impl.matchers.GroupMatcher;
+import org.quartz.spi.JobFactory;
+import org.quartz.spi.TriggerFiredBundle;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.quartz.SchedulerFactoryBean;
+import org.springframework.scheduling.quartz.SpringBeanJobFactory;
+
+@Configuration
+@Slf4j
+public class QuartzConfig {
+  private final DataSource dataSource;
+  private final AutowireCapableBeanFactory beanFactory;
+
+  public QuartzConfig(DataSource dataSource, AutowireCapableBeanFactory beanFactory) {
+    this.dataSource = dataSource;
+    this.beanFactory = beanFactory;
+  }
+
+  @Bean
+  public JobFactory jobFactory() {
+    return new SpringBeanJobFactory() {
+      @Override
+      protected Object createJobInstance(TriggerFiredBundle bundle) throws Exception {
+        Object job = super.createJobInstance(bundle);
+        beanFactory.autowireBean(job);
+        return job;
+      }
+    };
+  }
+
+  @Bean
+  public SchedulerFactoryBean schedulerFactoryBean() {
+    SchedulerFactoryBean scheduler = new SchedulerFactoryBean();
+    scheduler.setDataSource(dataSource);
+    scheduler.setJobFactory(jobFactory());
+    scheduler.setOverwriteExistingJobs(true);
+    scheduler.setStartupDelay(3);
+    scheduler.setAutoStartup(true);
+    return scheduler;
+  }
+
+  @Bean
+  public ApplicationRunner checkScheduler(SchedulerFactoryBean schedulerFactoryBean,
+                                          JobDetail updateExpiryTimeJobDetail,
+                                          Trigger updateExpiryTimeTrigger,
+                                          JobDetail updatePromoCodeStatusJobDetail,
+                                          Trigger updatePromoCodeStatusTrigger,
+                                          JobDetail createTrendingProductDataJobDetail,
+                                          Trigger createTrendingProductDataTrigger) {
+    return args -> {
+      Scheduler scheduler = schedulerFactoryBean.getScheduler();
+
+      // Đăng ký các job và trigger
+      scheduler.scheduleJob(updateExpiryTimeJobDetail, updateExpiryTimeTrigger);
+      scheduler.scheduleJob(updatePromoCodeStatusJobDetail, updatePromoCodeStatusTrigger);
+      scheduler.scheduleJob(createTrendingProductDataJobDetail, createTrendingProductDataTrigger);
+
+      // Khởi động scheduler (nếu chưa tự động chạy)
+      if (!scheduler.isStarted()) {
+        scheduler.start();
+      }
+
+      Thread.sleep(5000); // Chờ 5 giây để kiểm tra
+        log.info("\uD83D\uDE80 Quartz Scheduler Started: {}", scheduler.isStarted());
+
+      for (String groupName : scheduler.getJobGroupNames()) {
+        for (JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(groupName))) {
+            log.info("✅ Job found: {} in group: {}", jobKey.getName(), groupName);
+          for (Trigger trigger : scheduler.getTriggersOfJob(jobKey)) {
+              log.info("   ⏰ Trigger: {}, Next fire time: {}", trigger.getKey(), trigger.getNextFireTime());
+          }
+        }
+      }
+    };
+  }
+
+  @Bean
+  public JobDetail updateExpiryTimeJobDetail() {
+    return JobBuilder.newJob(UpdateExpiryTimeJob.class)
+            .withIdentity("updateExpiryTimeJob")
+            .storeDurably()
+            .build();
+  }
+
+  @Bean
+  public Trigger updateExpiryTimeTrigger() {
+    log.info("Configuring updateExpiryTimeTrigger");
+    return TriggerBuilder.newTrigger()
+            .forJob(updateExpiryTimeJobDetail())
+            .withIdentity("updateExpiryTimeTrigger")
+            .withSchedule(
+                    CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                            .withMisfireHandlingInstructionFireAndProceed())
+            .build();
+  }
+
+  @Bean
+  public JobDetail updatePromoCodeStatusJobDetail() {
+    return JobBuilder.newJob(UpdatePromoCodeStatusJob.class)
+            .withIdentity("updatePromoCodeStatusJob")
+            .storeDurably()
+            .build();
+  }
+
+  @Bean
+  public Trigger updatePromoCodeStatusTrigger() {
+    log.info("Configuring updatePromoCodeStatusTrigger");
+    return TriggerBuilder.newTrigger()
+            .forJob(updatePromoCodeStatusJobDetail())
+            .withIdentity("updatePromoCodeStatusTrigger")
+            .withSchedule(
+                    CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                            .withMisfireHandlingInstructionFireAndProceed())
+            .build();
+  }
+
+  @Bean
+  public JobDetail createTrendingProductDataJobDetail() {
+    return JobBuilder.newJob(TrendingProductJob.class)
+            .withIdentity("createTrendingProductDataJob")
+            .storeDurably()
+            .build();
+  }
+
+  @Bean
+  public Trigger createTrendingProductDataTrigger() {
+    log.info("Configuring createTrendingProductDataTrigger");
+    return TriggerBuilder.newTrigger()
+            .forJob(createTrendingProductDataJobDetail())
+            .withIdentity("createTrendingProductDataTrigger")
+            .withSchedule(
+                    CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                            .withMisfireHandlingInstructionFireAndProceed())
+            .build();
+  }
+}

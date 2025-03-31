@@ -32,13 +32,14 @@ public class User {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   long userId;
 
-  @Column(
-      name = "fullName",
-      unique = true,
-      columnDefinition = "varchar(255) collate utf8mb4_unicode_ci")
   String fullName;
 
+  @Column(
+      name = "email",
+      unique = true,
+      columnDefinition = "varchar(255) collate utf8mb4_unicode_ci")
   String email;
+
   String phoneNumber;
   String birthday;
   String password;

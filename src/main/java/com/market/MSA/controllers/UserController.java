@@ -36,8 +36,8 @@ public class UserController {
   AuthenticationService authenticationService;
 
   @PostMapping("/register")
-  ApiResponse<String> registerUser(@RequestBody @Valid UserRequest request) {
-    return ApiResponse.<String>builder().result(userService.registerUser(request)).build();
+  ApiResponse<UserResponse> registerUser(@RequestBody @Valid UserRequest request) {
+    return ApiResponse.<UserResponse>builder().result(userService.registerUser(request)).build();
   }
 
   @PostMapping("/login")

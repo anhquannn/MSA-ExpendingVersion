@@ -49,7 +49,7 @@ public class UserService {
   final PasswordEncoder passwordEncoder;
 
   @Transactional
-  public String registerUser(UserRequest request) {
+  public UserResponse registerUser(UserRequest request) {
     //      if (userRepository.findByEmail(request.getEmail()).isPresent()) {
     //      throw new AppException(ErrorCode.USER_EXISTED);
     //    }
@@ -61,7 +61,7 @@ public class UserService {
     user.setPassword(passwordEncoder.encode(request.getPassword()));
     user.setRoles(Set.of(customerRole));
     userRepository.save(user);
-    return request.getEmail();
+    return userMapper.toUserResponse(user);
   }
 
   public String login(String email, String password) throws MessagingException {

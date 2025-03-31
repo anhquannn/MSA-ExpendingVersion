@@ -26,17 +26,14 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.List;
 import java.util.StringJoiner;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -58,6 +55,10 @@ public class AuthenticationService {
   @NonFinal
   @Value("${jwt.valid-duration}")
   protected long VALID_DURATION;
+
+  @NonFinal
+  @Value("${jwt.refreshable-duration}")
+  protected long REFRESHABLE_DURATION;
 
   public AuthenticationResponse authenticate(AuthenticationRequest request) {
     var user =
@@ -133,21 +134,6 @@ public class AuthenticationService {
   }
 
   @Transactional
-  @Scheduled(cron = "0 0 0 * * *")
-  public void updateExpiryTime() {
-    Date currentDate = new Date();
-    List<InvalidatedToken> invalidatedTokens = invalidatedTokenRepository.findAll();
-    for (InvalidatedToken invalidatedToken : invalidatedTokens) {
-      long diffInMillies = currentDate.getTime() - invalidatedToken.getExpiryTime().getTime();
-      long diffInDays = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-
-      if (diffInDays > 3) {
-        invalidatedTokenRepository.delete(invalidatedToken);
-      }
-    }
-  }
-
-  @Transactional
   public AuthenticationResponse refreshToken(RefreshRequest request)
       throws JOSEException, ParseException {
     var signedJWT = verifyToken(request.getToken(), true);
@@ -198,7 +184,7 @@ public class AuthenticationService {
                     .getJWTClaimsSet()
                     .getIssueTime()
                     .toInstant()
-                    .plus(VALID_DURATION, ChronoUnit.SECONDS)
+                    .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
                     .toEpochMilli())
             : signedJWT.getJWTClaimsSet().getExpirationTime();
 

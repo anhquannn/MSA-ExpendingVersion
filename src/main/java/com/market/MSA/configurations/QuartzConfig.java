@@ -6,10 +6,8 @@ import com.market.MSA.jobs.UpdatePromoCodeStatusJob;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
-import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
@@ -73,16 +71,6 @@ public class QuartzConfig {
       }
 
       Thread.sleep(5000); // Chờ 5 giây để kiểm tra
-        log.info("\uD83D\uDE80 Quartz Scheduler Started: {}", scheduler.isStarted());
-
-      for (String groupName : scheduler.getJobGroupNames()) {
-        for (JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(groupName))) {
-            log.info("✅ Job found: {} in group: {}", jobKey.getName(), groupName);
-          for (Trigger trigger : scheduler.getTriggersOfJob(jobKey)) {
-              log.info("   ⏰ Trigger: {}, Next fire time: {}", trigger.getKey(), trigger.getNextFireTime());
-          }
-        }
-      }
     };
   }
 
@@ -96,7 +84,6 @@ public class QuartzConfig {
 
   @Bean
   public Trigger updateExpiryTimeTrigger() {
-    log.info("Configuring updateExpiryTimeTrigger");
     return TriggerBuilder.newTrigger()
             .forJob(updateExpiryTimeJobDetail())
             .withIdentity("updateExpiryTimeTrigger")
@@ -116,7 +103,6 @@ public class QuartzConfig {
 
   @Bean
   public Trigger updatePromoCodeStatusTrigger() {
-    log.info("Configuring updatePromoCodeStatusTrigger");
     return TriggerBuilder.newTrigger()
             .forJob(updatePromoCodeStatusJobDetail())
             .withIdentity("updatePromoCodeStatusTrigger")
@@ -136,7 +122,6 @@ public class QuartzConfig {
 
   @Bean
   public Trigger createTrendingProductDataTrigger() {
-    log.info("Configuring createTrendingProductDataTrigger");
     return TriggerBuilder.newTrigger()
             .forJob(createTrendingProductDataJobDetail())
             .withIdentity("createTrendingProductDataTrigger")

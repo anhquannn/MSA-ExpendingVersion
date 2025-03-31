@@ -3,7 +3,6 @@ package com.market.MSA.jobs;
 import com.market.MSA.models.InvalidatedToken;
 import com.market.MSA.repositories.InvalidatedTokenRepository;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +25,6 @@ public class UpdateExpiryTimeJob implements Job {
   @Override
   @Transactional
   public void execute(JobExecutionContext context) {
-    log.info("Running UpdateExpiryTimeJob at {}", LocalDateTime.now());
     Date currentDate = new Date();
     List<InvalidatedToken> invalidatedTokens = invalidatedTokenRepository.findAll();
     for (InvalidatedToken invalidatedToken : invalidatedTokens) {

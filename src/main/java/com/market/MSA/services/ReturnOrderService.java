@@ -59,10 +59,10 @@ public class ReturnOrderService {
     List<OrderDetail> orderDetails = orderDetailRepository.findByOrder_OrderId(order.getOrderId());
 
     // Khôi phục số lượng sản phẩm trong kho
-    for (OrderDetail orderDetail : orderDetails) {
-      productService.restoreStock(
-          orderDetail.getProduct().getProductId(), orderDetail.getQuantity());
-    }
+    //    for (OrderDetail orderDetail : orderDetails) {
+    //      productService.restoreStock(
+    //          orderDetail.getProduct().getProductId(), orderDetail.getQuantity());
+    //    }
 
     return returnOrderMapper.toReturnOrderResponse(returnOrder);
   }
@@ -79,11 +79,12 @@ public class ReturnOrderService {
   }
 
   @Transactional
-  public void deleteReturnOrder(Long id) {
+  public boolean deleteReturnOrder(Long id) {
     if (!returnOrderRepository.existsById(id)) {
       throw new AppException(ErrorCode.RETURN_ORDER_NOT_FOUND);
     }
     returnOrderRepository.deleteById(id);
+    return true;
   }
 
   @Transactional(readOnly = true)

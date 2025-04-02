@@ -31,10 +31,10 @@ public class RoleController {
   }
 
   @DeleteMapping("/{roleId}")
-  ApiResponse<Void> delete(@PathVariable long roleId) {
-    roleService.delete(roleId);
+  ApiResponse<Boolean> delete(@PathVariable long roleId) {
+    Boolean result = roleService.delete(roleId);
 
-    return ApiResponse.<Void>builder().build();
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   @PutMapping("/{id}")

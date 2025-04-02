@@ -26,11 +26,16 @@ public class UserResponse {
 
   Set<RoleResponse> roles;
 
+  BranchResponse branch;
+
   public static UserResponse fromUser(User user) {
     return UserResponse.builder()
         .userId(user.getUserId())
         .email(user.getEmail())
         .fullName(user.getFullName())
+        .phoneNumber(user.getPhoneNumber())
+        .birthday(user.getBirthday())
+        .address(user.getAddress())
         .googleId(user.getGoogleId())
         .build();
   }

@@ -53,8 +53,12 @@ public class CartService {
     throw new AppException(ErrorCode.CART_NOT_FOUND);
   }
 
-  public void deleteCart(Long cartId) {
+  public boolean deleteCart(Long cartId) {
+    if (!cartRepository.existsById(cartId)) {
+      throw new AppException(ErrorCode.CART_NOT_FOUND);
+    }
     cartRepository.deleteById(cartId);
+    return true;
   }
 
   public CartResponse getCartById(Long cartId) {

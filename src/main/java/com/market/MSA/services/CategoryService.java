@@ -58,16 +58,19 @@ public class CategoryService {
               ErrorCode.PARENT_CATEGORY_NOT_FOUND));
     }
 
-    category = categoryRepository.save(category);
-    return categoryMapper.toCategoryResponse(category);
+    categoryMapper.updateCategoryFromRequest(request, category);
+
+    Category categoryUpdate = categoryRepository.save(category);
+    return categoryMapper.toCategoryResponse(categoryUpdate);
   }
 
   @Transactional
-  public void deleteCategory(Long categoryId) {
+  public boolean deleteCategory(Long categoryId) {
     if (!categoryRepository.existsById(categoryId)) {
       throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
     }
     categoryRepository.deleteById(categoryId);
+    return true;
   }
 
   public CategoryResponse getCategoryById(Long categoryId) {

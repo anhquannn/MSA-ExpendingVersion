@@ -111,9 +111,9 @@ public class UserController {
   }
 
   @DeleteMapping("/{userId}")
-  ApiResponse<String> deleteUser(@PathVariable long userId) {
-    userService.deleteUser(userId);
-    return ApiResponse.<String>builder().result("User has been deleted").build();
+  ApiResponse<Boolean> deleteUser(@PathVariable long userId) {
+    Boolean result = userService.deleteUser(userId);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   @PutMapping("/{userId}")

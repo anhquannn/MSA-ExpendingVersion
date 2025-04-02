@@ -53,8 +53,12 @@ public class PromoCodeService {
 
   // Xóa PromoCode
   @Transactional
-  public void deletePromoCode(Long id) {
+  public boolean deletePromoCode(Long id) {
+    if (!promoCodeRepository.existsById(id)) {
+      throw new AppException(ErrorCode.PROMO_CODE_NOT_FOUND);
+    }
     promoCodeRepository.deleteById(id);
+    return true;
   }
 
   // Lấy PromoCode theo ID

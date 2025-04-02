@@ -50,7 +50,11 @@ public class PermissionService {
   }
 
   @Transactional
-  public void delete(long id) {
+  public boolean delete(long id) {
+    if (!permissionRepository.existsById(id)) {
+      throw new AppException(ErrorCode.PERMISSION_NOT_FOUND);
+    }
     permissionRepository.deleteById(id);
+    return true;
   }
 }

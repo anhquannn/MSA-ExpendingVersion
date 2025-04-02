@@ -21,4 +21,6 @@ public class UserRequest {
   String password;
   String address;
   String googleId;
+
+  long branchId;
 }

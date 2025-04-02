@@ -41,9 +41,9 @@ public class PaymentController {
   }
 
   @DeleteMapping("/{id}")
-  ApiResponse<String> deletePayment(@PathVariable Long id) {
-    paymentService.deletePayment(id);
-    return ApiResponse.<String>builder().result("Payment deleted successfully").build();
+  ApiResponse<Boolean> deletePayment(@PathVariable Long id) {
+    Boolean result = paymentService.deletePayment(id);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   @GetMapping("/{id}")

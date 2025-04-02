@@ -31,11 +31,27 @@ public class Branch {
 
   String name;
   String address;
+  String city;
+  String state;
+  String zip;
+  String country;
+  String email;
   String contact;
 
   @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Product> products;
+  List<User> users;
 
   @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
   List<Order> orders;
+
+  @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<Inventory> inventories;
+
+  // Danh sách yêu cầu điều hàng mà chi nhánh này là chi nhánh gửi (From_Branch)
+  @OneToMany(mappedBy = "fromBranch", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<StockTransfer> stockTransfersFrom;
+
+  // Danh sách yêu cầu điều hàng mà chi nhánh này là chi nhánh nhận (To_Branch)
+  @OneToMany(mappedBy = "toBranch", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<StockTransfer> stockTransfersTo;
 }

@@ -22,7 +22,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "orderdetails")
+@Table(name = "orderDetails")
 public class OrderDetail {
 
   @Id

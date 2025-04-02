@@ -1,14 +1,6 @@
 package com.market.MSA.models;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.util.List;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -48,6 +40,10 @@ public class User {
 
   @ManyToMany Set<Role> roles;
 
+  @ManyToOne
+  @JoinColumn(name = "branchId", nullable = false)
+  Branch branch;
+
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   List<Feedback> feedbacks;
 
@@ -59,4 +55,15 @@ public class User {
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   List<Order> orders;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<UserBehavior> userBehaviors;
+
+  // Danh sách yêu cầu điều hàng mà user này tạo
+  @OneToMany(mappedBy = "userRequest", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<StockTransfer> stockTransferRequests;
+
+  // Danh sách yêu cầu điều hàng mà user này xác nhận
+  @OneToMany(mappedBy = "userResponse", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<StockTransfer> stockTransferResponses;
 }

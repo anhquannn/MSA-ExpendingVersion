@@ -20,4 +20,5 @@ public class OrderDetailResponse {
   double totalPrice;
 
   ProductResponse product;
+  OrderResponse order;
 }

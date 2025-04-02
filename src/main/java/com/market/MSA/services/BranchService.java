@@ -44,10 +44,11 @@ public class BranchService {
   }
 
   // Delete Branch
-  public void deleteBranch(Long branchId) {
+  public boolean deleteBranch(Long branchId) {
     Optional<Branch> optionalBranch = branchRepository.findById(branchId);
     if (optionalBranch.isPresent()) {
       branchRepository.deleteById(branchId);
+      return true;
     } else {
       throw new AppException(ErrorCode.BRANCH_NOT_FOUND);
     }

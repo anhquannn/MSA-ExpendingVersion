@@ -24,6 +24,7 @@ import com.market.MSA.responses.OrderResponse;
 import com.market.MSA.responses.PromoCodeResponse;
 import jakarta.mail.MessagingException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -77,11 +78,14 @@ public class OrderService {
             .findById(branchId)
             .orElseThrow(() -> new AppException(ErrorCode.BRANCH_NOT_FOUND));
 
+    Date orderDate = new Date();
+
     // Tạo đơn hàng mới
     Order order =
         Order.builder()
             .user(user)
             .cart(cart)
+            .orderDate(orderDate)
             .branch(branch)
             .grandTotal(grandTotal)
             .status(OrderStatus.ORDER_STATUS_1.getStatus())
@@ -122,7 +126,7 @@ public class OrderService {
       orderDetailRepository.save(orderDetail);
 
       // Cập nhật số lượng tồn kho sản phẩm
-      productService.updateStockNumber(product.getProductId(), cartItem.getQuantity());
+      // productService.updateStockNumber(product.getProductId(), cartItem.getQuantity());
     }
 
     // Xóa giỏ hàng sau khi đặt hàng
@@ -180,11 +184,12 @@ public class OrderService {
     throw new AppException(ErrorCode.ORDER_NOT_FOUND);
   }
 
-  public void deleteOrder(Long orderId) {
+  public boolean deleteOrder(Long orderId) {
     if (!orderRepository.existsById(orderId)) {
       throw new AppException(ErrorCode.ORDER_NOT_FOUND);
     }
     orderRepository.deleteById(orderId);
+    return true;
   }
 
   @Transactional

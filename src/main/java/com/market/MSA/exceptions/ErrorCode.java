@@ -49,6 +49,10 @@ public enum ErrorCode {
   WRONG_PROMO_CODE(134, "Wrong promo code!", HttpStatus.BAD_REQUEST),
   CANNOT_SEND_EMAIL(135, "Can not send email!", HttpStatus.BAD_REQUEST),
   PERMISSION_NOT_FOUND(136, "Permission not found!", HttpStatus.NOT_FOUND),
+
+  INVENTORY_NOT_FOUND(137, "Inventory not found!", HttpStatus.NOT_FOUND),
+  INVENTORY_PRODUCT_NOT_FOUND(138, "InventoryProduct not found!", HttpStatus.NOT_FOUND),
+  STOCK_TRANSFER_NOT_FOUND(139, "Stock transfer not found!", HttpStatus.NOT_FOUND),
   ;
 
   private final int code;

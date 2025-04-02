@@ -6,8 +6,10 @@ import com.market.MSA.responses.CartItemResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "spring")
+@Component
 public interface CartItemMapper {
   CartItem toCartItem(CartItemRequest request);
 

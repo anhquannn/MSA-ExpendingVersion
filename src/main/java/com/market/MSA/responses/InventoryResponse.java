@@ -1,0 +1,25 @@
+package com.market.MSA.responses;
+
+import java.util.List;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class InventoryResponse {
+  long inventoryId;
+
+  String name;
+  String address;
+  String contact;
+  int stockNumber;
+  String stockLevel;
+  long totalRevenue;
+
+  BranchResponse branch;
+  List<ProductResponse> products;
+  List<InventoryProductResponse> inventoryProductResponses;
+}

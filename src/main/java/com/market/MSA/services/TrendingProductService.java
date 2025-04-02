@@ -49,11 +49,12 @@ public class TrendingProductService {
 
   // Xóa TrendingProduct
   @Transactional
-  public void deleteTrendingProduct(Long id) {
+  public boolean deleteTrendingProduct(Long id) {
     if (!trendingProductRepository.existsById(id)) {
       throw new AppException(ErrorCode.TRENDING_PRODUCT_NOT_FOUND);
     }
     trendingProductRepository.deleteById(id);
+    return true;
   }
 
   // Lấy TrendingProduct theo ID

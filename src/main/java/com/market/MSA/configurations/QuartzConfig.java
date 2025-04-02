@@ -50,13 +50,14 @@ public class QuartzConfig {
   }
 
   @Bean
-  public ApplicationRunner checkScheduler(SchedulerFactoryBean schedulerFactoryBean,
-                                          JobDetail updateExpiryTimeJobDetail,
-                                          Trigger updateExpiryTimeTrigger,
-                                          JobDetail updatePromoCodeStatusJobDetail,
-                                          Trigger updatePromoCodeStatusTrigger,
-                                          JobDetail createTrendingProductDataJobDetail,
-                                          Trigger createTrendingProductDataTrigger) {
+  public ApplicationRunner checkScheduler(
+      SchedulerFactoryBean schedulerFactoryBean,
+      JobDetail updateExpiryTimeJobDetail,
+      Trigger updateExpiryTimeTrigger,
+      JobDetail updatePromoCodeStatusJobDetail,
+      Trigger updatePromoCodeStatusTrigger,
+      JobDetail createTrendingProductDataJobDetail,
+      Trigger createTrendingProductDataTrigger) {
     return args -> {
       Scheduler scheduler = schedulerFactoryBean.getScheduler();
 
@@ -77,57 +78,57 @@ public class QuartzConfig {
   @Bean
   public JobDetail updateExpiryTimeJobDetail() {
     return JobBuilder.newJob(UpdateExpiryTimeJob.class)
-            .withIdentity("updateExpiryTimeJob")
-            .storeDurably()
-            .build();
+        .withIdentity("updateExpiryTimeJob")
+        .storeDurably()
+        .build();
   }
 
   @Bean
   public Trigger updateExpiryTimeTrigger() {
     return TriggerBuilder.newTrigger()
-            .forJob(updateExpiryTimeJobDetail())
-            .withIdentity("updateExpiryTimeTrigger")
-            .withSchedule(
-                    CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
-                            .withMisfireHandlingInstructionFireAndProceed())
-            .build();
+        .forJob(updateExpiryTimeJobDetail())
+        .withIdentity("updateExpiryTimeTrigger")
+        .withSchedule(
+            CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                .withMisfireHandlingInstructionFireAndProceed())
+        .build();
   }
 
   @Bean
   public JobDetail updatePromoCodeStatusJobDetail() {
     return JobBuilder.newJob(UpdatePromoCodeStatusJob.class)
-            .withIdentity("updatePromoCodeStatusJob")
-            .storeDurably()
-            .build();
+        .withIdentity("updatePromoCodeStatusJob")
+        .storeDurably()
+        .build();
   }
 
   @Bean
   public Trigger updatePromoCodeStatusTrigger() {
     return TriggerBuilder.newTrigger()
-            .forJob(updatePromoCodeStatusJobDetail())
-            .withIdentity("updatePromoCodeStatusTrigger")
-            .withSchedule(
-                    CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
-                            .withMisfireHandlingInstructionFireAndProceed())
-            .build();
+        .forJob(updatePromoCodeStatusJobDetail())
+        .withIdentity("updatePromoCodeStatusTrigger")
+        .withSchedule(
+            CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                .withMisfireHandlingInstructionFireAndProceed())
+        .build();
   }
 
   @Bean
   public JobDetail createTrendingProductDataJobDetail() {
     return JobBuilder.newJob(TrendingProductJob.class)
-            .withIdentity("createTrendingProductDataJob")
-            .storeDurably()
-            .build();
+        .withIdentity("createTrendingProductDataJob")
+        .storeDurably()
+        .build();
   }
 
   @Bean
   public Trigger createTrendingProductDataTrigger() {
     return TriggerBuilder.newTrigger()
-            .forJob(createTrendingProductDataJobDetail())
-            .withIdentity("createTrendingProductDataTrigger")
-            .withSchedule(
-                    CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
-                            .withMisfireHandlingInstructionFireAndProceed())
-            .build();
+        .forJob(createTrendingProductDataJobDetail())
+        .withIdentity("createTrendingProductDataTrigger")
+        .withSchedule(
+            CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                .withMisfireHandlingInstructionFireAndProceed())
+        .build();
   }
 }

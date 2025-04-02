@@ -38,9 +38,9 @@ public class CartController {
   }
 
   @DeleteMapping("/{cartId}")
-  ApiResponse<String> deleteCart(@PathVariable Long cartId) {
-    cartService.deleteCart(cartId);
-    return ApiResponse.<String>builder().result("Cart deleted successfully").build();
+  ApiResponse<Boolean> deleteCart(@PathVariable Long cartId) {
+    Boolean result = cartService.deleteCart(cartId);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   @GetMapping("/{cartId}")

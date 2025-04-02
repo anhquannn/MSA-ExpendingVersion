@@ -59,11 +59,11 @@ public class DeliveryInfoService {
 
   // Delete DeliveryInfo
   @Transactional
-  public void deleteDeliveryInfo(long deliveryInfoId) {
+  public boolean deleteDeliveryInfo(long deliveryInfoId) {
     Optional<DeliveryInfo> deliveryInfoOpt = deliveryInfoRepository.findById(deliveryInfoId);
     if (deliveryInfoOpt.isPresent()) {
       deliveryInfoRepository.delete(deliveryInfoOpt.get());
-      return;
+      return true;
     }
     throw new AppException(ErrorCode.DELIVERY_INFO_NOT_FOUND); // Or throw an exception if not found
   }

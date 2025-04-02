@@ -40,9 +40,9 @@ public class BranchController {
 
   // Delete Branch
   @DeleteMapping("/{branchId}")
-  public ApiResponse<Void> deleteBranch(@PathVariable Long branchId) {
-    branchService.deleteBranch(branchId);
-    return ApiResponse.<Void>builder().result(null).build();
+  public ApiResponse<Boolean> deleteBranch(@PathVariable Long branchId) {
+    boolean result = branchService.deleteBranch(branchId);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   // Get Branch by ID

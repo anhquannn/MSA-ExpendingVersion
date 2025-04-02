@@ -22,11 +22,8 @@ public class ProductRequest {
   String specification;
   String description;
   Date expiry;
-  int stockNumber;
-  String stockLevel;
-  int sales;
+  long totalRevenue;
 
   long manufactureId;
-  long branchId;
   long categoryId;
 }

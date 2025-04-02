@@ -15,5 +15,10 @@ import lombok.experimental.FieldDefaults;
 public class BranchRequest {
   String name;
   String address;
+  String city;
+  String state;
+  String zip;
+  String country;
+  String email;
   String contact;
 }

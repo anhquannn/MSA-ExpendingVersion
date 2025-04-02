@@ -58,9 +58,9 @@ public class CartItemController {
   }
 
   @DeleteMapping("/{cartItemId}")
-  ApiResponse<String> deleteCartItem(@PathVariable Long cartItemId) {
-    cartItemService.deleteCartItem(cartItemId);
-    return ApiResponse.<String>builder().result("Cart item deleted").build();
+  ApiResponse<Boolean> deleteCartItem(@PathVariable Long cartItemId) {
+    Boolean result = cartItemService.deleteCartItem(cartItemId);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   @DeleteMapping("/clear/{cartId}")

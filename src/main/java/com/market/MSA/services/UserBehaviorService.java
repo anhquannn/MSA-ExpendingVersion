@@ -50,11 +50,12 @@ public class UserBehaviorService {
 
   // Xóa UserBehavior
   @Transactional
-  public void deleteUserBehavior(Long id) {
+  public boolean deleteUserBehavior(Long id) {
     if (!userBehaviorRepository.existsById(id)) {
       throw new AppException(ErrorCode.USER_BEHAVIOR_NOT_FOUND);
     }
     userBehaviorRepository.deleteById(id);
+    return true;
   }
 
   // Lấy UserBehavior theo ID

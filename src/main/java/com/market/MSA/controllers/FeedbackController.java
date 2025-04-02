@@ -39,9 +39,9 @@ public class FeedbackController {
   }
 
   @DeleteMapping("/{id}")
-  public ApiResponse<Void> deleteFeedback(@PathVariable Long id) {
-    feedbackService.deleteFeedback(id);
-    return ApiResponse.<Void>builder().result(null).build();
+  public ApiResponse<Boolean> deleteFeedback(@PathVariable Long id) {
+    Boolean result = feedbackService.deleteFeedback(id);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   @GetMapping("/{id}")

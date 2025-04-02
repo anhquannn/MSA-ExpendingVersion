@@ -1,6 +1,7 @@
 package com.market.MSA.responses;
 
 import java.util.Date;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,11 +25,10 @@ public class ProductResponse {
   String specification;
   String description;
   Date expiry;
-  int stockNumber;
-  String stockLevel;
-  int sales;
+  int totalRevenue;
 
   ManufacturerResponse manufacturer;
-  BranchResponse branch;
   CategoryResponse category;
+  List<InventoryProductResponse> inventoryProductResponses;
+  List<OrderDetailResponse> orderDetails;
 }

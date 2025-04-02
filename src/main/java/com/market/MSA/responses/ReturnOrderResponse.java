@@ -19,7 +19,7 @@ public class ReturnOrderResponse {
   Date dateReturn;
   String status;
   String reason;
-  double refundamount;
+  double refundAmount;
 
   long orderId;
 }

@@ -51,9 +51,9 @@ public class OrderController {
   }
 
   @DeleteMapping("/{orderId}")
-  public ApiResponse<String> deleteOrder(@PathVariable Long orderId) {
-    orderService.deleteOrder(orderId);
-    return ApiResponse.<String>builder().result("Order has been deleted successfully.").build();
+  public ApiResponse<Boolean> deleteOrder(@PathVariable Long orderId) {
+    Boolean result = orderService.deleteOrder(orderId);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   @GetMapping("/{orderId}")

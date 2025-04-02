@@ -17,5 +17,10 @@ public class BranchResponse {
 
   String name;
   String address;
+  String city;
+  String state;
+  String zip;
+  String country;
+  String email;
   String contact;
 }

@@ -248,8 +248,12 @@ public class UserService {
   }
 
   @Transactional
-  public void deleteUser(long userId) {
+  public boolean deleteUser(long userId) {
+    if (!userRepository.existsById(userId)) {
+      throw new AppException(ErrorCode.USER_NOT_EXISTED);
+    }
     userRepository.deleteById(userId);
+    return true;
   }
 
   static String generateRandomPassword() {

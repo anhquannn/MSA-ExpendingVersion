@@ -68,11 +68,11 @@ public class FeedbackService {
 
   // Delete Feedback
   @Transactional
-  public void deleteFeedback(long feedbackId) {
+  public boolean deleteFeedback(long feedbackId) {
     Optional<Feedback> feedbackOpt = feedbackRepository.findById(feedbackId);
     if (feedbackOpt.isPresent()) {
       feedbackRepository.delete(feedbackOpt.get());
-      return;
+      return true;
     }
 
     throw new AppException(ErrorCode.FEEDBACK_NOT_FOUND); // Or throw an exception if not found

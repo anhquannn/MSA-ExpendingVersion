@@ -4,7 +4,6 @@ import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.ProductMapper;
 import com.market.MSA.models.Product;
-import com.market.MSA.repositories.BranchRepository;
 import com.market.MSA.repositories.CategoryRepository;
 import com.market.MSA.repositories.ManufacturerRepository;
 import com.market.MSA.repositories.ProductRepository;
@@ -29,7 +28,6 @@ public class ProductService {
   final EntityFinderService entityFinderService;
 
   final ProductRepository productRepository;
-  final BranchRepository branchRepository;
   final ManufacturerRepository manufacturerRepository;
   final CategoryRepository categoryRepository;
 
@@ -39,10 +37,6 @@ public class ProductService {
   @Transactional
   public ProductResponse createProduct(ProductRequest request) {
     Product product = productMapper.toProduct(request);
-
-    product.setBranch(
-        entityFinderService.findByIdOrThrow(
-            branchRepository, request.getBranchId(), ErrorCode.BRANCH_NOT_FOUND));
     product.setManufacturer(
         entityFinderService.findByIdOrThrow(
             manufacturerRepository, request.getManufactureId(), ErrorCode.MANUFACTURER_NOT_FOUND));
@@ -61,10 +55,6 @@ public class ProductService {
         productRepository
             .findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
-
-    product.setBranch(
-        entityFinderService.findByIdOrThrow(
-            branchRepository, request.getBranchId(), ErrorCode.BRANCH_NOT_FOUND));
     product.setManufacturer(
         entityFinderService.findByIdOrThrow(
             manufacturerRepository, request.getManufactureId(), ErrorCode.MANUFACTURER_NOT_FOUND));
@@ -79,11 +69,12 @@ public class ProductService {
 
   // Xóa sản phẩm
   @Transactional
-  public void deleteProduct(Long id) {
+  public boolean deleteProduct(Long id) {
     if (!productRepository.existsById(id)) {
       throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
     }
     productRepository.deleteById(id);
+    return true;
   }
 
   // Lấy sản phẩm theo ID
@@ -108,40 +99,6 @@ public class ProductService {
         .limit(pageSize)
         .map(productMapper::toProductResponse)
         .collect(Collectors.toList());
-  }
-
-  // Cập nhật số lượng tồn kho
-  @Transactional
-  public void updateStockNumber(Long productId, int quantity) {
-    Product product =
-        productRepository
-            .findById(productId)
-            .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
-
-    if (product.getStockNumber() < quantity) {
-      throw new RuntimeException("Insufficient stock");
-    }
-
-    product.setStockNumber(product.getStockNumber() - quantity);
-    product.setSales(product.getSales() + quantity);
-
-    updateStockLevel(product);
-    productRepository.save(product);
-  }
-
-  // Khôi phục số lượng tồn kho
-  @Transactional
-  public void restoreStock(Long productId, int quantity) {
-    Product product =
-        productRepository
-            .findById(productId)
-            .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
-
-    product.setStockNumber(product.getStockNumber() + quantity);
-    product.setSales(product.getSales() - quantity);
-
-    updateStockLevel(product);
-    productRepository.save(product);
   }
 
   // Tìm kiếm sản phẩm theo tên
@@ -172,21 +129,11 @@ public class ProductService {
                     || categoryId == 0
                     || p.getCategory().getCategoryId() == categoryId))
         .sorted(
-            (p1, p2) -> Integer.compare(p2.getSales(), p1.getSales())) // Sắp xếp theo số lượng bán
+            (p1, p2) ->
+                Long.compare(p2.getTotalRevenue(), p1.getTotalRevenue())) // Sắp xếp theo số lượng
         .skip((long) (page - 1) * pageSize)
         .limit(pageSize)
         .map(productMapper::toProductResponse)
         .collect(Collectors.toList());
-  }
-
-  // Cập nhật mức tồn kho
-  private void updateStockLevel(Product product) {
-    if (product.getStockNumber() > 300) {
-      product.setStockLevel("high");
-    } else if (product.getStockNumber() > 50) {
-      product.setStockLevel("medium");
-    } else {
-      product.setStockLevel("low");
-    }
   }
 }

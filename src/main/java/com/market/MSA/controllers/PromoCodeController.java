@@ -46,9 +46,9 @@ public class PromoCodeController {
 
   // Xóa PromoCode
   @DeleteMapping("/{promoCodeId}")
-  public ApiResponse<String> deletePromoCode(@PathVariable long promoCodeId) {
-    promoCodeService.deletePromoCode(promoCodeId);
-    return ApiResponse.<String>builder().result("PromoCode has been deleted").build();
+  public ApiResponse<Boolean> deletePromoCode(@PathVariable long promoCodeId) {
+    Boolean result = promoCodeService.deletePromoCode(promoCodeId);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   // Lấy PromoCode theo ID

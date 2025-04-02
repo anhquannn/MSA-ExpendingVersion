@@ -6,8 +6,10 @@ import com.market.MSA.responses.RoleResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "spring")
+@Component
 public interface RoleMapper {
   @Mapping(target = "permissions", ignore = true)
   Role toRole(RoleRequest request);

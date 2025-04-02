@@ -68,8 +68,12 @@ public class CartItemService {
     cartItemRepository.updateCartItemsStatus(cartItemIds, status);
   }
 
-  public void deleteCartItem(Long cartItemId) {
+  public boolean deleteCartItem(Long cartItemId) {
+    if (!cartItemRepository.existsById(cartItemId)) {
+      throw new AppException(ErrorCode.CART_ITEM_NOT_FOUND);
+    }
     cartItemRepository.deleteById(cartItemId);
+    return true;
   }
 
   public void clearCart(Long cartId) {

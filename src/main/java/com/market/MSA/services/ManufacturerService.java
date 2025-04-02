@@ -45,11 +45,12 @@ public class ManufacturerService {
   }
 
   @Transactional
-  public void deleteManufacturer(Long manufacturerId) {
+  public boolean deleteManufacturer(Long manufacturerId) {
     if (!manufacturerRepository.existsById(manufacturerId)) {
       throw new IllegalArgumentException("Manufacturer not found");
     }
     manufacturerRepository.deleteById(manufacturerId);
+    return true;
   }
 
   public ManufacturerResponse getManufacturerById(Long manufacturerId) {

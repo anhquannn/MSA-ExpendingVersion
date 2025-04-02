@@ -42,10 +42,9 @@ public class TrendingProductController {
 
   // Xóa TrendingProduct
   @DeleteMapping("/{trendingProductId}")
-  public ApiResponse<String> deleteTrendingProduct(@PathVariable long trendingProductId) {
-    log.info("Deleting trending product with ID: {}", trendingProductId);
-    trendingProductService.deleteTrendingProduct(trendingProductId);
-    return ApiResponse.<String>builder().result("Trending product has been deleted").build();
+  public ApiResponse<Boolean> deleteTrendingProduct(@PathVariable long trendingProductId) {
+    Boolean result = trendingProductService.deleteTrendingProduct(trendingProductId);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   // Lấy TrendingProduct theo ID

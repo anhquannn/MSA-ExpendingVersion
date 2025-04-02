@@ -41,9 +41,9 @@ public class ReturnOrderController {
   }
 
   @DeleteMapping("/{id}")
-  public ApiResponse<String> deleteReturnOrder(@PathVariable Long id) {
-    returnOrderService.deleteReturnOrder(id);
-    return ApiResponse.<String>builder().result("Success").build();
+  public ApiResponse<Boolean> deleteReturnOrder(@PathVariable Long id) {
+    Boolean result = returnOrderService.deleteReturnOrder(id);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   @GetMapping("/{id}")

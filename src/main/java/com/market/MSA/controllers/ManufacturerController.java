@@ -42,9 +42,9 @@ public class ManufacturerController {
   }
 
   @DeleteMapping("/{id}")
-  public ApiResponse<String> deleteManufacturer(@PathVariable Long id) {
-    manufacturerService.deleteManufacturer(id);
-    return ApiResponse.<String>builder().result("Manufacturer has been deleted").build();
+  public ApiResponse<Boolean> deleteManufacturer(@PathVariable Long id) {
+    Boolean result = manufacturerService.deleteManufacturer(id);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   @GetMapping("/{id}")

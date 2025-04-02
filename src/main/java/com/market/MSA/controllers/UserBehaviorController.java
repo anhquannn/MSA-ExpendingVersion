@@ -41,9 +41,9 @@ public class UserBehaviorController {
 
   // Xóa UserBehavior
   @DeleteMapping("/{userBehaviorId}")
-  public ApiResponse<String> deleteUserBehavior(@PathVariable long userBehaviorId) {
-    userBehaviorService.deleteUserBehavior(userBehaviorId);
-    return ApiResponse.<String>builder().result("User behavior has been deleted").build();
+  public ApiResponse<Boolean> deleteUserBehavior(@PathVariable long userBehaviorId) {
+    Boolean result = userBehaviorService.deleteUserBehavior(userBehaviorId);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   // Lấy UserBehavior theo ID

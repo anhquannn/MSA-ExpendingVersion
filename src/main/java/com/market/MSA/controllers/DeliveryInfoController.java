@@ -39,9 +39,9 @@ public class DeliveryInfoController {
   }
 
   @DeleteMapping("/{id}")
-  public ApiResponse<Void> deleteDeliveryInfo(@PathVariable Long id) {
-    deliveryInfoService.deleteDeliveryInfo(id);
-    return ApiResponse.<Void>builder().result(null).build();
+  public ApiResponse<Boolean> deleteDeliveryInfo(@PathVariable Long id) {
+    Boolean result = deliveryInfoService.deleteDeliveryInfo(id);
+    return ApiResponse.<Boolean>builder().result(result).build();
   }
 
   @GetMapping("/{id}")

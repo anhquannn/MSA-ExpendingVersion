@@ -53,7 +53,11 @@ public class RoleService {
   }
 
   @Transactional
-  public void delete(long id) {
+  public boolean delete(long id) {
+    if (!roleRepository.existsById(id)) {
+      throw new AppException(ErrorCode.ROLE_NOT_FOUND);
+    }
     roleRepository.deleteById(id);
+    return true;
   }
 }

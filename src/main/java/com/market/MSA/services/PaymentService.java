@@ -60,11 +60,12 @@ public class PaymentService {
   }
 
   @Transactional
-  public void deletePayment(Long id) {
+  public boolean deletePayment(Long id) {
     if (!paymentRepository.existsById(id)) {
       throw new AppException(ErrorCode.PAYMENT_NOT_FOUND);
     }
     paymentRepository.deleteById(id);
+    return true;
   }
 
   @Transactional(readOnly = true)

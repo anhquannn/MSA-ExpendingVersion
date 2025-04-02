@@ -1,7 +1,5 @@
 package com.market.MSA.services;
 
-import static com.market.MSA.requests.ShippoRequest.getDefaultAddressFrom;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.market.MSA.constants.OrderStatus;
@@ -51,20 +49,34 @@ public class ShippoService {
             .findById(deliveryInfoId)
             .orElseThrow(() -> new AppException(ErrorCode.DELIVERY_INFO_NOT_FOUND));
 
+    AddressRequest addressFrom =
+        AddressRequest.builder()
+            .name(deliveryInfo.getOrder().getBranch().getName())
+            .street1(deliveryInfo.getOrder().getBranch().getAddress())
+            .city(deliveryInfo.getOrder().getBranch().getCity())
+            .state(deliveryInfo.getOrder().getBranch().getState())
+            .zip(deliveryInfo.getOrder().getBranch().getZip())
+            .country(deliveryInfo.getOrder().getBranch().getCountry())
+            .phone(deliveryInfo.getOrder().getBranch().getContact())
+            .email(deliveryInfo.getOrder().getBranch().getEmail())
+            .build();
+
+    AddressRequest addressTo =
+        AddressRequest.builder()
+            .name(deliveryInfo.getOrder().getUser().getFullName())
+            .street1(deliveryInfo.getStreet1())
+            .city(deliveryInfo.getCity())
+            .state(deliveryInfo.getState())
+            .zip(deliveryInfo.getZip())
+            .country(deliveryInfo.getCountry())
+            .phone(deliveryInfo.getOrder().getUser().getPhoneNumber())
+            .email(deliveryInfo.getOrder().getUser().getEmail())
+            .build();
+
     ShippoRequest request =
         ShippoRequest.builder()
-            .address_to(
-                AddressRequest.builder()
-                    .name(deliveryInfo.getOrder().getUser().getFullName())
-                    .street1(deliveryInfo.getStreet1())
-                    .city(deliveryInfo.getCity())
-                    .state(deliveryInfo.getState())
-                    .zip(deliveryInfo.getZip())
-                    .country(deliveryInfo.getCountry())
-                    .phone(deliveryInfo.getOrder().getUser().getPhoneNumber())
-                    .email(deliveryInfo.getOrder().getUser().getEmail())
-                    .build())
-            .address_from(getDefaultAddressFrom())
+            .address_to(addressTo)
+            .address_from(addressFrom)
             .parcels(
                 List.of(
                     ParcelRequest.builder()

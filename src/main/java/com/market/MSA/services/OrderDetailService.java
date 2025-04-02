@@ -48,8 +48,12 @@ public class OrderDetailService {
 
   // Xóa chi tiết đơn hàng
   @Transactional
-  public void deleteOrderDetail(Long id) {
+  public boolean deleteOrderDetail(Long id) {
+    if (!orderDetailRepository.existsById(id)) {
+      throw new AppException(ErrorCode.ORDER_DETAIL_NOT_FOUND);
+    }
     orderDetailRepository.deleteById(id);
+    return true;
   }
 
   // Cập nhật chi tiết đơn hàng

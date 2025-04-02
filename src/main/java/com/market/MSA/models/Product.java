@@ -40,17 +40,11 @@ public class Product {
   String specification;
   String description;
   Date expiry;
-  int stockNumber;
-  String stockLevel;
-  int sales;
+  long totalRevenue;
 
   @ManyToOne
   @JoinColumn(name = "manufactureId", nullable = false)
   Manufacturer manufacturer;
-
-  @ManyToOne
-  @JoinColumn(name = "branchId", nullable = false)
-  Branch branch;
 
   @ManyToOne
   @JoinColumn(name = "categoryId", nullable = false)
@@ -64,4 +58,16 @@ public class Product {
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
   List<OrderDetail> orderDetails;
+
+  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<InventoryProduct> inventoryProducts;
+
+  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<UserBehavior> userBehaviors;
+
+  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<TrendingProduct> trendingProducts;
+
+  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<StockTransfer> stockTransfers;
 }

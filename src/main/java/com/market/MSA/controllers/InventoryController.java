@@ -54,8 +54,8 @@ public class InventoryController {
   }
 
   @GetMapping("/branch/{branchId}")
-  public ApiResponse<List<InventoryResponse>> getInventoryByBranchId(@PathVariable long branchId) {
-    return ApiResponse.<List<InventoryResponse>>builder()
+  public ApiResponse<InventoryResponse> getInventoryByBranchId(@PathVariable long branchId) {
+    return ApiResponse.<InventoryResponse>builder()
         .result(inventoryService.getInventoryByBranchId(branchId))
         .build();
   }

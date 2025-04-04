@@ -81,11 +81,10 @@ public class InventoryService {
         .collect(Collectors.toList());
   }
 
-  public List<InventoryResponse> getInventoryByBranchId(Long branchId) {
-    List<Inventory> inventories = inventoryRepository.findByBranch_BranchId(branchId);
-    return inventories.stream()
-        .map(inventoryMapper::toInventoryResponse)
-        .collect(Collectors.toList());
+  public InventoryResponse getInventoryByBranchId(Long branchId) {
+    Inventory inventory = inventoryRepository.findByBranch_BranchId(branchId)
+        .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
+    return inventoryMapper.toInventoryResponse(inventory);
   }
 
   public List<InventoryResponse> searchInventoryByKeyword(String keyword, int page, int pageSize) {

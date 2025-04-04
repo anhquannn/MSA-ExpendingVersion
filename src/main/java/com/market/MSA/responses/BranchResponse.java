@@ -1,5 +1,6 @@
 package com.market.MSA.responses;
 
+import com.market.MSA.models.Inventory;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,4 +24,6 @@ public class BranchResponse {
   String country;
   String email;
   String contact;
+
+  InventoryResponse inventory;
 }

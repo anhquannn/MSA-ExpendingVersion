@@ -21,4 +21,6 @@ public class BranchRequest {
   String country;
   String email;
   String contact;
+
+  InventoryRequest inventory;
 }

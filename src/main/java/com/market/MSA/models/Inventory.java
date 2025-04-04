@@ -23,8 +23,8 @@ public class Inventory {
   String contact;
   long totalRevenue;
 
-  @ManyToOne
-  @JoinColumn(name = "branchId", nullable = false)
+  @OneToOne
+  @JoinColumn(name = "branchId", nullable = false, unique = true)
   Branch branch;
 
   @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)

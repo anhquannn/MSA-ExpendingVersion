@@ -95,4 +95,38 @@ public class InventoryProductService {
         .map(inventoryProductMapper::toInventoryProductResponse)
         .collect(Collectors.toList());
   }
+
+  public int getTotalStockInBranch(Long branchId, Long productId) {
+    // Find the inventory for the branch
+    Inventory inventory = inventoryRepository.findByBranch_BranchId(branchId)
+        .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
+    
+    // Find inventory products for this inventory and product
+    List<InventoryProduct> inventoryProducts = inventoryProductRepository
+        .findByInventory_InventoryIdAndProduct_ProductId(inventory.getInventoryId(), productId);
+    
+    return inventoryProducts.stream()
+        .mapToInt(InventoryProduct::getStockNumber)
+        .sum();
+  }
+
+  @Transactional
+  public void restoreStock(Long branchId, Long productId, int quantity) {
+    // Find the inventory for the branch
+    Inventory inventory = inventoryRepository.findByBranch_BranchId(branchId)
+        .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
+    
+    // Find inventory products for this inventory and product
+    List<InventoryProduct> inventoryProducts = inventoryProductRepository
+        .findByInventory_InventoryIdAndProduct_ProductId(inventory.getInventoryId(), productId);
+    
+    if (inventoryProducts.isEmpty()) {
+      throw new AppException(ErrorCode.INVENTORY_PRODUCT_NOT_FOUND);
+    }
+    
+    // Restore stock to the first inventory product found
+    InventoryProduct inventoryProduct = inventoryProducts.get(0);
+    inventoryProduct.setStockNumber(inventoryProduct.getStockNumber() + quantity);
+    inventoryProductRepository.save(inventoryProduct);
+  }
 }

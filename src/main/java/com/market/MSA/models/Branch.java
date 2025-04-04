@@ -1,12 +1,7 @@
 package com.market.MSA.models;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -41,6 +36,6 @@ public class Branch {
   @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
   List<Order> orders;
 
-  @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Inventory> inventories;
+  @OneToOne(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
+  Inventory inventory;
 }

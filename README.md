@@ -169,6 +169,64 @@ The MSA (Microservices Architecture) system is designed to manage all aspects of
 3. **Run the application**
     Start the necessary services for **staff** and **customer** functionalities.
 
+## Running with Docker Compose
+
+This project includes Docker Compose configuration to run the application with Redis and MySQL.
+
+### Prerequisites
+
+- Docker and Docker Compose installed on your machine
+- Git (to clone the repository)
+
+### Steps to Run
+
+1. Clone the repository:
+   ```
+   git clone <repository-url>
+   cd MSA_EV
+   ```
+
+2. Build and start the containers:
+   ```
+   docker-compose up -d
+   ```
+
+3. Check the status of the containers:
+   ```
+   docker-compose ps
+   ```
+
+4. View logs of the application:
+   ```
+   docker-compose logs -f app
+   ```
+
+5. Stop the containers:
+   ```
+   docker-compose down
+   ```
+
+### Services
+
+- **app**: Spring Boot application running on port 1081
+- **redis**: Redis server running on port 6379
+- **db**: MySQL database running on port 3306
+
+### Environment Variables
+
+The following environment variables are set in the docker-compose.yml file:
+
+- `SPRING_REDIS_HOST`: Redis host (default: redis)
+- `SPRING_REDIS_PORT`: Redis port (default: 6379)
+- `SPRING_DATASOURCE_URL`: MySQL connection URL
+- `SPRING_DATASOURCE_USERNAME`: MySQL username (default: root)
+- `SPRING_DATASOURCE_PASSWORD`: MySQL password (default: password)
+
+### Volumes
+
+- `redis-data`: Persistent storage for Redis data
+- `mysql-data`: Persistent storage for MySQL data
+
 ---
 
 ## Contributing

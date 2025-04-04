@@ -9,6 +9,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CartItemStatusRequest {
+public class CartItemSelectionRequest {
   List<Long> cartItemIds;
 }

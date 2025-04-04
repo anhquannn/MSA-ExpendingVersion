@@ -28,7 +28,7 @@ public class CartItem {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   long cartItemId;
 
-  String status;
+  boolean isSelected;
   double price;
   int quantity;
 

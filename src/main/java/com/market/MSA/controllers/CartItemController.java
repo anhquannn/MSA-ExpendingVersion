@@ -1,7 +1,7 @@
 package com.market.MSA.controllers;
 
 import com.market.MSA.requests.CartItemRequest;
-import com.market.MSA.requests.CartItemStatusRequest;
+import com.market.MSA.requests.CartItemSelectionRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.CartItemResponse;
 import com.market.MSA.services.CartItemService;
@@ -50,11 +50,11 @@ public class CartItemController {
         .build();
   }
 
-  @PutMapping("/update-status")
-  ApiResponse<String> updateCartItemsStatus(
-      @RequestBody CartItemStatusRequest request, @RequestParam String status) {
-    cartItemService.updateCartItemsStatus(request.getCartItemIds(), status);
-    return ApiResponse.<String>builder().result("Cart items status updated").build();
+  @PutMapping("/update-selection")
+  ApiResponse<String> updateCartItemsSelection(
+      @RequestBody CartItemSelectionRequest request, @RequestParam boolean isSelected) {
+    cartItemService.updateCartItemsSelection(request.getCartItemIds(), isSelected);
+    return ApiResponse.<String>builder().result("Cart items selection updated").build();
   }
 
   @DeleteMapping("/{cartItemId}")

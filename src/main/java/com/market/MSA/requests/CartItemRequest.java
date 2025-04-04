@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartItemRequest {
-  String status;
+  boolean isSelected;
   double price;
   int quantity;
 

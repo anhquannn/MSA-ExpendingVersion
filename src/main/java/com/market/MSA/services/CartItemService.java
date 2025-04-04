@@ -1,6 +1,5 @@
 package com.market.MSA.services;
 
-import com.market.MSA.constants.CartStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.CartItemMapper;
@@ -56,7 +55,7 @@ public class CartItemService {
   }
 
   public CartItemResponse updateCartItem(Long cartItemId, CartItemRequest request) {
-    cartItemRepository.updateCartItem(cartItemId, request.getStatus(), request.getQuantity());
+    cartItemRepository.updateCartItem(cartItemId, request.isSelected(), request.getQuantity());
     CartItem cartItem =
         cartItemRepository
             .findById(cartItemId)
@@ -64,8 +63,8 @@ public class CartItemService {
     return cartItemMapper.toCartItemResponse(cartItem);
   }
 
-  public void updateCartItemsStatus(List<Long> cartItemIds, String status) {
-    cartItemRepository.updateCartItemsStatus(cartItemIds, status);
+  public void updateCartItemsSelection(List<Long> cartItemIds, boolean isSelected) {
+    cartItemRepository.updateCartItemsSelection(cartItemIds, isSelected);
   }
 
   public boolean deleteCartItem(Long cartItemId) {
@@ -77,7 +76,7 @@ public class CartItemService {
   }
 
   public void clearCart(Long cartId) {
-    cartItemRepository.clearCart(cartId, CartStatus.CART_ITEM_STATUS_2.getStatus());
+    cartItemRepository.clearCart(cartId);
   }
 
   public CartItemResponse getCartItemById(Long id) {
@@ -89,9 +88,7 @@ public class CartItemService {
   }
 
   public List<CartItemResponse> getCartItemsByCartId(Long cartId) {
-    List<CartItem> cartItems =
-        cartItemRepository.findByCart_CartIdAndStatus(
-            cartId, CartStatus.CART_ITEM_STATUS_2.getStatus());
+    List<CartItem> cartItems = cartItemRepository.findByCart_CartIdAndIsSelected(cartId, true);
     return cartItems.stream().map(cartItemMapper::toCartItemResponse).collect(Collectors.toList());
   }
 
@@ -125,7 +122,7 @@ public class CartItemService {
             .cart(cart)
             .product(product)
             .quantity(quantity)
-            .status(CartStatus.CART_ITEM_STATUS_1.getStatus())
+            .isSelected(false)
             .price(product.getPrice())
             .build();
 

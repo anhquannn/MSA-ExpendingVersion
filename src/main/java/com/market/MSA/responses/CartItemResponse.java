@@ -15,7 +15,7 @@ import lombok.experimental.FieldDefaults;
 public class CartItemResponse {
   long cartItemId;
 
-  String status;
+  boolean isSelected;
   double price;
   int quantity;
 

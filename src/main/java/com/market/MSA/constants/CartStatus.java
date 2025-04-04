@@ -4,8 +4,6 @@ import lombok.Getter;
 
 @Getter
 public enum CartStatus {
-  CART_ITEM_STATUS_1("unavailable"),
-  CART_ITEM_STATUS_2("available"),
   CART_STATUS_1("active"),
   ;
 

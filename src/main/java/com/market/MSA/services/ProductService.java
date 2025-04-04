@@ -43,6 +43,7 @@ public class ProductService {
     product.setCategory(
         entityFinderService.findByIdOrThrow(
             categoryRepository, request.getCategoryId(), ErrorCode.CATEGORY_NOT_FOUND));
+    product.setCurrentPrice(request.getPrice());
 
     Product savedProduct = productRepository.save(product);
     return productMapper.toProductResponse(savedProduct);

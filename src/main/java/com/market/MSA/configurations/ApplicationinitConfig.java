@@ -115,7 +115,7 @@ public class ApplicationinitConfig {
                 .fullName("admin")
                 .password(passwordEncoder.encode("admin"))
                 .roles(Set.of(adminRole))
-                .branch(branch)
+                .branches(List.of(branch))
                 .build();
 
         userRepository.save(user);

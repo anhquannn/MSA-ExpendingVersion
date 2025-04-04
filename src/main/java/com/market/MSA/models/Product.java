@@ -35,6 +35,7 @@ public class Product {
   String name;
   String image;
   double price;
+  double currentPrice;
   int size;
   String color;
   String specification;
@@ -67,7 +68,4 @@ public class Product {
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
   List<TrendingProduct> trendingProducts;
-
-  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<StockTransfer> stockTransfers;
 }

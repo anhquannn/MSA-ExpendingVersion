@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 public interface UserMapper {
   @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+  @Mapping(target = "branches", ignore = true)
   User toUser(UserRequest request);
 
   UserResponse toUserResponse(User user);

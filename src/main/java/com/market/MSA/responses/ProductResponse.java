@@ -20,6 +20,7 @@ public class ProductResponse {
   String name;
   String image;
   double price;
+  double currentPrice;
   int size;
   String color;
   String specification;

@@ -1,5 +1,6 @@
 package com.market.MSA.requests;
 
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,5 +23,5 @@ public class UserRequest {
   String address;
   String googleId;
 
-  long branchId;
+  List<Long> branches;
 }

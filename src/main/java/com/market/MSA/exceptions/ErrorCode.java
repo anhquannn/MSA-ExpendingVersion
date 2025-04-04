@@ -52,7 +52,6 @@ public enum ErrorCode {
 
   INVENTORY_NOT_FOUND(137, "Inventory not found!", HttpStatus.NOT_FOUND),
   INVENTORY_PRODUCT_NOT_FOUND(138, "InventoryProduct not found!", HttpStatus.NOT_FOUND),
-  STOCK_TRANSFER_NOT_FOUND(139, "Stock transfer not found!", HttpStatus.NOT_FOUND),
   ;
 
   private final int code;

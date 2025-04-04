@@ -20,6 +20,5 @@ public class InventoryResponse {
   long totalRevenue;
 
   BranchResponse branch;
-  List<ProductResponse> products;
   List<InventoryProductResponse> inventoryProductResponses;
 }

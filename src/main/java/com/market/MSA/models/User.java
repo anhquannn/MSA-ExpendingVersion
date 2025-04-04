@@ -40,9 +40,7 @@ public class User {
 
   @ManyToMany Set<Role> roles;
 
-  @ManyToOne
-  @JoinColumn(name = "branchId", nullable = false)
-  Branch branch;
+  @ManyToMany List<Branch> branches;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   List<Feedback> feedbacks;
@@ -58,12 +56,4 @@ public class User {
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   List<UserBehavior> userBehaviors;
-
-  // Danh sách yêu cầu điều hàng mà user này tạo
-  @OneToMany(mappedBy = "userRequest", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<StockTransfer> stockTransferRequests;
-
-  // Danh sách yêu cầu điều hàng mà user này xác nhận
-  @OneToMany(mappedBy = "userResponse", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<StockTransfer> stockTransferResponses;
 }

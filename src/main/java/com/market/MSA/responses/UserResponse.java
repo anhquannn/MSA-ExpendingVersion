@@ -1,6 +1,7 @@
 package com.market.MSA.responses;
 
 import com.market.MSA.models.User;
+import java.util.List;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -26,7 +27,7 @@ public class UserResponse {
 
   Set<RoleResponse> roles;
 
-  BranchResponse branch;
+  List<BranchResponse> branches;
 
   public static UserResponse fromUser(User user) {
     return UserResponse.builder()

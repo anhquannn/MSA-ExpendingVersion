@@ -13,6 +13,12 @@ spring:
   jackson:
     deserialization:
       adjust-dates-to-context-time-zone: false
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: 
+      database: 0
 
   quartz:
     job-store-type: jdbc

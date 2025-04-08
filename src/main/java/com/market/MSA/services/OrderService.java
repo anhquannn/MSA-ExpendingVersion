@@ -34,6 +34,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +57,7 @@ public class OrderService {
   final OrderDetailService orderDetailService;
   final OrderMapper orderMapper;
   final InventoryProductService inventoryProductService;
+  final BranchService branchService;
 
   @Transactional
   public OrderResponse createOrder(Long userId, Long branchId, Long cartId, List<String> promoCodes)
@@ -250,5 +253,21 @@ public class OrderService {
     // Gửi email với tiêu đề "Xác nhận đơn hàng"
     String subject = "Order Confirmation - Your Order Details";
     emailService.sendEmail(userEmail, subject, emailBody.toString());
+  }
+
+  public Page<OrderResponse> getOrdersByBranchId(
+      Long branchId, int page, int size, String sortBy, String sortDirection) {
+    // Kiểm tra branch tồn tại
+    branchService.getBranchById(branchId);
+
+    // Tạo pageable với sắp xếp
+    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
+    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+    // Lấy danh sách đơn hàng của branch với phân trang và sắp xếp
+    Page<Order> orderPage = orderRepository.findByBranch_BranchId(branchId, pageable);
+
+    // Chuyển đổi sang OrderResponse
+    return orderPage.map(orderMapper::toOrderResponse);
   }
 }

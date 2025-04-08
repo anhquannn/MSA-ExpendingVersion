@@ -11,6 +11,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -99,6 +100,18 @@ public class OrderController {
   public ApiResponse<List<OrderResponse>> getAllOrders(int page, int pageSize) {
     return ApiResponse.<List<OrderResponse>>builder()
         .result(orderService.getAllOrders(page, pageSize))
+        .build();
+  }
+
+  @GetMapping("/branch/{branchId}")
+  public ApiResponse<Page<OrderResponse>> getOrdersByBranchId(
+      @PathVariable Long branchId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "orderDate") String sortBy,
+      @RequestParam(defaultValue = "desc") String sortDirection) {
+    return ApiResponse.<Page<OrderResponse>>builder()
+        .result(orderService.getOrdersByBranchId(branchId, page, size, sortBy, sortDirection))
         .build();
   }
 }

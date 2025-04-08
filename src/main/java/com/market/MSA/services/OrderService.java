@@ -262,7 +262,24 @@ public class OrderService {
 
     // Tạo pageable với sắp xếp
     Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
-    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+    Sort sort;
+
+    // Xử lý các trường sắp xếp
+    switch (sortBy.toLowerCase()) {
+      case "orderdate":
+        sort = Sort.by(direction, "orderDate");
+        break;
+      case "grandtotal":
+        sort = Sort.by(direction, "grandTotal");
+        break;
+      case "status":
+        sort = Sort.by(direction, "status");
+        break;
+      default:
+        sort = Sort.by(direction, "orderDate"); // Mặc định sắp xếp theo orderDate
+    }
+
+    Pageable pageable = PageRequest.of(page, size, sort);
 
     // Lấy danh sách đơn hàng của branch với phân trang và sắp xếp
     Page<Order> orderPage = orderRepository.findByBranch_BranchId(branchId, pageable);

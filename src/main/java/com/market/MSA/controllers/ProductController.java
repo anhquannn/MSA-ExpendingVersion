@@ -10,6 +10,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -65,16 +66,6 @@ public class ProductController {
         .build();
   }
 
-  @GetMapping("/search")
-  public ApiResponse<List<ProductResponse>> searchProducts(
-      @RequestParam String name,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize) {
-    return ApiResponse.<List<ProductResponse>>builder()
-        .result(productService.searchProductsByName(name, page, pageSize))
-        .build();
-  }
-
   @GetMapping("/filter")
   public ApiResponse<List<ProductResponse>> filterAndSortProducts(
       @RequestParam(required = false) Integer size,
@@ -88,6 +79,46 @@ public class ProductController {
         .result(
             productService.filterAndSortProducts(
                 size, minPrice, maxPrice, color, categoryId, page, pageSize))
+        .build();
+  }
+
+  @GetMapping("/branch/{branchId}")
+  public ApiResponse<Page<ProductResponse>> getAllProductsInBranch(
+      @PathVariable Long branchId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "name") String sortBy,
+      @RequestParam(defaultValue = "asc") String sortDirection) {
+    return ApiResponse.<Page<ProductResponse>>builder()
+        .result(productService.getAllProductsInBranch(branchId, page, size, sortBy, sortDirection))
+        .build();
+  }
+
+  @GetMapping("/branch/{branchId}/search")
+  public ApiResponse<Page<ProductResponse>> searchProductsInBranch(
+      @PathVariable Long branchId,
+      @RequestParam(required = false) String keyword,
+      @RequestParam(required = false) Double minPrice,
+      @RequestParam(required = false) Double maxPrice,
+      @RequestParam(required = false) String color,
+      @RequestParam(required = false) int size,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int pageSize,
+      @RequestParam(defaultValue = "name") String sortBy,
+      @RequestParam(defaultValue = "asc") String sortDirection) {
+    return ApiResponse.<Page<ProductResponse>>builder()
+        .result(
+            productService.searchProductsInBranch(
+                branchId,
+                keyword,
+                minPrice,
+                maxPrice,
+                color,
+                size,
+                page,
+                pageSize,
+                sortBy,
+                sortDirection))
         .build();
   }
 }

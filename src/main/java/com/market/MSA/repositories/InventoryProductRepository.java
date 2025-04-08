@@ -2,6 +2,8 @@ package com.market.MSA.repositories;
 
 import com.market.MSA.models.InventoryProduct;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,8 +13,26 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
   List<InventoryProduct> findByProductId_ProductId(@Param("productId") Long productId);
 
   @Query("SELECT i FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId")
-  List<InventoryProduct> findByInventory_InventoryId(@Param("inventoryId") Long inventoryId);
-  
-  @Query("SELECT i FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId AND i.product.productId = :productId")
-  List<InventoryProduct> findByInventory_InventoryIdAndProduct_ProductId(@Param("inventoryId") Long inventoryId, @Param("productId") Long productId);
+  Page<InventoryProduct> findByInventory_InventoryId(
+      @Param("inventoryId") Long inventoryId, Pageable pageable);
+
+  @Query(
+      "SELECT i FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId AND i.product.productId = :productId")
+  List<InventoryProduct> findByInventory_InventoryIdAndProduct_ProductId(
+      @Param("inventoryId") Long inventoryId, @Param("productId") Long productId);
+
+  @Query("SELECT COUNT(i) FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId")
+  int countProductsByInventoryId(@Param("inventoryId") Long inventoryId);
+
+  @Query(
+      "SELECT COALESCE(SUM(i.stockNumber), 0) FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId")
+  int sumStockByInventoryId(@Param("inventoryId") Long inventoryId);
+
+  @Query(
+      "SELECT COUNT(i) FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId AND i.stockLevel = 'low'")
+  int countLowStockByInventoryId(@Param("inventoryId") Long inventoryId);
+
+  @Query(
+      "SELECT COUNT(i) FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId AND i.stockLevel = 'high'")
+  int countHighStockByInventoryId(@Param("inventoryId") Long inventoryId);
 }

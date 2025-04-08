@@ -12,7 +12,7 @@ services:
       - SPRING_REDIS_PORT=6379
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/market_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_DATASOURCE_PASSWORD=
     networks:
       - market-network
 
@@ -30,8 +30,8 @@ services:
     ports:
       - "3306:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=market_db
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_DATABASE=msa_1
     volumes:
       - mysql-data:/var/lib/mysql
     networks:

@@ -54,6 +54,7 @@ public class OrderService {
   final OrderDetailRepository orderDetailRepository;
   final OrderDetailService orderDetailService;
   final OrderMapper orderMapper;
+  final InventoryProductService inventoryProductService;
 
   @Transactional
   public OrderResponse createOrder(Long userId, Long branchId, Long cartId, List<String> promoCodes)
@@ -119,14 +120,18 @@ public class OrderService {
               .order(order)
               .product(product)
               .quantity(cartItem.getQuantity())
-              .unitPrice(product.getPrice())
-              .totalPrice(cartItem.getQuantity() * product.getPrice())
+              .unitPrice(product.getCurrentPrice())
+              .totalPrice(cartItem.getQuantity() * product.getCurrentPrice())
               .build();
 
       orderDetailRepository.save(orderDetail);
 
       // Cập nhật số lượng tồn kho sản phẩm
-      // productService.updateStockNumber(product.getProductId(), cartItem.getQuantity());
+      inventoryProductService.updateInventoryProduct(
+          branchId, product.getProductId(), cartItem.getQuantity());
+
+      // Cập nhật doanh số sản phẩm
+      productService.updateTotalRevenue(product.getProductId(), cartItem.getQuantity());
     }
 
     // Xóa giỏ hàng sau khi đặt hàng

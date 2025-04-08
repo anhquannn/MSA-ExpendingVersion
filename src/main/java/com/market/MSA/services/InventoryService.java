@@ -82,8 +82,10 @@ public class InventoryService {
   }
 
   public InventoryResponse getInventoryByBranchId(Long branchId) {
-    Inventory inventory = inventoryRepository.findByBranch_BranchId(branchId)
-        .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
+    Inventory inventory =
+        inventoryRepository
+            .findByBranch_BranchId(branchId)
+            .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
     return inventoryMapper.toInventoryResponse(inventory);
   }
 
@@ -93,5 +95,15 @@ public class InventoryService {
     return inventories.stream()
         .map(inventoryMapper::toInventoryResponse)
         .collect(Collectors.toList());
+  }
+
+  @Transactional
+  public void updateTotalRevenue(Long inventoryId, int quantity) {
+    Inventory inventory =
+        inventoryRepository
+            .findById(inventoryId)
+            .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
+    inventory.setTotalRevenue(inventory.getTotalRevenue() + quantity);
+    inventoryRepository.save(inventory);
   }
 }

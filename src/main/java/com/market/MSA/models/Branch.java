@@ -1,7 +1,6 @@
 package com.market.MSA.models;
 
 import jakarta.persistence.*;
-
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

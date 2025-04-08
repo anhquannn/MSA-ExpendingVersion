@@ -3,6 +3,7 @@ package com.market.MSA.controllers;
 import com.market.MSA.requests.InventoryProductRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.InventoryProductResponse;
+import com.market.MSA.responses.InventoryStatisticsResponse;
 import com.market.MSA.services.InventoryProductService;
 import java.util.List;
 import lombok.AccessLevel;
@@ -49,9 +50,10 @@ public class InventoryProductController {
 
   @GetMapping("/inventory/{inventoryId}")
   public ApiResponse<List<InventoryProductResponse>> getInventoryProductByInventoryId(
-      @PathVariable long inventoryId) {
+      @PathVariable long inventoryId, int page, int pageSize) {
     return ApiResponse.<List<InventoryProductResponse>>builder()
-        .result(inventoryProductService.getInventoryProductByInventoryId(inventoryId))
+        .result(
+            inventoryProductService.getInventoryProductByInventoryId(inventoryId, page, pageSize))
         .build();
   }
 
@@ -60,6 +62,14 @@ public class InventoryProductController {
       @PathVariable long productId) {
     return ApiResponse.<List<InventoryProductResponse>>builder()
         .result(inventoryProductService.getInventoryProductByProductId(productId))
+        .build();
+  }
+
+  @GetMapping("/statistic/{branchId}")
+  public ApiResponse<InventoryStatisticsResponse> getInventoryStatistics(
+      @PathVariable long branchId) {
+    return ApiResponse.<InventoryStatisticsResponse>builder()
+        .result(inventoryProductService.getInventoryStatistics(branchId))
         .build();
   }
 }

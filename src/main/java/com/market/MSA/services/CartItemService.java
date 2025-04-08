@@ -123,7 +123,7 @@ public class CartItemService {
             .product(product)
             .quantity(quantity)
             .isSelected(false)
-            .price(product.getPrice())
+            .price(product.getCurrentPrice())
             .build();
 
     cartItemRepository.save(newCartItem);

@@ -7,7 +7,9 @@ import com.market.MSA.models.Branch;
 import com.market.MSA.repositories.BranchRepository;
 import com.market.MSA.requests.BranchRequest;
 import com.market.MSA.responses.BranchResponse;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,6 +24,8 @@ public class BranchService {
   final BranchRepository branchRepository;
 
   final BranchMapper branchMapper;
+
+  final ProductService productService;
 
   // Create Branch
   public BranchResponse createBranch(BranchRequest branchRequest) {
@@ -62,5 +66,16 @@ public class BranchService {
     } else {
       throw new AppException(ErrorCode.BRANCH_NOT_FOUND);
     }
+  }
+
+  public List<BranchResponse> getBranchesByProductId(Long productId) {
+    // Kiểm tra sản phẩm có tồn tại không
+    productService.findProductById(productId);
+
+    // Lấy danh sách chi nhánh có sản phẩm này
+    List<Branch> branches = branchRepository.findByProductId(productId);
+
+    // Chuyển đổi sang response
+    return branches.stream().map(branchMapper::toBranchResponse).collect(Collectors.toList());
   }
 }

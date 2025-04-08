@@ -15,8 +15,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,14 +29,11 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductService {
   final EntityFinderService entityFinderService;
-
   final ProductRepository productRepository;
   final ManufacturerRepository manufacturerRepository;
   final CategoryRepository categoryRepository;
-
   final ProductMapper productMapper;
 
-  // Tạo sản phẩm
   @Transactional
   public ProductResponse createProduct(ProductRequest request) {
     Product product = productMapper.toProduct(request);
@@ -49,7 +49,6 @@ public class ProductService {
     return productMapper.toProductResponse(savedProduct);
   }
 
-  // Cập nhật sản phẩm
   @Transactional
   public ProductResponse updateProduct(Long id, ProductRequest request) {
     Product product =
@@ -68,7 +67,6 @@ public class ProductService {
     return productMapper.toProductResponse(updatedProduct);
   }
 
-  // Xóa sản phẩm
   @Transactional
   public boolean deleteProduct(Long id) {
     if (!productRepository.existsById(id)) {
@@ -78,7 +76,6 @@ public class ProductService {
     return true;
   }
 
-  // Lấy sản phẩm theo ID
   public ProductResponse getProductById(Long id) {
     Product product =
         productRepository
@@ -93,6 +90,13 @@ public class ProductService {
         .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
   }
 
+  @Transactional
+  public void updateTotalRevenue(Long productId, int quantity) {
+    Product product = findProductById(productId);
+    product.setTotalRevenue(product.getTotalRevenue() + quantity);
+    productRepository.save(product);
+  }
+
   // Lấy tất cả sản phẩm (phân trang)
   public List<ProductResponse> getAllProducts(int page, int pageSize) {
     return productRepository.findAll().stream()
@@ -100,14 +104,6 @@ public class ProductService {
         .limit(pageSize)
         .map(productMapper::toProductResponse)
         .collect(Collectors.toList());
-  }
-
-  // Tìm kiếm sản phẩm theo tên
-  public List<ProductResponse> searchProductsByName(String keyword, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page - 1, pageSize); // Tạo Pageable đúng cách
-    List<Product> products = productRepository.searchByKeyword(keyword, pageable);
-
-    return products.stream().map(productMapper::toProductResponse).collect(Collectors.toList());
   }
 
   // Lọc & sắp xếp sản phẩm
@@ -136,5 +132,64 @@ public class ProductService {
         .limit(pageSize)
         .map(productMapper::toProductResponse)
         .collect(Collectors.toList());
+  }
+
+  public Page<ProductResponse> searchProductsInBranch(
+      Long branchId,
+      String keyword,
+      Double minPrice,
+      Double maxPrice,
+      String color,
+      Integer size,
+      int page,
+      int pageSize,
+      String sortBy,
+      String sortDirection) {
+
+    // Create pageable with sorting
+    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
+    Pageable pageable = PageRequest.of(page, pageSize, Sort.by(direction, sortBy));
+
+    // Get filtered products with pagination using searchByKeyword
+    Page<Product> products = productRepository.searchByKeyword(branchId, keyword, pageable);
+
+    // Apply additional filters
+    List<Product> filteredProducts =
+        products.getContent().stream()
+            .filter(
+                product -> {
+                  boolean matchesPrice =
+                      (minPrice == null || product.getCurrentPrice() >= minPrice)
+                          && (maxPrice == null || product.getCurrentPrice() <= maxPrice);
+                  boolean matchesColor =
+                      color == null
+                          || color.isEmpty()
+                          || product.getColor().equalsIgnoreCase(color);
+                  boolean matchesSize = size == null || product.getSize() == size;
+                  return matchesPrice && matchesColor && matchesSize;
+                })
+            .collect(Collectors.toList());
+
+    // Create new page with filtered results
+    Page<Product> filteredPage =
+        new PageImpl<>(filteredProducts, pageable, filteredProducts.size());
+
+    // Convert to response DTOs
+    return filteredPage.map(productMapper::toProductResponse);
+  }
+
+  public Page<ProductResponse> getAllProductsInBranch(
+      Long branchId, int page, int size, String sortBy, String sortDirection) {
+
+    // Create pageable with sorting
+    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
+    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+    // Get all products in branch with pagination using database query
+    Page<Product> products =
+        productRepository.findByBranchAndFilters(branchId, null, null, null, null, null, pageable);
+
+    // Convert to response DTOs
+    return products.map(productMapper::toProductResponse);
   }
 }

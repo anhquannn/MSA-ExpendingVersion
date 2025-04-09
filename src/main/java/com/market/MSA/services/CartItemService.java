@@ -127,6 +127,7 @@ public class CartItemService {
 
     cartItem.setPrice(cartItem.getProduct().getCurrentPrice());
     cartItem.setQuantity(quantity);
+
     return cartItemMapper.toCartItemResponse(cartItemRepository.save(cartItem));
   }
 

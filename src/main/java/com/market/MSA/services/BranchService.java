@@ -68,6 +68,11 @@ public class BranchService {
     }
   }
 
+  public BranchResponse getBranchByRole(String role) {
+    Branch optionalBranch = branchRepository.findByUserRole(role);
+    return branchMapper.toBranchResponse(optionalBranch);
+  }
+
   public List<BranchResponse> getBranchesByProductId(Long productId) {
     // Kiểm tra sản phẩm có tồn tại không
     productService.findProductById(productId);

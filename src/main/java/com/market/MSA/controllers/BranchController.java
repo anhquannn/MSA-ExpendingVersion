@@ -53,6 +53,12 @@ public class BranchController {
     return ApiResponse.<BranchResponse>builder().result(branchResponse).build();
   }
 
+  @GetMapping("/role/{roleName}")
+  public ApiResponse<BranchResponse> getBranchByRole(@PathVariable String roleName) {
+    BranchResponse branchResponse = branchService.getBranchByRole(roleName);
+    return ApiResponse.<BranchResponse>builder().result(branchResponse).build();
+  }
+
   @GetMapping("/product/{productId}")
   public ApiResponse<List<BranchResponse>> getBranchesByProductId(@PathVariable Long productId) {
     return ApiResponse.<List<BranchResponse>>builder()

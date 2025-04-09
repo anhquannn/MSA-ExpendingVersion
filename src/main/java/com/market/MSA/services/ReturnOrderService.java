@@ -29,8 +29,8 @@ public class ReturnOrderService {
   final ReturnOrderRepository returnOrderRepository;
   final OrderRepository orderRepository;
   final OrderDetailRepository orderDetailRepository;
-  final ProductService productService;
   final ReturnOrderMapper returnOrderMapper;
+  private final InventoryProductService inventoryProductService;
 
   @Transactional
   public ReturnOrderResponse createReturnOrder(ReturnOrderRequest request) {
@@ -59,10 +59,9 @@ public class ReturnOrderService {
     List<OrderDetail> orderDetails = orderDetailRepository.findByOrder_OrderId(order.getOrderId());
 
     // Khôi phục số lượng sản phẩm trong kho
-    //    for (OrderDetail orderDetail : orderDetails) {
-    //      productService.restoreStock(
-    //          orderDetail.getProduct().getProductId(), orderDetail.getQuantity());
-    //    }
+    for (OrderDetail orderDetail : orderDetails) {
+      inventoryProductService.restoreStock(orderDetail.getOrder());
+    }
 
     return returnOrderMapper.toReturnOrderResponse(returnOrder);
   }

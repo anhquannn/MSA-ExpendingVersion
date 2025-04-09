@@ -262,22 +262,15 @@ public class OrderService {
 
     // Tạo pageable với sắp xếp
     Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
-    Sort sort;
+    Sort sort =
+        switch (sortBy.toLowerCase()) {
+          case "orderdate" -> Sort.by(direction, "orderDate");
+          case "grandtotal" -> Sort.by(direction, "grandTotal");
+          case "status" -> Sort.by(direction, "status");
+          default -> Sort.by(direction, "orderDate"); // Mặc định sắp xếp theo orderDate
+        };
 
     // Xử lý các trường sắp xếp
-    switch (sortBy.toLowerCase()) {
-      case "orderdate":
-        sort = Sort.by(direction, "orderDate");
-        break;
-      case "grandtotal":
-        sort = Sort.by(direction, "grandTotal");
-        break;
-      case "status":
-        sort = Sort.by(direction, "status");
-        break;
-      default:
-        sort = Sort.by(direction, "orderDate"); // Mặc định sắp xếp theo orderDate
-    }
 
     Pageable pageable = PageRequest.of(page, size, sort);
 

@@ -61,7 +61,9 @@ public class CartItemService {
 
   @Transactional
   public CartItemResponse addToCart(Long userId, Long productId, Long branchId, int quantity) {
-    if (!inventoryProductService.checkStockAvailability(branchId, productId, quantity)) {
+    boolean hasSufficientStock =
+        inventoryProductService.checkStockAvailability(branchId, productId, quantity);
+    if (!hasSufficientStock) {
       throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
     }
 
@@ -85,7 +87,9 @@ public class CartItemService {
       cartItem = existingCartItem.get();
       int newQuantity = cartItem.getQuantity() + quantity;
 
-      if (!inventoryProductService.checkStockAvailability(branchId, productId, newQuantity)) {
+      boolean hasEnoughStockForNewQuantity =
+          inventoryProductService.checkStockAvailability(branchId, productId, newQuantity);
+      if (!hasEnoughStockForNewQuantity) {
         throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
       }
 
@@ -101,6 +105,7 @@ public class CartItemService {
               .product(product)
               .quantity(quantity)
               .price(product.getCurrentPrice())
+              .isSelected(true)
               .build();
     }
     return cartItemMapper.toCartItemResponse(cartItemRepository.save(cartItem));
@@ -113,8 +118,10 @@ public class CartItemService {
             .findById(cartItemId)
             .orElseThrow(() -> new AppException(ErrorCode.CART_ITEM_NOT_FOUND));
 
-    if (!inventoryProductService.checkStockAvailability(
-        branchId, cartItem.getProduct().getProductId(), quantity)) {
+    boolean hasSufficientStock =
+        inventoryProductService.checkStockAvailability(
+            branchId, cartItem.getProduct().getProductId(), quantity);
+    if (!hasSufficientStock) {
       throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
     }
 

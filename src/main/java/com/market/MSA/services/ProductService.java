@@ -15,6 +15,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -76,28 +78,32 @@ public class ProductService {
     return true;
   }
 
+  @Cacheable(value = "products", key = "#id")
   public ProductResponse getProductById(Long id) {
-    Product product =
-        productRepository
-            .findById(id)
-            .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+    Product product = findProductEntityById(id);
     return productMapper.toProductResponse(product);
   }
 
+  @Cacheable(value = "products", key = "#id")
   public Product findProductById(Long id) {
+    return findProductEntityById(id);
+  }
+
+  private Product findProductEntityById(Long id) {
     return productRepository
         .findById(id)
         .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
   }
 
+  @CacheEvict(value = "products", key = "#productId")
   @Transactional
   public void updateTotalRevenue(Long productId, int quantity) {
-    Product product = findProductById(productId);
+    Product product = findProductEntityById(productId);
     product.setTotalRevenue(product.getTotalRevenue() + quantity);
     productRepository.save(product);
   }
 
-  // Lấy tất cả sản phẩm (phân trang)
+  @Cacheable(value = "products", key = "'all_' + #page + '_' + #pageSize")
   public List<ProductResponse> getAllProducts(int page, int pageSize) {
     return productRepository.findAll().stream()
         .skip((long) (page - 1) * pageSize)
@@ -106,7 +112,10 @@ public class ProductService {
         .collect(Collectors.toList());
   }
 
-  // Lọc & sắp xếp sản phẩm
+  @Cacheable(
+      value = "products",
+      key =
+          "'filtered_' + #size + '_' + #minPrice + '_' + #maxPrice + '_' + #color + '_' + #categoryId + '_' + #page + '_' + #pageSize")
   public List<ProductResponse> filterAndSortProducts(
       int size,
       double minPrice,
@@ -134,6 +143,10 @@ public class ProductService {
         .collect(Collectors.toList());
   }
 
+  @Cacheable(
+      value = "products",
+      key =
+          "'branch_' + #branchId + '_' + #keyword + '_' + #minPrice + '_' + #maxPrice + '_' + #color + '_' + #size + '_' + #page + '_' + #pageSize + '_' + #sortBy + '_' + #sortDirection")
   public Page<ProductResponse> searchProductsInBranch(
       Long branchId,
       String keyword,
@@ -178,6 +191,10 @@ public class ProductService {
     return filteredPage.map(productMapper::toProductResponse);
   }
 
+  @Cacheable(
+      value = "products",
+      key =
+          "'branch_all_' + #branchId + '_' + #page + '_' + #size + '_' + #sortBy + '_' + #sortDirection")
   public Page<ProductResponse> getAllProductsInBranch(
       Long branchId, int page, int size, String sortBy, String sortDirection) {
 

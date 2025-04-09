@@ -4,6 +4,7 @@ import com.market.MSA.requests.BranchRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.BranchResponse;
 import com.market.MSA.services.BranchService;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -50,5 +51,12 @@ public class BranchController {
   public ApiResponse<BranchResponse> getBranchById(@PathVariable Long branchId) {
     BranchResponse branchResponse = branchService.getBranchById(branchId);
     return ApiResponse.<BranchResponse>builder().result(branchResponse).build();
+  }
+
+  @GetMapping("/product/{productId}")
+  public ApiResponse<List<BranchResponse>> getBranchesByProductId(@PathVariable Long productId) {
+    return ApiResponse.<List<BranchResponse>>builder()
+        .result(branchService.getBranchesByProductId(productId))
+        .build();
   }
 }

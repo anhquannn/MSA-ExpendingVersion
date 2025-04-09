@@ -19,6 +19,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -108,14 +109,13 @@ public class InventoryProductService {
         .collect(Collectors.toList());
   }
 
+  @Cacheable(value = "inventory_products", key = "'stock_' + #branchId + '_' + #productId")
   public int getTotalStockInBranch(Long branchId, Long productId) {
-    // Find the inventory for the branch
     Inventory inventory =
         inventoryRepository
             .findByBranch_BranchId(branchId)
             .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
 
-    // Find inventory products for this inventory and product
     List<InventoryProduct> inventoryProducts =
         inventoryProductRepository.findByInventory_InventoryIdAndProduct_ProductId(
             inventory.getInventoryId(), productId);
@@ -242,9 +242,12 @@ public class InventoryProductService {
         .build();
   }
 
-  /** Lấy danh sách sản phẩm trong kho của một chi nhánh có phân trang */
+  @Cacheable(
+      value = "inventory_products",
+      key =
+          "'branch_' + #branchId + '_' + #page + '_' + #size + '_' + #sortBy + '_' + #sortDirection")
   public Page<InventoryProductResponse> getInventoryProductsByBranch(
-      Long branchId, int page, int pageSize, String sortBy, String sortDirection) {
+      Long branchId, int page, int size, String sortBy, String sortDirection) {
     // Tìm inventory của branch
     Inventory inventory =
         inventoryRepository
@@ -256,7 +259,7 @@ public class InventoryProductService {
         Sort.by(
             sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
             sortBy);
-    Pageable pageable = PageRequest.of(page, pageSize, sort);
+    Pageable pageable = PageRequest.of(page, size, sort);
 
     // Lấy danh sách sản phẩm có phân trang
     Page<InventoryProduct> inventoryProductsPage =
@@ -267,14 +270,9 @@ public class InventoryProductService {
     return inventoryProductsPage.map(inventoryProductMapper::toInventoryProductResponse);
   }
 
-  /**
-   * Kiểm tra xem có đủ số lượng tồn kho cho sản phẩm trong chi nhánh không
-   *
-   * @param branchId ID của chi nhánh
-   * @param productId ID của sản phẩm
-   * @param quantity Số lượng cần kiểm tra
-   * @return true nếu đủ số lượng, false nếu không đủ
-   */
+  @Cacheable(
+      value = "inventory_products",
+      key = "'availability_' + #branchId + '_' + #productId + '_' + #quantity")
   public boolean checkStockAvailability(Long branchId, Long productId, int quantity) {
     Integer totalStock =
         inventoryProductRepository.getTotalStockByBranchAndProduct(branchId, productId);

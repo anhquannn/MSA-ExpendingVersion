@@ -9,6 +9,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -70,6 +71,28 @@ public class InventoryProductController {
       @PathVariable long branchId) {
     return ApiResponse.<InventoryStatisticsResponse>builder()
         .result(inventoryProductService.getInventoryStatistics(branchId))
+        .build();
+  }
+
+  @GetMapping("/branch/{branchId}/product/{productId}/stock")
+  public ApiResponse<Integer> getTotalStockInBranch(
+      @PathVariable Long branchId, @PathVariable Long productId) {
+    return ApiResponse.<Integer>builder()
+        .result(inventoryProductService.getTotalStockInBranch(branchId, productId))
+        .build();
+  }
+
+  @GetMapping("/branch/{branchId}/products")
+  public ApiResponse<Page<InventoryProductResponse>> getInventoryProductsByBranch(
+      @PathVariable Long branchId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "stockNumber") String sortBy,
+      @RequestParam(defaultValue = "desc") String sortDirection) {
+    return ApiResponse.<Page<InventoryProductResponse>>builder()
+        .result(
+            inventoryProductService.getInventoryProductsByBranch(
+                branchId, page, size, sortBy, sortDirection))
         .build();
   }
 }

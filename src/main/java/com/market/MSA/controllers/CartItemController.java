@@ -43,10 +43,10 @@ public class CartItemController {
   }
 
   @PutMapping("/{cartItemId}")
-  ApiResponse<CartItemResponse> updateCartItem(
-      @PathVariable Long cartItemId, @RequestBody @Valid CartItemRequest request) {
+  public ApiResponse<CartItemResponse> updateCartItem(
+      @PathVariable Long cartItemId, @RequestParam Long branchId, @RequestParam int quantity) {
     return ApiResponse.<CartItemResponse>builder()
-        .result(cartItemService.updateCartItem(cartItemId, request))
+        .result(cartItemService.updateCartItem(cartItemId, branchId, quantity))
         .build();
   }
 
@@ -91,10 +91,13 @@ public class CartItemController {
   }
 
   @PostMapping("/add")
-  ApiResponse<CartItemResponse> addProductToCart(
-      @RequestParam Long cartId, @RequestParam Long productId, @RequestParam int quantity) {
+  public ApiResponse<CartItemResponse> addToCart(
+      @RequestParam Long userId,
+      @RequestParam Long productId,
+      @RequestParam Long branchId,
+      @RequestParam int quantity) {
     return ApiResponse.<CartItemResponse>builder()
-        .result(cartItemService.addProductToCart(cartId, productId, quantity))
+        .result(cartItemService.addToCart(userId, productId, branchId, quantity))
         .build();
   }
 

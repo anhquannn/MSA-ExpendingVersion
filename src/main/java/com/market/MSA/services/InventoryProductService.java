@@ -266,4 +266,18 @@ public class InventoryProductService {
     // Chuyển đổi sang response
     return inventoryProductsPage.map(inventoryProductMapper::toInventoryProductResponse);
   }
+
+  /**
+   * Kiểm tra xem có đủ số lượng tồn kho cho sản phẩm trong chi nhánh không
+   *
+   * @param branchId ID của chi nhánh
+   * @param productId ID của sản phẩm
+   * @param quantity Số lượng cần kiểm tra
+   * @return true nếu đủ số lượng, false nếu không đủ
+   */
+  public boolean checkStockAvailability(Long branchId, Long productId, int quantity) {
+    Integer totalStock =
+        inventoryProductRepository.getTotalStockByBranchAndProduct(branchId, productId);
+    return totalStock != null && totalStock >= quantity;
+  }
 }

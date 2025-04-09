@@ -23,7 +23,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "returnorders")
+@Table(name = "returnOrders")
 public class ReturnOrder {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

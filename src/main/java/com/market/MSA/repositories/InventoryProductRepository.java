@@ -35,4 +35,11 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
   @Query(
       "SELECT COUNT(i) FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId AND i.stockLevel = 'high'")
   int countHighStockByInventoryId(@Param("inventoryId") Long inventoryId);
+
+  @Query(
+      "SELECT SUM(ip.stockNumber) FROM InventoryProduct ip "
+          + "WHERE ip.inventory.branch.branchId = :branchId "
+          + "AND ip.product.productId = :productId")
+  Integer getTotalStockByBranchAndProduct(
+      @Param("branchId") Long branchId, @Param("productId") Long productId);
 }

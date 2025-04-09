@@ -21,7 +21,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "promocodes")
+@Table(name = "promoCodes")
 public class PromoCode {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

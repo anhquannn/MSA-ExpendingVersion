@@ -9,6 +9,7 @@ import com.market.MSA.models.Product;
 import com.market.MSA.repositories.CartItemRepository;
 import com.market.MSA.repositories.CartRepository;
 import com.market.MSA.repositories.ProductRepository;
+import com.market.MSA.repositories.UserRepository;
 import com.market.MSA.requests.CartItemRequest;
 import com.market.MSA.responses.CartItemResponse;
 import java.util.List;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -30,8 +32,11 @@ public class CartItemService {
   final CartItemRepository cartItemRepository;
   final CartRepository cartRepository;
   final ProductRepository productRepository;
+  final UserRepository userRepository;
 
   final CartItemMapper cartItemMapper;
+
+  final InventoryProductService inventoryProductService;
 
   public CartItemResponse createCartItem(CartItemRequest request) {
     CartItem cartItem = cartItemMapper.toCartItem(request);
@@ -54,13 +59,68 @@ public class CartItemService {
         .orElseThrow(() -> new AppException(ErrorCode.CART_ITEM_NOT_FOUND));
   }
 
-  public CartItemResponse updateCartItem(Long cartItemId, CartItemRequest request) {
-    cartItemRepository.updateCartItem(cartItemId, request.isSelected(), request.getQuantity());
+  @Transactional
+  public CartItemResponse addToCart(Long userId, Long productId, Long branchId, int quantity) {
+    if (!inventoryProductService.checkStockAvailability(branchId, productId, quantity)) {
+      throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
+    }
+
+    Cart cart =
+        cartRepository
+            .findByUser_UserId(userId)
+            .orElseGet(
+                () -> {
+                  Cart newCart = new Cart();
+                  newCart.setUser(
+                      entityFinderService.findByIdOrThrow(
+                          userRepository, userId, ErrorCode.USER_NOT_EXISTED));
+                  return cartRepository.save(newCart);
+                });
+
+    Optional<CartItem> existingCartItem =
+        cartItemRepository.findByCart_CartIdAndProduct_ProductId(cart.getCartId(), productId);
+
+    CartItem cartItem;
+    if (existingCartItem.isPresent()) {
+      cartItem = existingCartItem.get();
+      int newQuantity = cartItem.getQuantity() + quantity;
+
+      if (!inventoryProductService.checkStockAvailability(branchId, productId, newQuantity)) {
+        throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
+      }
+
+      cartItem.setQuantity(newQuantity);
+    } else {
+      Product product =
+          entityFinderService.findByIdOrThrow(
+              productRepository, productId, ErrorCode.PRODUCT_NOT_FOUND);
+
+      cartItem =
+          CartItem.builder()
+              .cart(cart)
+              .product(product)
+              .quantity(quantity)
+              .price(product.getCurrentPrice())
+              .build();
+    }
+    return cartItemMapper.toCartItemResponse(cartItemRepository.save(cartItem));
+  }
+
+  @Transactional
+  public CartItemResponse updateCartItem(Long cartItemId, Long branchId, int quantity) {
     CartItem cartItem =
         cartItemRepository
             .findById(cartItemId)
             .orElseThrow(() -> new AppException(ErrorCode.CART_ITEM_NOT_FOUND));
-    return cartItemMapper.toCartItemResponse(cartItem);
+
+    if (!inventoryProductService.checkStockAvailability(
+        branchId, cartItem.getProduct().getProductId(), quantity)) {
+      throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
+    }
+
+    cartItem.setPrice(cartItem.getProduct().getCurrentPrice());
+    cartItem.setQuantity(quantity);
+    return cartItemMapper.toCartItemResponse(cartItemRepository.save(cartItem));
   }
 
   public void updateCartItemsSelection(List<Long> cartItemIds, boolean isSelected) {
@@ -95,39 +155,6 @@ public class CartItemService {
   public List<CartItemResponse> getAllCartItemsByCartId(Long cartId) {
     List<CartItem> cartItems = cartItemRepository.findByCart_CartId(cartId);
     return cartItems.stream().map(cartItemMapper::toCartItemResponse).collect(Collectors.toList());
-  }
-
-  public CartItemResponse addProductToCart(Long cartId, Long productId, int quantity) {
-    Optional<CartItem> existingCartItem =
-        cartItemRepository.findByCart_CartIdAndProduct_ProductId(cartId, productId);
-    Product product =
-        productRepository
-            .findById(productId)
-            .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
-
-    if (existingCartItem.isPresent()) {
-      CartItem cartItem = existingCartItem.get();
-      cartItem.setQuantity(cartItem.getQuantity() + quantity);
-      cartItemRepository.save(cartItem);
-      return cartItemMapper.toCartItemResponse(cartItem);
-    }
-
-    Cart cart =
-        cartRepository
-            .findById(cartId)
-            .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
-
-    CartItem newCartItem =
-        CartItem.builder()
-            .cart(cart)
-            .product(product)
-            .quantity(quantity)
-            .isSelected(false)
-            .price(product.getCurrentPrice())
-            .build();
-
-    cartItemRepository.save(newCartItem);
-    return cartItemMapper.toCartItemResponse(newCartItem);
   }
 
   public double calculateCartTotal(Long cartId) {

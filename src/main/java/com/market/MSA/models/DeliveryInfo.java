@@ -16,7 +16,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "deliveryinfos")
+@Table(name = "deliveryInfos")
 public class DeliveryInfo {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

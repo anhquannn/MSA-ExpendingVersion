@@ -15,14 +15,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+@Entity
+@Table(name = "cartItems")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity
-@Table(name = "cartitems")
 public class CartItem {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

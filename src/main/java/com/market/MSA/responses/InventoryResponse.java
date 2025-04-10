@@ -15,8 +15,6 @@ public class InventoryResponse {
   String name;
   String address;
   String contact;
-  int stockNumber;
-  String stockLevel;
   long totalRevenue;
 
   BranchResponse branch;

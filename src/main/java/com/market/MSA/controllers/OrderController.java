@@ -97,9 +97,13 @@ public class OrderController {
   }
 
   @GetMapping
-  public ApiResponse<List<OrderResponse>> getAllOrders(int page, int pageSize) {
-    return ApiResponse.<List<OrderResponse>>builder()
-        .result(orderService.getAllOrders(page, pageSize))
+  public ApiResponse<Page<OrderResponse>> getAllOrders(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size,
+      @RequestParam(defaultValue = "orderDate") String sortBy,
+      @RequestParam(defaultValue = "desc") String sortDirection) {
+    return ApiResponse.<Page<OrderResponse>>builder()
+        .result(orderService.getAllOrders(page, size, sortBy, sortDirection))
         .build();
   }
 

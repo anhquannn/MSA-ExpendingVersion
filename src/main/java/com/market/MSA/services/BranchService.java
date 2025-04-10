@@ -14,6 +14,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -82,5 +86,18 @@ public class BranchService {
 
     // Chuyển đổi sang response
     return branches.stream().map(branchMapper::toBranchResponse).collect(Collectors.toList());
+  }
+
+  public Page<BranchResponse> getAllBranches(
+      int page, int size, String sortBy, String sortDirection) {
+    // Create pageable with sorting
+    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
+    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+    // Get all branches with pagination
+    Page<Branch> branches = branchRepository.findAll(pageable);
+
+    // Convert to response DTOs
+    return branches.map(branchMapper::toBranchResponse);
   }
 }

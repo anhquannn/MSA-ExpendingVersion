@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public interface BranchMapper {
   Branch toBranch(BranchRequest request);
 
+  @Mapping(target = "inventory", ignore = true)
   BranchResponse toBranchResponse(Branch branch);
 
   @Mapping(target = "branchId", ignore = true)

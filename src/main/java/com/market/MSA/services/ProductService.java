@@ -209,4 +209,34 @@ public class ProductService {
     // Convert to response DTOs
     return products.map(productMapper::toProductResponse);
   }
+
+  @Cacheable(
+      value = "products",
+      key =
+          "'search_' + #keyword + '_' + #minPrice + '_' + #maxPrice + '_' + #color + '_' + #size + '_' + #categoryId + '_' + #manufacturerId + '_' + #page + '_' + #pageSize + '_' + #sortBy + '_' + #sortDirection")
+  public Page<ProductResponse> searchProducts(
+      String keyword,
+      Double minPrice,
+      Double maxPrice,
+      String color,
+      Integer size,
+      Long categoryId,
+      Long manufacturerId,
+      int page,
+      int pageSize,
+      String sortBy,
+      String sortDirection) {
+
+    // Create pageable with sorting
+    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
+    Pageable pageable = PageRequest.of(page, pageSize, Sort.by(direction, sortBy));
+
+    // Get products with filters and pagination
+    Page<Product> products =
+        productRepository.searchProducts(
+            keyword, minPrice, maxPrice, color, size, categoryId, manufacturerId, pageable);
+
+    // Convert to response DTOs
+    return products.map(productMapper::toProductResponse);
+  }
 }

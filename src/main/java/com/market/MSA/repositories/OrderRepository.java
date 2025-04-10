@@ -16,4 +16,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
   @Query("SELECT o FROM Order o WHERE o.branch.branchId = :branchId")
   Page<Order> findByBranch_BranchId(@Param("branchId") Long branchId, Pageable pageable);
+
+  @Query(
+      "SELECT o FROM Order o JOIN o.user u WHERE o.branch.branchId = :branchId ORDER BY u.phoneNumber")
+  Page<Order> findByBranch_BranchIdWithUserSort(
+      @Param("branchId") Long branchId, Pageable pageable);
 }

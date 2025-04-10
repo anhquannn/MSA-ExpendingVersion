@@ -8,11 +8,14 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    uses = {BranchMapper.class})
 @Component
 public interface InventoryMapper {
   Inventory toInventory(InventoryRequest request);
 
+  @Mapping(target = "inventoryProductResponses", ignore = true)
   InventoryResponse toInventoryResponse(Inventory inventory);
 
   @Mapping(target = "inventoryId", ignore = true)

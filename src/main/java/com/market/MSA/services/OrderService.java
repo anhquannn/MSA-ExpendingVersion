@@ -24,6 +24,7 @@ import com.market.MSA.responses.OrderResponse;
 import com.market.MSA.responses.PromoCodeResponse;
 import jakarta.mail.MessagingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +33,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -215,9 +217,19 @@ public class OrderService {
     return orders.stream().map(orderMapper::toOrderResponse).collect(Collectors.toList());
   }
 
-  public List<OrderResponse> getAllOrders(int page, int pageSize) {
-    List<Order> orders = orderRepository.findAll(PageRequest.of(page, pageSize)).getContent();
-    return orders.stream().map(orderMapper::toOrderResponse).collect(Collectors.toList());
+  @Cacheable(
+      value = "orders",
+      key = "'all_' + #page + '_' + #size + '_' + #sortBy + '_' + #sortDirection")
+  public Page<OrderResponse> getAllOrders(int page, int size, String sortBy, String sortDirection) {
+    // Create pageable with sorting
+    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
+    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+    // Get all orders with pagination
+    Page<Order> orders = orderRepository.findAll(pageable);
+
+    // Convert to response DTOs
+    return orders.map(orderMapper::toOrderResponse);
   }
 
   public List<OrderResponse> getOrdersByUserIDWithStatus(
@@ -255,29 +267,43 @@ public class OrderService {
     emailService.sendEmail(userEmail, subject, emailBody.toString());
   }
 
+  @Cacheable(
+      value = "orders",
+      key =
+          "'branch_' + #branchId + '_' + #page + '_' + #size + '_' + #sortBy + '_' + #sortDirection")
   public Page<OrderResponse> getOrdersByBranchId(
       Long branchId, int page, int size, String sortBy, String sortDirection) {
-    // Kiểm tra branch tồn tại
+    // Check if branch exists
     branchService.getBranchById(branchId);
 
-    // Tạo pageable với sắp xếp
+    // Create pageable with sorting
     Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
-    Sort sort =
-        switch (sortBy.toLowerCase()) {
-          case "orderdate" -> Sort.by(direction, "orderDate");
-          case "grandtotal" -> Sort.by(direction, "grandTotal");
-          case "status" -> Sort.by(direction, "status");
-          default -> Sort.by(direction, "orderDate"); // Mặc định sắp xếp theo orderDate
-        };
 
-    // Xử lý các trường sắp xếp
+    // Handle special sorting by user phone number
+    if ("user-phoneNumber".equals(sortBy)) {
+      // Create a custom sort that joins with the user table
+      Sort sort = Sort.by(direction, "user.phoneNumber");
+      Pageable pageable = PageRequest.of(page, size, sort);
 
-    Pageable pageable = PageRequest.of(page, size, sort);
+      // Use a custom query to join with user table
+      Page<Order> orders = orderRepository.findByBranch_BranchIdWithUserSort(branchId, pageable);
+      return orders.map(orderMapper::toOrderResponse);
+    } else {
+      // Validate sort field
+      validateSortField(sortBy);
 
-    // Lấy danh sách đơn hàng của branch với phân trang và sắp xếp
-    Page<Order> orderPage = orderRepository.findByBranch_BranchId(branchId, pageable);
+      // Standard sorting for order fields (orderDate, grandTotal, status)
+      Sort sort = Sort.by(direction, sortBy);
+      Pageable pageable = PageRequest.of(page, size, sort);
+      Page<Order> orders = orderRepository.findByBranch_BranchId(branchId, pageable);
+      return orders.map(orderMapper::toOrderResponse);
+    }
+  }
 
-    // Chuyển đổi sang OrderResponse
-    return orderPage.map(orderMapper::toOrderResponse);
+  private void validateSortField(String sortBy) {
+    List<String> validSortFields = Arrays.asList("orderDate", "grandTotal", "status");
+    if (!validSortFields.contains(sortBy)) {
+      throw new AppException(ErrorCode.INVALID_SORT_FIELD);
+    }
   }
 }

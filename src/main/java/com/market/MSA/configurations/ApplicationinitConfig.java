@@ -94,17 +94,17 @@ public class ApplicationinitConfig {
               .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
       if (userRepository.findByEmail("nguyenanhquan20102003@gmail.com").isEmpty()
-          || branchRepository.findByName("").isEmpty()) {
+          || branchRepository.findByName("HEAD").isEmpty()) {
         Branch branch =
             Branch.builder()
-                .name("")
-                .address("")
-                .city("")
+                .name("HEAD")
+                .address("51 Mạc Đĩnh Chi")
+                .city("Đà Lạt")
                 .state("")
-                .zip("")
-                .country("")
-                .email("")
-                .contact("")
+                .zip("00000")
+                .country("Việt Nam")
+                .email("dalat@gmail.com")
+                .contact("0000 9999")
                 .build();
 
         branchRepository.save(branch);

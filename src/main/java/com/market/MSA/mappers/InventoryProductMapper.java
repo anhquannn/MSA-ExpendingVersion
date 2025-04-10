@@ -8,7 +8,9 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    uses = {ProductMapper.class, InventoryMapper.class})
 @Component
 public interface InventoryProductMapper {
   InventoryProduct toInventoryProduct(InventoryProductRequest request);

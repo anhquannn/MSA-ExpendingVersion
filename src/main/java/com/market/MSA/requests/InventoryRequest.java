@@ -12,8 +12,6 @@ public class InventoryRequest {
   String name;
   String address;
   String contact;
-  int stockNumber;
-  String stockLevel;
   long totalRevenue;
 
   long branchId;

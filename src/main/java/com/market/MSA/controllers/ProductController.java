@@ -121,4 +121,34 @@ public class ProductController {
                 sortDirection))
         .build();
   }
+
+  @GetMapping("/search")
+  public ApiResponse<Page<ProductResponse>> searchProducts(
+      @RequestParam(required = false) String keyword,
+      @RequestParam(required = false) Double minPrice,
+      @RequestParam(required = false) Double maxPrice,
+      @RequestParam(required = false) String color,
+      @RequestParam(required = false) Integer size,
+      @RequestParam(required = false) Long categoryId,
+      @RequestParam(required = false) Long manufacturerId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int pageSize,
+      @RequestParam(defaultValue = "name") String sortBy,
+      @RequestParam(defaultValue = "asc") String sortDirection) {
+    return ApiResponse.<Page<ProductResponse>>builder()
+        .result(
+            productService.searchProducts(
+                keyword,
+                minPrice,
+                maxPrice,
+                color,
+                size,
+                categoryId,
+                manufacturerId,
+                page,
+                pageSize,
+                sortBy,
+                sortDirection))
+        .build();
+  }
 }

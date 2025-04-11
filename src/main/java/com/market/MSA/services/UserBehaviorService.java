@@ -4,7 +4,9 @@ import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.UserBehaviorMapper;
 import com.market.MSA.models.UserBehavior;
+import com.market.MSA.repositories.ProductRepository;
 import com.market.MSA.repositories.UserBehaviorRepository;
+import com.market.MSA.repositories.UserRepository;
 import com.market.MSA.requests.UserBehaviorRequest;
 import com.market.MSA.responses.UserBehaviorResponse;
 import java.util.List;
@@ -24,13 +26,23 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserBehaviorService {
 
-  UserBehaviorRepository userBehaviorRepository;
-  UserBehaviorMapper userBehaviorMapper;
+  final UserBehaviorRepository userBehaviorRepository;
+  final UserBehaviorMapper userBehaviorMapper;
+  final EntityFinderService entityFinderService;
+  final ProductRepository productRepository;
+  final UserRepository userRepository;
 
   // Tạo UserBehavior
   @Transactional
   public UserBehaviorResponse createUserBehavior(UserBehaviorRequest request) {
     UserBehavior userBehavior = userBehaviorMapper.toUserBehavior(request);
+    userBehavior.setProduct(
+        entityFinderService.findByIdOrThrow(
+            productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
+    userBehavior.setUser(
+        entityFinderService.findByIdOrThrow(
+            userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
+
     UserBehavior savedUserBehavior = userBehaviorRepository.save(userBehavior);
     return userBehaviorMapper.toUserBehaviorResponse(savedUserBehavior);
   }
@@ -42,6 +54,12 @@ public class UserBehaviorService {
         userBehaviorRepository
             .findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.USER_BEHAVIOR_NOT_FOUND));
+    userBehavior.setProduct(
+        entityFinderService.findByIdOrThrow(
+            productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
+    userBehavior.setUser(
+        entityFinderService.findByIdOrThrow(
+            userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
 
     userBehaviorMapper.updateUserBehaviorFromRequest(request, userBehavior);
     UserBehavior updatedUserBehavior = userBehaviorRepository.save(userBehavior);

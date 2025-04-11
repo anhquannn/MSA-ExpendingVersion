@@ -54,6 +54,9 @@ public enum ErrorCode {
   INVENTORY_PRODUCT_NOT_FOUND(138, "InventoryProduct not found!", HttpStatus.NOT_FOUND),
   INSUFFICIENT_STOCK(139, "Insufficient stock!", HttpStatus.BAD_REQUEST),
   INVALID_SORT_FIELD(140, "Invalid sort field!", HttpStatus.BAD_REQUEST),
+
+  NOTIFICATION_NOT_FOUND(141, "Notification not found!", HttpStatus.NOT_FOUND),
+  INVALID_INPUT(142, "Invalid input!", HttpStatus.BAD_REQUEST),
   ;
 
   private final int code;

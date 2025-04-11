@@ -1,5 +1,6 @@
 package com.market.MSA.configurations;
 
+import com.market.MSA.jobs.LowStockCheckJob;
 import com.market.MSA.jobs.TrendingProductJob;
 import com.market.MSA.jobs.UpdateExpiryTimeJob;
 import com.market.MSA.jobs.UpdatePromoCodeStatusJob;
@@ -57,7 +58,9 @@ public class QuartzConfig {
       JobDetail updatePromoCodeStatusJobDetail,
       Trigger updatePromoCodeStatusTrigger,
       JobDetail createTrendingProductDataJobDetail,
-      Trigger createTrendingProductDataTrigger) {
+      Trigger createTrendingProductDataTrigger,
+      JobDetail lowStockCheckJobDetail,
+      Trigger lowStockCheckTrigger) {
     return args -> {
       Scheduler scheduler = schedulerFactoryBean.getScheduler();
 
@@ -65,6 +68,7 @@ public class QuartzConfig {
       scheduler.scheduleJob(updateExpiryTimeJobDetail, updateExpiryTimeTrigger);
       scheduler.scheduleJob(updatePromoCodeStatusJobDetail, updatePromoCodeStatusTrigger);
       scheduler.scheduleJob(createTrendingProductDataJobDetail, createTrendingProductDataTrigger);
+      scheduler.scheduleJob(lowStockCheckJobDetail, lowStockCheckTrigger);
 
       // Khởi động scheduler (nếu chưa tự động chạy)
       if (!scheduler.isStarted()) {
@@ -129,6 +133,24 @@ public class QuartzConfig {
         .withSchedule(
             CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
                 .withMisfireHandlingInstructionFireAndProceed())
+        .build();
+  }
+
+  @Bean
+  public JobDetail lowStockCheckJobDetail() {
+    return JobBuilder.newJob(LowStockCheckJob.class)
+        .withIdentity("lowStockCheckJob")
+        .storeDurably()
+        .build();
+  }
+
+  @Bean
+  public Trigger lowStockCheckTrigger() {
+    return TriggerBuilder.newTrigger()
+        .forJob(lowStockCheckJobDetail())
+        .withIdentity("lowStockCheckTrigger")
+        .withSchedule(
+            SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(60).repeatForever())
         .build();
   }
 }

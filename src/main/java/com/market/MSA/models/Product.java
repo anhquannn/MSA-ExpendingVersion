@@ -67,5 +67,8 @@ public class Product {
   List<UserBehavior> userBehaviors;
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<Notification> notifications;
+
+  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
   List<TrendingProduct> trendingProducts;
 }

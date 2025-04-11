@@ -112,12 +112,15 @@ public class CartItemService {
   }
 
   @Transactional
-  public CartItemResponse updateCartItem(Long cartItemId, Long branchId, int quantity) {
+  public CartItemResponse updateCartItem(
+      Long cartItemId, Long branchId, int quantity, boolean isSelected) {
+    // Check if cart item exists
     CartItem cartItem =
         cartItemRepository
             .findById(cartItemId)
             .orElseThrow(() -> new AppException(ErrorCode.CART_ITEM_NOT_FOUND));
 
+    // Check stock availability
     boolean hasSufficientStock =
         inventoryProductService.checkStockAvailability(
             branchId, cartItem.getProduct().getProductId(), quantity);
@@ -125,10 +128,11 @@ public class CartItemService {
       throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
     }
 
-    cartItem.setPrice(cartItem.getProduct().getCurrentPrice());
-    cartItem.setQuantity(quantity);
+    // Update cart item using repository method
+    cartItemRepository.updateCartItem(cartItemId, isSelected, quantity);
 
-    return cartItemMapper.toCartItemResponse(cartItemRepository.save(cartItem));
+    // Get updated cart item
+    return getCartItemById(cartItemId);
   }
 
   public void updateCartItemsSelection(List<Long> cartItemIds, boolean isSelected) {

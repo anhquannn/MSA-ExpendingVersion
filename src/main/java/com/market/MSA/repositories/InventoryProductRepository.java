@@ -13,8 +13,11 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
   List<InventoryProduct> findByProductId_ProductId(@Param("productId") Long productId);
 
   @Query("SELECT i FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId")
-  Page<InventoryProduct> findByInventory_InventoryId(
+  Page<InventoryProduct> findByInventory_InventoryIdWithPageable(
       @Param("inventoryId") Long inventoryId, Pageable pageable);
+
+  @Query("SELECT i FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId")
+  List<InventoryProduct> findAllByInventory_InventoryId(@Param("inventoryId") Long inventoryId);
 
   @Query(
       "SELECT i FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId AND i.product.productId = :productId")

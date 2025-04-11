@@ -55,5 +55,8 @@ public class User {
   List<Order> orders;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<Notification> notifications;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   List<UserBehavior> userBehaviors;
 }

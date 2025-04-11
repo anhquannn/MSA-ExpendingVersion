@@ -4,6 +4,7 @@ import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.TrendingProductMapper;
 import com.market.MSA.models.TrendingProduct;
+import com.market.MSA.repositories.ProductRepository;
 import com.market.MSA.repositories.TrendingProductRepository;
 import com.market.MSA.requests.TrendingProductRequest;
 import com.market.MSA.responses.TrendingProductResponse;
@@ -23,13 +24,19 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TrendingProductService {
-  TrendingProductRepository trendingProductRepository;
-  TrendingProductMapper trendingProductMapper;
+  final TrendingProductRepository trendingProductRepository;
+  final TrendingProductMapper trendingProductMapper;
+  final EntityFinderService entityFinderService;
+  final ProductRepository productRepository;
 
   // Tạo TrendingProduct
   @Transactional
   public TrendingProductResponse createTrendingProduct(TrendingProductRequest request) {
     TrendingProduct trendingProduct = trendingProductMapper.toTrendingProduct(request);
+    trendingProduct.setProduct(
+        entityFinderService.findByIdOrThrow(
+            productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
+
     TrendingProduct savedTrendingProduct = trendingProductRepository.save(trendingProduct);
     return trendingProductMapper.toTrendingProductResponse(savedTrendingProduct);
   }
@@ -41,6 +48,9 @@ public class TrendingProductService {
         trendingProductRepository
             .findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.TRENDING_PRODUCT_NOT_FOUND));
+    trendingProduct.setProduct(
+        entityFinderService.findByIdOrThrow(
+            productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
 
     trendingProductMapper.updateTrendingProductFromRequest(request, trendingProduct);
     TrendingProduct updatedTrendingProduct = trendingProductRepository.save(trendingProduct);

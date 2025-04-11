@@ -52,5 +52,8 @@ public class Order {
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   List<OrderDetail> orderDetails;
 
+  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<Notification> notifications;
+
   @ManyToMany List<PromoCode> promoCodes;
 }

@@ -29,4 +29,7 @@ public class Inventory {
 
   @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
   List<InventoryProduct> inventoryProducts;
+
+  @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<Notification> notifications;
 }

@@ -30,7 +30,8 @@ public class ReturnOrderService {
   final OrderRepository orderRepository;
   final OrderDetailRepository orderDetailRepository;
   final ReturnOrderMapper returnOrderMapper;
-  private final InventoryProductService inventoryProductService;
+  final InventoryProductService inventoryProductService;
+  final NotificationService notificationService;
 
   @Transactional
   public ReturnOrderResponse createReturnOrder(ReturnOrderRequest request) {
@@ -62,6 +63,9 @@ public class ReturnOrderService {
     for (OrderDetail orderDetail : orderDetails) {
       inventoryProductService.restoreStock(orderDetail.getOrder());
     }
+
+    // Send notification
+    notificationService.sendOrderCancelledNotification(order.getOrderId());
 
     return returnOrderMapper.toReturnOrderResponse(returnOrder);
   }

@@ -30,10 +30,11 @@ public class ProductController {
   ProductService productService;
 
   @PostMapping
-  public ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request) {
-    System.out.println("Received request: " + request);
+  public ApiResponse<ProductResponse> createProduct(
+      @RequestBody @Valid ProductRequest request,
+      @RequestParam(defaultValue = "false") boolean sendNotificationToAll) {
     return ApiResponse.<ProductResponse>builder()
-        .result(productService.createProduct(request))
+        .result(productService.createProduct(request, sendNotificationToAll))
         .build();
   }
 

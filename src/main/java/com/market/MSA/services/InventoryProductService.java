@@ -36,9 +36,9 @@ public class InventoryProductService {
   final EntityFinderService entityFinderService;
   final InventoryRepository inventoryRepository;
   final InventoryProductMapper inventoryProductMapper;
-  private final ProductRepository productRepository;
-  private final ProductService productService;
-  private final InventoryService inventoryService;
+  final ProductRepository productRepository;
+  final ProductService productService;
+  final InventoryService inventoryService;
 
   @Transactional
   public InventoryProductResponse createInventoryProduct(InventoryProductRequest request) {
@@ -103,7 +103,7 @@ public class InventoryProductService {
       Long inventoryId, int page, int pageSize) {
     Pageable pageable = PageRequest.of(page, pageSize);
     Page<InventoryProduct> inventoryProducts =
-        inventoryProductRepository.findByInventory_InventoryId(inventoryId, pageable);
+        inventoryProductRepository.findByInventory_InventoryIdWithPageable(inventoryId, pageable);
     return inventoryProducts.stream()
         .map(inventoryProductMapper::toInventoryProductResponse)
         .collect(Collectors.toList());
@@ -263,7 +263,7 @@ public class InventoryProductService {
 
     // Lấy danh sách sản phẩm có phân trang
     Page<InventoryProduct> inventoryProductsPage =
-        inventoryProductRepository.findByInventory_InventoryId(
+        inventoryProductRepository.findByInventory_InventoryIdWithPageable(
             inventory.getInventoryId(), pageable);
 
     // Chuyển đổi sang response

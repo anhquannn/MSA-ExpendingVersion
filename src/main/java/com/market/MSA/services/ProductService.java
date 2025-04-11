@@ -35,9 +35,10 @@ public class ProductService {
   final ManufacturerRepository manufacturerRepository;
   final CategoryRepository categoryRepository;
   final ProductMapper productMapper;
+  final NotificationService notificationService;
 
   @Transactional
-  public ProductResponse createProduct(ProductRequest request) {
+  public ProductResponse createProduct(ProductRequest request, boolean sendNotificationToAll) {
     Product product = productMapper.toProduct(request);
     product.setManufacturer(
         entityFinderService.findByIdOrThrow(
@@ -48,6 +49,11 @@ public class ProductService {
     product.setCurrentPrice(request.getPrice());
 
     Product savedProduct = productRepository.save(product);
+
+    if (sendNotificationToAll) {
+      notificationService.sendProductNotificationToAllCustomers(savedProduct.getProductId(), true);
+    }
+
     return productMapper.toProductResponse(savedProduct);
   }
 

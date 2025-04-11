@@ -15,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -136,5 +137,40 @@ public class UserController {
       throws JOSEException, ParseException {
     var result = authenticationService.refreshToken(request);
     return ApiResponse.<AuthenticationResponse>builder().result(result).build();
+  }
+
+  @GetMapping("/role/{role}/page")
+  public ApiResponse<Page<UserResponse>> getAllUsersByRoleWithPagination(
+      @PathVariable String role,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size) {
+    return ApiResponse.<Page<UserResponse>>builder()
+        .result(userService.getAllUsersByRoleWithPagination(role, page, size))
+        .build();
+  }
+
+  @GetMapping("/role/{role}/all")
+  public ApiResponse<List<UserResponse>> getAllUsersByRole(@PathVariable String role) {
+    return ApiResponse.<List<UserResponse>>builder()
+        .result(userService.getAllUsersByRole(role))
+        .build();
+  }
+
+  @GetMapping("/inventory/{inventoryId}/managers/page")
+  public ApiResponse<Page<UserResponse>> getManagersByInventoryIdWithPagination(
+      @PathVariable Long inventoryId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size) {
+    return ApiResponse.<Page<UserResponse>>builder()
+        .result(userService.getManagersByInventoryIdWithPagination(inventoryId, page, size))
+        .build();
+  }
+
+  @GetMapping("/inventory/{inventoryId}/managers/all")
+  public ApiResponse<List<UserResponse>> getAllManagersByInventoryId(
+      @PathVariable Long inventoryId) {
+    return ApiResponse.<List<UserResponse>>builder()
+        .result(userService.getAllManagersByInventoryId(inventoryId))
+        .build();
   }
 }

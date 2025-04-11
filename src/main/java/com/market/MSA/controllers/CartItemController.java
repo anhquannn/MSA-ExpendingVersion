@@ -44,9 +44,13 @@ public class CartItemController {
 
   @PutMapping("/{cartItemId}")
   public ApiResponse<CartItemResponse> updateCartItem(
-      @PathVariable Long cartItemId, @RequestParam Long branchId, @RequestParam int quantity) {
+      @PathVariable Long cartItemId,
+      @RequestParam Long branchId,
+      @RequestParam int quantity,
+      @RequestParam(defaultValue = "true") boolean isSelected) {
     return ApiResponse.<CartItemResponse>builder()
-        .result(cartItemService.updateCartItem(cartItemId, branchId, quantity))
+        .result(cartItemService.updateCartItem(cartItemId, branchId, quantity, isSelected))
+        .message("Cart item updated successfully")
         .build();
   }
 

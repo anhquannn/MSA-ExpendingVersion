@@ -60,6 +60,7 @@ public class OrderService {
   final OrderMapper orderMapper;
   final InventoryProductService inventoryProductService;
   final BranchService branchService;
+  final NotificationService notificationService;
 
   @Transactional
   public OrderResponse createOrder(Long userId, Long branchId, Long cartId, List<String> promoCodes)
@@ -144,6 +145,9 @@ public class OrderService {
 
     // Gửi email xác nhận đơn hàng
     sendOrderDetails(order, user.getEmail());
+
+    // Send notification
+    notificationService.sendOrderCreatedNotification(order.getOrderId());
 
     return orderMapper.toOrderResponse(order);
   }

@@ -19,14 +19,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -182,9 +185,8 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
+  //  @PreAuthorize("hasRole('ADMIN')")
   public List<UserResponse> getUsers() {
-    log.info("In method get Users");
     List<User> users = userRepository.findAll();
     return users.stream().map(userMapper::toUserResponse).toList();
   }
@@ -265,5 +267,61 @@ public class UserService {
     }
 
     return password.toString();
+  }
+
+  @Cacheable(value = "users", key = "'role:' + #role + ':page:' + #page + ':size:' + #size")
+  public Page<UserResponse> getAllUsersByRoleWithPagination(String role, int page, int size) {
+    if (role == null || role.trim().isEmpty()) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+    if (page < 0) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+    if (size <= 0) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+    Page<User> userPage =
+        userRepository.findByRoleWithPagination(role.toUpperCase(), PageRequest.of(page, size));
+    return userPage.map(userMapper::toUserResponse);
+  }
+
+  @Cacheable(value = "users", key = "'role:all:' + #role")
+  public List<UserResponse> getAllUsersByRole(String role) {
+    if (role == null || role.trim().isEmpty()) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+    return userRepository.findAllByRole(role.toUpperCase()).stream()
+        .map(userMapper::toUserResponse)
+        .collect(Collectors.toList());
+  }
+
+  @Cacheable(
+      value = "users",
+      key = "'managers:inventory:' + #inventoryId + ':page:' + #page + ':size:' + #size")
+  public Page<UserResponse> getManagersByInventoryIdWithPagination(
+      Long inventoryId, int page, int size) {
+    if (inventoryId == null) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+    if (page < 0) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+    if (size <= 0) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+    Page<User> userPage =
+        userRepository.findManagersByInventoryIdWithPagination(
+            inventoryId, PageRequest.of(page, size));
+    return userPage.map(userMapper::toUserResponse);
+  }
+
+  @Cacheable(value = "users", key = "'managers:inventory:all:' + #inventoryId")
+  public List<UserResponse> getAllManagersByInventoryId(Long inventoryId) {
+    if (inventoryId == null) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+    return userRepository.findAllManagersByInventoryId(inventoryId).stream()
+        .map(userMapper::toUserResponse)
+        .collect(Collectors.toList());
   }
 }

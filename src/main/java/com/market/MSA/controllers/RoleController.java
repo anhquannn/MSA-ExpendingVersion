@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.RoleRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.RoleResponse;
@@ -21,25 +22,35 @@ public class RoleController {
 
   @PostMapping
   ApiResponse<RoleResponse> createRole(@RequestBody RoleRequest request) {
-
-    return ApiResponse.<RoleResponse>builder().result(roleService.createRole(request)).build();
+    return ApiResponse.<RoleResponse>builder()
+        .result(roleService.createRole(request))
+        .message(ApiMessage.ROLE_CREATED.getMessage())
+        .build();
   }
 
   @GetMapping
   ApiResponse<List<RoleResponse>> getAll() {
-    return ApiResponse.<List<RoleResponse>>builder().result(roleService.getAll()).build();
+    return ApiResponse.<List<RoleResponse>>builder()
+        .result(roleService.getAll())
+        .message(ApiMessage.ALL_ROLES_RETRIEVED.getMessage())
+        .build();
   }
 
   @DeleteMapping("/{roleId}")
   ApiResponse<Boolean> delete(@PathVariable long roleId) {
     Boolean result = roleService.delete(roleId);
-
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.ROLE_DELETED.getMessage())
+        .build();
   }
 
   @PutMapping("/{id}")
   public ApiResponse<RoleResponse> updateRole(
       @PathVariable Long id, @RequestBody RoleRequest request) {
-    return ApiResponse.<RoleResponse>builder().result(roleService.updateRole(id, request)).build();
+    return ApiResponse.<RoleResponse>builder()
+        .result(roleService.updateRole(id, request))
+        .message(ApiMessage.ROLE_UPDATED.getMessage())
+        .build();
   }
 }

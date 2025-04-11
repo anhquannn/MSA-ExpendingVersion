@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.CartItemRequest;
 import com.market.MSA.requests.CartItemSelectionRequest;
 import com.market.MSA.responses.ApiResponse;
@@ -31,6 +32,7 @@ public class CartItemController {
   ApiResponse<CartItemResponse> createCartItem(@RequestBody @Valid CartItemRequest request) {
     return ApiResponse.<CartItemResponse>builder()
         .result(cartItemService.createCartItem(request))
+        .message(ApiMessage.CART_ITEM_CREATED.getMessage())
         .build();
   }
 
@@ -39,6 +41,7 @@ public class CartItemController {
       @PathVariable Long cartId, @PathVariable Long productId) {
     return ApiResponse.<CartItemResponse>builder()
         .result(cartItemService.getCartItem(cartId, productId))
+        .message(ApiMessage.CART_ITEM_RETRIEVED.getMessage())
         .build();
   }
 
@@ -50,7 +53,7 @@ public class CartItemController {
       @RequestParam(defaultValue = "true") boolean isSelected) {
     return ApiResponse.<CartItemResponse>builder()
         .result(cartItemService.updateCartItem(cartItemId, branchId, quantity, isSelected))
-        .message("Cart item updated successfully")
+        .message(ApiMessage.CART_ITEM_UPDATED.getMessage())
         .build();
   }
 
@@ -58,25 +61,35 @@ public class CartItemController {
   ApiResponse<String> updateCartItemsSelection(
       @RequestBody CartItemSelectionRequest request, @RequestParam boolean isSelected) {
     cartItemService.updateCartItemsSelection(request.getCartItemIds(), isSelected);
-    return ApiResponse.<String>builder().result("Cart items selection updated").build();
+    return ApiResponse.<String>builder()
+        .result("Cart items selection updated")
+        .message(ApiMessage.CART_ITEMS_SELECTION_UPDATED.getMessage())
+        .build();
   }
 
   @DeleteMapping("/{cartItemId}")
   ApiResponse<Boolean> deleteCartItem(@PathVariable Long cartItemId) {
     Boolean result = cartItemService.deleteCartItem(cartItemId);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.CART_ITEM_DELETED.getMessage())
+        .build();
   }
 
   @DeleteMapping("/clear/{cartId}")
   ApiResponse<String> clearCart(@PathVariable Long cartId) {
     cartItemService.clearCart(cartId);
-    return ApiResponse.<String>builder().result("Cart cleared").build();
+    return ApiResponse.<String>builder()
+        .result("Cart cleared")
+        .message(ApiMessage.CART_CLEARED.getMessage())
+        .build();
   }
 
   @GetMapping("/by-id/{id}")
   ApiResponse<CartItemResponse> getCartItemById(@PathVariable Long id) {
     return ApiResponse.<CartItemResponse>builder()
         .result(cartItemService.getCartItemById(id))
+        .message(ApiMessage.CART_ITEM_RETRIEVED.getMessage())
         .build();
   }
 
@@ -84,6 +97,7 @@ public class CartItemController {
   ApiResponse<List<CartItemResponse>> getCartItemsByCartId(@PathVariable Long cartId) {
     return ApiResponse.<List<CartItemResponse>>builder()
         .result(cartItemService.getCartItemsByCartId(cartId))
+        .message(ApiMessage.CART_ITEM_RETRIEVED.getMessage())
         .build();
   }
 
@@ -91,6 +105,7 @@ public class CartItemController {
   ApiResponse<List<CartItemResponse>> getAllCartItemsByCartId(@PathVariable Long cartId) {
     return ApiResponse.<List<CartItemResponse>>builder()
         .result(cartItemService.getAllCartItemsByCartId(cartId))
+        .message(ApiMessage.ALL_CART_ITEMS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -102,11 +117,15 @@ public class CartItemController {
       @RequestParam int quantity) {
     return ApiResponse.<CartItemResponse>builder()
         .result(cartItemService.addToCart(userId, productId, branchId, quantity))
+        .message(ApiMessage.ADD_CART_ITEM.getMessage())
         .build();
   }
 
   @GetMapping("/calculate-total/{cartId}")
   ApiResponse<Double> calculateCartTotal(@PathVariable Long cartId) {
-    return ApiResponse.<Double>builder().result(cartItemService.calculateCartTotal(cartId)).build();
+    return ApiResponse.<Double>builder()
+        .result(cartItemService.calculateCartTotal(cartId))
+        .message(ApiMessage.CART_TOTAL_CALCULATED.getMessage())
+        .build();
   }
 }

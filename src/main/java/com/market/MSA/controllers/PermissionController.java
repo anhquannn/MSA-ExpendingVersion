@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.PermissionRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.PermissionResponse;
@@ -21,9 +22,9 @@ public class PermissionController {
 
   @PostMapping
   ApiResponse<PermissionResponse> createPermission(@RequestBody PermissionRequest request) {
-
     return ApiResponse.<PermissionResponse>builder()
         .result(permissionService.createPermission(request))
+        .message(ApiMessage.PERMISSION_CREATED.getMessage())
         .build();
   }
 
@@ -31,13 +32,17 @@ public class PermissionController {
   ApiResponse<List<PermissionResponse>> getAll() {
     return ApiResponse.<List<PermissionResponse>>builder()
         .result(permissionService.getAll())
+        .message(ApiMessage.ALL_PERMISSIONS_RETRIEVED.getMessage())
         .build();
   }
 
   @DeleteMapping("/{permissionId}")
   ApiResponse<Boolean> deletePermission(@PathVariable long permissionId) {
     Boolean result = permissionService.delete(permissionId);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.PERMISSION_DELETED.getMessage())
+        .build();
   }
 
   @PutMapping("/{id}")
@@ -45,6 +50,7 @@ public class PermissionController {
       @PathVariable Long id, @RequestBody PermissionRequest request) {
     return ApiResponse.<PermissionResponse>builder()
         .result(permissionService.updatePermission(id, request))
+        .message(ApiMessage.PERMISSION_UPDATED.getMessage())
         .build();
   }
 }

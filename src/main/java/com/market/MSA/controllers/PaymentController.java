@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.PaymentRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.PaymentResponse;
@@ -29,6 +30,7 @@ public class PaymentController {
   ApiResponse<PaymentResponse> createPayment(@RequestBody @Valid PaymentRequest request) {
     return ApiResponse.<PaymentResponse>builder()
         .result(paymentService.createPayment(request))
+        .message(ApiMessage.PAYMENT_CREATED.getMessage())
         .build();
   }
 
@@ -37,24 +39,32 @@ public class PaymentController {
       @PathVariable Long id, @RequestBody @Valid PaymentRequest request) {
     return ApiResponse.<PaymentResponse>builder()
         .result(paymentService.updatePayment(id, request))
+        .message(ApiMessage.PAYMENT_UPDATED.getMessage())
         .build();
   }
 
   @DeleteMapping("/{id}")
   ApiResponse<Boolean> deletePayment(@PathVariable Long id) {
     Boolean result = paymentService.deletePayment(id);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.PAYMENT_DELETED.getMessage())
+        .build();
   }
 
   @GetMapping("/{id}")
   ApiResponse<PaymentResponse> getPaymentById(@PathVariable Long id) {
-    return ApiResponse.<PaymentResponse>builder().result(paymentService.getPaymentById(id)).build();
+    return ApiResponse.<PaymentResponse>builder()
+        .result(paymentService.getPaymentById(id))
+        .message(ApiMessage.PAYMENT_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping
   ApiResponse<List<PaymentResponse>> getAllPayments() {
     return ApiResponse.<List<PaymentResponse>>builder()
         .result(paymentService.getAllPayments())
+        .message(ApiMessage.ALL_PAYMENTS_RETRIEVED.getMessage())
         .build();
   }
 }

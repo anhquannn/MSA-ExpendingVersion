@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.*;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.AuthenticationResponse;
@@ -38,7 +39,10 @@ public class UserController {
 
   @PostMapping("/register")
   ApiResponse<UserResponse> registerUser(@RequestBody @Valid UserRequest request) {
-    return ApiResponse.<UserResponse>builder().result(userService.registerUser(request)).build();
+    return ApiResponse.<UserResponse>builder()
+        .result(userService.registerUser(request))
+        .message(ApiMessage.USER_REGISTERED.getMessage())
+        .build();
   }
 
   @PostMapping("/login")
@@ -46,12 +50,16 @@ public class UserController {
       throws MessagingException {
     return ApiResponse.<String>builder()
         .result(userService.login(requests.getEmail(), requests.getPassword()))
+        .message(ApiMessage.USER_LOGGED_IN.getMessage())
         .build();
   }
 
   @PostMapping("/verify-otp")
   ApiResponse<String> verifyOtp(@RequestBody @Valid VerifyOtpRequest requests) {
-    return ApiResponse.<String>builder().result(userService.verifyOtp(requests.getOtp())).build();
+    return ApiResponse.<String>builder()
+        .result(userService.verifyOtp(requests.getOtp()))
+        .message(ApiMessage.EMAIL_VERIFIED.getMessage())
+        .build();
   }
 
   @PostMapping("/reset-password")
@@ -59,17 +67,24 @@ public class UserController {
       throws MessagingException {
     return ApiResponse.<String>builder()
         .result(userService.resetPassword(requests.getEmail()))
+        .message(ApiMessage.PASSWORD_RESET.getMessage())
         .build();
   }
 
   @PostMapping("/login/google")
   ApiResponse<String> loginWithGoogle(@RequestParam String accessToken) {
-    return ApiResponse.<String>builder().result(userService.loginWithGoogle(accessToken)).build();
+    return ApiResponse.<String>builder()
+        .result(userService.loginWithGoogle(accessToken))
+        .message(ApiMessage.GOOGLE_LOGIN_SUCCESSFUL.getMessage())
+        .build();
   }
 
   @PostMapping
   ApiResponse<UserResponse> createUser(@RequestBody @Valid UserRequest request) {
-    return ApiResponse.<UserResponse>builder().result(userService.createUser(request)).build();
+    return ApiResponse.<UserResponse>builder()
+        .result(userService.createUser(request))
+        .message(ApiMessage.USER_CREATED.getMessage())
+        .build();
   }
 
   @GetMapping
@@ -79,18 +94,25 @@ public class UserController {
         .getAuthorities()
         .forEach(grantedAuthority -> log.info(grantedAuthority.getAuthority()));
 
-    return ApiResponse.<List<UserResponse>>builder().result(userService.getUsers()).build();
+    return ApiResponse.<List<UserResponse>>builder()
+        .result(userService.getUsers())
+        .message(ApiMessage.ALL_USERS_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping("/{userId}")
   ApiResponse<UserResponse> getUser(@PathVariable long userId) {
-    return ApiResponse.<UserResponse>builder().result(userService.getUserByID(userId)).build();
+    return ApiResponse.<UserResponse>builder()
+        .result(userService.getUserByID(userId))
+        .message(ApiMessage.USER_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping("/google/{googleId}")
   ApiResponse<UserResponse> getUserByGoogleID(@PathVariable String googleId) {
     return ApiResponse.<UserResponse>builder()
         .result(userService.getUserByGoogleID(googleId))
+        .message(ApiMessage.USER_RETRIEVED.getMessage())
         .build();
   }
 
@@ -98,23 +120,33 @@ public class UserController {
   ApiResponse<String> generateAndSetRandomPasswordByEmail(@PathVariable String email) {
     return ApiResponse.<String>builder()
         .result(userService.generateAndSetRandomPasswordByEmail(email))
+        .message(ApiMessage.PASSWORD_RESET_EMAIL_SENT.getMessage())
         .build();
   }
 
   @GetMapping("/email/{email}")
   ApiResponse<UserResponse> getUserByEmail(@PathVariable String email) {
-    return ApiResponse.<UserResponse>builder().result(userService.getUserByEmail(email)).build();
+    return ApiResponse.<UserResponse>builder()
+        .result(userService.getUserByEmail(email))
+        .message(ApiMessage.USER_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping("/myinfo")
   ApiResponse<UserResponse> getMyInfo() {
-    return ApiResponse.<UserResponse>builder().result(userService.getMyInfo()).build();
+    return ApiResponse.<UserResponse>builder()
+        .result(userService.getMyInfo())
+        .message(ApiMessage.USER_RETRIEVED.getMessage())
+        .build();
   }
 
   @DeleteMapping("/{userId}")
   ApiResponse<Boolean> deleteUser(@PathVariable long userId) {
     Boolean result = userService.deleteUser(userId);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.USER_DELETED.getMessage())
+        .build();
   }
 
   @PutMapping("/{userId}")
@@ -122,6 +154,7 @@ public class UserController {
       @PathVariable long userId, @RequestBody UpdateUserRequest request) {
     return ApiResponse.<UserResponse>builder()
         .result(userService.updateUser(userId, request))
+        .message(ApiMessage.USER_UPDATED.getMessage())
         .build();
   }
 
@@ -136,7 +169,10 @@ public class UserController {
   ApiResponse<AuthenticationResponse> refresh(@RequestBody RefreshRequest request)
       throws JOSEException, ParseException {
     var result = authenticationService.refreshToken(request);
-    return ApiResponse.<AuthenticationResponse>builder().result(result).build();
+    return ApiResponse.<AuthenticationResponse>builder()
+        .result(result)
+        .message(ApiMessage.TOKEN_REFRESHED.getMessage())
+        .build();
   }
 
   @GetMapping("/role/{role}/page")
@@ -146,6 +182,7 @@ public class UserController {
       @RequestParam(defaultValue = "10") int size) {
     return ApiResponse.<Page<UserResponse>>builder()
         .result(userService.getAllUsersByRoleWithPagination(role, page, size))
+        .message(ApiMessage.ALL_USERS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -153,6 +190,7 @@ public class UserController {
   public ApiResponse<List<UserResponse>> getAllUsersByRole(@PathVariable String role) {
     return ApiResponse.<List<UserResponse>>builder()
         .result(userService.getAllUsersByRole(role))
+        .message(ApiMessage.ALL_USERS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -163,6 +201,7 @@ public class UserController {
       @RequestParam(defaultValue = "10") int size) {
     return ApiResponse.<Page<UserResponse>>builder()
         .result(userService.getManagersByInventoryIdWithPagination(inventoryId, page, size))
+        .message(ApiMessage.ALL_USERS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -171,6 +210,7 @@ public class UserController {
       @PathVariable Long inventoryId) {
     return ApiResponse.<List<UserResponse>>builder()
         .result(userService.getAllManagersByInventoryId(inventoryId))
+        .message(ApiMessage.ALL_USERS_RETRIEVED.getMessage())
         .build();
   }
 }

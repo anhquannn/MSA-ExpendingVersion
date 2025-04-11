@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.FeedbackRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.FeedbackResponse;
@@ -27,27 +28,36 @@ public class FeedbackController {
 
   @PostMapping
   public ApiResponse<FeedbackResponse> createFeedback(@RequestBody @Valid FeedbackRequest request) {
-    FeedbackResponse createdFeedback = feedbackService.createFeedback(request);
-    return ApiResponse.<FeedbackResponse>builder().result(createdFeedback).build();
+    return ApiResponse.<FeedbackResponse>builder()
+        .result(feedbackService.createFeedback(request))
+        .message(ApiMessage.FEEDBACK_CREATED.getMessage())
+        .build();
   }
 
   @PutMapping("/{id}")
   public ApiResponse<FeedbackResponse> updateFeedback(
       @PathVariable Long id, @RequestBody @Valid FeedbackRequest request) {
-    FeedbackResponse updatedFeedback = feedbackService.updateFeedback(id, request);
-    return ApiResponse.<FeedbackResponse>builder().result(updatedFeedback).build();
+    return ApiResponse.<FeedbackResponse>builder()
+        .result(feedbackService.updateFeedback(id, request))
+        .message(ApiMessage.FEEDBACK_UPDATED.getMessage())
+        .build();
   }
 
   @DeleteMapping("/{id}")
   public ApiResponse<Boolean> deleteFeedback(@PathVariable Long id) {
     Boolean result = feedbackService.deleteFeedback(id);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.FEEDBACK_DELETED.getMessage())
+        .build();
   }
 
   @GetMapping("/{id}")
   public ApiResponse<FeedbackResponse> getFeedbackById(@PathVariable Long id) {
-    FeedbackResponse feedbackResponse = feedbackService.getFeedbackById(id);
-    return ApiResponse.<FeedbackResponse>builder().result(feedbackResponse).build();
+    return ApiResponse.<FeedbackResponse>builder()
+        .result(feedbackService.getFeedbackById(id))
+        .message(ApiMessage.FEEDBACK_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping("/product/{productId}")
@@ -55,6 +65,9 @@ public class FeedbackController {
       @PathVariable Long productId) {
     List<FeedbackResponse> feedbackResponses =
         feedbackService.getAllFeedbacksByProductId(productId);
-    return ApiResponse.<List<FeedbackResponse>>builder().result(feedbackResponses).build();
+    return ApiResponse.<List<FeedbackResponse>>builder()
+        .result(feedbackResponses)
+        .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())
+        .build();
   }
 }

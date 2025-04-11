@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.ManufacturerRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.ManufacturerResponse;
@@ -30,6 +31,7 @@ public class ManufacturerController {
       @RequestBody ManufacturerRequest request) {
     return ApiResponse.<ManufacturerResponse>builder()
         .result(manufacturerService.createManufacturer(request))
+        .message(ApiMessage.MANUFACTURER_CREATED.getMessage())
         .build();
   }
 
@@ -38,19 +40,24 @@ public class ManufacturerController {
       @PathVariable Long id, @RequestBody ManufacturerRequest request) {
     return ApiResponse.<ManufacturerResponse>builder()
         .result(manufacturerService.updateManufacturer(id, request))
+        .message(ApiMessage.MANUFACTURER_UPDATED.getMessage())
         .build();
   }
 
   @DeleteMapping("/{id}")
   public ApiResponse<Boolean> deleteManufacturer(@PathVariable Long id) {
     Boolean result = manufacturerService.deleteManufacturer(id);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.MANUFACTURER_DELETED.getMessage())
+        .build();
   }
 
   @GetMapping("/{id}")
   public ApiResponse<ManufacturerResponse> getManufacturerById(@PathVariable Long id) {
     return ApiResponse.<ManufacturerResponse>builder()
         .result(manufacturerService.getManufacturerById(id))
+        .message(ApiMessage.MANUFACTURER_RETRIEVED.getMessage())
         .build();
   }
 
@@ -58,6 +65,7 @@ public class ManufacturerController {
   public ApiResponse<ManufacturerResponse> getManufacturerByName(@RequestParam String name) {
     return ApiResponse.<ManufacturerResponse>builder()
         .result(manufacturerService.getManufacturerByName(name))
+        .message(ApiMessage.MANUFACTURER_RETRIEVED.getMessage())
         .build();
   }
 
@@ -65,6 +73,7 @@ public class ManufacturerController {
   public ApiResponse<List<ManufacturerResponse>> getAllManufacturers() {
     return ApiResponse.<List<ManufacturerResponse>>builder()
         .result(manufacturerService.getAllManufacturers())
+        .message(ApiMessage.ALL_MANUFACTURERS_RETRIEVED.getMessage())
         .build();
   }
 }

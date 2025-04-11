@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.UserBehaviorRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.UserBehaviorResponse;
@@ -27,6 +28,7 @@ public class UserBehaviorController {
       @RequestBody @Valid UserBehaviorRequest request) {
     return ApiResponse.<UserBehaviorResponse>builder()
         .result(userBehaviorService.createUserBehavior(request))
+        .message(ApiMessage.USER_BEHAVIOR_CREATED.getMessage())
         .build();
   }
 
@@ -36,6 +38,7 @@ public class UserBehaviorController {
       @PathVariable long userBehaviorId, @RequestBody @Valid UserBehaviorRequest request) {
     return ApiResponse.<UserBehaviorResponse>builder()
         .result(userBehaviorService.updateUserBehavior(userBehaviorId, request))
+        .message(ApiMessage.USER_BEHAVIOR_UPDATED.getMessage())
         .build();
   }
 
@@ -43,7 +46,10 @@ public class UserBehaviorController {
   @DeleteMapping("/{userBehaviorId}")
   public ApiResponse<Boolean> deleteUserBehavior(@PathVariable long userBehaviorId) {
     Boolean result = userBehaviorService.deleteUserBehavior(userBehaviorId);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.USER_BEHAVIOR_DELETED.getMessage())
+        .build();
   }
 
   // Lấy UserBehavior theo ID
@@ -51,6 +57,7 @@ public class UserBehaviorController {
   public ApiResponse<UserBehaviorResponse> getUserBehaviorById(@PathVariable long userBehaviorId) {
     return ApiResponse.<UserBehaviorResponse>builder()
         .result(userBehaviorService.getUserBehaviorById(userBehaviorId))
+        .message(ApiMessage.USER_BEHAVIOR_RETRIEVED.getMessage())
         .build();
   }
 
@@ -60,6 +67,7 @@ public class UserBehaviorController {
       @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int pageSize) {
     return ApiResponse.<List<UserBehaviorResponse>>builder()
         .result(userBehaviorService.getAllUserBehaviors(page, pageSize))
+        .message(ApiMessage.ALL_USER_BEHAVIORS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -71,6 +79,7 @@ public class UserBehaviorController {
       @RequestParam(defaultValue = "10") int pageSize) {
     return ApiResponse.<List<UserBehaviorResponse>>builder()
         .result(userBehaviorService.getUserBehaviorsByUserId(userId, page, pageSize))
+        .message(ApiMessage.ALL_USER_BEHAVIORS_RETRIEVED.getMessage())
         .build();
   }
 }

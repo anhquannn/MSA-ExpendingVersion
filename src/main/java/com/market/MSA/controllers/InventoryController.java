@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.InventoryRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.InventoryResponse;
@@ -22,6 +23,7 @@ public class InventoryController {
       @RequestBody InventoryRequest inventoryRequest) {
     return ApiResponse.<InventoryResponse>builder()
         .result(inventoryService.createInventory(inventoryRequest))
+        .message(ApiMessage.INVENTORY_CREATED.getMessage())
         .build();
   }
 
@@ -30,18 +32,23 @@ public class InventoryController {
       @PathVariable long id, @RequestBody InventoryRequest inventoryRequest) {
     return ApiResponse.<InventoryResponse>builder()
         .result(inventoryService.updateInventory(id, inventoryRequest))
+        .message(ApiMessage.INVENTORY_UPDATED.getMessage())
         .build();
   }
 
   @DeleteMapping("/{id}")
   public ApiResponse<Boolean> deleteInventory(@PathVariable long id) {
-    return ApiResponse.<Boolean>builder().result(inventoryService.deleteInventory(id)).build();
+    return ApiResponse.<Boolean>builder()
+        .result(inventoryService.deleteInventory(id))
+        .message(ApiMessage.INVENTORY_DELETED.getMessage())
+        .build();
   }
 
   @GetMapping("/{id}")
   public ApiResponse<InventoryResponse> getInventoryById(@PathVariable long id) {
     return ApiResponse.<InventoryResponse>builder()
         .result(inventoryService.getInventoryById(id))
+        .message(ApiMessage.INVENTORY_RETRIEVED.getMessage())
         .build();
   }
 
@@ -50,6 +57,7 @@ public class InventoryController {
       @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int pageSize) {
     return ApiResponse.<List<InventoryResponse>>builder()
         .result(inventoryService.getAllInventory(page, pageSize))
+        .message(ApiMessage.ALL_INVENTORIES_RETRIEVED.getMessage())
         .build();
   }
 
@@ -57,6 +65,7 @@ public class InventoryController {
   public ApiResponse<InventoryResponse> getInventoryByBranchId(@PathVariable long branchId) {
     return ApiResponse.<InventoryResponse>builder()
         .result(inventoryService.getInventoryByBranchId(branchId))
+        .message(ApiMessage.INVENTORY_RETRIEVED.getMessage())
         .build();
   }
 
@@ -67,6 +76,7 @@ public class InventoryController {
       @RequestParam(defaultValue = "10") int pageSize) {
     return ApiResponse.<List<InventoryResponse>>builder()
         .result(inventoryService.searchInventoryByKeyword(name, page, pageSize))
+        .message(ApiMessage.ALL_INVENTORIES_RETRIEVED.getMessage())
         .build();
   }
 }

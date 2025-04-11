@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.BranchRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.BranchResponse;
@@ -30,7 +31,10 @@ public class BranchController {
   @PostMapping
   public ApiResponse<BranchResponse> createBranch(@RequestBody BranchRequest branchRequest) {
     BranchResponse branchResponse = branchService.createBranch(branchRequest);
-    return ApiResponse.<BranchResponse>builder().result(branchResponse).build();
+    return ApiResponse.<BranchResponse>builder()
+        .result(branchResponse)
+        .message(ApiMessage.BRANCH_CREATED.getMessage())
+        .build();
   }
 
   // Update Branch
@@ -38,33 +42,46 @@ public class BranchController {
   public ApiResponse<BranchResponse> updateBranch(
       @PathVariable Long branchId, @RequestBody BranchRequest branchRequest) {
     BranchResponse branchResponse = branchService.updateBranch(branchId, branchRequest);
-    return ApiResponse.<BranchResponse>builder().result(branchResponse).build();
+    return ApiResponse.<BranchResponse>builder()
+        .result(branchResponse)
+        .message(ApiMessage.BRANCH_UPDATED.getMessage())
+        .build();
   }
 
   // Delete Branch
   @DeleteMapping("/{branchId}")
   public ApiResponse<Boolean> deleteBranch(@PathVariable Long branchId) {
     boolean result = branchService.deleteBranch(branchId);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.BRANCH_DELETED.getMessage())
+        .build();
   }
 
   // Get Branch by ID
   @GetMapping("/{branchId}")
   public ApiResponse<BranchResponse> getBranchById(@PathVariable Long branchId) {
     BranchResponse branchResponse = branchService.getBranchById(branchId);
-    return ApiResponse.<BranchResponse>builder().result(branchResponse).build();
+    return ApiResponse.<BranchResponse>builder()
+        .result(branchResponse)
+        .message(ApiMessage.BRANCH_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping("/role/{roleName}")
   public ApiResponse<BranchResponse> getBranchByRole(@PathVariable String roleName) {
     BranchResponse branchResponse = branchService.getBranchByRole(roleName);
-    return ApiResponse.<BranchResponse>builder().result(branchResponse).build();
+    return ApiResponse.<BranchResponse>builder()
+        .result(branchResponse)
+        .message(ApiMessage.BRANCH_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping("/product/{productId}")
   public ApiResponse<List<BranchResponse>> getBranchesByProductId(@PathVariable Long productId) {
     return ApiResponse.<List<BranchResponse>>builder()
         .result(branchService.getBranchesByProductId(productId))
+        .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())
         .build();
   }
 
@@ -76,6 +93,7 @@ public class BranchController {
       @RequestParam(defaultValue = "asc") String sortDirection) {
     return ApiResponse.<Page<BranchResponse>>builder()
         .result(branchService.getAllBranches(page, size, sortBy, sortDirection))
+        .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())
         .build();
   }
 }

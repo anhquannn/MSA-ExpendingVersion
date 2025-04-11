@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.OrderDetailRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.OrderDetailResponse;
@@ -30,6 +31,7 @@ public class OrderDetailController {
       @RequestBody @Valid OrderDetailRequest request) {
     return ApiResponse.<OrderDetailResponse>builder()
         .result(orderDetailService.createOrderDetail(request))
+        .message(ApiMessage.ORDER_DETAIL_CREATED.getMessage())
         .build();
   }
 
@@ -38,19 +40,24 @@ public class OrderDetailController {
       @PathVariable long orderDetailId, @RequestBody @Valid OrderDetailRequest request) {
     return ApiResponse.<OrderDetailResponse>builder()
         .result(orderDetailService.updateOrderDetail(orderDetailId, request))
+        .message(ApiMessage.ORDER_DETAIL_UPDATED.getMessage())
         .build();
   }
 
   @DeleteMapping("/{orderDetailId}")
   public ApiResponse<Boolean> deleteOrderDetail(@PathVariable long orderDetailId) {
     Boolean result = orderDetailService.deleteOrderDetail(orderDetailId);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.ORDER_DETAIL_DELETED.getMessage())
+        .build();
   }
 
   @GetMapping("/{orderDetailId}")
   public ApiResponse<OrderDetailResponse> getOrderDetailById(@PathVariable long orderDetailId) {
     return ApiResponse.<OrderDetailResponse>builder()
         .result(orderDetailService.getOrderDetailById(orderDetailId))
+        .message(ApiMessage.ORDER_DETAIL_RETRIEVED.getMessage())
         .build();
   }
 
@@ -59,6 +66,7 @@ public class OrderDetailController {
       @PathVariable long orderId) {
     return ApiResponse.<List<OrderDetailResponse>>builder()
         .result(orderDetailService.getOrderDetailsByOrderId(orderId))
+        .message(ApiMessage.ALL_ORDER_DETAILS_RETRIEVED.getMessage())
         .build();
   }
 }

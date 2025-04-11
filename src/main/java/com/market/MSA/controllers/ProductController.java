@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.ProductRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.ProductResponse;
@@ -35,6 +36,7 @@ public class ProductController {
       @RequestParam(defaultValue = "false") boolean sendNotificationToAll) {
     return ApiResponse.<ProductResponse>builder()
         .result(productService.createProduct(request, sendNotificationToAll))
+        .message(ApiMessage.PRODUCT_CREATED.getMessage())
         .build();
   }
 
@@ -43,19 +45,24 @@ public class ProductController {
       @PathVariable long productId, @RequestBody @Valid ProductRequest request) {
     return ApiResponse.<ProductResponse>builder()
         .result(productService.updateProduct(productId, request))
+        .message(ApiMessage.PRODUCT_UPDATED.getMessage())
         .build();
   }
 
   @DeleteMapping("/{productId}")
   public ApiResponse<Boolean> deleteProduct(@PathVariable long productId) {
     Boolean result = productService.deleteProduct(productId);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.PRODUCT_DELETED.getMessage())
+        .build();
   }
 
   @GetMapping("/{productId}")
   public ApiResponse<ProductResponse> getProductById(@PathVariable long productId) {
     return ApiResponse.<ProductResponse>builder()
         .result(productService.getProductById(productId))
+        .message(ApiMessage.PRODUCT_RETRIEVED.getMessage())
         .build();
   }
 
@@ -64,6 +71,7 @@ public class ProductController {
       @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int pageSize) {
     return ApiResponse.<List<ProductResponse>>builder()
         .result(productService.getAllProducts(page, pageSize))
+        .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -80,6 +88,7 @@ public class ProductController {
         .result(
             productService.filterAndSortProducts(
                 size, minPrice, maxPrice, color, categoryId, page, pageSize))
+        .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -92,6 +101,7 @@ public class ProductController {
       @RequestParam(defaultValue = "asc") String sortDirection) {
     return ApiResponse.<Page<ProductResponse>>builder()
         .result(productService.getAllProductsInBranch(branchId, page, size, sortBy, sortDirection))
+        .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -120,6 +130,7 @@ public class ProductController {
                 pageSize,
                 sortBy,
                 sortDirection))
+        .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -150,6 +161,7 @@ public class ProductController {
                 pageSize,
                 sortBy,
                 sortDirection))
+        .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
         .build();
   }
 }

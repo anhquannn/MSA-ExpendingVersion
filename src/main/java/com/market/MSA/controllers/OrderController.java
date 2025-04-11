@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.OrderRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.OrderResponse;
@@ -32,7 +33,6 @@ public class OrderController {
   @PostMapping
   public ApiResponse<OrderResponse> createOrder(@RequestBody @Valid OrderRequest request)
       throws MessagingException {
-    // Truyền danh sách promoCodeIds vào service
     return ApiResponse.<OrderResponse>builder()
         .result(
             orderService.createOrder(
@@ -40,6 +40,7 @@ public class OrderController {
                 request.getCartId(),
                 request.getBranchId(),
                 request.getPromoCodes()))
+        .message(ApiMessage.ORDER_CREATED.getMessage())
         .build();
   }
 
@@ -48,18 +49,25 @@ public class OrderController {
       @PathVariable Long orderId, @RequestBody(required = false) @Valid OrderRequest request) {
     return ApiResponse.<OrderResponse>builder()
         .result(orderService.updateOrder(orderId, request))
+        .message(ApiMessage.ORDER_UPDATED.getMessage())
         .build();
   }
 
   @DeleteMapping("/{orderId}")
   public ApiResponse<Boolean> deleteOrder(@PathVariable Long orderId) {
     Boolean result = orderService.deleteOrder(orderId);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.ORDER_DELETED.getMessage())
+        .build();
   }
 
   @GetMapping("/{orderId}")
   public ApiResponse<OrderResponse> getOrderById(@PathVariable Long orderId) {
-    return ApiResponse.<OrderResponse>builder().result(orderService.getOrderById(orderId)).build();
+    return ApiResponse.<OrderResponse>builder()
+        .result(orderService.getOrderById(orderId))
+        .message(ApiMessage.ORDER_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping("/search")
@@ -67,6 +75,7 @@ public class OrderController {
       String phoneNumber, int page, int pageSize) {
     return ApiResponse.<List<OrderResponse>>builder()
         .result(orderService.searchOrderByPhoneNumber(phoneNumber, page, pageSize))
+        .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -75,6 +84,7 @@ public class OrderController {
       @PathVariable Long userId, @PathVariable String status, int page, int pageSize) {
     return ApiResponse.<List<OrderResponse>>builder()
         .result(orderService.getOrdersByUserIDWithStatus(userId, status, page, pageSize))
+        .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -93,7 +103,10 @@ public class OrderController {
             .grandTotal(orderSummary.getGrandTotal())
             .build();
 
-    return ApiResponse.<OrderSummaryResponse>builder().result(response).build();
+    return ApiResponse.<OrderSummaryResponse>builder()
+        .result(response)
+        .message(ApiMessage.ORDER_SUMMARY_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping
@@ -104,6 +117,7 @@ public class OrderController {
       @RequestParam(defaultValue = "desc") String sortDirection) {
     return ApiResponse.<Page<OrderResponse>>builder()
         .result(orderService.getAllOrders(page, size, sortBy, sortDirection))
+        .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -116,6 +130,7 @@ public class OrderController {
       @RequestParam(defaultValue = "desc") String sortDirection) {
     return ApiResponse.<Page<OrderResponse>>builder()
         .result(orderService.getOrdersByBranchId(branchId, page, size, sortBy, sortDirection))
+        .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
         .build();
   }
 }

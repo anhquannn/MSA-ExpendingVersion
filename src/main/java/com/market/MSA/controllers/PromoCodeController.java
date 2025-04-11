@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.PromoCodeRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.PromoCodeResponse;
@@ -32,6 +33,7 @@ public class PromoCodeController {
       @RequestBody @Valid PromoCodeRequest request) {
     return ApiResponse.<PromoCodeResponse>builder()
         .result(promoCodeService.createPromoCode(request))
+        .message(ApiMessage.PROMO_CODE_CREATED.getMessage())
         .build();
   }
 
@@ -41,6 +43,7 @@ public class PromoCodeController {
       @PathVariable long promoCodeId, @RequestBody @Valid PromoCodeRequest request) {
     return ApiResponse.<PromoCodeResponse>builder()
         .result(promoCodeService.updatePromoCode(promoCodeId, request))
+        .message(ApiMessage.PROMO_CODE_UPDATED.getMessage())
         .build();
   }
 
@@ -48,7 +51,10 @@ public class PromoCodeController {
   @DeleteMapping("/{promoCodeId}")
   public ApiResponse<Boolean> deletePromoCode(@PathVariable long promoCodeId) {
     Boolean result = promoCodeService.deletePromoCode(promoCodeId);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.PROMO_CODE_DELETED.getMessage())
+        .build();
   }
 
   // Lấy PromoCode theo ID
@@ -56,6 +62,7 @@ public class PromoCodeController {
   public ApiResponse<PromoCodeResponse> getPromoCodeById(@PathVariable long promoCodeId) {
     return ApiResponse.<PromoCodeResponse>builder()
         .result(promoCodeService.getPromoCodeById(promoCodeId))
+        .message(ApiMessage.PROMO_CODE_RETRIEVED.getMessage())
         .build();
   }
 
@@ -64,6 +71,7 @@ public class PromoCodeController {
   public ApiResponse<PromoCodeResponse> getPromoCodeByCode(@PathVariable String code) {
     return ApiResponse.<PromoCodeResponse>builder()
         .result(promoCodeService.getPromoCodeByCode(code))
+        .message(ApiMessage.PROMO_CODE_RETRIEVED.getMessage())
         .build();
   }
 
@@ -73,6 +81,7 @@ public class PromoCodeController {
       @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int pageSize) {
     return ApiResponse.<List<PromoCodeResponse>>builder()
         .result(promoCodeService.getAllPromoCodes(page, pageSize))
+        .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
         .build();
   }
 }

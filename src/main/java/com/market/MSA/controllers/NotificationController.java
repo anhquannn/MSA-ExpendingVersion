@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.NotificationRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.NotificationResponse;
@@ -25,6 +26,7 @@ public class NotificationController {
       @RequestBody NotificationRequest request) {
     return ApiResponse.<NotificationResponse>builder()
         .result(notificationService.createNotification(request))
+        .message(ApiMessage.NOTIFICATION_CREATED.getMessage())
         .build();
   }
 
@@ -33,6 +35,7 @@ public class NotificationController {
       @PathVariable Long id, @RequestBody NotificationRequest request) {
     return ApiResponse.<NotificationResponse>builder()
         .result(notificationService.updateNotification(id, request))
+        .message(ApiMessage.NOTIFICATION_UPDATED.getMessage())
         .build();
   }
 
@@ -40,6 +43,7 @@ public class NotificationController {
   public ApiResponse<Boolean> deleteNotification(@PathVariable Long id) {
     return ApiResponse.<Boolean>builder()
         .result(notificationService.deleteNotification(id))
+        .message(ApiMessage.NOTIFICATION_DELETED.getMessage())
         .build();
   }
 
@@ -47,6 +51,7 @@ public class NotificationController {
   public ApiResponse<NotificationResponse> getNotificationById(@PathVariable Long id) {
     return ApiResponse.<NotificationResponse>builder()
         .result(notificationService.getNotificationById(id))
+        .message(ApiMessage.NOTIFICATION_RETRIEVED.getMessage())
         .build();
   }
 
@@ -64,6 +69,7 @@ public class NotificationController {
         .result(
             notificationService.getAllByUserId(
                 userId, type, isRead, productId, orderId, inventoryId, page, size))
+        .message(ApiMessage.ALL_NOTIFICATIONS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -75,6 +81,7 @@ public class NotificationController {
       @RequestParam(defaultValue = "10") int size) {
     return ApiResponse.<Page<NotificationResponse>>builder()
         .result(notificationService.getAllNotifications(type, isRead, page, size))
+        .message(ApiMessage.ALL_NOTIFICATIONS_RETRIEVED.getMessage())
         .build();
   }
 }

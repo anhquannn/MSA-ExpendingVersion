@@ -1,9 +1,11 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.ReturnOrderRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.ReturnOrderResponse;
 import com.market.MSA.services.ReturnOrderService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -26,30 +28,36 @@ public class ReturnOrderController {
 
   @PostMapping
   public ApiResponse<ReturnOrderResponse> createReturnOrder(
-      @RequestBody ReturnOrderRequest request) {
+      @RequestBody @Valid ReturnOrderRequest request) {
     return ApiResponse.<ReturnOrderResponse>builder()
         .result(returnOrderService.createReturnOrder(request))
+        .message(ApiMessage.RETURN_ORDER_CREATED.getMessage())
         .build();
   }
 
   @PutMapping("/{id}")
   public ApiResponse<ReturnOrderResponse> updateReturnOrder(
-      @PathVariable Long id, @RequestBody ReturnOrderRequest request) {
+      @PathVariable Long id, @RequestBody @Valid ReturnOrderRequest request) {
     return ApiResponse.<ReturnOrderResponse>builder()
         .result(returnOrderService.updateReturnOrder(id, request))
+        .message(ApiMessage.RETURN_ORDER_UPDATED.getMessage())
         .build();
   }
 
   @DeleteMapping("/{id}")
   public ApiResponse<Boolean> deleteReturnOrder(@PathVariable Long id) {
     Boolean result = returnOrderService.deleteReturnOrder(id);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.RETURN_ORDER_DELETED.getMessage())
+        .build();
   }
 
   @GetMapping("/{id}")
   public ApiResponse<ReturnOrderResponse> getReturnOrderById(@PathVariable Long id) {
     return ApiResponse.<ReturnOrderResponse>builder()
         .result(returnOrderService.getReturnOrderById(id))
+        .message(ApiMessage.RETURN_ORDER_RETRIEVED.getMessage())
         .build();
   }
 
@@ -57,6 +65,7 @@ public class ReturnOrderController {
   public ApiResponse<List<ReturnOrderResponse>> getAllReturnOrders() {
     return ApiResponse.<List<ReturnOrderResponse>>builder()
         .result(returnOrderService.getAllReturnOrders())
+        .message(ApiMessage.ALL_RETURN_ORDERS_RETRIEVED.getMessage())
         .build();
   }
 }

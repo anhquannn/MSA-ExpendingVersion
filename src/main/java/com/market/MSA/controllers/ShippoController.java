@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.ShippoResponse;
 import com.market.MSA.services.ShippoService;
@@ -22,16 +23,23 @@ public class ShippoController {
   public ApiResponse<ShippoResponse> createShipment(@PathVariable long deliveryId) {
     return ApiResponse.<ShippoResponse>builder()
         .result(shippoService.createShippo(deliveryId))
+        .message(ApiMessage.SHIPMENT_CREATED.getMessage())
         .build();
   }
 
   @GetMapping("/{objectId}")
   public ApiResponse<ShippoResponse> getShipment(@PathVariable String objectId) {
-    return ApiResponse.<ShippoResponse>builder().result(shippoService.getShippo(objectId)).build();
+    return ApiResponse.<ShippoResponse>builder()
+        .result(shippoService.getShippo(objectId))
+        .message(ApiMessage.SHIPMENT_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping
   public ApiResponse<List<ShippoResponse>> getShipments() {
-    return ApiResponse.<List<ShippoResponse>>builder().result(shippoService.getShippos()).build();
+    return ApiResponse.<List<ShippoResponse>>builder()
+        .result(shippoService.getShippos())
+        .message(ApiMessage.ALL_SHIPMENTS_RETRIEVED.getMessage())
+        .build();
   }
 }

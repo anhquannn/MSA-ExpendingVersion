@@ -1,10 +1,13 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.CategoryRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.CategoryResponse;
 import com.market.MSA.services.CategoryService;
 import java.util.List;
+
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -26,30 +29,36 @@ public class CategoryController {
   CategoryService categoryService;
 
   @PostMapping
-  public ApiResponse<CategoryResponse> createCategory(@RequestBody CategoryRequest request) {
+  public ApiResponse<CategoryResponse> createCategory(@RequestBody @Valid CategoryRequest request) {
     return ApiResponse.<CategoryResponse>builder()
         .result(categoryService.createCategory(request))
+        .message(ApiMessage.CATEGORY_CREATED.getMessage())
         .build();
   }
 
   @PutMapping("/{id}")
   public ApiResponse<CategoryResponse> updateCategory(
-      @PathVariable Long id, @RequestBody CategoryRequest request) {
+      @PathVariable Long id, @RequestBody @Valid CategoryRequest request) {
     return ApiResponse.<CategoryResponse>builder()
         .result(categoryService.updateCategory(id, request))
+        .message(ApiMessage.CATEGORY_UPDATED.getMessage())
         .build();
   }
 
   @DeleteMapping("/{id}")
   public ApiResponse<Boolean> deleteCategory(@PathVariable Long id) {
     Boolean result = categoryService.deleteCategory(id);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.CATEGORY_DELETED.getMessage())
+        .build();
   }
 
   @GetMapping("/{id}")
   public ApiResponse<CategoryResponse> getCategoryById(@PathVariable Long id) {
     return ApiResponse.<CategoryResponse>builder()
         .result(categoryService.getCategoryById(id))
+        .message(ApiMessage.CATEGORY_RETRIEVED.getMessage())
         .build();
   }
 
@@ -57,6 +66,7 @@ public class CategoryController {
   public ApiResponse<List<CategoryResponse>> getAllCategories() {
     return ApiResponse.<List<CategoryResponse>>builder()
         .result(categoryService.getAllCategories())
+        .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())
         .build();
   }
 }

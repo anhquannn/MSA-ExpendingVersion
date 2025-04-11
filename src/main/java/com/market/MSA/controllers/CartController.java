@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.CartRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.CartResponse;
@@ -26,7 +27,10 @@ public class CartController {
 
   @PostMapping
   ApiResponse<CartResponse> createCart(@RequestBody @Valid CartRequest request) {
-    return ApiResponse.<CartResponse>builder().result(cartService.createCart(request)).build();
+    return ApiResponse.<CartResponse>builder()
+        .result(cartService.createCart(request))
+        .message(ApiMessage.CART_CREATED.getMessage())
+        .build();
   }
 
   @PutMapping("/{cartId}")
@@ -34,24 +38,32 @@ public class CartController {
       @PathVariable Long cartId, @RequestBody @Valid CartRequest request) {
     return ApiResponse.<CartResponse>builder()
         .result(cartService.updateCart(cartId, request))
+        .message(ApiMessage.CART_UPDATED.getMessage())
         .build();
   }
 
   @DeleteMapping("/{cartId}")
   ApiResponse<Boolean> deleteCart(@PathVariable Long cartId) {
     Boolean result = cartService.deleteCart(cartId);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.CART_DELETED.getMessage())
+        .build();
   }
 
   @GetMapping("/{cartId}")
   ApiResponse<CartResponse> getCartById(@PathVariable Long cartId) {
-    return ApiResponse.<CartResponse>builder().result(cartService.getCartById(cartId)).build();
+    return ApiResponse.<CartResponse>builder()
+        .result(cartService.getCartById(cartId))
+        .message(ApiMessage.CART_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping("/user/{userId}")
   ApiResponse<CartResponse> getOrCreateCartForUser(@PathVariable Long userId) {
     return ApiResponse.<CartResponse>builder()
         .result(cartService.getOrCreateCartForUser(userId))
+        .message(ApiMessage.CART_RETRIEVED.getMessage())
         .build();
   }
 }

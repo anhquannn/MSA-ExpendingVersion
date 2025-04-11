@@ -1,5 +1,6 @@
 package com.market.MSA.controllers;
 
+import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.TrendingProductRequest;
 import com.market.MSA.responses.ApiResponse;
 import com.market.MSA.responses.TrendingProductResponse;
@@ -27,6 +28,7 @@ public class TrendingProductController {
     log.info("Received request to create trending product: {}", request);
     return ApiResponse.<TrendingProductResponse>builder()
         .result(trendingProductService.createTrendingProduct(request))
+        .message(ApiMessage.TRENDING_PRODUCT_CREATED.getMessage())
         .build();
   }
 
@@ -37,6 +39,7 @@ public class TrendingProductController {
     log.info("Updating trending product with ID: {}", trendingProductId);
     return ApiResponse.<TrendingProductResponse>builder()
         .result(trendingProductService.updateTrendingProduct(trendingProductId, request))
+        .message(ApiMessage.TRENDING_PRODUCT_UPDATED.getMessage())
         .build();
   }
 
@@ -44,7 +47,10 @@ public class TrendingProductController {
   @DeleteMapping("/{trendingProductId}")
   public ApiResponse<Boolean> deleteTrendingProduct(@PathVariable long trendingProductId) {
     Boolean result = trendingProductService.deleteTrendingProduct(trendingProductId);
-    return ApiResponse.<Boolean>builder().result(result).build();
+    return ApiResponse.<Boolean>builder()
+        .result(result)
+        .message(ApiMessage.TRENDING_PRODUCT_DELETED.getMessage())
+        .build();
   }
 
   // Lấy TrendingProduct theo ID
@@ -54,6 +60,7 @@ public class TrendingProductController {
     log.info("Fetching trending product with ID: {}", trendingProductId);
     return ApiResponse.<TrendingProductResponse>builder()
         .result(trendingProductService.getTrendingProductById(trendingProductId))
+        .message(ApiMessage.TRENDING_PRODUCT_RETRIEVED.getMessage())
         .build();
   }
 
@@ -64,6 +71,7 @@ public class TrendingProductController {
     log.info("Fetching all trending products, page: {}, pageSize: {}", page, pageSize);
     return ApiResponse.<List<TrendingProductResponse>>builder()
         .result(trendingProductService.getAllTrendingProducts(page, pageSize))
+        .message(ApiMessage.ALL_TRENDING_PRODUCTS_RETRIEVED.getMessage())
         .build();
   }
 }

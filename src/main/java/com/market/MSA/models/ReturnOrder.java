@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -23,7 +24,13 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "returnOrders")
+@Table(
+    name = "return_orders",
+    indexes = {
+      @Index(name = "idx_return_order", columnList = "order_id"),
+      @Index(name = "idx_return_status", columnList = "status"),
+      @Index(name = "idx_return_date", columnList = "returnDate")
+    })
 public class ReturnOrder {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

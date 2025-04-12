@@ -26,6 +26,7 @@ public class ProductResponse {
   String specification;
   String description;
   Date expiry;
+  Date createAt;
   int totalRevenue;
 
   ManufacturerResponse manufacturer;

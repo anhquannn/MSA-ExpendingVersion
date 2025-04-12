@@ -23,6 +23,7 @@ public class ProductRequest {
   String specification;
   String description;
   Date expiry;
+  Date createAt;
   long totalRevenue;
 
   long manufactureId;

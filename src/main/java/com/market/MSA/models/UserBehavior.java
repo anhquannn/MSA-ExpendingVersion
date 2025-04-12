@@ -12,7 +12,14 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "userBehaviors")
+@Table(
+    name = "user_behaviors",
+    indexes = {
+      @Index(name = "idx_behavior_user", columnList = "user_id"),
+      @Index(name = "idx_behavior_product", columnList = "product_id"),
+      @Index(name = "idx_behavior_type", columnList = "behaviorType"),
+      @Index(name = "idx_behavior_timestamp", columnList = "timestamp")
+    })
 public class UserBehavior {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,6 +1,7 @@
 package com.market.MSA.models;
 
 import jakarta.persistence.*;
+import java.util.Date;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,7 @@ public class DeliveryInfo {
   String country;
   String weight;
   String status;
+  Date deliveryDate;
 
   @OneToOne
   @JoinColumn(name = "orderId", nullable = false, unique = true)

@@ -1,5 +1,6 @@
 package com.market.MSA.requests;
 
+import java.util.Date;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +21,7 @@ public class DeliveryInfoRequest {
   String country;
   String weight;
   String status;
+  Date deliveryDate;
 
   long orderId;
 }

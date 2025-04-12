@@ -1,5 +1,6 @@
 package com.market.MSA.responses;
 
+import java.util.Date;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +18,7 @@ public class FeedbackResponse {
 
   int rating;
   String comments;
+  Date createAt;
 
   UserResponse user;
   ProductResponse product;

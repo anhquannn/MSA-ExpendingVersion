@@ -41,6 +41,7 @@ public class Product {
   String specification;
   String description;
   Date expiry;
+  Date createAt;
   long totalRevenue;
 
   @ManyToOne

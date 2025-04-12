@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -23,7 +24,15 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "payments")
+@Table(
+    name = "payments",
+    indexes = {
+      @Index(name = "idx_payment_user", columnList = "user_id"),
+      @Index(name = "idx_payment_order", columnList = "order_id"),
+      @Index(name = "idx_payment_date", columnList = "paymentDate"),
+      @Index(name = "idx_payment_method", columnList = "paymentMethod"),
+      @Index(name = "idx_payment_status", columnList = "status")
+    })
 public class Payment {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

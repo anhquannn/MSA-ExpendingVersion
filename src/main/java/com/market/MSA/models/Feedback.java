@@ -4,9 +4,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.util.Date;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,7 +24,13 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "feedbacks")
+@Table(
+    name = "feedbacks",
+    indexes = {
+      @Index(name = "idx_feedback_user", columnList = "user_id"),
+      @Index(name = "idx_feedback_product", columnList = "product_id"),
+      @Index(name = "idx_feedback_rating", columnList = "rating")
+    })
 public class Feedback {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,6 +38,7 @@ public class Feedback {
 
   int rating;
   String comments;
+  Date createAt;
 
   @ManyToOne
   @JoinColumn(name = "userId", nullable = false)

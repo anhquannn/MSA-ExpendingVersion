@@ -1,5 +1,6 @@
 package com.market.MSA.requests;
 
+import java.util.Date;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 public class FeedbackRequest {
   int rating;
   String comments;
+  Date createAt;
 
   long userId;
   long productId;

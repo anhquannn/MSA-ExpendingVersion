@@ -11,7 +11,14 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "inventoryProduct")
+@Table(
+    name = "inventory_products",
+    indexes = {
+      @Index(name = "idx_invproduct_inventory", columnList = "inventory_id"),
+      @Index(name = "idx_invproduct_product", columnList = "product_id"),
+      @Index(name = "idx_invproduct_stock", columnList = "stockLevel"),
+      @Index(name = "idx_invproduct_number", columnList = "stockNumber")
+    })
 public class InventoryProduct {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

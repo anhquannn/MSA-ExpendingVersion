@@ -181,5 +181,4 @@ public enum ApiMessage {
   ApiMessage(String message) {
     this.message = message;
   }
-
 }

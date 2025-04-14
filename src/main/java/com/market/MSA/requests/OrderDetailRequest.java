@@ -17,6 +17,6 @@ public class OrderDetailRequest {
   double unitPrice;
   double totalPrice;
 
-  long orderId;
-  long productId;
+  Long orderId;
+  Long productId;
 }

@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartResponse {
-  long cartId;
+  Long cartId;
 
   String status;
 

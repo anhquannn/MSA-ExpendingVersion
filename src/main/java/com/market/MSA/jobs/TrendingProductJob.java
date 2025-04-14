@@ -49,10 +49,10 @@ public class TrendingProductJob implements Job {
                   Long productId = product.getProductId();
                   Date currentDate = new Date();
                   double avgRating = avgRatings.getOrDefault(productId, 0.0);
-                  long totalRevenue = product.getTotalRevenue();
+                  double totalRevenue = product.getTotalRevenue();
                   double trendScore = calculateTrendScore(avgRating, totalRevenue);
 
-                  return new TrendingProduct(0, trendScore, currentDate, product);
+                  return new TrendingProduct(0L, trendScore, currentDate, product);
                 })
             .sorted((c1, c2) -> Double.compare(c2.getTrendScore(), c1.getTrendScore()))
             .limit(5)
@@ -74,7 +74,7 @@ public class TrendingProductJob implements Job {
     trendingProductRepository.saveAll(trendingProducts);
   }
 
-  private double calculateTrendScore(double avgRating, long totalRevenue) {
+  private double calculateTrendScore(double avgRating, double totalRevenue) {
     double weightRating = 0.3;
     double weightSales = 0.7;
     return (avgRating * weightRating) + (totalRevenue * weightSales);

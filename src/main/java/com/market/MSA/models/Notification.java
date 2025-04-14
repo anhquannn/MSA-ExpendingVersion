@@ -19,13 +19,13 @@ import lombok.experimental.FieldDefaults;
       @Index(name = "idx_notification_order", columnList = "order_id"),
       @Index(name = "idx_notification_product", columnList = "product_id"),
       @Index(name = "idx_notification_inventory", columnList = "inventory_id"),
-      @Index(name = "idx_notification_date", columnList = "createAt"),
+      @Index(name = "idx_notification_date", columnList = "notificationDate"),
       @Index(name = "idx_notification_read", columnList = "isRead")
     })
 public class Notification {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long notificationId;
+  Long notificationId;
 
   String notificationType;
   Date notificationDate;

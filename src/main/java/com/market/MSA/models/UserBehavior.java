@@ -23,7 +23,7 @@ import lombok.experimental.FieldDefaults;
 public class UserBehavior {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long userBehaviorId;
+  Long userBehaviorId;
 
   String behaviorType;
   Date timestamp;

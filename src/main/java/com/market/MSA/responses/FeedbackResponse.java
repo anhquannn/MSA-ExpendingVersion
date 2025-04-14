@@ -14,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FeedbackResponse {
-  long feedbackId;
+  Long feedbackId;
 
   int rating;
   String comments;

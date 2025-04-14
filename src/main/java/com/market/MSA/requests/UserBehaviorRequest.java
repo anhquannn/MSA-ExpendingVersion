@@ -13,6 +13,6 @@ public class UserBehaviorRequest {
   String behaviorType;
   Date timestamp;
 
-  long userId;
-  long productId;
+  Long userId;
+  Long productId;
 }

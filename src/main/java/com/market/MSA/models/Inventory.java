@@ -16,12 +16,12 @@ import lombok.experimental.FieldDefaults;
 public class Inventory {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long inventoryId;
+  Long inventoryId;
 
   String name;
   String address;
   String contact;
-  long totalRevenue;
+  double totalRevenue;
 
   @OneToOne
   @JoinColumn(name = "branchId", nullable = false, unique = true)

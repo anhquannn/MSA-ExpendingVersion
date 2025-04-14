@@ -12,7 +12,7 @@ public class InventoryRequest {
   String name;
   String address;
   String contact;
-  long totalRevenue;
+  double totalRevenue;
 
-  long branchId;
+  Long branchId;
 }

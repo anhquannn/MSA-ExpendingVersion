@@ -23,5 +23,5 @@ public class DeliveryInfoRequest {
   String status;
   Date deliveryDate;
 
-  long orderId;
+  Long orderId;
 }

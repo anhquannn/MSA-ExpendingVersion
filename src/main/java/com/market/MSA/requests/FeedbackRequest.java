@@ -1,5 +1,6 @@
 package com.market.MSA.requests;
 
+import com.market.MSA.validators.RatingConstraint;
 import java.util.Date;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,10 +15,11 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FeedbackRequest {
-  int rating;
+  @RatingConstraint int rating;
+
   String comments;
   Date createAt;
 
-  long userId;
-  long productId;
+  Long userId;
+  Long productId;
 }

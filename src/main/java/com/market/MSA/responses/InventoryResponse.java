@@ -10,12 +10,12 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class InventoryResponse {
-  long inventoryId;
+  Long inventoryId;
 
   String name;
   String address;
   String contact;
-  long totalRevenue;
+  double totalRevenue;
 
   BranchResponse branch;
   List<InventoryProductResponse> inventoryProductResponses;

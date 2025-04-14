@@ -14,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PromoCodeResponse {
-  long promoCodeId;
+  Long promoCodeId;
 
   String name;
   String code;

@@ -19,6 +19,6 @@ public class PaymentRequest {
   String status;
   double grandTotal;
 
-  long userId;
-  long orderId;
+  Long userId;
+  Long orderId;
 }

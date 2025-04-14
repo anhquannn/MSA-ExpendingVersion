@@ -15,5 +15,5 @@ import lombok.experimental.FieldDefaults;
 public class CartRequest {
   String status;
 
-  long userId;
+  Long userId;
 }

@@ -14,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DeliveryInfoResponse {
-  long deliveryInfoId;
+  Long deliveryInfoId;
 
   String street1;
   String city;
@@ -25,5 +25,5 @@ public class DeliveryInfoResponse {
   String status;
   Date deliveryDate;
 
-  long orderId;
+  Long orderId;
 }

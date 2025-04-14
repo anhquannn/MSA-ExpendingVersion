@@ -47,7 +47,7 @@ public class ReturnOrderService {
     // Lưu đơn trả hàng vào cơ sở dữ liệu
     ReturnOrder returnOrder =
         ReturnOrder.builder()
-            .dateReturn(request.getDateReturn())
+            .returnDate(request.getReturnDate())
             .reason(request.getReason())
             .order(order)
             .refundAmount(order.getGrandTotal())

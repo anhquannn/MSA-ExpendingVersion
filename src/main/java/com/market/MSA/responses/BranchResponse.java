@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BranchResponse {
-  long branchId;
+  Long branchId;
 
   String name;
   String address;

@@ -27,7 +27,7 @@ import lombok.experimental.FieldDefaults;
 public class Manufacturer {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long manufacturerId;
+  Long manufacturerId;
 
   String name;
   String address;

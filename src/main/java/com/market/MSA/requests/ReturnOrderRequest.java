@@ -14,10 +14,10 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReturnOrderRequest {
-  Date dateReturn;
+  Date returnDate;
   String status;
   String reason;
   double refundAmount;
 
-  long orderId;
+  Long orderId;
 }

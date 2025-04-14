@@ -12,6 +12,6 @@ public class InventoryProductRequest {
   int stockNumber;
   String stockLevel;
 
-  long inventoryId;
-  long productId;
+  Long inventoryId;
+  Long productId;
 }

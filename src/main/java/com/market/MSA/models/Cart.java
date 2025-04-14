@@ -29,7 +29,7 @@ import lombok.experimental.FieldDefaults;
 public class Cart {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long cartId;
+  Long cartId;
 
   String status;
 

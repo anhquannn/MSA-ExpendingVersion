@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderDetailResponse {
-  long orderDetailId;
+  Long orderDetailId;
 
   int quantity;
   double unitPrice;

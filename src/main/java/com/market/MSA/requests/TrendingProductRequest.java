@@ -13,5 +13,5 @@ public class TrendingProductRequest {
   double trendScore;
   Date timestamp;
 
-  long productId;
+  Long productId;
 }

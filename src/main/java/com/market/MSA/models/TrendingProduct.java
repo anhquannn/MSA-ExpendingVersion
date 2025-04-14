@@ -16,7 +16,7 @@ import lombok.experimental.FieldDefaults;
 public class TrendingProduct {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long trendId;
+  Long trendId;
 
   double trendScore;
   Date timestamp;

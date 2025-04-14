@@ -1,6 +1,7 @@
 package com.market.MSA.responses;
 
 import com.market.MSA.models.User;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -16,11 +17,11 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse {
-  long userId;
+  Long userId;
   String fullName;
   String email;
   String phoneNumber;
-  String birthday;
+  LocalDate birthday;
   String password;
   String address;
   String googleId;

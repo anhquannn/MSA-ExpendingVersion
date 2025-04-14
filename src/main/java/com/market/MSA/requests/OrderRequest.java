@@ -1,5 +1,6 @@
 package com.market.MSA.requests;
 
+import jakarta.validation.constraints.Positive;
 import java.util.Date;
 import java.util.List;
 import lombok.AccessLevel;
@@ -16,12 +17,14 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderRequest {
   Date orderDate;
-  double grandTotal;
+
+  @Positive double grandTotal;
+
   String status;
 
-  long branchId;
-  long cartId;
-  long userId;
+  Long branchId;
+  Long cartId;
+  Long userId;
   List<String> promoCodes;
   DeliveryInfoRequest deliveryInfo;
 }

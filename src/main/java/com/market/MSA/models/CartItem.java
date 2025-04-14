@@ -26,7 +26,7 @@ import lombok.experimental.FieldDefaults;
 public class CartItem {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long cartItemId;
+  Long cartItemId;
 
   boolean isSelected;
   double price;

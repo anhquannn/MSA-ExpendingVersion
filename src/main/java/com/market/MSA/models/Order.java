@@ -1,6 +1,7 @@
 package com.market.MSA.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
 import java.util.Date;
 import java.util.List;
 import lombok.AccessLevel;
@@ -18,14 +19,23 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "orders")
+@Table(
+    name = "orders",
+    indexes = {
+      @Index(name = "idx_order_user", columnList = "user_id"),
+      @Index(name = "idx_order_branch", columnList = "branch_id"),
+      @Index(name = "idx_order_date", columnList = "order_date"),
+      @Index(name = "idx_order_status", columnList = "status")
+    })
 public class Order {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long orderId;
+  Long orderId;
 
   Date orderDate;
-  double grandTotal;
+
+  @Positive double grandTotal;
+
   String status;
 
   @ManyToOne

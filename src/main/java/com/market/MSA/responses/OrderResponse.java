@@ -15,7 +15,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderResponse {
-  long orderId;
+  Long orderId;
 
   Date orderDate;
   double grandTotal;

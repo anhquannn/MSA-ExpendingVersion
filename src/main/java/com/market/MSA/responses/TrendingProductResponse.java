@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TrendingProductResponse {
-  long trendId;
+  Long trendId;
   double trendScore;
   Date timestamp;
 

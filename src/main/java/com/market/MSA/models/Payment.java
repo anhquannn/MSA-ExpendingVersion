@@ -36,7 +36,7 @@ import lombok.experimental.FieldDefaults;
 public class Payment {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long paymentId;
+  Long paymentId;
 
   String paymentMethod;
   Date paymentDate;

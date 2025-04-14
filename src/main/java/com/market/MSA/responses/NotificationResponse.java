@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NotificationResponse {
-  long notificationId;
+  Long notificationId;
   String notificationType;
   Date notificationDate;
   boolean isRead;

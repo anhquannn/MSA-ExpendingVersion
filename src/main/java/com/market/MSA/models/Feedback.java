@@ -1,5 +1,6 @@
 package com.market.MSA.models;
 
+import com.market.MSA.validators.RatingConstraint;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -34,10 +35,12 @@ import lombok.experimental.FieldDefaults;
 public class Feedback {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long feedbackId;
+  Long feedbackId;
 
-  int rating;
-  String comments;
+  String comment;
+
+  @RatingConstraint int rating;
+
   Date createAt;
 
   @ManyToOne

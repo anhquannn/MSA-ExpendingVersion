@@ -1,6 +1,9 @@
 package com.market.MSA.models;
 
+import com.market.MSA.validators.DobConstraint;
+import com.market.MSA.validators.PhoneNumberConstraint;
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -18,11 +21,16 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "users")
+@Table(
+    name = "users",
+    indexes = {
+      @Index(name = "idx_user_email", columnList = "email", unique = true),
+      @Index(name = "idx_user_phone", columnList = "phone_number")
+    })
 public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long userId;
+  Long userId;
 
   String fullName;
 
@@ -32,8 +40,11 @@ public class User {
       columnDefinition = "varchar(255) collate utf8mb4_unicode_ci")
   String email;
 
-  String phoneNumber;
-  String birthday;
+  @PhoneNumberConstraint String phoneNumber;
+
+  @DobConstraint(min = 18)
+  LocalDate birthday;
+
   String password;
   String address;
   String googleId;

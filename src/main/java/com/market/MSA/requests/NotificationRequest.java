@@ -15,8 +15,8 @@ public class NotificationRequest {
   boolean isRead;
   String message;
 
-  long userId;
-  long productId;
-  long orderId;
-  long inventoryId;
+  Long userId;
+  Long productId;
+  Long orderId;
+  Long inventoryId;
 }

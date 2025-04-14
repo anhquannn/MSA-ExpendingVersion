@@ -1,5 +1,6 @@
 package com.market.MSA.models;
 
+import com.market.MSA.validators.StockNumberConstraint;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -16,16 +17,17 @@ import lombok.experimental.FieldDefaults;
     indexes = {
       @Index(name = "idx_invproduct_inventory", columnList = "inventory_id"),
       @Index(name = "idx_invproduct_product", columnList = "product_id"),
-      @Index(name = "idx_invproduct_stock", columnList = "stockLevel"),
-      @Index(name = "idx_invproduct_number", columnList = "stockNumber")
+      @Index(name = "idx_invproduct_stock", columnList = "stock_level"),
+      @Index(name = "idx_invproduct_number", columnList = "stock_number")
     })
 public class InventoryProduct {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long inventoryProductId;
+  Long inventoryProductId;
 
-  int stockNumber;
   String stockLevel;
+
+  @StockNumberConstraint int stockNumber;
 
   @ManyToOne
   @JoinColumn(name = "inventoryId", nullable = false)

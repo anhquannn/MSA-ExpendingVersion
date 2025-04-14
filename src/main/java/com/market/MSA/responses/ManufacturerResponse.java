@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ManufacturerResponse {
-  long manufacturerId;
+  Long manufacturerId;
 
   String name;
   String address;

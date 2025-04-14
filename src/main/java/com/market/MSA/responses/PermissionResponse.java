@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PermissionResponse {
-  long permissionId;
+  Long permissionId;
   String name;
   String description;
 }

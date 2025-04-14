@@ -21,7 +21,7 @@ import lombok.experimental.FieldDefaults;
 public class DeliveryInfo {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long deliveryInfoId;
+  Long deliveryInfoId;
 
   String street1;
   String city;

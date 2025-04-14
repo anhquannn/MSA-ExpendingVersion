@@ -14,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PaymentResponse {
-  long paymentId;
+  Long paymentId;
 
   String paymentMethod;
   Date paymentDate;
@@ -22,5 +22,5 @@ public class PaymentResponse {
   double grandTotal;
 
   UserResponse user;
-  long orderId;
+  Long orderId;
 }

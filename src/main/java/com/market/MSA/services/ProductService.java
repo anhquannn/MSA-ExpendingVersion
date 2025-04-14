@@ -142,7 +142,7 @@ public class ProductService {
                     || p.getCategory().getCategoryId() == categoryId))
         .sorted(
             (p1, p2) ->
-                Long.compare(p2.getTotalRevenue(), p1.getTotalRevenue())) // Sắp xếp theo số lượng
+                Double.compare(p2.getTotalRevenue(), p1.getTotalRevenue())) // Sắp xếp theo số lượng
         .skip((long) (page - 1) * pageSize)
         .limit(pageSize)
         .map(productMapper::toProductResponse)

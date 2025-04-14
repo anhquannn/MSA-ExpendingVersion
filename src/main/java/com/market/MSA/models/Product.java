@@ -1,14 +1,7 @@
 package com.market.MSA.models;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
 import java.util.Date;
 import java.util.List;
 import lombok.AccessLevel;
@@ -26,23 +19,33 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "products")
+@Table(
+    name = "products",
+    indexes = {
+      @Index(name = "idx_product_name", columnList = "name"),
+      @Index(name = "idx_product_manufacturer", columnList = "manufacture_id"),
+      @Index(name = "idx_product_category", columnList = "category_id")
+    })
 public class Product {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long productId;
+  Long productId;
 
   String name;
   String image;
-  double price;
-  double currentPrice;
+
+  @Positive double price;
+
+  @Positive double currentPrice;
+
   int size;
   String color;
   String specification;
   String description;
   Date expiry;
   Date createAt;
-  long totalRevenue;
+
+  @Positive double totalRevenue;
 
   @ManyToOne
   @JoinColumn(name = "manufactureId", nullable = false)

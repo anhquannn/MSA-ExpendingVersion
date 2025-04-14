@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserBehaviorResponse {
-  long userBehaviorId;
+  Long userBehaviorId;
 
   String behaviorType;
   Date timestamp;

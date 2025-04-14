@@ -15,7 +15,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductResponse {
-  long productId;
+  Long productId;
 
   String name;
   String image;

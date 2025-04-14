@@ -21,7 +21,7 @@ import lombok.experimental.FieldDefaults;
 public class Branch {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long branchId;
+  Long branchId;
 
   String name;
   String address;

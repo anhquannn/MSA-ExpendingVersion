@@ -17,6 +17,6 @@ public class CartItemRequest {
   double price;
   int quantity;
 
-  long productId;
-  long cartId;
+  Long productId;
+  Long cartId;
 }

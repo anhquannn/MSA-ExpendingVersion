@@ -34,9 +34,9 @@ import lombok.experimental.FieldDefaults;
 public class ReturnOrder {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  long returnOrderId;
+  Long returnOrderId;
 
-  Date dateReturn;
+  Date returnDate;
   String status;
   String reason;
   double refundAmount;

@@ -1,5 +1,6 @@
 package com.market.MSA.requests;
 
+import jakarta.validation.constraints.Positive;
 import java.util.Date;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -16,16 +17,20 @@ import lombok.experimental.FieldDefaults;
 public class ProductRequest {
   String name;
   String image;
-  double price;
-  double currentPrice;
+
+  @Positive double price;
+
+  @Positive double currentPrice;
+
   int size;
   String color;
   String specification;
   String description;
   Date expiry;
   Date createAt;
-  long totalRevenue;
 
-  long manufactureId;
-  long categoryId;
+  @Positive double totalRevenue;
+
+  Long manufactureId;
+  Long categoryId;
 }

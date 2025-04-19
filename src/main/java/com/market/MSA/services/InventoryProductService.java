@@ -7,6 +7,7 @@ import com.market.MSA.models.Inventory;
 import com.market.MSA.models.InventoryProduct;
 import com.market.MSA.models.Order;
 import com.market.MSA.models.OrderDetail;
+import com.market.MSA.models.Product;
 import com.market.MSA.repositories.InventoryProductRepository;
 import com.market.MSA.repositories.InventoryRepository;
 import com.market.MSA.repositories.ProductRepository;
@@ -42,35 +43,102 @@ public class InventoryProductService {
 
   @Transactional
   public InventoryProductResponse createInventoryProduct(InventoryProductRequest request) {
-    InventoryProduct inventoryProduct = inventoryProductMapper.toInventoryProduct(request);
-    inventoryProduct.setInventory(
-        entityFinderService.findByIdOrThrow(
-            inventoryRepository, request.getInventoryId(), ErrorCode.INVENTORY_PRODUCT_NOT_FOUND));
-    inventoryProduct.setProduct(
-        entityFinderService.findByIdOrThrow(
-            productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
+    // Get the inventory and product
+    Inventory inventory = entityFinderService.findByIdOrThrow(inventoryRepository, request.getInventoryId(), ErrorCode.INVENTORY_NOT_FOUND);
+    Product product = entityFinderService.findByIdOrThrow(productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND);
 
-    inventoryProductRepository.save(inventoryProduct);
-    return inventoryProductMapper.toInventoryProductResponse(inventoryProduct);
+    // Check if this is a non-central branch (branchId != 1)
+    if (inventory.getBranch().getBranchId() != 1) {
+        // Get central inventory (branchId = 1)
+        Inventory centralInventory = inventoryRepository.findByBranch_BranchId(1L)
+                .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
+
+        // Check if product exists in central inventory
+        List<InventoryProduct> centralInventoryProducts = inventoryProductRepository
+                .findByInventory_InventoryIdAndProduct_ProductId(centralInventory.getInventoryId(), request.getProductId());
+
+        if (centralInventoryProducts.isEmpty()) {
+            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+
+        InventoryProduct centralInventoryProduct = centralInventoryProducts.getFirst();
+
+        // Check if central inventory has enough stock
+        if (centralInventoryProduct.getStockNumber() < request.getStockNumber()) {
+            throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
+        }
+
+        // Deduct stock from central inventory
+        centralInventoryProduct.setStockNumber(centralInventoryProduct.getStockNumber() - request.getStockNumber());
+        inventoryProductRepository.save(centralInventoryProduct);
+    }
+
+    // Create new inventory product
+    InventoryProduct inventoryProduct = InventoryProduct.builder()
+            .inventory(inventory)
+            .product(product)
+            .stockNumber(request.getStockNumber())
+            .stockLevel(request.getStockLevel())
+            .build();
+
+    InventoryProduct saveProduct = inventoryProductRepository.save(inventoryProduct);
+
+    return inventoryProductMapper.toInventoryProductResponse(saveProduct);
   }
 
   @Transactional
   public InventoryProductResponse updateInventoryProduct(Long id, InventoryProductRequest request) {
-    InventoryProduct inventoryProduct =
-        inventoryProductRepository
-            .findById(id)
+    // Get existing inventory product
+    InventoryProduct inventoryProduct = inventoryProductRepository.findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_PRODUCT_NOT_FOUND));
-    inventoryProduct.setProduct(
-        entityFinderService.findByIdOrThrow(
-            productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
-    inventoryProduct.setInventory(
-        entityFinderService.findByIdOrThrow(
-            inventoryRepository, request.getInventoryId(), ErrorCode.INVENTORY_PRODUCT_NOT_FOUND));
 
-    inventoryProductMapper.updateInventoryProductFromRequest(request, inventoryProduct);
-    InventoryProduct inventoryProductUpdated = inventoryProductRepository.save(inventoryProduct);
+    // Get the new inventory and product
+    Inventory newInventory = entityFinderService.findByIdOrThrow(inventoryRepository, request.getInventoryId(), ErrorCode.INVENTORY_NOT_FOUND);
+    Product product = entityFinderService.findByIdOrThrow(productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND);
 
-    return inventoryProductMapper.toInventoryProductResponse(inventoryProductUpdated);
+    // Calculate stock difference
+    int stockDifference = request.getStockNumber() - inventoryProduct.getStockNumber();
+
+    // If moving to a non-central branch and increasing stock
+    if (newInventory.getBranch().getBranchId() != 1 && stockDifference > 0) {
+        // Get central inventory
+        Inventory centralInventory = inventoryRepository.findByBranch_BranchId(1L)
+                .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
+
+        // Check if product exists in central inventory
+        List<InventoryProduct> centralInventoryProducts = inventoryProductRepository
+                .findByInventory_InventoryIdAndProduct_ProductId(centralInventory.getInventoryId(), request.getProductId());
+
+        if (centralInventoryProducts.isEmpty()) {
+            throw new AppException(ErrorCode.INVENTORY_PRODUCT_NOT_FOUND);
+        }
+
+        InventoryProduct centralInventoryProduct = centralInventoryProducts.getFirst();
+
+        // Check if central inventory has enough stock
+        if (centralInventoryProduct.getStockNumber() < stockDifference) {
+            throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
+        }
+
+        // Deduct stock from central inventory
+        centralInventoryProduct.setStockNumber(centralInventoryProduct.getStockNumber() - stockDifference);
+        inventoryProductRepository.save(centralInventoryProduct);
+    }
+    // If moving from a non-central branch to central branch and decreasing stock
+    else if (inventoryProduct.getInventory().getBranch().getBranchId() != 1 && 
+             newInventory.getBranch().getBranchId() == 1 && stockDifference < 0) {
+        // Return stock to central inventory
+        inventoryProduct.setStockNumber(inventoryProduct.getStockNumber() + Math.abs(stockDifference));
+    }
+
+    // Update inventory product
+    inventoryProduct.setInventory(newInventory);
+    inventoryProduct.setProduct(product);
+    inventoryProduct.setStockNumber(request.getStockNumber());
+    inventoryProduct.setStockLevel(request.getStockLevel());
+
+    InventoryProduct updatedInventoryProduct = inventoryProductRepository.save(inventoryProduct);
+    return inventoryProductMapper.toInventoryProductResponse(updatedInventoryProduct);
   }
 
   @Transactional

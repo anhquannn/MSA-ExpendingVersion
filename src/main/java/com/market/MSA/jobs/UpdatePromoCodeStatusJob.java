@@ -1,6 +1,6 @@
 package com.market.MSA.jobs;
 
-import com.market.MSA.repositories.PromoCodeRepository;
+import com.market.MSA.repositories.order.PromoCodeRepository;
 import java.util.Date;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;

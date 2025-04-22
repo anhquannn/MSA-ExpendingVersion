@@ -1,6 +1,6 @@
 package com.market.MSA.jobs;
 
-import com.market.MSA.services.NotificationService;
+import com.market.MSA.services.others.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;

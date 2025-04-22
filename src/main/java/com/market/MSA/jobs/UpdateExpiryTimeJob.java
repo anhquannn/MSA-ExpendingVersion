@@ -1,7 +1,7 @@
 package com.market.MSA.jobs;
 
-import com.market.MSA.models.InvalidatedToken;
-import com.market.MSA.repositories.InvalidatedTokenRepository;
+import com.market.MSA.models.user.InvalidatedToken;
+import com.market.MSA.repositories.user.InvalidatedTokenRepository;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;

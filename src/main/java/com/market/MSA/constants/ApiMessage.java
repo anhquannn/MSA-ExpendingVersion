@@ -174,7 +174,12 @@ public enum ApiMessage {
   // Shipment messages
   SHIPMENT_CREATED("Shipment created successfully"),
   SHIPMENT_RETRIEVED("Shipment retrieved successfully"),
-  ALL_SHIPMENTS_RETRIEVED("All shipments retrieved successfully");
+  ALL_SHIPMENTS_RETRIEVED("All shipments retrieved successfully"),
+  CITIES_RETRIEVED("Cities retrieved successfully"),
+  DISTRICTS_RETRIEVED("District retrieved successfully"),
+  WARDS_RETRIEVED("Ward retrieved successfully"),
+  RATES_CREATED("Rates created successfully"),
+  ;
 
   private final String message;
 

@@ -1,10 +1,10 @@
 package com.market.MSA.jobs;
 
-import com.market.MSA.models.Product;
-import com.market.MSA.models.TrendingProduct;
-import com.market.MSA.repositories.FeedbackRepository;
-import com.market.MSA.repositories.ProductRepository;
-import com.market.MSA.repositories.TrendingProductRepository;
+import com.market.MSA.models.product.Product;
+import com.market.MSA.models.product.TrendingProduct;
+import com.market.MSA.repositories.product.FeedbackRepository;
+import com.market.MSA.repositories.product.ProductRepository;
+import com.market.MSA.repositories.product.TrendingProductRepository;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;

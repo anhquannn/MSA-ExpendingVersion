@@ -1,6 +1,6 @@
 package com.market.MSA.exceptions;
 
-import com.market.MSA.responses.ApiResponse;
+import com.market.MSA.responses.others.ApiResponse;
 import jakarta.validation.ConstraintViolation;
 import java.util.Map;
 import java.util.Objects;

@@ -2,7 +2,7 @@ package com.market.MSA.configurations;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.market.MSA.exceptions.ErrorCode;
-import com.market.MSA.responses.ApiResponse;
+import com.market.MSA.responses.others.ApiResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,15 +21,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
       throws IOException, ServletException {
 
     ErrorCode errorCode = ErrorCode.USER_UNAUTHENTICATED;
-
-    System.out.println(
-        "Authentication failed: "
-            + authException.getMessage()
-            + " Request: "
-            + request.getRequestURL());
-
-    System.out.println("Request URL: " + request.getRequestURL());
-    System.out.println("Authorization Header: " + request.getHeader("Authorization"));
 
     response.setStatus(errorCode.getStatusCode().value());
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);

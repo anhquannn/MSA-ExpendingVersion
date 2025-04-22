@@ -2,14 +2,14 @@ package com.market.MSA.configurations;
 
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
-import com.market.MSA.models.Branch;
-import com.market.MSA.models.Permission;
-import com.market.MSA.models.Role;
-import com.market.MSA.models.User;
-import com.market.MSA.repositories.BranchRepository;
-import com.market.MSA.repositories.PermissionRepository;
-import com.market.MSA.repositories.RoleRepository;
-import com.market.MSA.repositories.UserRepository;
+import com.market.MSA.models.product.Branch;
+import com.market.MSA.models.user.Permission;
+import com.market.MSA.models.user.Role;
+import com.market.MSA.models.user.User;
+import com.market.MSA.repositories.product.BranchRepository;
+import com.market.MSA.repositories.user.PermissionRepository;
+import com.market.MSA.repositories.user.RoleRepository;
+import com.market.MSA.repositories.user.UserRepository;
 import java.util.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -98,15 +98,11 @@ public class ApplicationinitConfig {
         Branch branch =
             Branch.builder()
                 .name("HEAD")
-                .address("51 Mạc Đĩnh Chi")
-                .city("Đà Lạt")
-                .state("")
-                .zip("00000")
-                .country("Việt Nam")
-                .email("dalat@gmail.com")
-                .contact("0000 9999")
+                .phone("0937974995")
+                .street("180 Cao Lo")
+                .city("700000")
+                .district("700800")
                 .build();
-
         branchRepository.save(branch);
 
         User user =
@@ -119,7 +115,6 @@ public class ApplicationinitConfig {
                 .build();
 
         userRepository.save(user);
-        log.warn("admin user has been created!");
       }
     };
   }

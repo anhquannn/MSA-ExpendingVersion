@@ -1,0 +1,110 @@
+package com.market.MSA.services.order;
+
+import com.market.MSA.constants.OrderStatus;
+import com.market.MSA.exceptions.AppException;
+import com.market.MSA.exceptions.ErrorCode;
+import com.market.MSA.mappers.order.ReturnOrderMapper;
+import com.market.MSA.models.order.Order;
+import com.market.MSA.models.order.OrderDetail;
+import com.market.MSA.models.order.ReturnOrder;
+import com.market.MSA.repositories.order.OrderDetailRepository;
+import com.market.MSA.repositories.order.OrderRepository;
+import com.market.MSA.repositories.order.ReturnOrderRepository;
+import com.market.MSA.requests.order.ReturnOrderRequest;
+import com.market.MSA.responses.order.ReturnOrderResponse;
+import com.market.MSA.services.others.NotificationService;
+import com.market.MSA.services.product.InventoryProductService;
+import java.util.List;
+import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class ReturnOrderService {
+  final ReturnOrderRepository returnOrderRepository;
+  final OrderRepository orderRepository;
+  final OrderDetailRepository orderDetailRepository;
+  final ReturnOrderMapper returnOrderMapper;
+  final InventoryProductService inventoryProductService;
+  final NotificationService notificationService;
+
+  @Transactional
+  public ReturnOrderResponse createReturnOrder(ReturnOrderRequest request) {
+    Order order =
+        orderRepository
+            .findById(request.getOrderId())
+            .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+    // Cập nhật trạng thái đơn hàng gốc
+    order.setStatus(OrderStatus.ORDER_STATUS_7.getStatus());
+    orderRepository.save(order);
+
+    // Lưu đơn trả hàng vào cơ sở dữ liệu
+    ReturnOrder returnOrder =
+        ReturnOrder.builder()
+            .returnDate(request.getReturnDate())
+            .reason(request.getReason())
+            .order(order)
+            .refundAmount(order.getGrandTotal())
+            .status(OrderStatus.ORDER_STATUS_8.getStatus())
+            .build();
+
+    returnOrder = returnOrderRepository.save(returnOrder);
+
+    // Lấy chi tiết sản phẩm trong đơn hàng gốc
+    List<OrderDetail> orderDetails = orderDetailRepository.findByOrder_OrderId(order.getOrderId());
+
+    // Khôi phục số lượng sản phẩm trong kho
+    for (OrderDetail orderDetail : orderDetails) {
+      inventoryProductService.restoreStock(orderDetail.getOrder());
+    }
+
+    // Send notification
+    notificationService.sendOrderCancelledNotification(order.getOrderId());
+
+    return returnOrderMapper.toReturnOrderResponse(returnOrder);
+  }
+
+  @Transactional
+  public ReturnOrderResponse updateReturnOrder(Long id, ReturnOrderRequest request) {
+    ReturnOrder returnOrder =
+        returnOrderRepository
+            .findById(id)
+            .orElseThrow(() -> new AppException(ErrorCode.RETURN_ORDER_NOT_FOUND));
+
+    returnOrderMapper.updateReturnOrderFromRequest(request, returnOrder);
+    return returnOrderMapper.toReturnOrderResponse(returnOrderRepository.save(returnOrder));
+  }
+
+  @Transactional
+  public boolean deleteReturnOrder(Long id) {
+    if (!returnOrderRepository.existsById(id)) {
+      throw new AppException(ErrorCode.RETURN_ORDER_NOT_FOUND);
+    }
+    returnOrderRepository.deleteById(id);
+    return true;
+  }
+
+  @Transactional(readOnly = true)
+  public ReturnOrderResponse getReturnOrderById(Long id) {
+    ReturnOrder returnOrder =
+        returnOrderRepository
+            .findById(id)
+            .orElseThrow(() -> new AppException(ErrorCode.RETURN_ORDER_NOT_FOUND));
+    return returnOrderMapper.toReturnOrderResponse(returnOrder);
+  }
+
+  @Transactional(readOnly = true)
+  public List<ReturnOrderResponse> getAllReturnOrders() {
+    return returnOrderRepository.findAll().stream()
+        .map(returnOrderMapper::toReturnOrderResponse)
+        .collect(Collectors.toList());
+  }
+}

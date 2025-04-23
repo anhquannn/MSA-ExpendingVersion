@@ -59,6 +59,8 @@ public enum ErrorCode {
   INVALID_INPUT(142, "Invalid input!", HttpStatus.BAD_REQUEST),
 
   CAMPAIGN_NOT_FOUND(143, "Campaign not found!", HttpStatus.NOT_FOUND),
+  PROMO_CODE_OUTSIDE_CAMPAIGN_DATES(
+      144, "PromoCode dates must be within Campaign date range!", HttpStatus.BAD_REQUEST),
   ;
 
   private final int code;

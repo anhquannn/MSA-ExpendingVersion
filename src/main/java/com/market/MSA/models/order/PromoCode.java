@@ -1,5 +1,6 @@
 package com.market.MSA.models.order;
 
+import com.market.MSA.validators.CampaignDateRangeConstraint;
 import com.market.MSA.validators.DateRangeConstraint;
 import com.market.MSA.validators.DiscountPercentageConstraint;
 import com.market.MSA.validators.PositiveAmountConstraint;
@@ -27,6 +28,7 @@ import lombok.experimental.FieldDefaults;
       @Index(name = "idx_promo_dates", columnList = "start_date,end_date")
     })
 @DateRangeConstraint(startDate = "startDate", endDate = "endDate")
+@CampaignDateRangeConstraint
 public class PromoCode {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

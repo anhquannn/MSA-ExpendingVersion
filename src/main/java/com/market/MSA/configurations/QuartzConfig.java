@@ -1,9 +1,6 @@
 package com.market.MSA.configurations;
 
-import com.market.MSA.jobs.LowStockCheckJob;
-import com.market.MSA.jobs.TrendingProductJob;
-import com.market.MSA.jobs.UpdateExpiryTimeJob;
-import com.market.MSA.jobs.UpdatePromoCodeStatusJob;
+import com.market.MSA.jobs.*;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -111,6 +108,25 @@ public class QuartzConfig {
     return TriggerBuilder.newTrigger()
         .forJob(updatePromoCodeStatusJobDetail())
         .withIdentity("updatePromoCodeStatusTrigger")
+        .withSchedule(
+            CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                .withMisfireHandlingInstructionFireAndProceed())
+        .build();
+  }
+
+  @Bean
+  public JobDetail updateCampaignStatusJobDetail() {
+    return JobBuilder.newJob(UpdateCampaignStatusJob.class)
+        .withIdentity("updateCampaignStatusJob")
+        .storeDurably()
+        .build();
+  }
+
+  @Bean
+  public Trigger updateCampaignStatusTrigger() {
+    return TriggerBuilder.newTrigger()
+        .forJob(updateCampaignStatusJobDetail())
+        .withIdentity("updateCampaignStatusTrigger")
         .withSchedule(
             CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
                 .withMisfireHandlingInstructionFireAndProceed())

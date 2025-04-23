@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 public class CampaignRequest {
   String name;
   String description;
+  String status;
   Date startDate;
   Date endDate;
 }

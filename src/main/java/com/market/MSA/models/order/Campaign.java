@@ -26,6 +26,7 @@ public class Campaign {
 
   String name;
   String description;
+  String status;
   Date startDate;
   Date endDate;
 

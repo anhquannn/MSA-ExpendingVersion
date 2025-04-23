@@ -14,6 +14,7 @@ public class CampaignResponse {
 
   String name;
   String description;
+  String status;
   Date startDate;
   Date endDate;
 }

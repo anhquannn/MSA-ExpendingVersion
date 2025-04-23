@@ -3,15 +3,15 @@ package com.market.MSA.services.order;
 import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
-import com.market.MSA.mappers.order.ReturnOrderMapper;
+import com.market.MSA.mappers.order.CancelOrderMapper;
+import com.market.MSA.models.order.CancelOrder;
 import com.market.MSA.models.order.Order;
 import com.market.MSA.models.order.OrderDetail;
-import com.market.MSA.models.order.ReturnOrder;
+import com.market.MSA.repositories.order.CancelOrderRepository;
 import com.market.MSA.repositories.order.OrderDetailRepository;
 import com.market.MSA.repositories.order.OrderRepository;
-import com.market.MSA.repositories.order.ReturnOrderRepository;
-import com.market.MSA.requests.order.ReturnOrderRequest;
-import com.market.MSA.responses.order.ReturnOrderResponse;
+import com.market.MSA.requests.order.CancelOrderRequest;
+import com.market.MSA.responses.order.CancelOrderResponse;
 import com.market.MSA.services.others.NotificationService;
 import com.market.MSA.services.product.InventoryProductService;
 import java.util.List;
@@ -27,16 +27,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ReturnOrderService {
-  final ReturnOrderRepository returnOrderRepository;
+public class CancelOrderService {
+  final CancelOrderRepository cancelOrderRepository;
   final OrderRepository orderRepository;
   final OrderDetailRepository orderDetailRepository;
-  final ReturnOrderMapper returnOrderMapper;
+  final CancelOrderMapper cancelOrderMapper;
   final InventoryProductService inventoryProductService;
   final NotificationService notificationService;
 
   @Transactional
-  public ReturnOrderResponse createReturnOrder(ReturnOrderRequest request) {
+  public CancelOrderResponse createCancelOrder(CancelOrderRequest request) {
     Order order =
         orderRepository
             .findById(request.getOrderId())
@@ -47,16 +47,16 @@ public class ReturnOrderService {
     orderRepository.save(order);
 
     // Lưu đơn trả hàng vào cơ sở dữ liệu
-    ReturnOrder returnOrder =
-        ReturnOrder.builder()
-            .returnDate(request.getReturnDate())
+    CancelOrder cancelOrder =
+        CancelOrder.builder()
+            .cancelDate(request.getCancelDate())
             .reason(request.getReason())
             .order(order)
             .refundAmount(order.getGrandTotal())
             .status(OrderStatus.ORDER_STATUS_8.getStatus())
             .build();
 
-    returnOrder = returnOrderRepository.save(returnOrder);
+    cancelOrder = cancelOrderRepository.save(cancelOrder);
 
     // Lấy chi tiết sản phẩm trong đơn hàng gốc
     List<OrderDetail> orderDetails = orderDetailRepository.findByOrder_OrderId(order.getOrderId());
@@ -69,42 +69,42 @@ public class ReturnOrderService {
     // Send notification
     notificationService.sendOrderCancelledNotification(order.getOrderId());
 
-    return returnOrderMapper.toReturnOrderResponse(returnOrder);
+    return cancelOrderMapper.toCancelOrderResponse(cancelOrder);
   }
 
   @Transactional
-  public ReturnOrderResponse updateReturnOrder(Long id, ReturnOrderRequest request) {
-    ReturnOrder returnOrder =
-        returnOrderRepository
+  public CancelOrderResponse updateCancelOrder(Long id, CancelOrderRequest request) {
+    CancelOrder cancelOrder =
+        cancelOrderRepository
             .findById(id)
-            .orElseThrow(() -> new AppException(ErrorCode.RETURN_ORDER_NOT_FOUND));
+            .orElseThrow(() -> new AppException(ErrorCode.CANCEL_ORDER_NOT_FOUND));
 
-    returnOrderMapper.updateReturnOrderFromRequest(request, returnOrder);
-    return returnOrderMapper.toReturnOrderResponse(returnOrderRepository.save(returnOrder));
+    cancelOrderMapper.updateCancelOrderFromRequest(request, cancelOrder);
+    return cancelOrderMapper.toCancelOrderResponse(cancelOrderRepository.save(cancelOrder));
   }
 
   @Transactional
-  public boolean deleteReturnOrder(Long id) {
-    if (!returnOrderRepository.existsById(id)) {
-      throw new AppException(ErrorCode.RETURN_ORDER_NOT_FOUND);
+  public boolean deleteCancelOrder(Long id) {
+    if (!cancelOrderRepository.existsById(id)) {
+      throw new AppException(ErrorCode.CANCEL_ORDER_NOT_FOUND);
     }
-    returnOrderRepository.deleteById(id);
+    cancelOrderRepository.deleteById(id);
     return true;
   }
 
   @Transactional(readOnly = true)
-  public ReturnOrderResponse getReturnOrderById(Long id) {
-    ReturnOrder returnOrder =
-        returnOrderRepository
+  public CancelOrderResponse getCancelOrderById(Long id) {
+    CancelOrder cancelOrder =
+        cancelOrderRepository
             .findById(id)
-            .orElseThrow(() -> new AppException(ErrorCode.RETURN_ORDER_NOT_FOUND));
-    return returnOrderMapper.toReturnOrderResponse(returnOrder);
+            .orElseThrow(() -> new AppException(ErrorCode.CANCEL_ORDER_NOT_FOUND));
+    return cancelOrderMapper.toCancelOrderResponse(cancelOrder);
   }
 
   @Transactional(readOnly = true)
-  public List<ReturnOrderResponse> getAllReturnOrders() {
-    return returnOrderRepository.findAll().stream()
-        .map(returnOrderMapper::toReturnOrderResponse)
+  public List<CancelOrderResponse> getAllCancelOrders() {
+    return cancelOrderRepository.findAll().stream()
+        .map(cancelOrderMapper::toCancelOrderResponse)
         .collect(Collectors.toList());
   }
 }

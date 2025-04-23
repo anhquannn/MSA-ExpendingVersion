@@ -25,18 +25,18 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(
-    name = "return_orders",
+    name = "cancel_orders",
     indexes = {
-      @Index(name = "idx_return_order", columnList = "order_id"),
-      @Index(name = "idx_return_status", columnList = "status"),
-      @Index(name = "idx_return_date", columnList = "returnDate")
+      @Index(name = "idx_cancel_order", columnList = "order_id"),
+      @Index(name = "idx_cancel_status", columnList = "status"),
+      @Index(name = "idx_cancel_date", columnList = "cancelDate")
     })
-public class ReturnOrder {
+public class CancelOrder {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  Long returnOrderId;
+  Long cancelOrderId;
 
-  Date returnDate;
+  Date cancelDate;
   String status;
   String reason;
   double refundAmount;

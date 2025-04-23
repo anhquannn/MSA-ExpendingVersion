@@ -59,7 +59,7 @@ public class Order {
   DeliveryInfo deliveryInfo;
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<ReturnOrder> returnOrders;
+  List<CancelOrder> cancelOrders;
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   List<Payment> payments;

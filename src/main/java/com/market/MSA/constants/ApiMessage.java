@@ -150,6 +150,13 @@ public enum ApiMessage {
   PROMO_CODE_RETRIEVED("Promo code retrieved successfully"),
   ALL_PROMO_CODES_RETRIEVED("All promo codes retrieved successfully"),
 
+  // Campaign messages
+  CAMPAIGN_CREATED("Campaign created successfully"),
+  CAMPAIGN_UPDATED("Campaign updated successfully"),
+  CAMPAIGN_DELETED("Campaign deleted successfully"),
+  CAMPAIGN_RETRIEVED("Campaign retrieved successfully"),
+  ALL_CAMPAIGNS_RETRIEVED("All campaigns retrieved successfully"),
+
   // Return Order messages
   RETURN_ORDER_CREATED("Return order created successfully"),
   RETURN_ORDER_UPDATED("Return order updated successfully"),

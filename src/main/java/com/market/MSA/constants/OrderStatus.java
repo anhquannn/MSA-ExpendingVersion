@@ -9,8 +9,8 @@ public enum OrderStatus {
   ORDER_STATUS_3("paid"),
   ORDER_STATUS_4("delivering"),
   ORDER_STATUS_5("shipped"),
-  ORDER_STATUS_6("returning"),
-  ORDER_STATUS_7("returned"),
+  ORDER_STATUS_6("canceling"),
+  ORDER_STATUS_7("cancel"),
   ORDER_STATUS_8("success"),
   ;
 

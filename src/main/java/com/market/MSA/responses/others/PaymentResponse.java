@@ -1,5 +1,6 @@
 package com.market.MSA.responses.others;
 
+import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.user.UserResponse;
 import java.util.Date;
 import lombok.AccessLevel;
@@ -23,5 +24,5 @@ public class PaymentResponse {
   double grandTotal;
 
   UserResponse user;
-  Long orderId;
+  OrderResponse orderResponse;
 }

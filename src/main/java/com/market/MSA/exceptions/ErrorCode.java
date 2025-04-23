@@ -39,7 +39,7 @@ public enum ErrorCode {
   ORDER_DETAIL_NOT_FOUND(124, "Order detail not found!", HttpStatus.NOT_FOUND),
   PAYMENT_NOT_FOUND(125, "Payment not found!", HttpStatus.NOT_FOUND),
   PROMO_CODE_NOT_FOUND(126, "Promo code not found!", HttpStatus.NOT_FOUND),
-  RETURN_ORDER_NOT_FOUND(127, "Return order not found!", HttpStatus.NOT_FOUND),
+  CANCEL_ORDER_NOT_FOUND(127, "Cancel order not found!", HttpStatus.NOT_FOUND),
   FEEDBACK_NOT_FOUND(128, "Feedback not found!", HttpStatus.NOT_FOUND),
 
   TRENDING_PRODUCT_NOT_FOUND(129, "Trending product not found!", HttpStatus.NOT_FOUND),
@@ -57,6 +57,8 @@ public enum ErrorCode {
 
   NOTIFICATION_NOT_FOUND(141, "Notification not found!", HttpStatus.NOT_FOUND),
   INVALID_INPUT(142, "Invalid input!", HttpStatus.BAD_REQUEST),
+
+  CAMPAIGN_NOT_FOUND(143, "Campaign not found!", HttpStatus.NOT_FOUND),
   ;
 
   private final int code;

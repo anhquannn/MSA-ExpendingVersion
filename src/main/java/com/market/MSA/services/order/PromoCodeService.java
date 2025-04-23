@@ -5,9 +5,11 @@ import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.order.PromoCodeMapper;
 import com.market.MSA.models.order.PromoCode;
+import com.market.MSA.repositories.order.CampaignRepository;
 import com.market.MSA.repositories.order.PromoCodeRepository;
 import com.market.MSA.requests.order.PromoCodeRequest;
 import com.market.MSA.responses.order.PromoCodeResponse;
+import com.market.MSA.services.others.EntityFinderService;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class PromoCodeService {
   final PromoCodeRepository promoCodeRepository;
   final PromoCodeMapper promoCodeMapper;
+  private final EntityFinderService entityFinderService;
+  private final CampaignRepository campaignRepository;
 
   // Tạo PromoCode
   @Transactional
@@ -34,6 +38,10 @@ public class PromoCodeService {
     PromoCode promoCode = promoCodeMapper.toPromoCode(request);
     promoCode.setDiscountType("percentage");
     promoCode.setStatus(PromocodeStatus.PROMO_CODE_STATUS_3.getStatus());
+    promoCode.setCampaign(
+        entityFinderService.findByIdOrThrow(
+            campaignRepository, request.getCampaignId(), ErrorCode.CAMPAIGN_NOT_FOUND));
+
     PromoCode savedPromoCode = promoCodeRepository.save(promoCode);
     return promoCodeMapper.toPromoCodeResponse(savedPromoCode);
   }

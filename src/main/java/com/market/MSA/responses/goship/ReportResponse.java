@@ -10,9 +10,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReportResponse {
-    @JsonProperty("avg_time_delivery")
-    int avgTimeDelivery;
+  @JsonProperty("avg_time_delivery")
+  int avgTimeDelivery;
 
-    @JsonProperty("avg_time_delivery_format")
-    int avgTimeDeliveryFormat;
+  @JsonProperty("avg_time_delivery_format")
+  int avgTimeDeliveryFormat;
 }

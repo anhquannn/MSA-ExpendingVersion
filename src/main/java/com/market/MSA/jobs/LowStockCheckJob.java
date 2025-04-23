@@ -17,12 +17,9 @@ public class LowStockCheckJob implements Job {
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
-    log.info("Running low stock check job...");
     try {
       notificationService.checkAndNotifyLowStock();
-      log.info("Low stock check completed successfully");
     } catch (Exception e) {
-      log.error("Error in low stock check job", e);
       throw new JobExecutionException(e);
     }
   }

@@ -43,4 +43,8 @@ public class PromoCode {
   @DiscountPercentageConstraint double discountPercentage;
 
   @PositiveAmountConstraint double minimumOrderValue;
+
+  @ManyToOne
+  @JoinColumn(name = "campaignId", nullable = false)
+  Campaign campaign;
 }

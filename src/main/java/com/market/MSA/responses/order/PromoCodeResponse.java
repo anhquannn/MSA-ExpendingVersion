@@ -25,4 +25,6 @@ public class PromoCodeResponse {
   String discountType;
   double discountPercentage;
   double minimumOrderValue;
+
+  CampaignResponse campaignResponse;
 }

@@ -32,7 +32,7 @@ public class OrderResponse {
   UserResponse user;
 
   DeliveryInfoResponse deliveryInfo;
-  List<ReturnOrderResponse> returnOrders;
+  List<CancelOrderResponse> returnOrders;
   List<PaymentResponse> payments;
   List<PromoCodeResponse> promoCodes;
   List<OrderDetailResponse> orderDetails;

@@ -1,4 +1,4 @@
-package com.market.MSA.requests.order;
+package com.market.MSA.responses.order;
 
 import java.util.Date;
 import lombok.AccessLevel;
@@ -13,11 +13,13 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ReturnOrderRequest {
-  Date returnDate;
+public class CancelOrderResponse {
+  Long cancelOrderId;
+
+  Date cancelDate;
   String status;
   String reason;
   double refundAmount;
 
-  Long orderId;
+  OrderResponse orderResponse;
 }

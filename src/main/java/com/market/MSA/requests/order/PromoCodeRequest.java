@@ -27,4 +27,6 @@ public class PromoCodeRequest {
   @DiscountPercentageConstraint double discountPercentage;
 
   @PositiveAmountConstraint double minimumOrderValue;
+
+  Long campaignId;
 }

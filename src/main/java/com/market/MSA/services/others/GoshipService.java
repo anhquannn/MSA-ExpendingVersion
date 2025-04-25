@@ -76,7 +76,6 @@ public class GoshipService {
   public List<CityResponse> getCities() {
     CityApiResponse response =
         callApi(API_URL + "/cities", HttpMethod.GET, null, CityApiResponse.class);
-    log.info(response.getData().toString());
     return response.getData();
   }
 
@@ -113,13 +112,13 @@ public class GoshipService {
             .city(request.getShipment().getAddress_to().getCity())
             .ward(request.getShipment().getAddress_to().getWard())
             .district(request.getShipment().getAddress_to().getDistrict())
-            .cod(request.getShipment().getParcels().getFirst().getCod())
+            .cod(request.getShipment().getParcel().getCod())
             .status(OrderStatus.ORDER_STATUS_1.getStatus())
             .deliveryDate(new Date())
-            .weight(null)
-            .width(null)
-            .height(null)
-            .length(null)
+            .weight(request.getShipment().getParcel().getWeight())
+            .width(request.getShipment().getParcel().getWidth())
+            .height(request.getShipment().getParcel().getHeight())
+            .length(request.getShipment().getParcel().getLength())
             .order(order)
             .build();
     deliveryInfoRepository.save(deliveryInfo);

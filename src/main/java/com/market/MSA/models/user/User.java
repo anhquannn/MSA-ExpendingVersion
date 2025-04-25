@@ -6,6 +6,7 @@ import com.market.MSA.models.others.Notification;
 import com.market.MSA.models.others.Payment;
 import com.market.MSA.models.product.Branch;
 import com.market.MSA.models.product.Feedback;
+import com.market.MSA.models.product.TransferRequest;
 import com.market.MSA.validators.DobConstraint;
 import com.market.MSA.validators.PhoneNumberConstraint;
 import jakarta.persistence.*;
@@ -61,6 +62,12 @@ public class User {
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   List<Feedback> feedbacks;
+
+  @OneToMany(mappedBy = "requester", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<TransferRequest> fromTransferRequests;
+
+  @OneToMany(mappedBy = "approver", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<TransferRequest> toTransferRequests;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   List<Cart> carts;

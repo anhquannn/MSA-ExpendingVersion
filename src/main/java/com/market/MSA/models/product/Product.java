@@ -66,6 +66,9 @@ public class Product {
   List<Feedback> feedbacks;
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<TransferRequestItem> transferRequestItems;
+
+  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
   List<OrderDetail> orderDetails;
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)

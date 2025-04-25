@@ -54,6 +54,8 @@ public class QuartzConfig {
       Trigger updateExpiryTimeTrigger,
       JobDetail updatePromoCodeStatusJobDetail,
       Trigger updatePromoCodeStatusTrigger,
+      JobDetail updateCampaignStatusJobDetail,
+      Trigger updateCampaignStatusTrigger,
       JobDetail createTrendingProductDataJobDetail,
       Trigger createTrendingProductDataTrigger,
       JobDetail lowStockCheckJobDetail,
@@ -64,6 +66,7 @@ public class QuartzConfig {
       // Đăng ký các job và trigger
       scheduler.scheduleJob(updateExpiryTimeJobDetail, updateExpiryTimeTrigger);
       scheduler.scheduleJob(updatePromoCodeStatusJobDetail, updatePromoCodeStatusTrigger);
+      scheduler.scheduleJob(updateCampaignStatusJobDetail, updateCampaignStatusTrigger);
       scheduler.scheduleJob(createTrendingProductDataJobDetail, createTrendingProductDataTrigger);
       scheduler.scheduleJob(lowStockCheckJobDetail, lowStockCheckTrigger);
 

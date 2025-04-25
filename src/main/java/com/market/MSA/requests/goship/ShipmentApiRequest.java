@@ -1,6 +1,5 @@
 package com.market.MSA.requests.goship;
 
-import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -13,5 +12,5 @@ public class ShipmentApiRequest {
   String rate;
   AddressRequest address_from;
   AddressRequest address_to;
-  List<ParcelRequest> parcels;
+  ParcelRequest parcel;
 }

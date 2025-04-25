@@ -33,6 +33,7 @@ public class OrderDetail {
   int quantity;
   double unitPrice;
   double totalPrice;
+  String image;
 
   @ManyToOne
   @JoinColumn(name = "orderId", nullable = false)

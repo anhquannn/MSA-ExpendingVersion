@@ -33,4 +33,10 @@ public class Inventory {
 
   @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
   List<Notification> notifications;
+
+  @OneToMany(mappedBy = "fromInventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<TransferRequest> fromTransferRequests;
+
+  @OneToMany(mappedBy = "toInventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<TransferRequest> toTransferRequests;
 }

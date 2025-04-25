@@ -19,6 +19,7 @@ public class OrderDetailResponse {
   int quantity;
   double unitPrice;
   double totalPrice;
+  String image;
 
   ProductResponse product;
   OrderResponse order;

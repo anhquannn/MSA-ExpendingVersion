@@ -36,6 +36,22 @@ public enum ApiMessage {
   PRODUCT_RETRIEVED("Product retrieved successfully"),
   ALL_PRODUCTS_RETRIEVED("All products retrieved successfully"),
 
+  // Transfer request messages
+  TRANSFER_REQUEST_CREATED("Transfer request created successfully"),
+  TRANSFER_REQUEST_UPDATED("Transfer request updated successfully"),
+  TRANSFER_REQUEST_DELETED("Transfer request deleted successfully"),
+  TRANSFER_REQUEST_RETRIEVED("Transfer request retrieved successfully"),
+  ALL_TRANSFER_REQUESTS_RETRIEVED("All Transfer requests retrieved successfully"),
+  TRANSFER_REQUEST_APPROVED("Transfer request has been approved successfully"),
+  TRANSFER_REQUEST_REJECTED("Transfer request has been rejected"),
+
+  // Transfer request item messages
+  TRANSFER_REQUEST_ITEM_CREATED("Transfer request item created successfully"),
+  TRANSFER_REQUEST_ITEM_UPDATED("Transfer request item updated successfully"),
+  TRANSFER_REQUEST_ITEM_DELETED("Transfer request item deleted successfully"),
+  TRANSFER_REQUEST_ITEM_RETRIEVED("Transfer request item retrieved successfully"),
+  ALL_TRANSFER_REQUEST_ITEMS_RETRIEVED("All Transfer request items retrieved successfully"),
+
   // Cart messages
   CART_CREATED("Cart created successfully"),
   CART_UPDATED("Cart updated successfully"),

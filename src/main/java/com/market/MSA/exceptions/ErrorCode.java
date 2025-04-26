@@ -61,6 +61,11 @@ public enum ErrorCode {
   CAMPAIGN_NOT_FOUND(143, "Campaign not found!", HttpStatus.NOT_FOUND),
   PROMO_CODE_OUTSIDE_CAMPAIGN_DATES(
       144, "PromoCode dates must be within Campaign date range!", HttpStatus.BAD_REQUEST),
+
+  TRANSFER_REQUEST_ALREADY_PROCESSED(
+      145, "Transfer request has already been processed", HttpStatus.BAD_REQUEST),
+  TRANSFER_REQUEST_NOT_FOUND(146, "Transfer request not found", HttpStatus.NOT_FOUND),
+  TRANSFER_REQUEST_ITEM_NOT_FOUND(147, "Transfer request item not found", HttpStatus.NOT_FOUND),
   ;
 
   private final int code;

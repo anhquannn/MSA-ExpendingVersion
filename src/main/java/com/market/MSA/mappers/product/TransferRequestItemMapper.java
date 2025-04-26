@@ -1,6 +1,7 @@
 package com.market.MSA.mappers.product;
 
-import com.market.MSA.models.product.TransferRequestItem;
+import com.market.MSA.models.product.TransferItem;
+import com.market.MSA.requests.product.TransferRequestItem;
 import com.market.MSA.responses.product.TransferResponseItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -10,11 +11,11 @@ import org.springframework.stereotype.Component;
 @Mapper(componentModel = "spring")
 @Component
 public interface TransferRequestItemMapper {
-  TransferRequestItem toTransferRequestItem(TransferRequestItem transferRequestItem);
+  TransferItem toTransferRequestItem(TransferRequestItem transferRequestItemItem);
 
-  TransferResponseItem toTransferResponseItem(TransferResponseItem transferResponseItem);
+  TransferResponseItem toTransferResponseItem(TransferItem transferItem);
 
   @Mapping(target = "transferRequestItemId", ignore = true)
   void updateTransferRequestItem(
-      TransferRequestItem transferRequestItem, @MappingTarget TransferRequestItem transferItem);
+      TransferRequestItem transferRequestItem, @MappingTarget TransferItem transferItem);
 }

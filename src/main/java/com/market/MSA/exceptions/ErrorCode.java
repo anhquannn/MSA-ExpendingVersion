@@ -66,6 +66,11 @@ public enum ErrorCode {
       145, "Transfer request has already been processed", HttpStatus.BAD_REQUEST),
   TRANSFER_REQUEST_NOT_FOUND(146, "Transfer request not found", HttpStatus.NOT_FOUND),
   TRANSFER_REQUEST_ITEM_NOT_FOUND(147, "Transfer request item not found", HttpStatus.NOT_FOUND),
+  REWARD_POINT_NOT_FOUND(146, "Reward point not found", HttpStatus.NOT_FOUND),
+  REWARD_POINT_TRANSACTION_NOT_FOUND(
+      147, "Reward point transaction not found", HttpStatus.NOT_FOUND),
+
+  INSUFFICIENT_POINTS(150, "Insufficient points", HttpStatus.BAD_REQUEST),
   ;
 
   private final int code;

@@ -39,11 +39,12 @@ public enum ApiMessage {
   // Transfer request messages
   TRANSFER_REQUEST_CREATED("Transfer request created successfully"),
   TRANSFER_REQUEST_UPDATED("Transfer request updated successfully"),
+
+  TRANSFER_REQUEST_APPROVED("Transfer request approved"),
+  TRANSFER_REQUEST_REJECTED("Transfer request rejected"),
   TRANSFER_REQUEST_DELETED("Transfer request deleted successfully"),
   TRANSFER_REQUEST_RETRIEVED("Transfer request retrieved successfully"),
   ALL_TRANSFER_REQUESTS_RETRIEVED("All Transfer requests retrieved successfully"),
-  TRANSFER_REQUEST_APPROVED("Transfer request has been approved successfully"),
-  TRANSFER_REQUEST_REJECTED("Transfer request has been rejected"),
 
   // Transfer request item messages
   TRANSFER_REQUEST_ITEM_CREATED("Transfer request item created successfully"),
@@ -202,6 +203,22 @@ public enum ApiMessage {
   DISTRICTS_RETRIEVED("District retrieved successfully"),
   WARDS_RETRIEVED("Ward retrieved successfully"),
   RATES_CREATED("Rates created successfully"),
+
+  // Reward point
+  REWARD_POINT_CREATED("Reward point created successfully"),
+  REWARD_POINT_UPDATED("Reward point updated successfully"),
+  REWARD_POINT_DELETED("Reward point deleted successfully"),
+  REWARD_POINT_RETRIEVED("Reward point retrieved successfully"),
+  ALL_REWARD_POINTS_RETRIEVED("All reward points retrieved successfully"),
+  REWARD_POINT_TRANSACTION_CREATED("Reward point transaction created successfully"),
+  REWARD_POINT_TRANSACTION_UPDATED("Reward point transaction updated successfully"),
+  REWARD_POINT_TRANSACTION_DELETED("Reward point transaction deleted successfully"),
+  REWARD_POINT_TRANSACTION_RETRIEVED("Reward point transaction retrieved successfully"),
+  ALL_REWARD_POINT_TRANSACTIONS_RETRIEVED("All reward point transactions retrieved successfully"),
+  POINTS_EARNED("Points earned successfully"),
+  POINTS_REDEEMED("Points redeemed successfully"),
+  POINTS_ADJUSTED("Points adjusted successfully"),
+  POINTS_BALANCE_RETRIEVED("Points balance retrieved successfully"),
   ;
 
   private final String message;

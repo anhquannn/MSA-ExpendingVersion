@@ -4,6 +4,7 @@ import com.market.MSA.models.others.DeliveryInfo;
 import com.market.MSA.models.others.Notification;
 import com.market.MSA.models.others.Payment;
 import com.market.MSA.models.product.Branch;
+import com.market.MSA.models.user.RewardPointTransaction;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
@@ -69,6 +70,9 @@ public class Order {
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   List<Notification> notifications;
+
+  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  List<RewardPointTransaction> rewardPointTransactions;
 
   @ManyToMany List<PromoCode> promoCodes;
 }

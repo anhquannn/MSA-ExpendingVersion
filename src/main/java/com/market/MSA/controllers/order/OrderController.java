@@ -9,6 +9,7 @@ import com.market.MSA.services.order.OrderService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -131,6 +132,18 @@ public class OrderController {
     return ApiResponse.<Page<OrderResponse>>builder()
         .result(orderService.getOrdersByBranchId(branchId, page, size, sortBy, sortDirection))
         .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @GetMapping("/revenue/statistics")
+  public ApiResponse<Map<String, Double>> getRevenueStatistics(
+      @RequestParam int year,
+      @RequestParam int month,
+      @RequestParam(required = false) Long branchId,
+      @RequestParam(required = false) Long userId) {
+    return ApiResponse.<Map<String, Double>>builder()
+        .result(orderService.getRevenueStatistics(year, month, branchId, userId))
+        .message(ApiMessage.REVENUE_STATISTICS_RETRIEVED.getMessage())
         .build();
   }
 }

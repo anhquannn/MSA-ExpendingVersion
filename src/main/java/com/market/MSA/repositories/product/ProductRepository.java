@@ -21,15 +21,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
           + "AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
           + "AND (:minPrice IS NULL OR p.currentPrice >= :minPrice) "
           + "AND (:maxPrice IS NULL OR p.currentPrice <= :maxPrice) "
-          + "AND (:color IS NULL OR LOWER(p.color) = LOWER(:color)) "
-          + "AND (:size IS NULL OR p.size = :size)")
+          + "AND (:color IS NULL OR LOWER(p.color) = LOWER(:color)) ")
   Page<Product> findByBranchAndFilters(
       @Param("branchId") Long branchId,
       @Param("keyword") String keyword,
       @Param("minPrice") Double minPrice,
       @Param("maxPrice") Double maxPrice,
       @Param("color") String color,
-      @Param("size") Integer size,
       Pageable pageable);
 
   @Query(
@@ -38,7 +36,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
           + "AND (:minPrice IS NULL OR p.currentPrice >= :minPrice) "
           + "AND (:maxPrice IS NULL OR p.currentPrice <= :maxPrice) "
           + "AND (:color IS NULL OR LOWER(p.color) = LOWER(:color)) "
-          + "AND (:size IS NULL OR p.size = :size) "
           + "AND (:categoryId IS NULL OR p.category.categoryId = :categoryId) "
           + "AND (:manufacturerId IS NULL OR p.manufacturer.manufacturerId = :manufacturerId)")
   Page<Product> searchProducts(
@@ -46,7 +43,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
       @Param("minPrice") Double minPrice,
       @Param("maxPrice") Double maxPrice,
       @Param("color") String color,
-      @Param("size") Integer size,
       @Param("categoryId") Long categoryId,
       @Param("manufacturerId") Long manufacturerId,
       Pageable pageable);

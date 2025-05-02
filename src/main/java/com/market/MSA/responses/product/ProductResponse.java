@@ -19,10 +19,10 @@ public class ProductResponse {
   Long productId;
 
   String name;
-  String image;
+  String images;
   double price;
   double currentPrice;
-  int size;
+  String unit;
   String color;
   String specification;
   String description;

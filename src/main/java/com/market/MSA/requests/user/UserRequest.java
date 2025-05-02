@@ -1,8 +1,6 @@
 package com.market.MSA.requests.user;
 
-import com.market.MSA.validators.DobConstraint;
 import com.market.MSA.validators.PhoneNumberConstraint;
-import java.time.LocalDate;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -23,8 +21,7 @@ public class UserRequest {
 
   @PhoneNumberConstraint String phoneNumber;
 
-  @DobConstraint(min = 18)
-  LocalDate birthday;
+  String birthday;
 
   String password;
   String address;

@@ -24,7 +24,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -269,7 +268,7 @@ public class UserService {
     return password.toString();
   }
 
-  @Cacheable(value = "users", key = "'role:' + #role + ':page:' + #page + ':size:' + #size")
+  // @Cacheable(value = "users", key = "'role:' + #role + ':page:' + #page + ':size:' + #size")
   public Page<UserResponse> getAllUsersByRoleWithPagination(String role, int page, int size) {
     if (role == null || role.trim().isEmpty()) {
       throw new AppException(ErrorCode.INVALID_INPUT);
@@ -285,7 +284,7 @@ public class UserService {
     return userPage.map(userMapper::toUserResponse);
   }
 
-  @Cacheable(value = "users", key = "'role:all:' + #role")
+  // @Cacheable(value = "users", key = "'role:all:' + #role")
   public List<UserResponse> getAllUsersByRole(String role) {
     if (role == null || role.trim().isEmpty()) {
       throw new AppException(ErrorCode.INVALID_INPUT);
@@ -295,9 +294,9 @@ public class UserService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable(
-      value = "users",
-      key = "'managers:inventory:' + #inventoryId + ':page:' + #page + ':size:' + #size")
+  //  @Cacheable(
+  //      value = "users",
+  //      key = "'managers:inventory:' + #inventoryId + ':page:' + #page + ':size:' + #size")
   public Page<UserResponse> getManagersByInventoryIdWithPagination(
       Long inventoryId, int page, int size) {
     if (inventoryId == null) {
@@ -315,7 +314,7 @@ public class UserService {
     return userPage.map(userMapper::toUserResponse);
   }
 
-  @Cacheable(value = "users", key = "'managers:inventory:all:' + #inventoryId")
+  // @Cacheable(value = "users", key = "'managers:inventory:all:' + #inventoryId")
   public List<UserResponse> getAllManagersByInventoryId(Long inventoryId) {
     if (inventoryId == null) {
       throw new AppException(ErrorCode.INVALID_INPUT);

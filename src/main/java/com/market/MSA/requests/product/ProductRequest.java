@@ -16,13 +16,13 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductRequest {
   String name;
-  String image;
+  String images;
 
   @Positive double price;
 
   @Positive double currentPrice;
 
-  int size;
+  String unit;
   String color;
   String specification;
   String description;

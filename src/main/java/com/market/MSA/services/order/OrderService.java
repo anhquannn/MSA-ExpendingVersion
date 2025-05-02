@@ -31,7 +31,9 @@ import jakarta.mail.MessagingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -314,5 +316,79 @@ public class OrderService {
     if (!validSortFields.contains(sortBy)) {
       throw new AppException(ErrorCode.INVALID_SORT_FIELD);
     }
+  }
+
+  @Transactional(readOnly = true)
+  public Double calculateMonthlyRevenue(int year, int month) {
+    return orderRepository.calculateMonthlyRevenue(year, month);
+  }
+
+  @Transactional(readOnly = true)
+  public Double calculateYearlyRevenue(int year) {
+    return orderRepository.calculateYearlyRevenue(year);
+  }
+
+  @Transactional(readOnly = true)
+  public Double calculateMonthlyRevenueByBranch(int year, int month, Long branchId) {
+    return orderRepository.calculateMonthlyRevenueByBranch(year, month, branchId);
+  }
+
+  @Transactional(readOnly = true)
+  public Double calculateYearlyRevenueByBranch(int year, Long branchId) {
+    return orderRepository.calculateYearlyRevenueByBranch(year, branchId);
+  }
+
+  @Transactional(readOnly = true)
+  public Double calculateMonthlyRevenueByUser(int year, int month, Long userId) {
+    return orderRepository.calculateMonthlyRevenueByUser(year, month, userId);
+  }
+
+  @Transactional(readOnly = true)
+  public Double calculateYearlyRevenueByUser(int year, Long userId) {
+    return orderRepository.calculateYearlyRevenueByUser(year, userId);
+  }
+
+  @Transactional(readOnly = true)
+  public Double calculateMonthlyRevenueByBranchAndUser(
+      int year, int month, Long branchId, Long userId) {
+    return orderRepository.calculateMonthlyRevenueByBranchAndUser(year, month, branchId, userId);
+  }
+
+  @Transactional(readOnly = true)
+  public Double calculateYearlyRevenueByBranchAndUser(int year, Long branchId, Long userId) {
+    return orderRepository.calculateYearlyRevenueByBranchAndUser(year, branchId, userId);
+  }
+
+  @Transactional(readOnly = true)
+  public Map<String, Double> getRevenueStatistics(int year, int month, Long branchId, Long userId) {
+    Map<String, Double> statistics = new HashMap<>();
+
+    // Calculate total revenue
+    statistics.put("totalMonthlyRevenue", calculateMonthlyRevenue(year, month));
+    statistics.put("totalYearlyRevenue", calculateYearlyRevenue(year));
+
+    // Calculate branch revenue if branchId is provided
+    if (branchId != null) {
+      statistics.put(
+          "branchMonthlyRevenue", calculateMonthlyRevenueByBranch(year, month, branchId));
+      statistics.put("branchYearlyRevenue", calculateYearlyRevenueByBranch(year, branchId));
+    }
+
+    // Calculate user revenue if userId is provided
+    if (userId != null) {
+      statistics.put("userMonthlyRevenue", calculateMonthlyRevenueByUser(year, month, userId));
+      statistics.put("userYearlyRevenue", calculateYearlyRevenueByUser(year, userId));
+    }
+
+    // Calculate combined branch and user revenue if both are provided
+    if (branchId != null && userId != null) {
+      statistics.put(
+          "branchUserMonthlyRevenue",
+          calculateMonthlyRevenueByBranchAndUser(year, month, branchId, userId));
+      statistics.put(
+          "branchUserYearlyRevenue", calculateYearlyRevenueByBranchAndUser(year, branchId, userId));
+    }
+
+    return statistics;
   }
 }

@@ -21,4 +21,42 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       "SELECT o FROM Order o JOIN o.user u WHERE o.branch.branchId = :branchId ORDER BY u.phoneNumber")
   Page<Order> findByBranch_BranchIdWithUserSort(
       @Param("branchId") Long branchId, Pageable pageable);
+
+  @Query(
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month")
+  Double calculateMonthlyRevenue(@Param("year") int year, @Param("month") int month);
+
+  @Query("SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year")
+  Double calculateYearlyRevenue(@Param("year") int year);
+
+  @Query(
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.branch.branchId = :branchId")
+  Double calculateMonthlyRevenueByBranch(
+      @Param("year") int year, @Param("month") int month, @Param("branchId") Long branchId);
+
+  @Query(
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND o.branch.branchId = :branchId")
+  Double calculateYearlyRevenueByBranch(@Param("year") int year, @Param("branchId") Long branchId);
+
+  @Query(
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.user.userId = :userId")
+  Double calculateMonthlyRevenueByUser(
+      @Param("year") int year, @Param("month") int month, @Param("userId") Long userId);
+
+  @Query(
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND o.user.userId = :userId")
+  Double calculateYearlyRevenueByUser(@Param("year") int year, @Param("userId") Long userId);
+
+  @Query(
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.branch.branchId = :branchId AND o.user.userId = :userId")
+  Double calculateMonthlyRevenueByBranchAndUser(
+      @Param("year") int year,
+      @Param("month") int month,
+      @Param("branchId") Long branchId,
+      @Param("userId") Long userId);
+
+  @Query(
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND o.branch.branchId = :branchId AND o.user.userId = :userId")
+  Double calculateYearlyRevenueByBranchAndUser(
+      @Param("year") int year, @Param("branchId") Long branchId, @Param("userId") Long userId);
 }

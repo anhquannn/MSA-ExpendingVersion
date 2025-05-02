@@ -146,6 +146,8 @@ public enum ApiMessage {
   ORDER_CANCELLED("Order cancelled successfully"),
   ORDER_SUMMARY_RETRIEVED("Order summary retrieved successfully"),
 
+  REVENUE_STATISTICS_RETRIEVED("Revenue statistics retrieved successfully"),
+
   // Order Detail messages
   ORDER_DETAIL_CREATED("Order detail created successfully"),
   ORDER_DETAIL_UPDATED("Order detail updated successfully"),

@@ -77,7 +77,6 @@ public class ProductController {
 
   @GetMapping("/filter")
   public ApiResponse<List<ProductResponse>> filterAndSortProducts(
-      @RequestParam(required = false) Integer size,
       @RequestParam(required = false) Double minPrice,
       @RequestParam(required = false) Double maxPrice,
       @RequestParam(required = false) String color,
@@ -87,7 +86,7 @@ public class ProductController {
     return ApiResponse.<List<ProductResponse>>builder()
         .result(
             productService.filterAndSortProducts(
-                size, minPrice, maxPrice, color, categoryId, page, pageSize))
+                minPrice, maxPrice, color, categoryId, page, pageSize))
         .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
         .build();
   }
@@ -112,7 +111,6 @@ public class ProductController {
       @RequestParam(required = false) Double minPrice,
       @RequestParam(required = false) Double maxPrice,
       @RequestParam(required = false) String color,
-      @RequestParam(required = false) int size,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int pageSize,
       @RequestParam(defaultValue = "name") String sortBy,
@@ -125,7 +123,6 @@ public class ProductController {
                 minPrice,
                 maxPrice,
                 color,
-                size,
                 page,
                 pageSize,
                 sortBy,
@@ -140,7 +137,6 @@ public class ProductController {
       @RequestParam(required = false) Double minPrice,
       @RequestParam(required = false) Double maxPrice,
       @RequestParam(required = false) String color,
-      @RequestParam(required = false) Integer size,
       @RequestParam(required = false) Long categoryId,
       @RequestParam(required = false) Long manufacturerId,
       @RequestParam(defaultValue = "0") int page,
@@ -154,7 +150,6 @@ public class ProductController {
                 minPrice,
                 maxPrice,
                 color,
-                size,
                 categoryId,
                 manufacturerId,
                 page,

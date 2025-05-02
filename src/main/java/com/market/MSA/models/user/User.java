@@ -7,10 +7,8 @@ import com.market.MSA.models.others.Payment;
 import com.market.MSA.models.product.Branch;
 import com.market.MSA.models.product.Feedback;
 import com.market.MSA.models.product.Transfer;
-import com.market.MSA.validators.DobConstraint;
 import com.market.MSA.validators.PhoneNumberConstraint;
 import jakarta.persistence.*;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -49,8 +47,7 @@ public class User {
 
   @PhoneNumberConstraint String phoneNumber;
 
-  @DobConstraint(min = 18)
-  LocalDate birthday;
+  String birthday;
 
   String password;
   String address;

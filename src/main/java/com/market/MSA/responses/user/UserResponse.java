@@ -2,7 +2,6 @@ package com.market.MSA.responses.user;
 
 import com.market.MSA.models.user.User;
 import com.market.MSA.responses.product.BranchResponse;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -22,7 +21,7 @@ public class UserResponse {
   String fullName;
   String email;
   String phoneNumber;
-  LocalDate birthday;
+  String birthday;
   String password;
   String address;
   String googleId;

@@ -36,13 +36,13 @@ public class Product {
   Long productId;
 
   String name;
-  String image;
+  String images;
 
   @Positive double price;
 
   @Positive double currentPrice;
 
-  int size;
+  String unit;
   String color;
   String specification;
   String description;

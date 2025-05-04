@@ -19,9 +19,15 @@ public class PaymentResponse {
   Long paymentId;
 
   String paymentMethod;
-  Date paymentDate;
+  String paymentDate;
   String status;
   double grandTotal;
+  String transactionId;
+
+  String bankCode;
+  String bankTranNo;
+  String responseCode;
+  Date updateDate;
 
   UserResponse user;
   OrderResponse orderResponse;

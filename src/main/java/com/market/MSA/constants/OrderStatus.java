@@ -12,6 +12,8 @@ public enum OrderStatus {
   ORDER_STATUS_6("canceling"),
   ORDER_STATUS_7("cancel"),
   ORDER_STATUS_8("success"),
+
+  ORDER_STATUS_9("failed"),
   ;
 
   private final String status;

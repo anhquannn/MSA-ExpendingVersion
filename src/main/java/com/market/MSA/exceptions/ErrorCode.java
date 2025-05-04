@@ -71,6 +71,7 @@ public enum ErrorCode {
       147, "Reward point transaction not found", HttpStatus.NOT_FOUND),
 
   INSUFFICIENT_POINTS(150, "Insufficient points", HttpStatus.BAD_REQUEST),
+  PAYMENT_ERROR(151, "Payment error", HttpStatus.INTERNAL_SERVER_ERROR),
   ;
 
   private final int code;

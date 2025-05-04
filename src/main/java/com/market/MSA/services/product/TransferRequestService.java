@@ -38,15 +38,14 @@ public class TransferRequestService {
   final UserRepository userRepository;
   final TransferRequestRepository transferRequestRepository;
   final InventoryProductRepository inventoryProductRepository;
+  final InventoryProductService inventoryProductService;
 
   @Transactional
   public TransferResponse createTransferRequest(TransferRequest transferRequest) {
     Transfer transfer = transferRequestMapper.toTransferRequest(transferRequest);
     transfer.setFromInventory(
         entityFinderService.findByIdOrThrow(
-            inventoryRepository,
-            transferRequest.getFromInventoryId(),
-            ErrorCode.INVENTORY_NOT_FOUND));
+            inventoryRepository, 1L, ErrorCode.INVENTORY_NOT_FOUND));
     transfer.setToInventory(
         entityFinderService.findByIdOrThrow(
             inventoryRepository,
@@ -56,8 +55,8 @@ public class TransferRequestService {
         entityFinderService.findByIdOrThrow(
             userRepository, transferRequest.getRequesterId(), ErrorCode.USER_NOT_EXISTED));
     transfer.setApprover(
-        entityFinderService.findByIdOrThrow(
-            userRepository, transferRequest.getApproverId(), ErrorCode.USER_NOT_EXISTED));
+        entityFinderService.findByIdOrThrow(userRepository, 1L, ErrorCode.USER_NOT_EXISTED));
+    transfer.setCreatedAt(new Date());
 
     Transfer saveTransfer = transferRequestRepository.save(transfer);
 
@@ -213,11 +212,14 @@ public class TransferRequestService {
                   });
 
       destinationInventoryProduct.setStockNumber(
-          destinationInventoryProduct.getStockNumber() + item.getQuantityRequested());
+          destinationInventoryProduct.getStockNumber() + item.getQuantityTransferred());
       inventoryProductRepository.save(destinationInventoryProduct);
 
       // Update transferred quantity
-      item.setQuantityTransferred(item.getQuantityRequested());
+      item.setQuantityTransferred(item.getQuantityTransferred());
+
+      inventoryProductService.updateStockLevel(centralInventoryProduct);
+      inventoryProductService.updateStockLevel(destinationInventoryProduct);
     }
 
     // Update transfer request status

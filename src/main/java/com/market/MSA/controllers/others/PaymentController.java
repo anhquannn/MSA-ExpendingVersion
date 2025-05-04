@@ -5,8 +5,10 @@ import com.market.MSA.requests.others.PaymentRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.others.PaymentResponse;
 import com.market.MSA.services.others.PaymentService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -65,6 +68,23 @@ public class PaymentController {
     return ApiResponse.<List<PaymentResponse>>builder()
         .result(paymentService.getAllPayments())
         .message(ApiMessage.ALL_PAYMENTS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @GetMapping("/vnpay/{orderId}")
+  ApiResponse<String> createVNPayPaymentUrl(
+      @PathVariable Long orderId, HttpServletRequest request) {
+    return ApiResponse.<String>builder()
+        .result(paymentService.createVNPayPaymentUrl(orderId, request))
+        .message(ApiMessage.VNPAY_PAYMENT_URL_CREATED.getMessage())
+        .build();
+  }
+
+  @GetMapping("/vnpay/callback")
+  ApiResponse<PaymentResponse> handleVNPayCallback(@RequestParam Map<String, String> params) {
+    return ApiResponse.<PaymentResponse>builder()
+        .result(paymentService.handleVNPayCallback(params))
+        .message(ApiMessage.VNPAY_CALLBACK_HANDLED.getMessage())
         .build();
   }
 }

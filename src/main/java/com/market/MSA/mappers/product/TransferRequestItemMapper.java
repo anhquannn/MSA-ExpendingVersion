@@ -8,11 +8,15 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    uses = {ProductMapper.class, TransferRequestMapper.class})
 @Component
 public interface TransferRequestItemMapper {
   TransferItem toTransferRequestItem(TransferRequestItem transferRequestItemItem);
 
+  @Mapping(target = "productResponse", source = "product")
+  @Mapping(target = "transferResponse", source = "transfer")
   TransferResponseItem toTransferResponseItem(TransferItem transferItem);
 
   @Mapping(target = "transferRequestItemId", ignore = true)

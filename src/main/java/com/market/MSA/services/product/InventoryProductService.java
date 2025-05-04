@@ -142,7 +142,7 @@ public class InventoryProductService {
     return inventoryProducts.stream().mapToInt(InventoryProduct::getStockNumber).sum();
   }
 
-  private void updateStockLevel(InventoryProduct inventoryProduct) {
+  public void updateStockLevel(InventoryProduct inventoryProduct) {
     int stockNumber = inventoryProduct.getStockNumber();
     if (stockNumber < 50) {
       inventoryProduct.setStockLevel("low");

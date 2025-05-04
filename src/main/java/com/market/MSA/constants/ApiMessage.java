@@ -108,6 +108,8 @@ public enum ApiMessage {
   PAYMENT_DELETED("Payment deleted successfully"),
   PAYMENT_RETRIEVED("Payment retrieved successfully"),
   ALL_PAYMENTS_RETRIEVED("All payments retrieved successfully"),
+  VNPAY_PAYMENT_URL_CREATED("VNPay payment url created successfully"),
+  VNPAY_CALLBACK_HANDLED("VNPay callback handled successfully"),
 
   // Manufacturer messages
   MANUFACTURER_CREATED("Manufacturer created successfully"),

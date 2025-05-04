@@ -41,9 +41,15 @@ public class Payment {
   Long paymentId;
 
   String paymentMethod;
-  Date paymentDate;
+  String paymentDate;
   String status;
   double grandTotal;
+  String transactionId;
+
+  String bankCode;
+  String bankTranNo;
+  String responseCode;
+  Date updateDate;
 
   @ManyToOne
   @JoinColumn(name = "userId", nullable = false)

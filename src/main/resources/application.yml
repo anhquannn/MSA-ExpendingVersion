@@ -69,3 +69,10 @@ goship:
 zero-bounce:
   api:
     key: 5497d5ce12ee486da7951f94d381b2c4
+
+vnpay:
+  tmnCode: M4XRKBHC
+  hashSecret: MTXRPACIMWA09YVFD1GMVW1WJPUPN491
+  url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  returnUrl: http://localhost:1081/msa/api/payment/vnpay/callback
+  apiUrl: http://sandbox.vnpayment.vn/merchant_webapi/merchant.html

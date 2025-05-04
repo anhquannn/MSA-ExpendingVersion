@@ -19,6 +19,7 @@ public interface UserMapper {
   @Mapping(target = "branches", ignore = true)
   User toUser(UserRequest request);
 
+  @Mapping(target = "branches", ignore = true)
   UserResponse toUserResponse(User user);
 
   @Mapping(target = "roles", source = "roles", qualifiedByName = "mapRoles")

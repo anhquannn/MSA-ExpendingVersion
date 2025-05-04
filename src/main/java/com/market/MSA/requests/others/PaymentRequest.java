@@ -15,9 +15,15 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PaymentRequest {
   String paymentMethod;
-  Date paymentDate;
+  String paymentDate;
   String status;
   double grandTotal;
+  String transactionId;
+
+  String bankCode;
+  String bankTranNo;
+  String responseCode;
+  Date updateDate;
 
   Long userId;
   Long orderId;

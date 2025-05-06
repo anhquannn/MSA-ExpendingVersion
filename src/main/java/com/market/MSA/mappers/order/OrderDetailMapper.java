@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public interface OrderDetailMapper {
   OrderDetail toOrderDetail(OrderDetailRequest request);
 
+  @Mapping(target = "product", ignore = true)
   OrderDetailResponse toOrderDetailResponse(OrderDetail orderDetail);
 
   @Mapping(target = "orderDetailId", ignore = true)

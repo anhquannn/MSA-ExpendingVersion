@@ -71,7 +71,7 @@ public class PaymentController {
         .build();
   }
 
-  @GetMapping("/vnpay/{orderId}")
+  @PostMapping("/vnpay/{orderId}")
   ApiResponse<String> createVNPayPaymentUrl(
       @PathVariable Long orderId, HttpServletRequest request) {
     return ApiResponse.<String>builder()
@@ -80,7 +80,7 @@ public class PaymentController {
         .build();
   }
 
-  @GetMapping("/vnpay/callback")
+  @PostMapping("/vnpay/callback")
   ApiResponse<PaymentResponse> handleVNPayCallback(@RequestParam Map<String, String> params) {
     return ApiResponse.<PaymentResponse>builder()
         .result(paymentService.handleVNPayCallback(params))

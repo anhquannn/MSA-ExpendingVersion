@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public interface ProductMapper {
   Product toProduct(ProductRequest request);
 
+  @Mapping(target = "orderDetails", ignore = true)
   ProductResponse toProductResponse(Product product);
 
   // Cập nhật sản phẩm từ request

@@ -1,5 +1,6 @@
 package com.market.MSA.services.order;
 
+import com.market.MSA.constants.CartStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.order.CartItemMapper;
@@ -78,6 +79,7 @@ public class CartItemService {
                   newCart.setUser(
                       entityFinderService.findByIdOrThrow(
                           userRepository, userId, ErrorCode.USER_NOT_EXISTED));
+                  newCart.setStatus(CartStatus.CART_STATUS_1.getStatus());
                   return cartRepository.save(newCart);
                 });
 

@@ -25,6 +25,8 @@ public class UserRequest {
 
   String password;
   String address;
+  String image;
+  String deviceId;
   String googleId;
 
   List<Long> branches;

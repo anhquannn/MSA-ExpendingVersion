@@ -16,6 +16,7 @@ public interface InventoryMapper {
   Inventory toInventory(InventoryRequest request);
 
   @Mapping(target = "inventoryProductResponses", ignore = true)
+  @Mapping(target = "branch.inventory", ignore = true)
   InventoryResponse toInventoryResponse(Inventory inventory);
 
   @Mapping(target = "inventoryId", ignore = true)

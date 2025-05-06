@@ -18,6 +18,8 @@ public interface TransferRequestMapper {
 
   @Mapping(target = "requesterResponse", source = "requester")
   @Mapping(target = "approverResponse", source = "approver")
+  @Mapping(target = "fromInventoryResponse.branch.inventory", ignore = true)
+  @Mapping(target = "toInventoryResponse.branch.inventory", ignore = true)
   @Mapping(target = "fromInventoryResponse", source = "fromInventory")
   @Mapping(target = "toInventoryResponse", source = "toInventory")
   TransferResponse toTransferResponse(Transfer transfer);

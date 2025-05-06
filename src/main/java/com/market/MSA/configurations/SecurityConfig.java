@@ -3,7 +3,6 @@ package com.market.MSA.configurations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -23,6 +22,7 @@ public class SecurityConfig {
     "/user/login/google",
     "/user/refresh",
     "/user/reset-password/{email}",
+    "/payment/vnpay/callback",
   };
 
   @Autowired private CustomJwtDecoder customJwtDecoder;
@@ -31,11 +31,7 @@ public class SecurityConfig {
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(
         request ->
-            request
-                .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS)
-                .permitAll()
-                .anyRequest()
-                .authenticated());
+            request.requestMatchers(PUBLIC_ENDPOINTS).permitAll().anyRequest().authenticated());
 
     http.oauth2ResourceServer(
         oauth2 ->

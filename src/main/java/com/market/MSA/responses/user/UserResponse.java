@@ -24,6 +24,8 @@ public class UserResponse {
   String birthday;
   String password;
   String address;
+  String image;
+  String deviceId;
   String googleId;
 
   Set<RoleResponse> roles;

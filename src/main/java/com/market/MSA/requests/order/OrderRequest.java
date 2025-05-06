@@ -1,7 +1,6 @@
 package com.market.MSA.requests.order;
 
 import com.market.MSA.requests.others.DeliveryInfoRequest;
-import jakarta.validation.constraints.Positive;
 import java.util.Date;
 import java.util.List;
 import lombok.AccessLevel;
@@ -19,7 +18,7 @@ import lombok.experimental.FieldDefaults;
 public class OrderRequest {
   Date orderDate;
 
-  @Positive double grandTotal;
+  double grandTotal;
 
   String status;
 

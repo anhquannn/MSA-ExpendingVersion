@@ -37,18 +37,18 @@ public class Notification {
   String message;
 
   @ManyToOne
-  @JoinColumn(name = "productId", nullable = false)
+  @JoinColumn(name = "productId")
   Product product;
 
   @ManyToOne
-  @JoinColumn(name = "orderId", nullable = false)
+  @JoinColumn(name = "orderId")
   Order order;
 
   @ManyToOne
-  @JoinColumn(name = "inventoryId", nullable = false)
+  @JoinColumn(name = "inventoryId")
   Inventory inventory;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(name = "userId")
   User user;
 }

@@ -38,8 +38,8 @@ public class OrderController {
         .result(
             orderService.createOrder(
                 request.getUserId(),
-                request.getCartId(),
                 request.getBranchId(),
+                request.getCartId(),
                 request.getPromoCodes()))
         .message(ApiMessage.ORDER_CREATED.getMessage())
         .build();

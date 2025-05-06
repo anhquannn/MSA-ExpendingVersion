@@ -47,20 +47,39 @@ public class NotificationService {
   @Transactional
   public NotificationResponse createNotification(NotificationRequest notificationRequest) {
     Notification notification = notificationMapper.toNotification(notificationRequest);
-    notification.setUser(
-        entityFinderService.findByIdOrThrow(
-            userRepository, notificationRequest.getUserId(), ErrorCode.USER_NOT_EXISTED));
-    notification.setOrder(
-        entityFinderService.findByIdOrThrow(
-            orderRepository, notificationRequest.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
-    notification.setProduct(
-        entityFinderService.findByIdOrThrow(
-            productRepository, notificationRequest.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
-    notification.setInventory(
-        entityFinderService.findByIdOrThrow(
-            inventoryRepository,
-            notificationRequest.getInventoryId(),
-            ErrorCode.INVENTORY_NOT_FOUND));
+    if (notificationRequest.getUserId() != null) {
+      notification.setUser(
+          entityFinderService.findByIdOrThrow(
+              userRepository, notificationRequest.getUserId(), ErrorCode.USER_NOT_EXISTED));
+    } else {
+      notification.setUser(null);
+    }
+
+    if (notificationRequest.getOrderId() != null) {
+      notification.setOrder(
+          entityFinderService.findByIdOrThrow(
+              orderRepository, notificationRequest.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
+    } else {
+      notification.setOrder(null);
+    }
+
+    if (notificationRequest.getProductId() != null) {
+      notification.setProduct(
+          entityFinderService.findByIdOrThrow(
+              productRepository, notificationRequest.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
+    } else {
+      notification.setProduct(null);
+    }
+
+    if (notificationRequest.getInventoryId() != null) {
+      notification.setInventory(
+          entityFinderService.findByIdOrThrow(
+              inventoryRepository,
+              notificationRequest.getInventoryId(),
+              ErrorCode.INVENTORY_NOT_FOUND));
+    } else {
+      notification.setInventory(null);
+    }
 
     notification = notificationRepository.save(notification);
     return notificationMapper.toNotificationResponse(notification);
@@ -73,20 +92,39 @@ public class NotificationService {
         notificationRepository
             .findById(notificationId)
             .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_FOUND));
-    notification.setUser(
-        entityFinderService.findByIdOrThrow(
-            userRepository, notificationRequest.getUserId(), ErrorCode.USER_NOT_EXISTED));
-    notification.setOrder(
-        entityFinderService.findByIdOrThrow(
-            orderRepository, notificationRequest.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
-    notification.setProduct(
-        entityFinderService.findByIdOrThrow(
-            productRepository, notificationRequest.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
-    notification.setInventory(
-        entityFinderService.findByIdOrThrow(
-            inventoryRepository,
-            notificationRequest.getInventoryId(),
-            ErrorCode.INVENTORY_NOT_FOUND));
+    if (notificationRequest.getUserId() != null) {
+      notification.setUser(
+          entityFinderService.findByIdOrThrow(
+              userRepository, notificationRequest.getUserId(), ErrorCode.USER_NOT_EXISTED));
+    } else {
+      notification.setUser(null);
+    }
+
+    if (notificationRequest.getOrderId() != null) {
+      notification.setOrder(
+          entityFinderService.findByIdOrThrow(
+              orderRepository, notificationRequest.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
+    } else {
+      notification.setOrder(null);
+    }
+
+    if (notificationRequest.getProductId() != null) {
+      notification.setProduct(
+          entityFinderService.findByIdOrThrow(
+              productRepository, notificationRequest.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
+    } else {
+      notification.setProduct(null);
+    }
+
+    if (notificationRequest.getInventoryId() != null) {
+      notification.setInventory(
+          entityFinderService.findByIdOrThrow(
+              inventoryRepository,
+              notificationRequest.getInventoryId(),
+              ErrorCode.INVENTORY_NOT_FOUND));
+    } else {
+      notification.setInventory(null);
+    }
 
     notificationMapper.updateNotification(notificationRequest, notification);
     Notification updatedNotification = notificationRepository.save(notification);

@@ -7,7 +7,6 @@ import com.market.MSA.models.product.Branch;
 import com.market.MSA.models.user.RewardPointTransaction;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Positive;
 import java.util.Date;
 import java.util.List;
 import lombok.AccessLevel;
@@ -40,7 +39,7 @@ public class Order {
 
   Date orderDate;
 
-  @Positive double grandTotal;
+  double grandTotal;
 
   String status;
 

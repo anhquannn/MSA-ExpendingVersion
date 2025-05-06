@@ -51,6 +51,8 @@ public class User {
 
   String password;
   String address;
+  String deviceId;
+  String image;
   String googleId;
 
   @ManyToMany Set<Role> roles;

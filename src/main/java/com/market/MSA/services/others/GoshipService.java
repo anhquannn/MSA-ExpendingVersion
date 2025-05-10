@@ -121,7 +121,11 @@ public class GoshipService {
             .length(request.getShipment().getParcel().getLength())
             .order(order)
             .build();
+
+    order.setStatus(OrderStatus.ORDER_STATUS_4.getStatus());
+
     deliveryInfoRepository.save(deliveryInfo);
+    orderRepository.save(order);
 
     return callApi(API_URL + "/shipments", HttpMethod.POST, request, ShipmentResponse.class);
   }

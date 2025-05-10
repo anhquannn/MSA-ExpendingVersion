@@ -131,4 +131,23 @@ public class GoshipService {
         callApi(API_URL + "/shipments", HttpMethod.GET, null, ShipmentListResponse.class);
     return response.getData();
   }
+
+  public List<ShipmentDetailResponse> searchShipmentsByCode(String code) {
+    ShipmentListResponse response =
+        callApi(
+            API_URL + "/shipments/search?code=" + code,
+            HttpMethod.GET,
+            null,
+            ShipmentListResponse.class);
+    return response.getData();
+  }
+
+  public List<ShipmentDetailResponse> searchShipmentsByTimeRange(Integer from, Integer to) {
+    String url = API_URL + "/shipments";
+    if (from != null && to != null) {
+      url += "?from=" + from + "&to=" + to;
+    }
+    ShipmentListResponse response = callApi(url, HttpMethod.GET, null, ShipmentListResponse.class);
+    return response.getData();
+  }
 }

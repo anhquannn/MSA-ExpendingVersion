@@ -71,4 +71,22 @@ public class GoshipController {
         .message(ApiMessage.ALL_SHIPMENTS_RETRIEVED.getMessage())
         .build();
   }
+
+  @GetMapping("/search")
+  public ApiResponse<List<ShipmentDetailResponse>> searchShipmentsByCode(
+      @RequestParam String code) {
+    return ApiResponse.<List<ShipmentDetailResponse>>builder()
+        .result(goshipService.searchShipmentsByCode(code))
+        .message(ApiMessage.ALL_SHIPMENTS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @GetMapping("/time-range")
+  public ApiResponse<List<ShipmentDetailResponse>> searchShipmentsByTimeRange(
+      @RequestParam(required = false) Integer from, @RequestParam(required = false) Integer to) {
+    return ApiResponse.<List<ShipmentDetailResponse>>builder()
+        .result(goshipService.searchShipmentsByTimeRange(from, to))
+        .message(ApiMessage.ALL_SHIPMENTS_RETRIEVED.getMessage())
+        .build();
+  }
 }

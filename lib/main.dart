@@ -1,41 +1,23 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
-import 'package:msa/feature/presentation/logins/change_password/ui/change_password_screen.dart';
-import 'package:msa/feature/presentation/logins/register/ui/register_screen.dart';
+import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'feature/presentation/admin/add_category/ui/add_category_screen.dart';
-import 'feature/presentation/admin/add_manufacturer/ui/add_manufacturer_screen.dart';
-import 'feature/presentation/admin/add_promocode/ui/add_promocode_screen.dart';
-import 'feature/presentation/admin/admin_notification/ui/admin_notification_screen.dart';
-import 'feature/presentation/admin/create_branch/ui/create_branch_screen.dart';
-import 'feature/presentation/admin/dashboard/ui/dashboard_screen.dart';
-import 'feature/presentation/admin/inventory_in/ui/inventory_in_screen.dart';
-import 'feature/presentation/admin/list_branch/ui/list_branch_screen.dart';
-import 'feature/presentation/admin/order/ui/order_screen.dart';
-import 'feature/presentation/admin/product/product_detail/ui/product_detail_screen.dart';
-import 'feature/presentation/admin/product/ui/product_screen.dart';
-import 'feature/presentation/admin/promocode/ui/promocode_screen.dart';
-import 'feature/presentation/admin/user/ui/user_screen.dart';
-import 'feature/presentation/customer/category_list/ui/category_list_screen.dart';
+import 'feature/domain/usecase/user_use_case.dart';
 import 'feature/presentation/customer/home_screen/ui/home_screen.dart';
-import 'feature/presentation/customer/product_list/ui/product_list_screen.dart';
-import 'feature/presentation/customer/promo_code_list/ui/promo_code_list_screen.dart';
-import 'feature/presentation/logins/login/ui/login_screen.dart';
-import 'feature/presentation/manager/dashboard_manager/dashboard_screen.dart';
-import 'feature/presentation/manager/inventory_manager/inventory_manager.dart';
-import 'feature/presentation/manager/notification_manager/notification.dart';
-import 'feature/presentation/manager/order_manager/order_screen.dart';
-import 'feature/presentation/manager/stock_check/ui/stock_check_ui.dart';
-import 'widget/test.dart';
-import 'feature/presentation/logins/forgot_pasword/ui/forgot_password_screen.dart';
-import 'feature/presentation/logins/verify_otp/ui/verify_otp_screen.dart';
+import 'locator/locator.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(url: urlSupabase, anonKey: anonKey);
+  await Firebase.initializeApp();
+  getFcmToken();
+  setupLocator();
   runApp(const MyApp());
 }
 
@@ -47,6 +29,65 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     init(context);
-    return MaterialApp(debugShowCheckedModeBanner: false, home: HomeScreen());
+    HttpConnection.context = context;
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: HomeScreen(),
+    );
+  }
+}
+
+Future<void> getFcmToken() async {
+  final fcmToken = await FirebaseMessaging.instance.getToken();
+  if (fcmToken == null) {
+  HttpConnection.deviceId = fcmToken??'';
+  print('FCM Token: $fcmToken');
+  }
+}
+
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Profile Screen")),
+      body: Center(child: const Text("Welcome to Profile Screen!")),
+    );
+  }
+}
+
+class TestScreen extends StatelessWidget {
+  const TestScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final userUseCases = locator<UserUseCases>();
+    return Scaffold(
+      body: Center(
+        child: InkWell(
+          onTap: () {
+            userUseCases.update(
+              UserUpdateRequest(
+                birthday: '',
+                password: '123',
+                phoneNumber: '0912345678',
+                address: 'address',
+                roles: [],
+                fullName: 'fullName',
+                email: 'minhquang03082003@gmail.com',
+                userId: '4',
+              ),
+            );
+          },
+          child: Container(
+            width: 60,
+            height: 50,
+            color: Colors.blue,
+            child: Center(child: Text('test')),
+          ),
+        ),
+      ),
+    );
   }
 }

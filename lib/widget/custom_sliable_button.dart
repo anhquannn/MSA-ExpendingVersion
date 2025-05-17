@@ -1,6 +1,5 @@
 // TODO: Nút kéo qua
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class customSliableButton extends StatefulWidget {
@@ -15,7 +14,7 @@ class customSliableButton extends StatefulWidget {
   final double? borderRadius;
 
   const customSliableButton({
-    Key? key,
+    super.key,
     required this.width,
     required this.height,
     required this.onSwipeComplete,
@@ -25,7 +24,7 @@ class customSliableButton extends StatefulWidget {
     this.thumbColor = Colors.white,
     this.iconSuccess,
     this.borderRadius,
-  }) : super(key: key);
+  });
 
   @override
   _customSliableButtonState createState() => _customSliableButtonState();

@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:msa/core/config/base_bloc.dart';
-import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
-import 'package:msa/feature/presentation/logins/register/ui/register_screen.dart';
 
 import '../ui/create_branch_screen.dart';
 

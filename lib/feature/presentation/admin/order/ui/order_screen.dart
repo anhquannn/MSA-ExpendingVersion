@@ -18,11 +18,11 @@ class OrderScreen extends BaseView<OrderBloc> {
   OrderBloc createBloc() => OrderBloc();
 
   Widget build(BuildContext context) {
-    final _bloc = (context as StatefulElement).state as OrderBloc;
+    final bloc = (context as StatefulElement).state as OrderBloc;
 
     return CustomScaffold(
       appBarGradient: false,
-      appBarLeading: iconBack(size: 25),
+      appBarLeading: iconBack(bloc.viewContext,size: 25),
       centerTitle: true,
       title: Column(
         mainAxisSize: MainAxisSize.min,

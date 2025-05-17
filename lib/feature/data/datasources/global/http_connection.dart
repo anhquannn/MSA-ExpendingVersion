@@ -1,23 +1,58 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:path/path.dart' as path;
 
+import '../../../../core/config/constant.dart';
+
 class HttpConnection {
-  String urlConnection = '';
-  String token = '';
+  static final String _urlConnection = urlConnection;
   final String baseUrlSupabase = 'https://lmtqwglnnbgsrxhelpxz.supabase.co';
   final String tokenSupabase =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtdHF3Z2xubmJnc3J4aGVscHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3MTI1NzIsImV4cCI6MjA2MTI4ODU3Mn0.5D6-g10oFKgB5eJw7jbJPGtOsr2BmrYnm5pTpfjA_J0';
+  static BuildContext? context;
+  static String otp = '';
+  static String token = '';
+  static String deviceId = '';
+  static UserModel? userModel;
+  static String email = 'minhquang03082003@gmail.com';
 
-  Map<String, String> _configHeader({
+  static onLogout() {
+    otp = '';
+    token = '';
+    deviceId = '';
+    userModel = null;
+    email = '';
+  }
+
+  static String buildUrlWithQueryParams(
+    String baseUrl,
+    Map<String, dynamic> queryParams,
+  ) {
+    if (queryParams.isEmpty) return baseUrl;
+
+    final queryString = queryParams.entries
+        .map(
+          (e) =>
+              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
+        )
+        .join('&');
+
+    return '$baseUrl?$queryString';
+  }
+
+  static Map<String, String> _configHeader({
     Map<String, String>? extraHeaders,
     bool isToken = false,
   }) {
-    final headers = <String, String>{'Content-Type': 'application/json'};
+    final headers = <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    };
     if (isToken) headers['Authorization'] = token;
     if (extraHeaders != null) headers.addAll(extraHeaders);
     return headers;
@@ -57,6 +92,7 @@ class HttpConnection {
         headers: request.headers,
         body: {'file': file.path},
         response: response,
+        statusCode: response.statusCode,
       );
 
       final body = jsonDecode(response.body);
@@ -71,12 +107,12 @@ class HttpConnection {
     }
   }
 
-  Future<ResponseData> post(
+  static Future<ResponseData> post(
     String path, {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
     bool isToken = false,
-  }) => _sendRequest(
+  }) => sendRequest(
     method: 'POST',
     path: path,
     body: body,
@@ -84,23 +120,23 @@ class HttpConnection {
     isToken: isToken,
   );
 
-  Future<ResponseData> get(
+  static Future<ResponseData> get(
     String path, {
     Map<String, String>? headers,
     bool isToken = false,
-  }) => _sendRequest(
+  }) => sendRequest(
     method: 'GET',
     path: path,
     headers: headers,
     isToken: isToken,
   );
 
-  Future<ResponseData> put(
+  static Future<ResponseData> put(
     String path, {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
     bool isToken = false,
-  }) => _sendRequest(
+  }) => sendRequest(
     method: 'PUT',
     path: path,
     body: body,
@@ -108,12 +144,12 @@ class HttpConnection {
     isToken: isToken,
   );
 
-  Future<ResponseData> delete(
+  static Future<ResponseData> delete(
     String path, {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
     bool isToken = false,
-  }) => _sendRequest(
+  }) => sendRequest(
     method: 'DELETE',
     path: path,
     body: body,
@@ -121,14 +157,87 @@ class HttpConnection {
     isToken: isToken,
   );
 
-  Future<ResponseData> _sendRequest({
+  // static Future<ResponseData> sendRequest({
+  //   required String method,
+  //   required String path,
+  //   Map<String, dynamic>? body,
+  //   Map<String, String>? headers,
+  //   bool isToken = false,
+  // }) async {
+  //   final url = Uri.parse('$_urlConnection$path');
+  //   final requestHeaders = _configHeader(
+  //     extraHeaders: headers,
+  //     isToken: isToken,
+  //   );
+  //   final responseData = ResponseData();
+
+  //   try {
+  //     http.Response response;
+
+  //     switch (method) {
+  //       case 'POST':
+  //         response = await http.post(
+  //           url,
+  //           headers: requestHeaders,
+  //           body: jsonEncode(body ?? {}),
+  //         );
+  //         break;
+  //       case 'GET':
+  //         response = await http.get(url, headers: requestHeaders);
+  //         break;
+  //       case 'PUT':
+  //         response = await http.put(
+  //           url,
+  //           headers: requestHeaders,
+  //           body: jsonEncode(body ?? {}),
+  //         );
+  //         break;
+  //       case 'DELETE':
+  //         response = await http.delete(
+  //           url,
+  //           headers: requestHeaders,
+  //           body: jsonEncode(body ?? {}),
+  //         );
+  //         break;
+  //       default:
+  //         throw Exception('Unsupported HTTP method: $method');
+  //     }
+
+  //     _logRequest(
+  //       method: method,
+  //       url: url,
+  //       headers: requestHeaders,
+  //       body: body,
+  //       response: response,
+  //       statusCode: response.statusCode,
+  //     );
+
+  //     final responseBody = jsonDecode(response.body);
+
+  //     if (response.statusCode >= 200 && response.statusCode < 300) {
+  //       responseData
+  //         ..isSuccess = responseBody['code'] == 200
+  //         ..data = responseBody['result']
+  //         ..message = responseBody['message'];
+  //     } else {
+  //       // context?.go('/err404');
+  //       responseData.isSuccess = false;
+  //     }
+
+  //     return responseData;
+  //   } catch (e) {
+  //     throw Exception('Lỗi $method: $e');
+  //   }
+  // }
+
+  static Future<ResponseData> sendRequest({
     required String method,
     required String path,
     Map<String, dynamic>? body,
     Map<String, String>? headers,
     bool isToken = false,
   }) async {
-    final url = Uri.parse('$urlConnection$path');
+    final url = Uri.parse('$_urlConnection$path');
     final requestHeaders = _configHeader(
       extraHeaders: headers,
       isToken: isToken,
@@ -138,7 +247,7 @@ class HttpConnection {
     try {
       http.Response response;
 
-      switch (method) {
+      switch (method.toUpperCase()) {
         case 'POST':
           response = await http.post(
             url,
@@ -173,16 +282,33 @@ class HttpConnection {
         headers: requestHeaders,
         body: body,
         response: response,
+        statusCode: response.statusCode,
       );
 
-      final responseBody = jsonDecode(response.body);
+      // Decode response body bytes tùy theo header Content-Type charset
+      String responseBodyString;
+
+      final contentType = response.headers['content-type'] ?? '';
+
+      if (contentType.toLowerCase().contains('charset=latin1') ||
+          contentType.toLowerCase().contains('charset=iso-8859-1')) {
+        // decode latin1
+        responseBodyString = latin1.decode(response.bodyBytes);
+      } else {
+        // mặc định utf8
+        responseBodyString = utf8.decode(response.bodyBytes);
+      }
+
+      final responseBody = jsonDecode(responseBodyString);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         responseData
-          ..isSuccess = responseBody['error'] == 0
-          ..data = responseBody['data'];
+          ..isSuccess = responseBody['code'] == 200
+          ..data = responseBody['result']
+          ..message = responseBody['message'];
       } else {
         responseData.isSuccess = false;
+        responseData.message = responseBody['message'] ?? 'Error';
       }
 
       return responseData;
@@ -191,21 +317,22 @@ class HttpConnection {
     }
   }
 
-  void _logRequest({
+  static void _logRequest({
     required String method,
     required Uri url,
     required Map<String, String> headers,
     Map<String, dynamic>? body,
     required http.Response response,
+    required int statusCode,
   }) {
     if (kDebugMode) {
-      print('''
-###################### [$method REQUEST] ######################
+      print('''\n
+############################## [$method REQUEST] ##############################
 URL: $url
 Headers: $headers
 Body: $body
 Response: ${response.body}
-#################################################################
+########################### [STATUS CODE $statusCode] ##########################\n
 ''');
     }
   }
@@ -214,4 +341,5 @@ Response: ${response.body}
 class ResponseData {
   bool isSuccess = false;
   dynamic data;
+  dynamic message;
 }

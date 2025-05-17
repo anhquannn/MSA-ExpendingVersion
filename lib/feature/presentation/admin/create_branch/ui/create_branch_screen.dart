@@ -7,14 +7,13 @@ import 'package:msa/core/utils/prarse_color.dart';
 
 import '../../../../../core/config/base_bloc.dart';
 import '../../../../../widget/custom_dropshadow.dart';
-import '../../../../../widget/custom_sliable_button.dart';
 import '../../../../../widget/custom_textfield.dart';
 import '../../../../../widget/custom_widget.dart';
 import '../../../../../widget/reuseable_screen_hide_appbar.dart';
 import '../bloc/create_branch_bloc.dart';
 
 class CreateBranchScreen extends BaseView<CreateBranchBloc> {
-  CreateBranchScreen({super.key});
+  const CreateBranchScreen({super.key});
 
   Widget build(BuildContext context) {
     final bloc = (context as StatefulElement).state as CreateBranchBloc;
@@ -29,7 +28,7 @@ class CreateBranchScreen extends BaseView<CreateBranchBloc> {
           fontSize: 18,
         ),
       ),
-      appBarLeading: iconBack(size: 20),
+      appBarLeading: iconBack(bloc.viewContext,size: 20),
       bodyBuilder: (controller) {
         return SingleChildScrollView(
           controller: controller,

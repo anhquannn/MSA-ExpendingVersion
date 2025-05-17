@@ -1,10 +1,8 @@
-import 'package:auto_size_text/auto_size_text.dart' as forgot_pasword_screen;
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/utils/prarse_color.dart';
-import 'package:msa/widget/custom_widget.dart';
-import 'package:msa/widget/loading.dart';
 import '../../../../../core/config/config.dart';
 import '../../../../../core/config/constant.dart';
 import '../../../../../widget/custom_textfield.dart';
@@ -23,7 +21,7 @@ class ForgotPasswordScreen extends BaseView<ForgotPasswordBloc> {
         backgroundColor: toHexToColor(actionColor),
         leading: InkWell(
           onTap: () {
-            Navigator.pop(context);
+            context.go('/login');
           },
           child: Icon(Icons.arrow_back_ios, color: Colors.white),
         ),
@@ -45,18 +43,18 @@ class ForgotPasswordScreen extends BaseView<ForgotPasswordBloc> {
                     borderRadius: BorderRadius.circular(200),
                   ),
 
-                  width: AppSize.w(0.8), // Đặt chiều rộng
+                  width: AppSize.w(0.8), 
                   height: AppSize.w(
                     0.8,
-                  ), // Đặt chiều cao bằng chiều rộng để tạo thành hình tròn
+                  ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(
                       AppSize.w(0.85) / 2,
-                    ), // Bo tròn với bán kính bằng 1 nửa chiều rộng
+                    ), 
                     child: Image.asset(
                       imgForgotPassword,
                       fit:
-                          BoxFit.cover, // Tùy chọn fit để hình ảnh không bị méo
+                          BoxFit.cover, 
                     ),
                   ),
                 ),
@@ -112,61 +110,55 @@ class ForgotPasswordScreen extends BaseView<ForgotPasswordBloc> {
                 ],
               ),
               SizedBox(height: AppSize.h(0.15)),
-              InkWell(
-                onTap: () async {
-                  await showLoadingDialog(
-                    context: context,
-                    action: () async {
-                      await bloc.onNext(); // Thực hiện hành động sau khi delay
-                      // Đảm bảo chờ đợi thời gian 1 giây
-                      await Future.delayed(
-                        const Duration(milliseconds: 300),
-                      ); // Thêm await
-                    },
-                  );
-                },
+              Builder(builder: (ctx) {
+                return InkWell(
+                  onTap: () async {
+                    await bloc.onNext(ctx);
+                  },
 
-                child: Container(
-                  width: AppSize.w(0.4),
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: toHexToColor(borderColor),
-                    // color: toHexToColor(actionColor),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: toHexToColor(borderColor)),
-                  ),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Tiếp tục',
-                          style: TextStyle(
-                            // color: toHexToColor(borderColor),
-                            color: toHexToColor(appBarColor),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: toHexToColor(appBarColor),
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(5.0),
-                            child: Icon(
-                              Icons.arrow_forward_ios_outlined,
-                              size: 15,
-                              color: toHexToColor(borderColor),
+                  child: Container(
+                    width: AppSize.w(0.4),
+                    height: 45,
+                    decoration: BoxDecoration(
+                      color: toHexToColor(borderColor),
+                      // color: toHexToColor(actionColor),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: toHexToColor(borderColor)),
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Tiếp tục',
+                            style: TextStyle(
+                              // color: toHexToColor(borderColor),
+                              color: toHexToColor(appBarColor),
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 10),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: toHexToColor(appBarColor),
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(5.0),
+                              child: Icon(
+                                Icons.arrow_forward_ios_outlined,
+                                size: 15,
+                                color: toHexToColor(borderColor),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },),
+
             ],
           ),
         ),

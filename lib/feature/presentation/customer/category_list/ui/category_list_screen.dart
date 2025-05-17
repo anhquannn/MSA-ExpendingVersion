@@ -1,36 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/config.dart';
+import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/widget/custom_widget.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 import '../../../../../core/config/constant.dart';
 import '../../../../../core/utils/prarse_color.dart';
-import '../../../../../widget/custom_item_promocode.dart';
 import '../bloc/category_list_bloc.dart';
 
 class CategoryListScreen extends BaseView<CategoryListBloc> {
-  const CategoryListScreen({super.key});
+  final List<CategoryModel> categoryList;
+  const CategoryListScreen({super.key, required this.categoryList});
 
   @override
   CategoryListBloc createBloc() => CategoryListBloc();
 
   Widget build(BuildContext context) {
-    final _bloc = (context as StatefulElement).state as CategoryListBloc;
+    final bloc = (context as StatefulElement).state as CategoryListBloc;
     double width = AppSize.width();
-    List<String> labels = [
-      "La",
-      "Lab",
-      "Label 3",
-      "Label 3",
-      "Label 3",
-      "Label 3",
-      "Label 3",
-      "Label 3",
-      "Label 3",
-    ];
     return CustomScaffold(
       appBarGradient: false,
-      appBarLeading: iconBack(size: 25),
+      appBarLeading: iconBack(bloc.viewContext, size: 25),
       centerTitle: true,
       title: customAutoSizeText(
         16,
@@ -40,10 +30,15 @@ class CategoryListScreen extends BaseView<CategoryListBloc> {
       ),
       bodyBuilder: (controller) {
         final chipList =
-            labels
-                .map(
-                  (label) => Chip(
-                    label: Text(label),
+            categoryList.map((label) {
+              return InkWell(
+                onTap: () {
+                  bloc.onTapCategory(label.categoryId ?? 0);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Chip(
+                    label: Text(label.name ?? ''),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6,
                       vertical: 6,
@@ -51,8 +46,9 @@ class CategoryListScreen extends BaseView<CategoryListBloc> {
                     backgroundColor: toHexToColor(primaryButtonColor),
                     labelStyle: const TextStyle(color: Colors.white),
                   ),
-                )
-                .toList();
+                ),
+              );
+            }).toList();
 
         const chipWidth = 100.0;
         final maxChips = (width / chipWidth).floor();
@@ -97,20 +93,4 @@ class CategoryListScreen extends BaseView<CategoryListBloc> {
       hideBottomBarOnScroll: true,
     );
   }
-}
-
-Widget widgetCustomItemPromoCode(VoidCallback onTap1, VoidCallback onTap2) {
-  return Center(child: _customItemPromoCode(onTap1, onTap2));
-}
-
-Widget _customItemPromoCode(VoidCallback onTap1, VoidCallback onTap2) {
-  return GestureDetector(
-    onTap: onTap1,
-    child: SizedBox(
-      width: AppSize.w(0.9),
-      // height: 300,
-      // color: Colors.white,
-      child: customItemPromoCode(() {}, () {}),
-    ),
-  );
 }

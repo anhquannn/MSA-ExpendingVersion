@@ -1,9 +1,9 @@
-import 'dart:math';
-import 'dart:ui';
+import 'dart:ffi';
 
-import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
-import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
 import 'package:flutter/material.dart';
+import 'package:msa/feature/domain/entities/product_model.dart';
+import 'package:msa/feature/domain/entities/promo_code_model.dart';
+import 'package:msa/widget/customBottomSheet.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
@@ -11,7 +11,6 @@ import '../../../../../core/config/base_bloc.dart';
 import '../../../../../core/config/config.dart';
 import '../../../../../core/config/constant.dart';
 import '../../../../../core/utils/prarse_color.dart';
-import '../../../../../widget/custom_dropshadow.dart';
 import '../../../../../widget/custom_item_promocode.dart';
 import '../../../../../widget/custom_notification.dart';
 import '../../../../../widget/custom_widget.dart';
@@ -19,7 +18,7 @@ import '../../../../../widget/reuseable_screen_hide_appbar.dart';
 import '../bloc/home_screen_bloc.dart';
 
 class HomeScreen extends BaseView<HomeScreenBloc> {
-  HomeScreen({super.key});
+  const HomeScreen({super.key});
 
   @override
   HomeScreenBloc createState() => HomeScreenBloc();
@@ -28,7 +27,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
   HomeScreenBloc createBloc() => HomeScreenBloc();
 
   Widget build(BuildContext context) {
-    final _bloc = (context as StatefulElement).state as HomeScreenBloc;
+    final bloc = (context as StatefulElement).state as HomeScreenBloc;
     return CustomScaffold(
       appBarLeading: Container(
         width: 45,
@@ -40,11 +39,27 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
         child: Center(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(22.5),
-            child: Image.asset(
-              avtWomen1,
-              fit: BoxFit.cover,
-              width: 40,
-              height: 40,
+            child: StreamBuilder(
+              stream: bloc.userModel,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                }
+                if (snapshot.hasError) {
+                  return const Icon(Icons.error, color: Colors.red);
+                }
+                if (!snapshot.hasData) {
+                  return const Icon(Icons.person, color: Colors.grey);
+                }
+                return Image.asset(
+                  (snapshot.data?.image != '')
+                      ? snapshot.data!.image
+                      : avtWomen1,
+                  fit: BoxFit.cover,
+                  width: 40,
+                  height: 40,
+                );
+              },
             ),
           ),
         ),
@@ -52,11 +67,34 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AutoSizeText(
-            'Nguyen Van A',
-            minFontSize: 12,
-            maxFontSize: 20,
-            style: const TextStyle(color: Colors.white),
+          StreamBuilder(
+            stream: bloc.userModel,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              }
+              if (snapshot.hasError) {
+                return const Text(
+                  'Lỗi khi tải thông tin người dùng',
+                  style: TextStyle(color: Colors.red),
+                );
+              }
+              if (!snapshot.hasData) {
+                return const Text(
+                  'Không có thông tin người dùng',
+                  style: TextStyle(color: Colors.grey),
+                );
+              }
+              return AutoSizeText(
+                snapshot.data?.fullName ?? '',
+                minFontSize: 12,
+                maxFontSize: 20,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                softWrap: true,
+                style: const TextStyle(color: Colors.white),
+              );
+            },
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 5),
@@ -67,11 +105,36 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                   color: Colors.white,
                   size: 15,
                 ),
-                AutoSizeText(
-                  '123 Cao Lỗ TP.HCM',
-                  minFontSize: 8,
-                  maxFontSize: 12,
-                  style: const TextStyle(color: Colors.white),
+                StreamBuilder(
+                  stream: bloc.userModel,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    }
+                    if (snapshot.hasError) {
+                      return const Text(
+                        'Lỗi khi tải địa chỉ',
+                        style: TextStyle(color: Colors.red),
+                      );
+                    }
+                    if (!snapshot.hasData) {
+                      return const Text(
+                        'Không có địa chỉ',
+                        style: TextStyle(color: Colors.grey),
+                      );
+                    }
+                    return Expanded(
+                      child: AutoSizeText(
+                        snapshot.data?.address ?? '',
+                        minFontSize: 8,
+                        maxFontSize: 12,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -83,7 +146,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           padding: const EdgeInsets.symmetric(horizontal: 5),
           child: InkWell(
             onTap: () {
-              _bloc.onSetting();
+              bloc.onSearch();
             },
             child: const Icon(Icons.search, color: Colors.white),
           ),
@@ -92,7 +155,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           padding: const EdgeInsets.symmetric(horizontal: 5),
           child: InkWell(
             onTap: () {
-              _bloc.onLogout();
+              bloc.onLogout();
             },
             child: const Icon(Icons.filter_list_alt, color: Colors.white),
           ),
@@ -102,153 +165,567 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
       appBarGradient: false,
       bodyBuilder: (controller) {
         final double width = AppSize.width();
-        return buildBodyContent(
-          bloc: _bloc,
-          controller: controller,
-          width: width,
-          labels: [
-            "La",
-            "Lab",
-            "Label 3",
-            "Label 3",
-            "Label 3",
-            "Label 3",
-            "Label 3",
-            "Label 3",
-            "Label 3",
-          ],
-          categoryController: _bloc.categoryController,
-          primaryButtonColor: primaryButtonColor,
-          borderColor: borderColor,
-          selectedIndex: _bloc.indexScreen.value,
+        return StreamBuilder(
+          stream: bloc.categoryModels,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Text('Lỗi khi tải danh mục: ${snapshot.error}'),
+              );
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(child: Text('Không có danh mục nào'));
+            }
+
+            return buildBodyContent(
+              bloc: bloc,
+              width: width,
+              labels: snapshot.data!.map((e) => e).toList(),
+              primaryButtonColor: primaryButtonColor,
+              borderColor: borderColor,
+            );
+          },
         );
       },
-      bottomBarItemsCustom: customBottomBar(_bloc),
-      hideBottomBarOnScroll: true,
+      bottomBarItemsCustom: customBottomBar(bloc, bloc.indexScreen.value),
+      hideBottomBarOnScroll: false,
     );
   }
 
-  List<BottomBarItem> customBottomBar(HomeScreenBloc bloc) {
+  List<BottomBarItem> customBottomBar(HomeScreenBloc bloc, int selectedIndex) {
     return [
-      // BottomBarItem(
-      //   icon: const Icon(Icons.person, color: Colors.white),
-      //   label: 'Tài khoản',
-      //   onTap: (index) {
-      //     bloc.indexScreen.value = index;
-      //     print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   Tài khoản: $index');
-      //   },
-      // ),
+      BottomBarItem(
+        icon: const Icon(Icons.notifications, color: Colors.white),
+        label: 'Thông báo',
+        isSelected: selectedIndex == 3,
+        onTap: (index) {
+          if (bloc.indexScreen.value != 3) {
+            bloc.indexScreen.value = 3;
+          }
+        },
+      ),
       BottomBarItem(
         icon: const Icon(Icons.receipt_long, color: Colors.white),
         label: 'Đơn hàng',
         onTap: (index) {
-          bloc.indexScreen.value = index;
-          print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   Đơn hàng: $index');
+          if (bloc.indexScreen.value != 1) {
+            bloc.indexScreen.value = 1;
+          }
+        },
+        isSelected: selectedIndex == 1,
+      ),
+      BottomBarItem(
+        icon: const Icon(Icons.shopping_cart, color: Colors.white),
+        label: 'Giỏ hàng',
+        isSelected: selectedIndex == 2,
+        onTap: (index) {
+          if (bloc.indexScreen.value != 2) {
+            bloc.indexScreen.value = 2;
+          }
         },
       ),
       BottomBarItem(
         icon: const Icon(Icons.home_outlined, color: Colors.white),
         label: 'Trang chủ',
         onTap: (index) {
-          bloc.indexScreen.value = index;
-          print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   Trang chủ: $index');
+          if (bloc.indexScreen.value != 0) {
+            bloc.indexScreen.value = 0;
+          }
         },
-      ),
-      BottomBarItem(
-        icon: const Icon(Icons.shopping_cart, color: Colors.white),
-        label: 'Giỏ hàng',
-        onTap: (index) {
-          bloc.indexScreen.value = index;
-          print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   Giỏ hàng: $index');
-        },
-      ),
-      BottomBarItem(
-        icon: const Icon(Icons.notifications, color: Colors.white),
-        label: 'Thông báo',
-        onTap: (index) {
-          bloc.indexScreen.value = index;
-          print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   Vận chuyển: $index');
-        },
+        isSelected: selectedIndex == 0,
       ),
     ];
-  }
-
-  Widget buildCustomBottomBarAnimation({
-    required bool isVisible,
-    required int selectedIndex,
-    required List<BottomBarItem> items,
-    required bool isGradient,
-  }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      height: isVisible ? kBottomNavigationBarHeight : 0,
-      curve: Curves.easeInOut,
-      child: AnimatedOpacity(
-        opacity: isVisible && items.isNotEmpty ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 200),
-        child:
-            isVisible && items.isNotEmpty
-                ? CurvedNavigationBar(
-                  color: toHexToColor(appBarColor),
-                  backgroundColor: Colors.transparent,
-                  index: selectedIndex,
-                  animationDuration: const Duration(milliseconds: 400),
-                  buttonBackgroundColor: toHexToColor(appBarColor),
-                  items:
-                      items
-                          .asMap()
-                          .entries
-                          .map(
-                            (entry) => CurvedNavigationBarItem(
-                              child: entry.value.icon,
-                              label: entry.value.label,
-                              labelStyle: const TextStyle(
-                                color: Colors.white,
-                                overflow: TextOverflow.ellipsis,
-                                fontSize: 12,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                  onTap: (index) {
-                    if (index >= 0 && index < items.length) {
-                      items[index].onTap(index);
-                    }
-                  },
-                )
-                : null,
-      ),
-    );
   }
 
   Widget buildBodyContent({
     required HomeScreenBloc bloc,
-    required ScrollController controller,
     required double width,
-    required List<String> labels,
-    required PageController categoryController,
+    required List<CategoryModel> labels,
     required String primaryButtonColor,
     required String borderColor,
-    required int selectedIndex, // Thêm selectedIndex
   }) {
-    // Nội dung cho từng mục
-    final contents = [
-      buildFourTabBar(controller),
-      widgetHome(controller, categoryController, width, labels),
-      cardScreen(controller),
-      notificationScreen(controller),
-    ];
+    return ValueListenableBuilder<int>(
+      valueListenable: bloc.indexScreen,
+      builder: (context, index, _) {
+        return IndexedStack(
+          index: index,
+          children: [
+            HomeTab(bloc, width, labels),
+            OrderTab(bloc: bloc),
+            CardTab(bloc: bloc),
+            NotificationTab(bloc),
+          ],
+        );
+      },
+    );
+  }
+}
 
-    return contents[selectedIndex];
+final ValueNotifier<bool> isBarVisible = ValueNotifier(true);
+
+class HomeTab extends StatefulWidget {
+  final HomeScreenBloc bloc;
+  final double width;
+  final List<CategoryModel> labels;
+  const HomeTab(this.bloc, this.width, this.labels, {super.key});
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
+  late final PageController promoPageController;
+  bool _isDisposed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    promoPageController = PageController();
   }
 
-  Widget buildFourTabBar(ScrollController controller) {
+  @override
+  void dispose() {
+    _isDisposed = true;
+    promoPageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widgetHome(
+      widget.bloc,
+      widget.width,
+      widget.labels,
+      promoPageController,
+    );
+  }
+
+  Widget widgetHome(
+    HomeScreenBloc bloc,
+    double width,
+    List<CategoryModel> labels,
+    PageController promoPageController,
+  ) {
+    final chipList =
+        labels
+            .map(
+              (label) => InkWell(
+                onTap: () {
+                  bloc.onTapCategory(label);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: Chip(
+                    label: Text(label.name ?? ''),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 3,
+                      vertical: 3,
+                    ),
+                    backgroundColor: toHexToColor(primaryButtonColor),
+                    labelStyle: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            )
+            .toList();
+
+    const chipWidth = 100.0;
+    final maxChips = (width / chipWidth).floor();
+    final dynamicChipList =
+        chipList.length < maxChips
+            ? [
+              ...chipList,
+              ...List.generate(
+                maxChips - chipList.length,
+                (i) => Chip(
+                  label: Text('Chip ${chipList.length + i + 1}'),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 6,
+                  ),
+                  backgroundColor: toHexToColor(primaryButtonColor),
+                  labelStyle: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ]
+            : chipList;
+
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: customTitleCategory(
+              'Mã giảm giá',
+              'Xem tất cả',
+              () => bloc.onTapListPromoCode(),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: StreamBuilder(
+            stream: bloc.promoCodeModels,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text('Lỗi khi tải mã giảm giá: ${snapshot.error}'),
+                );
+              }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(child: Text('Không có mã giảm giá nào'));
+              }
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: 180,
+                    child: PageView.builder(
+                      controller: promoPageController,
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        if (_isDisposed) return const SizedBox();
+                        return widgetCustomItemPromoCode(
+                          snapshot.data![index],
+                          () {
+                            if (!_isDisposed) {
+                              _showPromoCodeSheet(
+                                context,
+                                '',
+                                Container(),
+                                snapshot.data![index],
+                              );
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: SmoothPageIndicator(
+                        controller: promoPageController,
+                        count: snapshot.data!.length,
+                        effect: SlideEffect(
+                          activeDotColor: toHexToColor(primaryButtonColor),
+                          dotColor: toHexToColor(borderColor),
+                          dotHeight: 10,
+                          dotWidth: 10,
+                          spacing: 4,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: customTitleCategory(
+              'Loại sản phẩm',
+              'Xem tất cả',
+              () => bloc.onTapListCategory(),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: SizedBox(
+            width: width,
+            child: Padding(
+              padding: const EdgeInsets.all(0.0),
+              child: Wrap(children: dynamicChipList),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: customTitleCategory(
+              'Sản phẩm giảm giá',
+              'Xem tất cả',
+              () => bloc.onTapProductSale(),
+            ),
+          ),
+        ),
+        // Sản phẩm giảm giá
+        SliverToBoxAdapter(
+          child: StreamBuilder(
+            stream: bloc.productModels,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('Lỗi: ${snapshot.error}'));
+              }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(child: Text('Không có sản phẩm'));
+              }
+              final products = snapshot.data!;
+              return GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 3,
+                  mainAxisSpacing: 3,
+                  mainAxisExtent: 300,
+                ),
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: products.length > 10 ? 10 : products.length,
+                itemBuilder: (context, index) {
+                  return customItemProductCustomer(
+                    isDiscount: true,
+                    products[index],
+                    width * 0.4,
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: customTitleCategory(
+              'Sản phẩm phổ biến',
+              'Xem tất cả',
+              () => bloc.onTapPopularProduct(),
+            ),
+          ),
+        ),
+        // Sản phẩm phổ biến
+        SliverToBoxAdapter(
+          child: StreamBuilder(
+            stream: bloc.productModels,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('Lỗi: ${snapshot.error}'));
+              }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(child: Text('Không có sản phẩm'));
+              }
+              final products = snapshot.data!;
+              return GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 3,
+                  mainAxisSpacing: 3,
+                  mainAxisExtent: 300,
+                ),
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount:
+                    products.length > 10
+                        ? 10
+                        : products.length, // lazy load 10 sản phẩm đầu
+                itemBuilder: (context, index) {
+                  return customItemProductCustomer(
+                    isDiscount: false,
+                    products[index],
+                    width * 0.4,
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        SliverToBoxAdapter(child: SizedBox(height: 20)),
+      ],
+    );
+  }
+
+  void _showPromoCodeSheet(
+    BuildContext context,
+    String title,
+    Widget bodyWidget,
+    PromoCodeModel model,
+  ) {
+    if (_isDisposed) return;
+
+    showCustomBottomSheet(
+      context: context,
+      title: model.name ?? '',
+      bodyWidget: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _customTextSpan('Mã giảm giá: ', model.code ?? ''),
+          const SizedBox(height: 10),
+          _customTextSpan('Mô tả: ', model.description ?? ''),
+          const SizedBox(height: 10),
+          _customTextSpan(
+            'Hạn sử dụng: ',
+            '${model.startDate ?? ''} -- ${model.endDate ?? ''}',
+          ),
+          const SizedBox(height: 10),
+          _customTextSpan(
+            'Điều kiện áp dụng: ',
+            'Dành cho đơn hàng có giá trị trên ${model.minimumOrderValue ?? ''}đ',
+          ),
+          const SizedBox(height: 10),
+          _customTextSpan(
+            'Giảm giá: ',
+            '${model.discountPercentage.toString()}đ',
+          ),
+          const SizedBox(height: 50),
+        ],
+      ),
+    );
+  }
+
+  Widget _customTextSpan(String title, String body) {
+    return customTextSpan(
+      title,
+      body,
+      TextStyle(fontSize: 14, color: toHexToColor(secondaryTextColor)),
+      TextStyle(
+        fontSize: 15,
+        color: toHexToColor(primaryButtonColor),
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget widgetCustomItemPromoCode(PromoCodeModel model, VoidCallback onTap) {
+    return Center(
+      child: InkWell(onTap: onTap, child: _customItemPromoCode(model)),
+    );
+  }
+
+  Widget _customItemPromoCode(PromoCodeModel model) {
+    return GestureDetector(
+      child: SizedBox(
+        width: AppSize.w(0.9),
+        child: customItemPromoCode(model, () {}, () {}),
+      ),
+    );
+  }
+
+  Widget customTitleCategory(
+    String title,
+    String actionText,
+    VoidCallback onTap,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+        InkWell(
+          onTap: onTap,
+          child: Text(
+            actionText,
+            style: const TextStyle(fontSize: 12, color: Colors.blue),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class OrderTab extends StatefulWidget {
+  final HomeScreenBloc bloc;
+  const OrderTab({super.key, required this.bloc});
+  @override
+  State<OrderTab> createState() => _OrderTabState();
+}
+
+class _OrderTabState extends State<OrderTab>
+    with AutomaticKeepAliveClientMixin {
+  late final ScrollController _tab1Controller;
+  late final ScrollController _tab2Controller;
+  late final ScrollController _tab3Controller;
+  double _lastOffset1 = 0, _lastOffset2 = 0, _lastOffset3 = 0;
+
+  // Store the listener functions
+  late final VoidCallback _tab1Listener;
+  late final VoidCallback _tab2Listener;
+  late final VoidCallback _tab3Listener;
+
+  @override
+  void initState() {
+    super.initState();
+    _tab1Controller = ScrollController();
+    _tab2Controller = ScrollController();
+    _tab3Controller = ScrollController();
+
+    // Create the listener functions
+    _tab1Listener = () => _onScroll(_tab1Controller, 1);
+    _tab2Listener = () => _onScroll(_tab2Controller, 2);
+    _tab3Listener = () => _onScroll(_tab3Controller, 3);
+
+    // Add the listeners
+    _tab1Controller.addListener(_tab1Listener);
+    _tab2Controller.addListener(_tab2Listener);
+    _tab3Controller.addListener(_tab3Listener);
+  }
+
+  void _onScroll(ScrollController controller, int tab) {
+    if (!mounted) return;
+
+    double lastOffset =
+        tab == 1
+            ? _lastOffset1
+            : tab == 2
+            ? _lastOffset2
+            : _lastOffset3;
+
+    if (controller.offset > lastOffset && controller.offset > 50) {
+      isBarVisible.value = false;
+    } else if (controller.offset < lastOffset) {
+      isBarVisible.value = true;
+    }
+
+    if (tab == 1) _lastOffset1 = controller.offset;
+    if (tab == 2) _lastOffset2 = controller.offset;
+    if (tab == 3) _lastOffset3 = controller.offset;
+  }
+
+  @override
+  void dispose() {
+    // Remove the stored listener functions
+    _tab1Controller.removeListener(_tab1Listener);
+    _tab2Controller.removeListener(_tab2Listener);
+    _tab3Controller.removeListener(_tab3Listener);
+
+    _tab1Controller.dispose();
+    _tab2Controller.dispose();
+    _tab3Controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return buildFourTabBar();
+  }
+
+  Widget buildFourTabBar() {
     return DefaultTabController(
-      length: 3, // Số lượng tab (đã sửa thành 3 vì chỉ có 3 tab)
+      length: 3,
       child: Column(
         children: [
           Container(
-            color: toHexToColor(backgroundColor), // Hàm này cần được định nghĩa
+            color: toHexToColor(backgroundColor),
             child: const TabBar(
               dividerHeight: 0,
               labelColor: Colors.blueGrey,
@@ -265,76 +742,29 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           Expanded(
             child: TabBarView(
               children: [
-                // Tab 1
-                SizedBox(
-                  width: AppSize.width(),
-                  child: ListView(
-                    controller: controller,
-                    children: [
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(AppSize.w(0.9), isPending: true),
-                      ),
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(AppSize.w(0.9), isPending: true),
-                      ),
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(AppSize.w(0.9), isPending: true),
-                      ),
-                    ],
-                  ),
+                ListView(
+                  controller: _tab1Controller,
+                  children: [
+                    customCardOrder(AppSize.w(0.9), isPending: true),
+                    customCardOrder(AppSize.w(0.9), isPending: true),
+                    customCardOrder(AppSize.w(0.9), isPending: true),
+                  ],
                 ),
-                //"Sản phẩm giảm giá
-                SizedBox(
-                  width: AppSize.width(),
-                  child: ListView(
-                    controller: controller,
-                    children: [
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(
-                          AppSize.w(0.9),
-                          isDelivering: true,
-                        ),
-                      ),
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(
-                          AppSize.w(0.9),
-                          isDelivering: true,
-                        ),
-                      ),
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(
-                          AppSize.w(0.9),
-                          isDelivering: true,
-                        ),
-                      ),
-                    ],
-                  ),
+                ListView(
+                  controller: _tab2Controller,
+                  children: [
+                    customCardOrder(AppSize.w(0.9), isDelivering: true),
+                    customCardOrder(AppSize.w(0.9), isDelivering: true),
+                    customCardOrder(AppSize.w(0.9), isDelivering: true),
+                  ],
                 ),
-                SizedBox(
-                  width: AppSize.width(),
-                  child: ListView(
-                    controller: controller,
-                    children: [
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(AppSize.w(0.9), isSuccess: true),
-                      ),
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(AppSize.w(0.9), isSuccess: true),
-                      ),
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(AppSize.w(0.9), isSuccess: true),
-                      ),
-                    ],
-                  ),
+                ListView(
+                  controller: _tab3Controller,
+                  children: [
+                    customCardOrder(AppSize.w(0.9), isSuccess: true),
+                    customCardOrder(AppSize.w(0.9), isSuccess: true),
+                    customCardOrder(AppSize.w(0.9), isSuccess: true),
+                  ],
                 ),
               ],
             ),
@@ -362,13 +792,13 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
+                Flexible(
                   flex: 8,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
+                      Flexible(
                         flex: 4,
                         child: Padding(
                           padding: const EdgeInsets.all(5.0),
@@ -388,62 +818,90 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                           ),
                         ),
                       ),
-                      Expanded(
+                      Flexible(
                         flex: 6,
                         child: Padding(
                           padding: const EdgeInsets.only(left: 10),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(10),
-                                topRight: Radius.circular(10),
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              // mainAxisSize: MainAxisSize.min,
+                          child: SizedBox(
+                            height: 100, // Đảm bảo Stack có height xác định
+                            child: Stack(
                               children: [
-                                customAutoSizeText(
-                                  14,
-                                  20,
-                                  'Mã đơn hàng #122222',
-                                  isBold: true,
-                                ),
-                                Card(
+                                Positioned(
+                                  top: 1,
+                                  right: 1,
                                   child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 5,
-                                      horizontal: 10,
-                                    ),
                                     decoration: BoxDecoration(
-                                      color: toHexToColor(secondaryColorOrange),
+                                      color: toHexToColor(primaryErrorColor),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: customAutoSizeText(
-                                      12,
-                                      18,
-                                      'Tổng sản phẩm: 3',
-                                      textColor: toHexToColor(
-                                        secondaryTextColor,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 2,
+                                        horizontal: 8,
+                                      ),
+                                      child: Text(
+                                        // '${model?.discountPercentage}%',
+                                        '',
+                                        style: TextStyle(color: Colors.white),
                                       ),
                                     ),
                                   ),
                                 ),
-                                Card(
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 5,
-                                      horizontal: 10,
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  // mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    customAutoSizeText(
+                                      14,
+                                      20,
+                                      'Mã đơn hàng #122222',
+                                      isBold: true,
                                     ),
-                                    decoration: BoxDecoration(
-                                      color: toHexToColor(secondaryColorPurple),
-                                      borderRadius: BorderRadius.circular(10),
+                                    Card(
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 5,
+                                          horizontal: 10,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: toHexToColor(
+                                            secondaryColorOrange,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: customAutoSizeText(
+                                          12,
+                                          18,
+                                          'Tổng sản phẩm: 3',
+                                          textColor: toHexToColor(
+                                            secondaryTextColor,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                    child: buildSuccessBody(
-                                      isSuccess: isSuccess,
+                                    Card(
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 5,
+                                          horizontal: 10,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: toHexToColor(
+                                            secondaryColorPurple,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: buildSuccessBody(
+                                          isSuccess: isSuccess,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -453,7 +911,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                     ],
                   ),
                 ),
-                Expanded(
+                Flexible(
                   flex: 2,
                   child: customBottomCard(
                     isPending: isPending,
@@ -466,6 +924,50 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
         ),
       ),
     );
+  }
+
+  Widget buildSuccessBody({bool isSuccess = false}) {
+    return !isSuccess
+        ? Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            customAutoSizeText(
+              12,
+              18,
+              'Tổng tiền: 100.000đ',
+              textColor: toHexToColor(secondaryTextColor),
+              maxLine: 1,
+            ),
+            customAutoSizeText(
+              12,
+              18,
+              'Tổng tiền: 100.000đ',
+              textColor: toHexToColor(secondaryTextColor),
+              maxLine: 1,
+            ),
+            customAutoSizeText(
+              12,
+              18,
+              'Tổng tiền: 100.000đ',
+              textColor: toHexToColor(secondaryTextColor),
+              maxLine: 1,
+            ),
+          ],
+        )
+        : Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            customAutoSizeText(
+              12,
+              18,
+              'Tổng tiền: 100.000đ',
+              textColor: toHexToColor(secondaryTextColor),
+              maxLine: 1,
+            ),
+          ],
+        );
   }
 
   Widget customBottomCard({bool isPending = false, bool isSuccess = false}) {
@@ -599,270 +1101,28 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           ],
         );
   }
+}
 
-  Widget buildSuccessBody({bool isSuccess = false}) {
-    return !isSuccess
-        ? Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            customAutoSizeText(
-              12,
-              18,
-              'Tổng tiền: 100.000đ',
-              textColor: toHexToColor(secondaryTextColor),
-              maxLine: 1,
-            ),
-            customAutoSizeText(
-              12,
-              18,
-              'Tổng tiền: 100.000đ',
-              textColor: toHexToColor(secondaryTextColor),
-              maxLine: 1,
-            ),
-            customAutoSizeText(
-              12,
-              18,
-              'Tổng tiền: 100.000đ',
-              textColor: toHexToColor(secondaryTextColor),
-              maxLine: 1,
-            ),
-          ],
-        )
-        : Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            customAutoSizeText(
-              12,
-              18,
-              'Tổng tiền: 100.000đ',
-              textColor: toHexToColor(secondaryTextColor),
-              maxLine: 1,
-            ),
-          ],
-        );
+class CardTab extends StatelessWidget {
+  final HomeScreenBloc? bloc;
+  const CardTab({super.key, this.bloc});
+  @override
+  Widget build(BuildContext context) {
+    return cardScreen();
   }
 
-  Widget cardScreen(ScrollController controller) {
+  Widget cardScreen() {
     return ListView(
-      controller: controller,
       children: [itemCard(), itemCard(), itemCard(), itemCard(), itemCard()],
     );
   }
 
-  Widget notificationScreen(ScrollController controller) {
-    return ListView(
-      controller: controller,
-      children: [
-        buildItemNotification(
-          'Bạn có đơn hàng mới',
-          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
-          isRead: false,
-        ),
-        buildItemNotification(
-          'Bạn có đơn hàng mới',
-          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
-          isRead: false,
-        ),
-        buildItemNotification(
-          'Bạn có đơn hàng mới',
-          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
-          isRead: false,
-        ),
-        buildItemNotification(
-          'Bạn có đơn hàng mới',
-          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
-          isRead: false,
-        ),
-      ],
-    );
-  }
-
-  Widget widgetHome(
-    ScrollController controller,
-    PageController categoryController,
-    double width,
-    List<String> labels,
-  ) {
-    final chipList =
-        labels
-            .map(
-              (label) => Chip(
-                label: Text(label),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                backgroundColor: toHexToColor(primaryButtonColor),
-                labelStyle: const TextStyle(color: Colors.white),
-              ),
-            )
-            .toList();
-
-    const chipWidth = 100.0;
-    final maxChips = (width / chipWidth).floor();
-    final dynamicChipList =
-        chipList.length < maxChips
-            ? [
-              ...chipList,
-              ...List.generate(
-                maxChips - chipList.length,
-                (i) => Chip(
-                  label: Text('Chip ${chipList.length + i + 1}'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 6,
-                  ),
-                  backgroundColor: toHexToColor(primaryButtonColor),
-                  labelStyle: const TextStyle(color: Colors.white),
-                ),
-              ),
-            ]
-            : chipList;
-    return ListView(
-      controller: controller,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: customTitleCategory('Mã giảm giá', 'Xem tất cả'),
-        ),
-        SizedBox(
-          height: 180,
-          child: PageView.builder(
-            controller: categoryController,
-            itemCount: 5,
-            itemBuilder: (context, index) {
-              return widgetCustomItemPromoCode(
-                () {},
-                () {},
-                categoryController,
-                index,
-              );
-            },
-          ),
-        ),
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: SmoothPageIndicator(
-              controller: categoryController,
-              count: 10,
-              effect: SlideEffect(
-                activeDotColor: toHexToColor(primaryButtonColor),
-                dotColor: toHexToColor(borderColor),
-                dotHeight: 10,
-                dotWidth: 10,
-                spacing: 4,
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(10),
-          child: customTitleCategory('Loại sản phẩm', 'Xem tất cả'),
-        ),
-        SizedBox(
-          width: width,
-          child: Padding(
-            padding: const EdgeInsets.all(0.0),
-            child: Wrap(children: dynamicChipList),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(10),
-          child: customTitleCategory('Sản phẩm giảm giá', 'Xem tất cả'),
-        ),
-        SizedBox(
-          width: width,
-          child: Padding(
-            padding: EdgeInsets.all(10),
-            child: GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 3,
-                mainAxisSpacing: 3,
-                // childAspectRatio: 0.6, // Điều chỉnh tỷ lệ chiều rộng/chiều cao
-                childAspectRatio: (width / 2) / (AppSize.h(0.4)),
-              ),
-              physics: NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: 6,
-              itemBuilder: (context, index) {
-                return SizedBox(child: customItemProductCustomer(width * 0.4));
-              },
-            ),
-          ),
-        ),
-
-        Padding(
-          padding: const EdgeInsets.all(10),
-          child: customTitleCategory('Sản phẩm phổ biến', 'Xem tất cả'),
-        ),
-        SizedBox(
-          width: width,
-          child: Padding(
-            padding: EdgeInsets.all(10),
-            child: GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 3,
-                mainAxisSpacing: 3,
-                childAspectRatio: (width / 2) / (AppSize.h(0.4)),
-              ),
-              physics: NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: 6,
-              itemBuilder: (context, index) {
-                return SizedBox(
-                  child: customItemProductCustomer(
-                    width * 0.4,
-                    isDiscount: false,
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget customTitleCategory(String title, String actionText) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-        ),
-        Text(
-          actionText,
-          style: const TextStyle(fontSize: 12, color: Colors.blue),
-        ),
-      ],
-    );
-  }
-
-  Widget widgetCustomItemPromoCode(
-    VoidCallback onTap1,
-    VoidCallback onTap2,
-    PageController controller,
-    int index,
-  ) {
-    return Center(child: _customItemPromoCode(onTap1, onTap2));
-  }
-
-  Widget _customItemPromoCode(VoidCallback onTap1, VoidCallback onTap2) {
-    return GestureDetector(
-      onTap: onTap1,
-      child: SizedBox(
-        width: AppSize.w(0.9),
-        // height: 300,
-        // color: Colors.white,
-        child: customItemPromoCode(() {}, () {}),
-      ),
-    );
-  }
-
-  Widget itemCard({String? img, String? name, String? price}) {
+  Widget itemCard({
+    String? img,
+    String? name,
+    String? price,
+    PromoCodeModel? model,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
       child: Card(
@@ -884,113 +1144,120 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                   flex: 6,
                   child: Padding(
                     padding: const EdgeInsets.only(left: 10),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          top: 1,
-                          right: 1,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: toHexToColor(primaryErrorColor),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 2,
-                                horizontal: 8,
+                    child: SizedBox(
+                      height: 100, // Đảm bảo Stack có height xác định
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: 1,
+                            right: 1,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: toHexToColor(primaryErrorColor),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Text(
-                                '10%',
-                                style: TextStyle(color: Colors.white),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 2,
+                                  horizontal: 8,
+                                ),
+                                child: Text(
+                                  '${model?.discountPercentage}%',
+                                  style: TextStyle(color: Colors.white),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.max,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            customAutoSizeText(
-                              14,
-                              18,
-                              'Dưa lưới',
-                              isBold: true,
-                              textColor: toHexToColor(primaryTextColor),
-                            ),
-                            customAutoSizeText(8, 12, '100.000đ', isLine: true),
-                            customAutoSizeText(
-                              12,
-                              16,
-                              '90.000đ',
-                              isBold: true,
-                              textColor: toHexToColor(primaryButtonColor),
-                            ),
-                            Spacer(),
-                            Row(
-                              children: [
-                                Spacer(),
-                                Card(
-                                  color: Colors.white,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      // color: toHexToColor(primaryButtonColor),
-                                      color: Colors.grey[300],
-                                      borderRadius: BorderRadius.circular(5),
-                                      // border: Border.all(
-                                      //   color: toHexToColor(primaryButtonColor),
-                                      // ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        InkWell(
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 3,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.only(
-                                                topLeft: Radius.circular(5),
-                                                bottomLeft: Radius.circular(5),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.max,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              customAutoSizeText(
+                                14,
+                                18,
+                                model?.name ?? '',
+                                isBold: true,
+                                textColor: toHexToColor(primaryTextColor),
+                              ),
+                              // customAutoSizeText(8, 12, '100.000đ', isLine: true),
+                              customAutoSizeText(
+                                12,
+                                16,
+                                'Đơn hàng trên ${model?.minimumOrderValue}đ',
+                                isBold: true,
+                                textColor: toHexToColor(primaryButtonColor),
+                              ),
+                              Spacer(),
+                              Row(
+                                children: [
+                                  Spacer(),
+                                  Card(
+                                    color: Colors.white,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        // color: toHexToColor(primaryButtonColor),
+                                        color: Colors.grey[300],
+                                        borderRadius: BorderRadius.circular(5),
+                                        // border: Border.all(
+                                        //   color: toHexToColor(primaryButtonColor),
+                                        // ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          InkWell(
+                                            child: Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 10,
+                                                vertical: 3,
                                               ),
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(5),
+                                                  bottomLeft: Radius.circular(
+                                                    5,
+                                                  ),
+                                                ),
+                                              ),
+                                              child: Text(' - '),
                                             ),
-                                            child: Text(' - '),
                                           ),
-                                        ),
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          color: Colors.white,
-                                          child: Text('100'),
-                                        ),
-                                        InkWell(
-                                          child: Container(
+                                          Container(
                                             padding: EdgeInsets.symmetric(
                                               horizontal: 8,
                                               vertical: 3,
                                             ),
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.only(
-                                                bottomRight: Radius.circular(5),
-                                                topRight: Radius.circular(5),
-                                              ),
-                                              // color: Colors.white,
-                                            ),
-                                            child: Text(' + '),
+                                            color: Colors.white,
+                                            child: Text('100'),
                                           ),
-                                        ),
-                                      ],
+                                          InkWell(
+                                            child: Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 3,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.only(
+                                                  bottomRight: Radius.circular(
+                                                    5,
+                                                  ),
+                                                  topRight: Radius.circular(5),
+                                                ),
+                                                // color: Colors.white,
+                                              ),
+                                              child: Text(' + '),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -999,6 +1266,42 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class NotificationTab extends StatelessWidget {
+  final HomeScreenBloc bloc;
+  const NotificationTab(this.bloc, {super.key});
+  @override
+  Widget build(BuildContext context) {
+    return notificationScreen();
+  }
+
+  Widget notificationScreen() {
+    return ListView(
+      children: [
+        buildItemNotification(
+          'Bạn có đơn hàng mới',
+          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
+          isRead: false,
+        ),
+        buildItemNotification(
+          'Bạn có đơn hàng mới',
+          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
+          isRead: false,
+        ),
+        buildItemNotification(
+          'Bạn có đơn hàng mới',
+          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
+          isRead: false,
+        ),
+        buildItemNotification(
+          'Bạn có đơn hàng mới',
+          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
+          isRead: false,
+        ),
+      ],
     );
   }
 }

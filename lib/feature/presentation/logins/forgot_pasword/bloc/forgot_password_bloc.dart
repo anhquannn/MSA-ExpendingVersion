@@ -1,7 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:msa/core/config/base_bloc.dart';
-import '../../welcom/welcom1.dart';
+import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
+import '../../../../../widget/loading.dart';
+import '../../../../domain/usecase/user_use_case.dart';
 import '../ui/forgot_password_screen.dart';
 
 class ForgotPasswordBloc extends BaseBloc<ForgotPasswordScreen> {
@@ -9,6 +11,10 @@ class ForgotPasswordBloc extends BaseBloc<ForgotPasswordScreen> {
 
   bool isValidEmail = false;
   String validEmail = '';
+  final UserUseCases _userUseCases = GetIt.I<UserUseCases>();
+
+    @override
+  String get contextKey => 'ForgotPasswordScreen';
 
   @override
   void onInit() {}
@@ -18,15 +24,24 @@ class ForgotPasswordBloc extends BaseBloc<ForgotPasswordScreen> {
     emailController.dispose();
   }
 
-  Future<void> onNext() async {
-    // final email = validateEmail(emailController.text);
+  Future<void> onNext(BuildContext context) async {
+    final emailValid = validateEmail(emailController.text);
     setState(() {});
-    // if (email) {
-    //   Navigator.push(
-    //     context,
-    //     MaterialPageRoute(builder: (context) => OnboardingScreen()),
-    //   );
-    // }
+
+    if (!emailValid) return;
+
+    bool success = await _userUseCases.resetPasswordWithoutOtp(
+      emailController.text,
+    );
+
+    await showLoading(context: viewContext);
+    if (success && context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (viewContext) => LoginScreen()),
+        (route) => true,
+      );
+    }
   }
 
   @override

@@ -1,11 +1,9 @@
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
 import 'package:flutter/material.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/utils/prarse_color.dart';
 
-import 'custom_widget.dart';
 import 'reuseable_screen_hide_appbar.dart';
 
 void main() {
@@ -132,12 +130,14 @@ class HomeScreens extends StatelessWidget {
 // }
 
 class SimpleScreen extends StatefulWidget {
+  const SimpleScreen({super.key});
+
   @override
   _SimpleScreenState createState() => _SimpleScreenState();
 }
 
 class _SimpleScreenState extends State<SimpleScreen> {
-  int _selectedIndex = 0;
+  final int _selectedIndex = 0;
 
   final List<Widget> _pages = [
     Center(

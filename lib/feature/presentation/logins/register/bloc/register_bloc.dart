@@ -1,6 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:msa/core/config/base_bloc.dart';
+import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import 'package:msa/feature/data/model/request/user_register_request.dart';
+import 'package:msa/feature/domain/entities/user_model.dart';
+import 'package:msa/feature/domain/usecase/user_use_case.dart';
 import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
 import 'package:msa/feature/presentation/logins/register/ui/register_screen.dart';
 
@@ -37,6 +41,10 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
   String? errTextDistrict;
   String? errTextStreet;
   String? errTextWard;
+
+  final UserUseCases _userUseCases = GetIt.I<UserUseCases>();
+  String get formattedAddress =>
+      '${streetController.text}, ${wardController.text}, ${districtController.text}, ${provinceController.text}';
 
   @override
   void onDispose() {
@@ -77,6 +85,16 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
     errTextProvince = '';
     errTextDistrict = '';
     errTextStreet = '';
+
+    streetController.text = '';
+    districtController.text = '';
+    provinceController.text = '';
+    wardController.text = '';
+    nameController.text = '';
+    emailController.text = '';
+    phoneNumberController.text = '';
+    passwordController.text = '';
+    validPasswordController.text = '';
   }
 
   @override
@@ -98,17 +116,28 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
   Future<void> onRegister() async {
     final isValidSuccess = validateFields();
     if (isValidSuccess) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
+      UserModel? user = await _userUseCases.register(
+        UserRegisterRequest(
+          fullName: nameController.text,
+          email: emailController.text,
+          phoneNumber: phoneNumberController.text,
+          password: passwordController.text,
+          address: formattedAddress,
+          birthday: '',
+        ),
       );
+      if (user != null) {
+        HttpConnection.userModel = user;
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+      }
     }
   }
 
   bool validateFields() {
     bool isValid = true;
-
-    // Hàm kiểm tra chung cho từng trường
     bool validateField({
       required TextEditingController controller,
       required String errorText,

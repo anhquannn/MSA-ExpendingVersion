@@ -9,8 +9,6 @@ import 'package:msa/widget/custom_textfield.dart';
 import 'package:msa/widget/custom_widget.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 
-import '../../../../../widget/custom_dialog.dart';
-import '../../../../../widget/widget_promo_code.dart';
 import '../bloc/add_manufacturer_bloc.dart';
 
 class AddManufacturerScreen extends BaseView<AddManufacturerBloc> {
@@ -20,11 +18,11 @@ class AddManufacturerScreen extends BaseView<AddManufacturerBloc> {
   AddManufacturerBloc createBloc() => AddManufacturerBloc();
 
   Widget build(BuildContext context) {
-    final _bloc = (context as StatefulElement).state as AddManufacturerBloc;
+    final bloc = (context as StatefulElement).state as AddManufacturerBloc;
 
     return CustomScaffold(
       appBarGradient: false,
-      appBarLeading: iconBack(size: 25),
+      appBarLeading: iconBack(bloc.viewContext,size: 25),
       centerTitle: true,
       title: const AutoSizeText(
         'Thêm nhà sản xuất',
@@ -48,35 +46,35 @@ class AddManufacturerScreen extends BaseView<AddManufacturerBloc> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       buildTextFieldCard(
-                        errText: _bloc.nameError,
-                        controller: _bloc.nameController,
-                        node: _bloc.nameFocusNode,
+                        errText: bloc.nameError,
+                        controller: bloc.nameController,
+                        node: bloc.nameFocusNode,
                         hintText: 'Siêu thị GO',
                         label: 'Tên nhà sản xuất',
                         onSubmitted:
-                            (val) => _bloc.onFieldSubmitted(
+                            (val) => bloc.onFieldSubmitted(
                               context,
-                              _bloc.nameFocusNode,
-                              _bloc.contactFocusNode,
+                              bloc.nameFocusNode,
+                              bloc.contactFocusNode,
                             ),
                       ),
 
                       buildTextFieldCard(
-                        errText: _bloc.addressError,
-                        controller: _bloc.addressController,
-                        node: _bloc.addressFocusNode,
+                        errText: bloc.addressError,
+                        controller: bloc.addressController,
+                        node: bloc.addressFocusNode,
                         hintText: '123 Nguyễn Thị Thập Quận 7 TP.Hồ Chí Minh',
                         label: 'Địa chỉ',
-                        onSubmitted: (val) => _bloc.onCreatePromoCode(),
+                        onSubmitted: (val) => bloc.onCreatePromoCode(),
                         maxLines: 5,
                       ),
                       buildTextFieldCard(
-                        errText: _bloc.contactError,
-                        controller: _bloc.contactController,
-                        node: _bloc.contactFocusNode,
+                        errText: bloc.contactError,
+                        controller: bloc.contactController,
+                        node: bloc.contactFocusNode,
                         hintText: '0123 456 678',
                         label: 'Số điện thoại',
-                        onSubmitted: (val) => _bloc.onCreatePromoCode(),
+                        onSubmitted: (val) => bloc.onCreatePromoCode(),
                         maxLines: 5,
                       ),
                       SizedBox(height: 20),
@@ -85,7 +83,7 @@ class AddManufacturerScreen extends BaseView<AddManufacturerBloc> {
                           elevation: 3,
                           child: customButton(
                             () {
-                              _bloc.validateForm();
+                              bloc.validateForm();
                             },
                             typeButton: 1,
                             AppSize.w(0.5),

@@ -1,12 +1,10 @@
-import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/utils/prarse_color.dart';
-import 'package:msa/widget/custom_textfield.dart';
+import 'package:msa/feature/domain/entities/product_model.dart';
 
 Widget customItemProduct(
   VoidCallback? onUpdate,
@@ -14,6 +12,9 @@ Widget customItemProduct(
   bool? isOrder = false,
   ProductModel? model,
   bool isInventory = false,
+  int? sale,
+  int? stock,
+  String? stockLevel,
 }) {
   ProductModel model = ProductModel();
   final width = AppSize.w(0.98);
@@ -65,7 +66,7 @@ Widget customItemProduct(
                                 padding: const EdgeInsets.all(7.0),
                                 child:
                                     isOrder == false
-                                        ? Text('Đã bán: ${model.sale}')
+                                        ? Text('Đã bán: $sale')
                                         : Text('Mã đơn 001'),
                               ),
                             ),
@@ -81,8 +82,8 @@ Widget customItemProduct(
                                 padding: const EdgeInsets.all(7.0),
                                 child:
                                     isOrder == false
-                                        ? Text('Tồn kho: ${model.stock}')
-                                        : Text('Tổng tiền: 100.000 đ'),
+                                        ? Text('Tồn kho: $stock')
+                                        : Text('Tổng tiền: ${model.price}'),
                               ),
                             ),
                           ),
@@ -96,7 +97,7 @@ Widget customItemProduct(
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(7.0),
-                                    child: Text(model.stockLevel),
+                                    child: Text(stockLevel??''),
                                   ),
                                 ),
                               )
@@ -141,7 +142,7 @@ Widget customItemProduct(
                             AutoSizeText(
                               minFontSize: 16,
                               maxFontSize: 24,
-                              model.name,
+                              model.name??'',
                               overflow: TextOverflow.ellipsis,
                               softWrap: true,
                               maxLines: 1,
@@ -153,7 +154,7 @@ Widget customItemProduct(
                             AutoSizeText(
                               minFontSize: 10,
                               maxFontSize: 24,
-                              model.price,
+                              model.price.toString(),
                               overflow: TextOverflow.ellipsis,
                               softWrap: true,
                               maxLines: 1,
@@ -416,8 +417,10 @@ Widget customItemInventory(
   bool? isCheck = false,
   String? loss,
   Function(String)? onSubmitUnit,
+  int? sale,
+  int? stock,
+  String? stockLevel,
 }) {
-  ProductModel model = ProductModel();
   final width = AppSize.w(0.98);
   final height = AppSize.h(0.4);
   return Padding(
@@ -473,8 +476,8 @@ Widget customItemInventory(
                           ),
                           child: _buildBottomBarInventory(
                             width,
-                            model.name,
-                            model.price,
+                            model?.name??'',
+                            model!.price.toString(),
                           ),
                         )
                         : SizedBox(
@@ -498,7 +501,7 @@ Widget customItemInventory(
                                       ),
                                       child: Padding(
                                         padding: const EdgeInsets.all(7.0),
-                                        child: Text('Đã bán: ${model.sale}'),
+                                        child: Text('Đã bán: $sale'),
                                       ),
                                     ),
                                   ),
@@ -513,7 +516,7 @@ Widget customItemInventory(
                                       ),
                                       child: Padding(
                                         padding: const EdgeInsets.all(7.0),
-                                        child: Text('Tồn kho: ${model.stock}'),
+                                        child: Text('Tồn kho: $stock'),
                                       ),
                                     ),
                                   ),
@@ -529,7 +532,7 @@ Widget customItemInventory(
                                       ),
                                       child: Padding(
                                         padding: const EdgeInsets.all(7.0),
-                                        child: Text(model.stockLevel),
+                                        child: Text(stockLevel??''),
                                       ),
                                     ),
                                   ),
@@ -589,8 +592,8 @@ Widget customItemInventory(
                           )
                           : _buildBottomBarInventory(
                             width,
-                            model.name,
-                            model.price,
+                            model?.name??'',
+                            model!.price.toString(),
                           ),
                       Container(
                         height: 40,
@@ -739,25 +742,4 @@ Widget _buildBottomBarInventory(double width, String name, String price) {
   );
 }
 
-Widget customItemProductCustomer(double width) {
-  return SizedBox(
-    width: width,
-    child: Card(
-      color: Colors.white,
-      elevation: 2,
-      child: Container(
-        // decoration: ,
-      ),
-    ),
-  );
-}
 
-class ProductModel {
-  final String image =
-      'https://pixabay.com/illustrations/draw-nature-landscape-free-image-3583548/';
-  final String name = 'Dưa hấu';
-  final String price = '1.000.000đ';
-  final String sale = '10000';
-  final String stock = '100';
-  final String stockLevel = 'Low';
-}

@@ -4,7 +4,6 @@ import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/utils/prarse_color.dart';
-import 'package:msa/widget/custom_dropdown.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 
 import '../../../../../widget/custom_dropshadow.dart';
@@ -19,7 +18,7 @@ class DashBoardScreen extends BaseView<DashBoardBloc> {
   DashBoardBloc createState() => DashBoardBloc();
 
   Widget build(BuildContext context) {
-    final _bloc = (context as StatefulElement).state as DashBoardBloc;
+    final bloc = (context as StatefulElement).state as DashBoardBloc;
     return CustomScaffold(
       appBarGradient: false,
 
@@ -65,7 +64,7 @@ class DashBoardScreen extends BaseView<DashBoardBloc> {
           padding: const EdgeInsets.symmetric(horizontal: 5),
           child: InkWell(
             onTap: () {
-              _bloc.onSetting();
+              bloc.onSetting();
             },
             child: Icon(Icons.settings, color: Colors.white),
           ),
@@ -74,7 +73,7 @@ class DashBoardScreen extends BaseView<DashBoardBloc> {
           padding: const EdgeInsets.symmetric(horizontal: 5),
           child: InkWell(
             onTap: () {
-              _bloc.onLogout();
+              bloc.onLogout();
             },
             child: Icon(Icons.logout, color: Colors.white),
           ),

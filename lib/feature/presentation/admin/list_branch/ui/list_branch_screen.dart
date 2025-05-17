@@ -4,14 +4,10 @@ import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/utils/prarse_color.dart';
-import 'package:msa/widget/custom_dropdown.dart';
-import 'package:msa/widget/custom_textfield.dart';
 import 'package:msa/widget/custom_widget.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 
-import '../../../../../widget/custom_dropshadow.dart';
 import '../../../../../widget/custom_item_product.dart';
-import '../../../../../widget/icon_wrap.dart';
 import '../bloc/list_branch_bloc.dart';
 
 class ListBranchScreen extends BaseView<ListBranchBloc> {
@@ -21,10 +17,10 @@ class ListBranchScreen extends BaseView<ListBranchBloc> {
   ListBranchBloc createState() => ListBranchBloc();
 
   Widget build(BuildContext context) {
-    final _bloc = (context as StatefulElement).state as ListBranchBloc;
+    final bloc = (context as StatefulElement).state as ListBranchBloc;
     return CustomScaffold(
       appBarGradient: false,
-      appBarLeading: iconBack(size: 25),
+      appBarLeading: iconBack(bloc.viewContext,size: 25),
       centerTitle: true,
       title: AutoSizeText(
         'Danh sách chi nhánh',

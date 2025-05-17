@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:msa/widget/custom_textfield.dart';
 
@@ -20,7 +19,7 @@ class StockCheckScreen extends BaseView<StockCheckBloc> {
   StockCheckBloc createState() => StockCheckBloc();
 
   Widget build(BuildContext context) {
-    final _bloc = (context as StatefulElement).state as StockCheckBloc;
+    final bloc = (context as StatefulElement).state as StockCheckBloc;
     final List<String> mockData = [
       '123 Cho Lon',
       '123 Ho Chi Minh',
@@ -28,7 +27,7 @@ class StockCheckScreen extends BaseView<StockCheckBloc> {
     ];
     return CustomScaffold(
       appBarGradient: false,
-      appBarLeading: iconBack(size: 25),
+      appBarLeading: iconBack(bloc.viewContext,size: 25),
       centerTitle: true,
       title: Column(
         mainAxisSize: MainAxisSize.min,
@@ -62,7 +61,7 @@ class StockCheckScreen extends BaseView<StockCheckBloc> {
         ],
       ),
       bodyBuilder: (controller) {
-        final double _width = min(500, AppSize.width());
+        final double width = min(500, AppSize.width());
         return Container(
           width: AppSize.width(),
           color: toHexToColor(backgroundColor),
@@ -74,13 +73,13 @@ class StockCheckScreen extends BaseView<StockCheckBloc> {
               children: [
                 SizedBox(height: 10),
                 SizedBox(
-                  width: _width * 0.9,
+                  width: width * 0.9,
                   height: 45,
                   child: Card(
                     child: customTextField(
                       prefixIcon: Icon(Icons.search, color: Colors.black),
                       onSubmit: (p0) {},
-                      _bloc.controller,
+                      bloc.controller,
                       fillColor: toHexToColor(borderColor),
                     ),
                   ),
@@ -91,7 +90,7 @@ class StockCheckScreen extends BaseView<StockCheckBloc> {
                   loss: '10000100001000010000',
                   () {}, // hàm click
                   () {}, // hàm edit
-                  _bloc.controller,
+                  bloc.controller,
                   'Cai',
                   () {}, // tùy thêm logic
                 ),
@@ -100,7 +99,7 @@ class StockCheckScreen extends BaseView<StockCheckBloc> {
                   loss: '10000100001000010000',
                   () {}, // hàm click
                   () {}, // hàm edit
-                  _bloc.controller,
+                  bloc.controller,
                   'Cai',
                   () {}, // tùy thêm logic
                 ),
@@ -109,7 +108,7 @@ class StockCheckScreen extends BaseView<StockCheckBloc> {
                   loss: '10000100001000010000',
                   () {}, // hàm click
                   () {}, // hàm edit
-                  _bloc.controller,
+                  bloc.controller,
                   'Cai',
                   () {}, // tùy thêm logic
                 ),
@@ -118,7 +117,7 @@ class StockCheckScreen extends BaseView<StockCheckBloc> {
                   // loss: '10000100001000010000',
                   () {}, // hàm click
                   () {}, // hàm edit
-                  _bloc.controller,
+                  bloc.controller,
                   'Cai',
                   () {}, // tùy thêm logic
                 ),
@@ -127,7 +126,7 @@ class StockCheckScreen extends BaseView<StockCheckBloc> {
                   // loss: '10000100001000010000',
                   () {}, // hàm click
                   () {}, // hàm edit
-                  _bloc.controller,
+                  bloc.controller,
                   'Cai',
                   () {}, // tùy thêm logic
                 ),
@@ -136,7 +135,7 @@ class StockCheckScreen extends BaseView<StockCheckBloc> {
                   loss: '10000100001000010000',
                   () {}, // hàm click
                   () {}, // hàm edit
-                  _bloc.controller,
+                  bloc.controller,
                   'Cai',
                   () {}, // tùy thêm logic
                 ),

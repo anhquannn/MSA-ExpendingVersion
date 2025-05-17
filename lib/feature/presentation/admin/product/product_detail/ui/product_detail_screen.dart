@@ -11,7 +11,6 @@ import 'package:msa/widget/custom_textfield.dart';
 import 'package:msa/widget/custom_widget.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 import '../../../../../../widget/custom_dialog.dart';
-import '../../../../../../widget/custom_dropshadow.dart';
 import '../bloc/product_detail_bloc.dart';
 
 class ProductDetailScreen extends BaseView<ProductDetailBloc> {
@@ -24,10 +23,10 @@ class ProductDetailScreen extends BaseView<ProductDetailBloc> {
   ProductDetailBloc createBloc() => ProductDetailBloc();
 
   Widget build(BuildContext context) {
-    final _bloc = (context as StatefulElement).state as ProductDetailBloc;
+    final bloc = (context as StatefulElement).state as ProductDetailBloc;
     return CustomScaffold(
       appBarGradient: false,
-      appBarLeading: iconBack(size: 25),
+      appBarLeading: iconBack(bloc.viewContext,size: 25),
       centerTitle: true,
       title: Text(
         'Thêm sản phẩm',
@@ -66,10 +65,10 @@ class ProductDetailScreen extends BaseView<ProductDetailBloc> {
                             prefixIcon: Icon(Icons.inventory_2_outlined),
                             hintText: 'Tên sản phẩm',
                             label: 'Tên sản phẩm',
-                            controller: _bloc.nameController,
-                            node: _bloc.nameFocus,
+                            controller: bloc.nameController,
+                            node: bloc.nameFocus,
                             onSubmitted: (p0) {},
-                            errText: _bloc.nameError,
+                            errText: bloc.nameError,
                           ),
 
                           SizedBox(
@@ -85,10 +84,10 @@ class ProductDetailScreen extends BaseView<ProductDetailBloc> {
                                     hPadding: 5,
                                     hintText: '120.000đ',
                                     label: 'Giá sản phẩm',
-                                    controller: _bloc.priceController,
-                                    node: _bloc.priceFocus,
+                                    controller: bloc.priceController,
+                                    node: bloc.priceFocus,
                                     onSubmitted: (p0) {},
-                                    errText: _bloc.priceError,
+                                    errText: bloc.priceError,
                                   ),
                                 ),
                                 // Widget con thứ hai
@@ -99,10 +98,10 @@ class ProductDetailScreen extends BaseView<ProductDetailBloc> {
                                     hPadding: 5,
                                     hintText: '100.000đ',
                                     label: 'Giá hiện tại',
-                                    controller: _bloc.currentPriceController,
-                                    node: _bloc.currentPriceFocus,
+                                    controller: bloc.currentPriceController,
+                                    node: bloc.currentPriceFocus,
                                     onSubmitted: (p0) {},
-                                    errText: _bloc.currentPriceError,
+                                    errText: bloc.currentPriceError,
                                   ),
                                 ),
                               ],
@@ -113,21 +112,21 @@ class ProductDetailScreen extends BaseView<ProductDetailBloc> {
                             prefixIcon: Icon(Icons.build_circle_outlined),
                             hintText: 'Thông số sản phẩm',
                             label: 'Thông số',
-                            controller: _bloc.specificationController,
-                            node: _bloc.specificationFocus,
+                            controller: bloc.specificationController,
+                            node: bloc.specificationFocus,
                             onSubmitted: (p0) {},
                             maxLines: 10,
-                            errText: _bloc.specificationError,
+                            errText: bloc.specificationError,
                           ),
                           buildTextFieldCard(
                             prefixIcon: Icon(Icons.description),
                             hintText: 'Mô tả sản phẩm',
                             label: 'Mô tả',
-                            controller: _bloc.descController,
-                            node: _bloc.descFocus,
+                            controller: bloc.descController,
+                            node: bloc.descFocus,
                             onSubmitted: (p0) {},
                             maxLines: 10,
-                            errText: _bloc.descError,
+                            errText: bloc.descError,
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(
@@ -146,8 +145,8 @@ class ProductDetailScreen extends BaseView<ProductDetailBloc> {
                                   'Hạn sử dụng',
                                   style: TextStyle(fontSize: 14),
                                 ),
-                                controller: _bloc.expiryController,
-                                errorText: _bloc.expiryError, // Nếu có lỗi
+                                controller: bloc.expiryController,
+                                errorText: bloc.expiryError, // Nếu có lỗi
                               ),
                             ),
                           ),
@@ -164,10 +163,10 @@ class ProductDetailScreen extends BaseView<ProductDetailBloc> {
                                     prefixIcon: Icon(Icons.straighten),
                                     hintText: 'Kg',
                                     label: 'Đơn vị tính',
-                                    controller: _bloc.unitController,
-                                    node: _bloc.unitFocus,
+                                    controller: bloc.unitController,
+                                    node: bloc.unitFocus,
                                     onSubmitted: (p0) {},
-                                    errText: _bloc.unitError,
+                                    errText: bloc.unitError,
                                   ),
                                 ),
                                 Expanded(
@@ -176,22 +175,22 @@ class ProductDetailScreen extends BaseView<ProductDetailBloc> {
                                     width: width * 0.28,
                                     height: 60,
                                     child: Card(
-                                      color: toHexToColor(_bloc.color),
+                                      color: toHexToColor(bloc.color),
                                       child: InkWell(
                                         onTap: () async {
-                                          await _bloc.selectColor();
+                                          await bloc.selectColor();
                                         },
                                         child: Container(
                                           width: 20,
                                           height: 20,
                                           decoration: BoxDecoration(
-                                            color: toHexToColor(_bloc.color),
+                                            color: toHexToColor(bloc.color),
                                             shape: BoxShape.circle,
                                           ),
                                           child: Icon(
                                             Icons.color_lens,
-                                            color: _bloc.getOppositeColor(
-                                              _bloc.color,
+                                            color: bloc.getOppositeColor(
+                                              bloc.color,
                                             ),
                                           ),
                                         ),

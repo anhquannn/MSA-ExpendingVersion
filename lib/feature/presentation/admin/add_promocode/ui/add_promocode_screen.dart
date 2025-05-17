@@ -19,11 +19,11 @@ class AddPromoCodeScreen extends BaseView<AddPromoCodeBloc> {
   AddPromoCodeBloc createBloc() => AddPromoCodeBloc();
 
   Widget build(BuildContext context) {
-    final _bloc = (context as StatefulElement).state as AddPromoCodeBloc;
+    final bloc = (context as StatefulElement).state as AddPromoCodeBloc;
 
     return CustomScaffold(
       appBarGradient: false,
-      appBarLeading: iconBack(size: 25),
+      appBarLeading: iconBack(bloc.viewContext,size: 25),
       centerTitle: true,
       title: const AutoSizeText(
         'Thêm mã giảm giá',
@@ -47,39 +47,39 @@ class AddPromoCodeScreen extends BaseView<AddPromoCodeBloc> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       buildTextFieldCard(
-                        errText: _bloc.nameError,
-                        controller: _bloc.nameController,
-                        node: _bloc.nameFocusNode,
+                        errText: bloc.nameError,
+                        controller: bloc.nameController,
+                        node: bloc.nameFocusNode,
                         hintText: 'Tên sản phẩm khuyến mãi',
                         label: 'Tên sản phẩm',
                         onSubmitted:
-                            (val) => _bloc.onFieldSubmitted(
+                            (val) => bloc.onFieldSubmitted(
                               context,
-                              _bloc.nameFocusNode,
-                              _bloc.codeFocusNode,
+                              bloc.nameFocusNode,
+                              bloc.codeFocusNode,
                             ),
                       ),
                       buildTextFieldCard(
-                        errText: _bloc.codeError,
-                        controller: _bloc.codeController,
-                        node: _bloc.codeFocusNode,
+                        errText: bloc.codeError,
+                        controller: bloc.codeController,
+                        node: bloc.codeFocusNode,
                         hintText: 'WELCOME10',
                         label: 'Mã giảm giá',
                         onSubmitted:
-                            (val) => _bloc.onFieldSubmitted(
+                            (val) => bloc.onFieldSubmitted(
                               context,
-                              _bloc.codeFocusNode,
-                              _bloc.descFocusNode,
+                              bloc.codeFocusNode,
+                              bloc.descFocusNode,
                             ),
                       ),
                       buildTextFieldCard(
-                        errText: _bloc.descError,
-                        controller: _bloc.descController,
-                        node: _bloc.descFocusNode,
+                        errText: bloc.descError,
+                        controller: bloc.descController,
+                        node: bloc.descFocusNode,
                         hintText:
                             'Giảm 10% cho đơn hàng đầu tiên, áp dụng cho tất cả sản phẩm...',
                         label: 'Mô tả mã giảm giá',
-                        onSubmitted: (val) => _bloc.onCreatePromoCode(),
+                        onSubmitted: (val) => bloc.onCreatePromoCode(),
                         maxLines: 5,
                       ),
                       Padding(
@@ -88,8 +88,8 @@ class AddPromoCodeScreen extends BaseView<AddPromoCodeBloc> {
                           horizontal: 20,
                         ),
                         child: datePickerField(
-                          errorText: _bloc.startDateError,
-                          controller: _bloc.startDateController,
+                          errorText: bloc.startDateError,
+                          controller: bloc.startDateController,
                           context: context,
                           label: Text('Chọn ngày bắt đầu'),
                         ),
@@ -100,15 +100,15 @@ class AddPromoCodeScreen extends BaseView<AddPromoCodeBloc> {
                           horizontal: 20,
                         ),
                         child: datePickerField(
-                          errorText: _bloc.endDateError,
-                          controller: _bloc.endDateController,
+                          errorText: bloc.endDateError,
+                          controller: bloc.endDateController,
                           context: context,
                           label: Text('Chọn ngày kết thúc'),
                         ),
                       ),
                       SizedBox(height: 20),
                       ValueListenableBuilder<bool>(
-                        valueListenable: _bloc.isShowMockup,
+                        valueListenable: bloc.isShowMockup,
                         builder: (context, show, _) {
                           return show
                               ? SizedBox(
@@ -116,11 +116,11 @@ class AddPromoCodeScreen extends BaseView<AddPromoCodeBloc> {
                                 // width: AppSize.w(0.98),
                                 height: AppSize.h(0.2),
                                 child: customItemPromoCode(
-                                  code: _bloc.codeController.text,
-                                  content: _bloc.descController.text,
+                                  code: bloc.codeController.text,
+                                  content: bloc.descController.text,
                                   date:
-                                      '${_bloc.startDateController.text} - ${_bloc.endDateController.text}',
-                                  title: _bloc.nameController.text,
+                                      '${bloc.startDateController.text} - ${bloc.endDateController.text}',
+                                  title: bloc.nameController.text,
                                 ),
                               )
                               : SizedBox.shrink();
@@ -130,7 +130,7 @@ class AddPromoCodeScreen extends BaseView<AddPromoCodeBloc> {
                       Center(
                         child: customButton(
                           () {
-                            _bloc.validateForm();
+                            bloc.validateForm();
                           },
                           typeButton: 1,
                           AppSize.w(0.5),

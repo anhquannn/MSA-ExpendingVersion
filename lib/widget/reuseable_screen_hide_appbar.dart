@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../core/config/constant.dart';
 import '../core/utils/prarse_color.dart';
 
 class CustomScaffold extends StatefulWidget {
-  final Widget title;
+  final Widget? title;
   final Widget Function(ScrollController controller) bodyBuilder;
   final List<Widget>? appBarActions;
   final Widget? appBarLeading;
@@ -20,11 +19,13 @@ class CustomScaffold extends StatefulWidget {
   final bool centerTitle;
   final Widget? tabBar;
   final Widget? floatActionButton;
+  final bool? isHide;
 
   const CustomScaffold({
     super.key,
+    this.isHide = false,
     this.centerTitle = false,
-    required this.title,
+    this.title,
     required this.bodyBuilder,
     this.bottomBarItems,
     this.bottomBarItemsCustom,
@@ -99,63 +100,146 @@ class _CustomScaffoldState extends State<CustomScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    final double topPadding = MediaQuery.of(context).padding.top;
+
     return Scaffold(
+      extendBodyBehindAppBar: widget.isHide ?? false,
       extendBody: true,
+      backgroundColor: toHexToColor('#FFFFFF'),
       body: Container(
         decoration: BoxDecoration(color: toHexToColor(backgroundColor)),
-        child: Column(
+        child: Stack(
           children: [
-            _buildAnimatedAppBar(),
-            widget.tabBar ?? Container(),
-            Expanded(child: widget.bodyBuilder(_scrollController)),
+            // Main body content (dưới AppBar)
+            ValueListenableBuilder<bool>(
+              valueListenable: _isAppBarVisible,
+              builder: (context, isVisible, _) {
+                final double topPaddingValue =
+                    (isVisible && !(widget.isHide ?? false))
+                        ? kToolbarHeight + topPadding
+                        : 0.0;
+                return Padding(
+                  padding: EdgeInsets.only(top: topPaddingValue),
+                  child: Column(
+                    children: [
+                      if (widget.tabBar != null) widget.tabBar!,
+                      Expanded(child: widget.bodyBuilder(_scrollController)),
+                    ],
+                  ),
+                );
+              },
+            ),
+            // AppBar (luôn ở trên cùng)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _buildAnimatedAppBar(isHide: widget.isHide ?? false),
+            ),
           ],
         ),
       ),
-      backgroundColor: toHexToColor('#FFFFFF'),
-      bottomNavigationBar: ValueListenableBuilder<bool>(
-        valueListenable:
-            _isBottomBarVisible, // Lắng nghe sự thay đổi của _isBottomBarVisible
-        builder: (context, isVisible, _) {
-          return ValueListenableBuilder<int>(
-            valueListenable:
-                _selectIndex, // Lắng nghe sự thay đổi của _selectIndex
-            builder: (context, selectedIndex, _) {
-              return _isBottomBarVisible.value
-                  ? buildCustomBottomBarAnimation(
-                    isGradient: widget.bottomBarGradient,
-                    items: widget.bottomBarItemsCustom ?? [],
-                  )
-                  : Container();
-            },
-          );
-        },
-      ),
+      bottomNavigationBar:
+          (widget.bottomBarItems != null && widget.bottomBarItems!.isNotEmpty)
+              ? ValueListenableBuilder<bool>(
+                valueListenable: _isBottomBarVisible,
+                builder: (context, isVisible, _) {
+                  return ValueListenableBuilder<int>(
+                    valueListenable: _selectIndex,
+                    builder: (context, selectedIndex, _) {
+                      return isVisible
+                          ? customBottomBar(
+                            onTap: (index) {
+                              _selectIndex.value = index;
+                              widget.bottomBarItems![index].onTap(index);
+                            },
+                            items: widget.bottomBarItems!,
+                          )
+                          : const SizedBox.shrink();
+                    },
+                  );
+                },
+              )
+              : ValueListenableBuilder<bool>(
+                valueListenable: _isBottomBarVisible,
+                builder: (context, isVisible, _) {
+                  return ValueListenableBuilder<int>(
+                    valueListenable: _selectIndex,
+                    builder: (context, selectedIndex, _) {
+                      return isVisible
+                          ? buildCustomBottomBarAnimation(
+                            isGradient: widget.bottomBarGradient,
+                            items: widget.bottomBarItemsCustom ?? [],
+                          )
+                          : const SizedBox.shrink();
+                    },
+                  );
+                },
+              ),
       floatingActionButton: widget.floatActionButton,
     );
   }
 
-  Widget _buildAnimatedAppBar() {
+  Widget customBottomBar({
+    required ValueChanged<int> onTap,
+    required List<BottomBarItem> items,
+    Color backgroundColor = Colors.white,
+  }) {
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(
+        color: toHexToColor(appBarColor),
+        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+      ),
+      child: Row(
+        children: List.generate(items.length, (index) {
+          final item = items[index];
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                onTap(index);
+              },
+              child: Container(
+                alignment: Alignment.center,
+                child: Text(
+                  item.label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.white),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedAppBar({required bool isHide}) {
     final double appBarHeight =
-        kToolbarHeight + MediaQuery.of(context).padding.top;
+        isHide ? 0 : kToolbarHeight + MediaQuery.of(context).padding.top;
 
     return ValueListenableBuilder<bool>(
       valueListenable: _isAppBarVisible,
       builder: (context, isVisible, child) {
-        return AnimatedContainer(
+        return AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          height: isVisible ? appBarHeight : 0,
+          switchInCurve: Curves.easeInOut,
+          switchOutCurve: Curves.easeInOut,
           child:
-              _isAppBarVisible.value
-                  ? buildAppBar(
-                    centerTitle: widget.centerTitle,
-                    title: widget.title,
-                    leading: widget.appBarLeading,
-                    action: widget.appBarActions,
-                    textStyle: widget.appBarTextStyle,
-                    isGradient: widget.appBarGradient,
+              (isVisible && !isHide)
+                  ? SizedBox(
+                    height: appBarHeight,
+                    child: buildAppBar(
+                      isHide: isHide,
+                      centerTitle: widget.centerTitle,
+                      title: widget.title ?? const SizedBox(),
+                      leading: widget.appBarLeading,
+                      action: widget.appBarActions,
+                      textStyle: widget.appBarTextStyle,
+                      isGradient: widget.appBarGradient,
+                    ),
                   )
-                  : null,
+                  : const SizedBox.shrink(),
         );
       },
     );
@@ -168,46 +252,52 @@ class _CustomScaffoldState extends State<CustomScaffold> {
     List<Widget>? action,
     TextStyle? textStyle,
     required bool isGradient,
+    required bool isHide,
   }) {
-    return AppBar(
-      // backgroundColor: toHexToColor(backgroundColor),
-      backgroundColor: Colors.transparent,
-      title: title,
-      centerTitle: centerTitle,
-      leading: leading,
-      actions: action,
-      titleTextStyle: textStyle,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(30), // Bo tròn hai cạnh dưới
-        ),
+    return PreferredSize(
+      preferredSize:
+          isHide == false ? const Size.fromHeight(kToolbarHeight) : Size.zero,
+      child: AppBar(
+        backgroundColor:
+            isHide ? Colors.transparent : toHexToColor(appBarColor),
+        elevation: 0,
+        centerTitle: centerTitle,
+        leading: leading,
+        actions: action,
+        title: isHide ? Container() : title,
+        titleTextStyle: isHide ? null : textStyle,
+        toolbarHeight: kToolbarHeight,
+        flexibleSpace:
+            isHide
+                ? const SizedBox.shrink()
+                : Container(
+                  decoration: BoxDecoration(
+                    gradient:
+                        isGradient
+                            ? LinearGradient(
+                              colors: [
+                                toHexToColor(appBarColor),
+                                Colors.blueGrey,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                            : null,
+                    color: isGradient ? null : toHexToColor(appBarColor),
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(30),
+                    ),
+                  ),
+                ),
+        shape:
+            isHide
+                ? null
+                : const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(30),
+                  ),
+                ),
       ),
-      flexibleSpace:
-          isGradient
-              ? Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      toHexToColor(appBarColor),
-                      Colors.blueGrey,
-                      // toHexToColor(primaryButtonColor),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(30), // Đồng bộ với shape
-                  ),
-                ),
-              )
-              : Container(
-                decoration: BoxDecoration(
-                  color: toHexToColor(appBarColor),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(30), // Đồng bộ với shape
-                  ),
-                ),
-              ),
     );
   }
 
@@ -223,14 +313,12 @@ class _CustomScaffoldState extends State<CustomScaffold> {
       child:
           _isBottomBarVisible.value && items.isNotEmpty
               ? ValueListenableBuilder<int>(
-                valueListenable:
-                    _selectIndex, // Lắng nghe sự thay đổi của _selectIndex
+                valueListenable: _selectIndex,
                 builder: (context, selectedIndex, _) {
                   return CurvedNavigationBar(
                     color: toHexToColor(appBarColor),
                     backgroundColor: Colors.transparent,
-                    index:
-                        selectedIndex, // Cập nhật index khi _selectIndex thay đổi
+                    index: selectedIndex,
                     animationDuration: const Duration(milliseconds: 100),
                     items:
                         items
@@ -238,7 +326,7 @@ class _CustomScaffoldState extends State<CustomScaffold> {
                             .entries
                             .map(
                               (entry) => CurvedNavigationBarItem(
-                                child: entry.value.icon,
+                                child: entry.value.icon!,
                                 label: entry.value.label,
                                 labelStyle: const TextStyle(
                                   color: Colors.white,
@@ -260,9 +348,10 @@ class _CustomScaffoldState extends State<CustomScaffold> {
 }
 
 class BottomBarItem {
-  final Widget icon;
+  final Widget? icon;
   final String label;
   final Function(int index) onTap;
+  final bool isSelected;
 
-  BottomBarItem({required this.icon, required this.label, required this.onTap});
+  BottomBarItem({this.icon, required this.label, required this.onTap, this.isSelected = false});
 }

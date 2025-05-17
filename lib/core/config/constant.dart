@@ -1,8 +1,48 @@
 /// API Connection
-final String urlConnection = '';
+final String urlConnection = 'http://192.168.100.196:1081/msa/api/';
 final String urlSupabase = 'https://lmtqwglnnbgsrxhelpxz.supabase.co';
 final String anonKey =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtdHF3Z2xubmJnc3J4aGVscHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3MTI1NzIsImV4cCI6MjA2MTI4ODU3Mn0.5D6-g10oFKgB5eJw7jbJPGtOsr2BmrYnm5pTpfjA_J0';
+
+///API ENDPOINTS
+//USER
+final String register='user/register';
+final String login='user/login';
+final String verifyOtp='user/verify-otp';
+final String resetPass='user/reset-password';
+final String resetPassWithoutOtp='user/reset-password/';
+final String updateUser='user/';
+final String deleteUser='user/';
+final String getUserByEmail='user/email/';//user/email/{email}
+
+// PRODUCT
+final String getAllProducts='product';//product?page=1&pageSize=10
+final String filterAndSortProducts='product/filter';//product/filter?minPrice=100&maxPrice=500&color=red&categoryId=2&page=1&pageSize=10
+final String getAllProductsInBranch='product/branch/';//product/branch/1?page=1&size=10&sortBy=price&sortDirection=desc
+final String searchProductsInBranch='product/branch/';//product/branch/10/search?keyword=phone&minPrice=100&maxPrice=500&color=black&page=1&pageSize=15&sortBy=price&sortDirection=desc
+final String getProductById='product/';//product/1
+final String searchProducts='product/search';//product/search?keyword=smartphone&minPrice=200&maxPrice=1000&color=red&categoryId=5&manufacturerId=3&page=2&pageSize=20&sortBy=price&sortDirection=desc
+final String createProduct='product';
+final String updateProduct='product/';
+final String deleteProduct='product/';
+
+//MANUFACTURER
+
+//CATEGORY
+final String getAllCategories='category';//category?page=1&pageSize=10
+final String getCategoryById='category/';
+final String createCategory='category';
+final String deleteCategory='category/';
+final String updateCategory='category/';
+
+//PROMOCODE
+final String getAllPromoCode='promo-code';//promo-code?page=1&pageSize=10
+final String getPromoCodeById='promo-code/';
+final String createPromoCode='promo-code';  
+final String updatePromoCode='promo-code/';
+final String deletePromoCode='promo-code/';
+
+
 
 /// SECURE STORAGE
 final String accessToken = 'ACCESS_TOKEN';
@@ -47,6 +87,7 @@ final String primaryColorPurple = '#BF83FF';
 final String secondaryColorPurple = '#F3E8FF';
 
 final String actionColor = '#1EBD58';
+final String secondaryActionColor='#D6EDE1';
 
 ///Image
 final String welcome1 = 'assets/images/welcome1.png';
@@ -102,3 +143,4 @@ final String avtAdmin = 'assets/images/avt_admin.jpg';
 final String avtManager = 'assets/images/avt_manager.jpg';
 
 final String imgBranch = 'assets/images/img_branch.png';
+final String imgProductDefault = 'https://lmtqwglnnbgsrxhelpxz.supabase.co/storage/v1/object/sign/msa/715ddffcb1448a27614572608ab8b6e5.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5XzE5ZTM1ODc1LTdlODYtNDljMy1iOWE3LTQ5OWQ5MGRkOTk3MyJ9.eyJ1cmwiOiJtc2EvNzE1ZGRmZmNiMTQ0OGEyNzYxNDU3MjYwOGFiOGI2ZTUuanBnIiwiaWF0IjoxNzQ3NDgyNzk2LCJleHAiOjE3NzkwMTg3OTZ9.tDTHIEe7SvgaKbuftP9MlsjONd4XULSlWdS9GjDMFlo';

@@ -9,8 +9,6 @@ import 'package:msa/widget/custom_textfield.dart';
 import 'package:msa/widget/custom_widget.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 
-import '../../../../../widget/custom_dialog.dart';
-import '../../../../../widget/widget_promo_code.dart';
 import '../bloc/add_category_bloc.dart';
 
 class AddCategoryScreen extends BaseView<AddCategoryBloc> {
@@ -20,11 +18,11 @@ class AddCategoryScreen extends BaseView<AddCategoryBloc> {
   AddCategoryBloc createBloc() => AddCategoryBloc();
 
   Widget build(BuildContext context) {
-    final _bloc = (context as StatefulElement).state as AddCategoryBloc;
+    final bloc = (context as StatefulElement).state as AddCategoryBloc;
 
     return CustomScaffold(
       appBarGradient: false,
-      appBarLeading: iconBack(size: 25),
+      appBarLeading: iconBack(bloc.viewContext,size: 25),
       centerTitle: true,
       title: const AutoSizeText(
         'Thêm loại sản phẩm',
@@ -48,27 +46,27 @@ class AddCategoryScreen extends BaseView<AddCategoryBloc> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       buildTextFieldCard(
-                        errText: _bloc.nameError,
-                        controller: _bloc.nameController,
-                        node: _bloc.nameFocusNode,
+                        errText: bloc.nameError,
+                        controller: bloc.nameController,
+                        node: bloc.nameFocusNode,
                         hintText: 'Sữa tươi',
                         label: 'Tên loại sản phẩm',
                         onSubmitted:
-                            (val) => _bloc.onFieldSubmitted(
+                            (val) => bloc.onFieldSubmitted(
                               context,
-                              _bloc.nameFocusNode,
-                              _bloc.descFocusNode,
+                              bloc.nameFocusNode,
+                              bloc.descFocusNode,
                             ),
                       ),
 
                       buildTextFieldCard(
-                        errText: _bloc.descError,
-                        controller: _bloc.descController,
-                        node: _bloc.descFocusNode,
+                        errText: bloc.descError,
+                        controller: bloc.descController,
+                        node: bloc.descFocusNode,
                         hintText:
                             'Sản phẩm sữa tươi tiệt trùng, giàu dinh dưỡng, dùng cho mọi lứa tuổi.',
                         label: 'Mô tả',
-                        onSubmitted: (val) => _bloc.onCreatePromoCode(),
+                        onSubmitted: (val) => bloc.onCreatePromoCode(),
                         maxLines: 5,
                       ),
                       SizedBox(height: 20),
@@ -77,7 +75,7 @@ class AddCategoryScreen extends BaseView<AddCategoryBloc> {
                           elevation: 3,
                           child: customButton(
                             () {
-                              _bloc.validateForm();
+                              bloc.validateForm();
                             },
                             typeButton: 1,
                             AppSize.w(0.5),

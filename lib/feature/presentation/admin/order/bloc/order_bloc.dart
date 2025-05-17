@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:msa/core/config/base_bloc.dart';
 import '../ui/order_screen.dart';
 

@@ -20,7 +20,7 @@ class InventoryInScreen extends BaseView<InventoryInBloc> {
   InventoryInBloc createState() => InventoryInBloc();
 
   Widget build(BuildContext context) {
-    final _bloc = (context as StatefulElement).state as InventoryInBloc;
+    final bloc = (context as StatefulElement).state as InventoryInBloc;
     final List<String> mockData = [
       '123 Cho Lon',
       '123 Ho Chi Minh',
@@ -28,7 +28,7 @@ class InventoryInScreen extends BaseView<InventoryInBloc> {
     ];
     return CustomScaffold(
       appBarGradient: false,
-      appBarLeading: iconBack(size: 25),
+      appBarLeading: iconBack(bloc.viewContext,size: 25),
       centerTitle: true,
       title: Column(
         mainAxisSize: MainAxisSize.min,
@@ -110,9 +110,9 @@ class InventoryInScreen extends BaseView<InventoryInBloc> {
                             items: mockData,
                             hint: '',
                             onChanged: (value) {
-                              _bloc.onSelect(value!);
+                              bloc.onSelect(value!);
                             },
-                            selectedItem: _bloc.selectItem,
+                            selectedItem: bloc.selectItem,
                           ),
                         ),
                       ),
@@ -159,7 +159,7 @@ class InventoryInScreen extends BaseView<InventoryInBloc> {
                   child: customItemInventory(
                     () {}, // hàm click
                     () {}, // hàm edit
-                    _bloc.controller,
+                    bloc.controller,
                     'Cai',
                     () {}, // tùy thêm logic
                   ),
@@ -169,35 +169,35 @@ class InventoryInScreen extends BaseView<InventoryInBloc> {
                   isLow: true,
                   () {},
                   () {},
-                  _bloc.controller,
+                  bloc.controller,
                   'Cai',
                   () {},
                 ),
                 customItemInventory(
                   () {},
                   () {},
-                  _bloc.controller,
+                  bloc.controller,
                   'Cai',
                   () {},
                 ),
                 customItemInventory(
                   () {},
                   () {},
-                  _bloc.controller,
+                  bloc.controller,
                   'Cai',
                   () {},
                 ),
                 customItemInventory(
                   () {},
                   () {},
-                  _bloc.controller,
+                  bloc.controller,
                   'Cai',
                   () {},
                 ),
                 customItemInventory(
                   () {},
                   () {},
-                  _bloc.controller,
+                  bloc.controller,
                   'Cai',
                   () {},
                 ),

@@ -1,7 +1,4 @@
-import 'dart:math';
-import 'dart:ui';
 
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/config.dart';
@@ -16,17 +13,17 @@ import '../bloc/admin_notification_bloc.dart';
 class AdminNotificationScreen extends BaseView<AdminNotificationBloc> {
   final bool? isManager;
 
-  AdminNotificationScreen({super.key, this.isManager});
+  const AdminNotificationScreen({super.key, this.isManager});
 
   @override
   AdminNotificationBloc createBloc() => AdminNotificationBloc();
 
   Widget build(BuildContext context) {
-    final _bloc = (context as StatefulElement).state as AdminNotificationBloc;
+    final bloc = (context as StatefulElement).state as AdminNotificationBloc;
 
     return CustomScaffold(
       appBarGradient: false,
-      appBarLeading: iconBack(size: 25),
+      appBarLeading: iconBack(bloc.viewContext,size: 25),
       centerTitle: true,
       title: Text(
         'Thông báo',

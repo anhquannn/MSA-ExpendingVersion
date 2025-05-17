@@ -1,18 +1,59 @@
+
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:msa/feature/domain/entities/product_model.dart';
 import '../core/config/config.dart' as Config;
 import '../core/config/constant.dart';
 import '../core/utils/prarse_color.dart';
 
-// TODO: Custom Icon quay lại
-Widget iconBack({double? size}) {
+  Widget customTextSpan(String title, String body, TextStyle primaryStyle, TextStyle? secondaryStyle) {
+    return RichText(
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: title,
+            style: primaryStyle,
+          ),
+          TextSpan(
+            text: body,
+            style: secondaryStyle,
+          ),
+        ],
+      ),
+    );
+  }
+
+Widget iconBack(BuildContext context,{double? size, Color? color, }) {
   return InkWell(
     onTap: () {
-      Navigator.of(Config.context, rootNavigator: true).pop();
+      Navigator.of(context, rootNavigator: true).pop();
     },
-    child: Icon(Icons.arrow_back_ios, color: Colors.white, size: size),
+    child: Icon(Icons.arrow_back_ios, color: color ?? Colors.white, size: size),
   );
+}
+
+Widget buildStarRating({
+  required double rating, // ví dụ: 4.8
+  Color color = Colors.amber, // màu sao mặc định
+  double size = 20.0, // kích thước sao mặc định
+  Color backgroundColor = Colors.grey, // màu sao rỗng
+}) {
+  List<Widget> stars = [];
+
+  for (int i = 0; i < 5; i++) {
+    if (i < rating.floor()) {
+      // Sao đầy
+      stars.add(Icon(Icons.star, color: color, size: size));
+    } else if (i < rating && rating - i < 1) {
+      // Sao nửa
+      stars.add(Icon(Icons.star_half, color: color, size: size));
+    } else {
+      // Sao rỗng
+      stars.add(Icon(Icons.star_border, color: backgroundColor, size: size));
+    }
+  }
+
+  return Row(mainAxisSize: MainAxisSize.min, children: stars);
 }
 
 Widget buildIconButton({
@@ -93,7 +134,11 @@ Widget customAutoSizeText(
   );
 }
 
-Widget customItemProductCustomer(double width, {bool? isDiscount = false}) {
+Widget customItemProductCustomer(
+  ProductModel model,
+  width, {
+  bool? isDiscount = false,
+}) {
   return Card(
     color: Colors.white,
     child: Container(
@@ -122,17 +167,25 @@ Widget customItemProductCustomer(double width, {bool? isDiscount = false}) {
                     width: width,
                     height: 150,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(
+                      borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(10),
                         topRight: Radius.circular(10),
                       ),
-                      image: DecorationImage(
-                        image: AssetImage(imgCategoryBotGiat),
-                        fit: BoxFit.cover, // Quan trọng để ảnh chiếm toàn bộ
-                      ),
+                    ),
+                    clipBehavior: Clip.hardEdge, // Đảm bảo ảnh bo góc
+                    child: Image.network(
+                      model.images ?? imgProductDefault,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Image.network(
+                          imgProductDefault,
+                          fit: BoxFit.cover,
+                        );
+                      },
                     ),
                   ),
                 ),
+
                 // Thẻ giảm giá
                 isDiscount == true
                     ? Positioned(
@@ -149,7 +202,9 @@ Widget customItemProductCustomer(double width, {bool? isDiscount = false}) {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            '-10%',
+                            model.currentPrice != null
+                                ? '${((model.price! - model.currentPrice!) / model.price! * 100).toStringAsFixed(0)}%'
+                                : 'Giảm giá',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -163,9 +218,8 @@ Widget customItemProductCustomer(double width, {bool? isDiscount = false}) {
               ],
             ),
           ),
-
           Container(
-            height: 80,
+            height: 100,
             decoration: BoxDecoration(
               color: Color(0xFFE6F4EA), // Xanh lá nhạt tươi sáng
             ),
@@ -174,22 +228,28 @@ Widget customItemProductCustomer(double width, {bool? isDiscount = false}) {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AutoSizeText(
-                  'Dưa lưới',
+                  model.name ?? '',
                   minFontSize: 14,
                   maxFontSize: 18,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
+                isDiscount == true
+                    ? AutoSizeText(
+                      model.price != null
+                          ? '${model.price}đ'
+                          : 'Giá chưa cập nhật',
+                      minFontSize: 10,
+                      maxFontSize: 14,
+                      style: TextStyle(
+                        color: Color(0xFF888888),
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    )
+                    : Container(),
                 AutoSizeText(
-                  '100.000đ',
-                  minFontSize: 10,
-                  maxFontSize: 14,
-                  style: TextStyle(
-                    color: Color(0xFF888888),
-                    decoration: TextDecoration.lineThrough,
-                  ),
-                ),
-                AutoSizeText(
-                  '90.000đ',
+                  model.currentPrice != null
+                      ? '${model.currentPrice}đ'
+                      : 'Giá chưa cập nhật',
                   minFontSize: 12,
                   maxFontSize: 16,
                   style: TextStyle(

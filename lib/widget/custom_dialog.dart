@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:msa/core/config/constant.dart';
-import 'package:msa/core/utils/prarse_color.dart';
 
 import '../core/config/config.dart';
 
@@ -124,10 +122,10 @@ Widget datePickerField({
   Color borderColor = Colors.blue, // Màu mặc định của border
   bool? isPrefix = false,
 }) {
-  final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
+  final DateFormat dateFormat = DateFormat('dd/MM/yyyy');
 
   // Hàm chọn ngày
-  Future<void> _pickDate() async {
+  Future<void> pickDate() async {
     final DateTime now = DateTime.now();
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -153,14 +151,14 @@ Widget datePickerField({
     );
 
     if (picked != null) {
-      final String formatted = _dateFormat.format(picked);
+      final String formatted = dateFormat.format(picked);
       controller.text =
           formatted; // Cập nhật giá trị ngày vào TextEditingController
     }
   }
 
   return GestureDetector(
-    onTap: _pickDate,
+    onTap: pickDate,
     child: SizedBox(
       height:
           errorText == null

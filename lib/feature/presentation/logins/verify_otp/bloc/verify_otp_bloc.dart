@@ -1,7 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:msa/core/config/base_bloc.dart';
-import '../../welcom/welcom1.dart';
+import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import '../../../../domain/usecase/user_use_case.dart';
 import '../ui/verify_otp_screen.dart';
 
 class VerifyOtpBloc extends BaseBloc<VerifyOtpScreen> {
@@ -13,16 +16,13 @@ class VerifyOtpBloc extends BaseBloc<VerifyOtpScreen> {
   bool isKeyboardVisible = false;
 
   bool isValid = false;
+  final UserUseCases _userUseCases = GetIt.I<UserUseCases>();
 
   @override
   void onInit() {}
 
   @override
   void onDispose() {
-    for (var node in focusNodes) {
-      node.dispose();
-    }
-    super.dispose();
   }
 
   @override
@@ -50,16 +50,20 @@ class VerifyOtpBloc extends BaseBloc<VerifyOtpScreen> {
     FocusScope.of(context).requestFocus(focusNodes[index]);
   }
 
-  void onOtpSubmit() {
+  Future<bool> onOtpSubmit(BuildContext context) async {
+    bool isSuccess = false;
     String otp = controllers.map((controller) => controller.text).join();
+
     if (otp.length < 6) {
       isValid = true;
-    } else {
-      isValid = false;
+      setState(() {});
+      return false;
     }
-    setState(() {});
+    if(otp==HttpConnection.otp){
+      context.push('/login');
+    }
+    return isSuccess;
   }
-
   void onHide() {
     setState(() {
       isKeyboardVisible = false;

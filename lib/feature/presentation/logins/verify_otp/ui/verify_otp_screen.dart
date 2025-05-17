@@ -1,5 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:msa/core/config/base_bloc.dart';
 import '../../../../../core/config/config.dart';
 import '../../../../../core/config/constant.dart';
@@ -15,6 +16,13 @@ class VerifyOtpScreen extends BaseView<VerifyOtpBloc> {
   Widget build(BuildContext context) {
     final bloc = (context as StatefulElement).state as VerifyOtpBloc;
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        leading: InkWell(onTap: () {
+        context.pop();
+      },
+      child: Icon(Icons.arrow_back_ios_new,color: Colors.white,),
+      ),),
       backgroundColor: toHexToColor(actionColor),
       body: Center(
         child: SingleChildScrollView(
@@ -119,7 +127,8 @@ class VerifyOtpScreen extends BaseView<VerifyOtpBloc> {
               if (bloc.isKeyboardVisible) ...[
                 Container(
                   width: AppSize.w(0.85),
-                  height: 300,
+                  // height: 300,
+                  // height: 300,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(10),
@@ -308,30 +317,57 @@ class VerifyOtpScreen extends BaseView<VerifyOtpBloc> {
                               ),
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: InkWell(
-                              onTap: () {
-                                bloc.onHide();
-                                bloc.onOtpSubmit();
-                              },
-                              child: Container(
-                                width: AppSize.w(0.22),
-                                height: AppSize.w(0.15),
-                                decoration: BoxDecoration(
-                                  color: toHexToColor(borderColor),
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    Icons.arrow_forward,
-                                    color: toHexToColor(primaryTextColor),
-                                    size: 24,
+
+                          Builder(builder: (ctx) {
+                            return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: InkWell(
+                                onTap: () async{
+                                  await bloc.onOtpSubmit(ctx);
+//                                   bool isSuccess=false;
+//                                   bloc.onHide();
+//                                   await showLoadingDialog(context: context,action: () async {
+//                                     isSuccess=await bloc.onOtpSubmit();
+//                                   },);
+// //minhquang03082003@gmail.com
+//                                   if(isSuccess){
+//                                     Navigator.pop(ctx);
+//                                     context.go('/login');
+//                                   }else{
+//                                     showDialog(
+//                                       context: ctx,
+//                                       builder: (_) => AlertDialog(
+//                                         title: const Text('Đăng nhập thất bại'),
+//                                         content: const Text('Email hoặc mật khẩu không đúng.'),
+//                                         actions: [
+//                                           TextButton(
+//                                             onPressed: () => Navigator.of(ctx).pop(),
+//                                             child: const Text('OK'),
+//                                           ),
+//                                         ],
+//                                       ),
+//                                     );
+//                                   }
+                                },
+                                child: Container(
+                                  width: AppSize.w(0.22),
+                                  height: AppSize.w(0.15),
+                                  decoration: BoxDecoration(
+                                    color: toHexToColor(borderColor),
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.arrow_forward,
+                                      color: toHexToColor(primaryTextColor),
+                                      size: 24,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
+                            );
+                          },),
+
                         ],
                       ),
                     ],

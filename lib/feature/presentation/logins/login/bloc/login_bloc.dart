@@ -1,15 +1,20 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:msa/core/config/base_bloc.dart';
-import '../../welcom/welcom1.dart';
+import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import 'package:msa/feature/data/model/request/user_login_request.dart';
+import 'package:msa/feature/presentation/logins/forgot_pasword/ui/forgot_password_screen.dart';
+import 'package:msa/feature/presentation/logins/register/ui/register_screen.dart';
+import '../../../../domain/usecase/user_use_case.dart';
 import '../ui/login_screen.dart';
 
 class LoginBloc extends BaseBloc<LoginScreen> {
   final FocusNode emailNode = FocusNode();
   final FocusNode passwordNode = FocusNode();
-
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  final UserUseCases _userUseCases = GetIt.I<UserUseCases>();
 
   bool isValidPassword = false;
   bool isValidEmail = false;
@@ -17,8 +22,16 @@ class LoginBloc extends BaseBloc<LoginScreen> {
   String validPassword = '';
   String validEmail = '';
 
+  bool? isSuccess = false;
+
+  // Override contextKey để đảm bảo nhận dạng đúng context của LoginScreen
   @override
-  void onInit() {}
+  String get contextKey => 'LoginScreen';
+
+  @override
+  void onInit() {
+    // Gọi khi khởi tạo bloc
+  }
 
   @override
   void onDispose() {
@@ -28,26 +41,39 @@ class LoginBloc extends BaseBloc<LoginScreen> {
     passwordNode.dispose();
   }
 
-  void login() {
-    final email = validateEmail(emailController.text);
-    final password = validatePassword(passwordController.text);
-    setState(() {});
-    if (email && password) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => OnboardingScreen()),
-      );
+  Future<bool> login() async {
+    final email = emailController.text;
+    final password = passwordController.text;
+
+    final isEmailValid = validateEmail(email);
+    final isPasswordValid = validatePassword(password);
+
+    if (!isEmailValid || !isPasswordValid) {
+      viewSetState(() {});
+      return false;
     }
+
+    isSuccess = await _userUseCases.login.call(
+      UserLoginRequest(email: email, password: password),
+    );
+
+    HttpConnection.email = email;
+    viewSetState(() {});
+    return isSuccess == true;
   }
 
   void forgotPassword() {
-    print("Quên mật khẩu");
-    // TODO: Viết logic forgot password
+    Navigator.push(
+      viewContext,
+      MaterialPageRoute(builder: (viewContext) => const ForgotPasswordScreen()),
+    );
   }
 
-  void createUser() {
-    print("Tạo tài khoản mới");
-    // TODO: Viết logic tạo tài khoản
+  void onRegister() {
+    Navigator.push(
+      viewContext,
+       MaterialPageRoute(builder: (viewContext) => const RegisterScreen()),
+    );
   }
 
   void loginWithGoogle() {
@@ -88,7 +114,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
       validPassword = 'Mật khẩu không được để trống';
       return false;
     }
-    if (value.length < 6) {
+    if (value.length < 2) {
       isValidPassword = true;
       validPassword = 'Mật khẩu phải lớn hơn 6 ký tự';
       return false;
@@ -99,7 +125,25 @@ class LoginBloc extends BaseBloc<LoginScreen> {
 
   void obscurePassword(bool value) {
     isShowPass = value;
-    setState(() {});
+    // Sử dụng viewSetState thay vì setState để cập nhật UI
+    viewSetState(() {});
+  }
+
+  // Hàm tiện ích để hiển thị thông báo từ bất kỳ đâu
+  void showErrorMessage(String message) {
+    ScaffoldMessenger.of(
+      viewContext,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  // Hàm tiện ích để truy cập từ bên ngoài
+  static void showLoginError(String message) {
+    final context = AppContext.of('LoginScreen');
+    if (context != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   @override

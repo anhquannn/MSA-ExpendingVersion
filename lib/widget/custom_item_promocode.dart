@@ -1,13 +1,14 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:msa/core/config/config.dart';
+import 'package:msa/feature/domain/entities/promo_code_model.dart';
 
 import '../core/config/constant.dart';
 import '../core/utils/prarse_color.dart';
 import 'custom_widget.dart';
 
 Widget customItemPromoCode(
+  PromoCodeModel model,
   VoidCallback onUpdate,
   VoidCallback onDelete, {
   bool isShow = true,
@@ -19,7 +20,7 @@ Widget customItemPromoCode(
     padding: const EdgeInsets.only(bottom: 5),
     child: SizedBox(
       width: width,
-      // height: height,
+      height: 300,
       child: Card(
         color: Colors.white,
         elevation: 3,
@@ -46,7 +47,7 @@ Widget customItemPromoCode(
                 padding: const EdgeInsets.all(5.0),
                 child: Center(
                   child: AutoSizeText(
-                    'Mã giảm giá 01',
+                    model.name ?? '',
                     minFontSize: 16,
                     maxFontSize: 24,
                     style: TextStyle(
@@ -60,7 +61,7 @@ Widget customItemPromoCode(
                 padding: const EdgeInsets.all(5.0),
                 child: Center(
                   child: AutoSizeText(
-                    'Giảm 40% cho sản phẩm đầu tiên bạn mua.Giảm 40% cho sản phẩm đầu tiên bạn mua.Giảm 40% cho sản phẩm đầu tiên bạn mua.',
+                    model.description ?? '',
                     minFontSize: 14,
                     maxFontSize: 20,
                     overflow: TextOverflow.ellipsis,
@@ -72,7 +73,7 @@ Widget customItemPromoCode(
                 ),
               ),
               Spacer(),
-              buildBottomInfo(() {}, () {}, width, isShow),
+              buildBottomInfo(model,() {}, () {}, width, isShow),
             ],
           ),
         ),
@@ -82,6 +83,7 @@ Widget customItemPromoCode(
 }
 
 Widget buildBottomInfo(
+  PromoCodeModel model,
   VoidCallback onDelete,
   VoidCallback onUpdate,
   double width,
@@ -106,7 +108,7 @@ Widget buildBottomInfo(
             width: isShow ? width * 0.3 : width * 0.2,
             color: toHexToColor(primaryColorOrange),
             label: AutoSizeText(
-              'MAGIAM01',
+              model.code ?? '',
               maxLines: 1,
               softWrap: true,
               overflow: TextOverflow.ellipsis,
@@ -115,17 +117,18 @@ Widget buildBottomInfo(
             isBold: true,
           ),
           SizedBox(width: 10),
+          model.startDate!=''?
           buildInfoContainer(
             width: width * 0.4,
             color: toHexToColor(primaryColorPurple),
             label: AutoSizeText(
-              '10/10/2020 - 10/10/2021',
+              '${model.startDate ?? DateTime.now()} - ${model.endDate ?? DateTime.now() }',
               maxLines: 1,
               softWrap: true,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: Colors.white),
             ),
-          ),
+          ):SizedBox.shrink(),
           if (isShow == false) ...[
             Spacer(),
             buildIconButton(

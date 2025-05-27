@@ -1,6 +1,7 @@
 package com.market.MSA.repositories.order;
 
 import com.market.MSA.models.order.Order;
+import com.market.MSA.models.product.Branch;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
   // Tham chiếu đến thuộc tính user của Order để tìm theo số điện thoại
   Page<Order> findByUser_PhoneNumber(String phoneNumber, Pageable pageable);
+
+  Page<Order> findByStatus(String status, Pageable pageable);
+
+  Page<Order> findByStatusAndBranch_BranchId(String status, Long branchId, Pageable pageable);
 
   @Query("SELECT o FROM Order o WHERE o.branch.branchId = :branchId")
   Page<Order> findByBranch_BranchId(@Param("branchId") Long branchId, Pageable pageable);
@@ -59,4 +64,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND o.branch.branchId = :branchId AND o.user.userId = :userId")
   Double calculateYearlyRevenueByBranchAndUser(
       @Param("year") int year, @Param("branchId") Long branchId, @Param("userId") Long userId);
+
+  Long branch(Branch branch);
 }

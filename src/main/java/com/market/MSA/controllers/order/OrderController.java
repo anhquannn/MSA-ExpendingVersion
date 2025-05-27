@@ -73,7 +73,8 @@ public class OrderController {
 
   @GetMapping("/search")
   public ApiResponse<List<OrderResponse>> searchOrdersByPhoneNumber(
-      String phoneNumber, int page, int pageSize) {
+      String phoneNumber,  @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int pageSize) {
     return ApiResponse.<List<OrderResponse>>builder()
         .result(orderService.searchOrderByPhoneNumber(phoneNumber, page, pageSize))
         .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
@@ -82,11 +83,26 @@ public class OrderController {
 
   @GetMapping("/user/{userId}/status/{status}")
   public ApiResponse<List<OrderResponse>> getOrdersByUserIdAndStatus(
-      @PathVariable Long userId, @PathVariable String status, int page, int pageSize) {
+      @PathVariable Long userId, @PathVariable String status,  @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int pageSize) {
     return ApiResponse.<List<OrderResponse>>builder()
         .result(orderService.getOrdersByUserIDWithStatus(userId, status, page, pageSize))
         .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
         .build();
+  }
+
+  @GetMapping("/branch/{branchId}/status/{status}")
+  public ApiResponse<Page<OrderResponse>> getOrdersByStatusAndBranchId(
+          @RequestParam(defaultValue = "0") int page,
+          @RequestParam(defaultValue = "10") int pageSize,
+          @PathVariable String status,
+          @RequestParam(defaultValue = "orderDate") String sortBy,
+          @RequestParam(defaultValue = "desc") String sortDirection,
+          @PathVariable(required = false) Long branchId) {
+    return ApiResponse.<Page<OrderResponse>>builder()
+            .result(orderService.getAllOrdersByStatus(page, pageSize,status, sortBy, sortDirection, branchId))
+            .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
+            .build();
   }
 
   @GetMapping("/preview")

@@ -221,6 +221,28 @@ public class OrderService {
         .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
   }
 
+  public Page<OrderResponse> getAllOrdersByStatus(
+          int page,
+          int size,
+          String status,
+          String sortBy,
+          String sortDirection,
+          Long branchId // có thể null
+  ) {
+    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
+    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+    Page<Order> orders;
+
+    if (branchId != null) {
+      orders = orderRepository.findByStatusAndBranch_BranchId(status, branchId, pageable);
+    } else {
+      orders = orderRepository.findByStatus(status, pageable);
+    }
+
+    return orders.map(orderMapper::toOrderResponse);
+  }
+
   public List<OrderResponse> searchOrderByPhoneNumber(String phoneNumber, int page, int pageSize) {
     Page<Order> orderPage =
         orderRepository.findByUser_PhoneNumber(phoneNumber, PageRequest.of(page, pageSize));

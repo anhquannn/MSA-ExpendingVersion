@@ -6,7 +6,6 @@ import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.OrderSummaryResponse;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.services.order.OrderService;
-import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -32,17 +31,18 @@ public class OrderController {
   OrderService orderService;
 
   @PostMapping
-  public ApiResponse<OrderResponse> createOrder(@RequestBody @Valid OrderRequest request)
-      throws MessagingException {
+  public ApiResponse<OrderResponse> createOrder(@RequestBody @Valid OrderRequest request) {
+    OrderResponse response = orderService.createOrder(request.getUserId(),
+            request.getBranchId(),
+            request.getCartId(),
+            request.getPromoCodes());
+
+    orderService.sendRecipe(response.getOrderId(), response.getUser().getEmail());
+
     return ApiResponse.<OrderResponse>builder()
-        .result(
-            orderService.createOrder(
-                request.getUserId(),
-                request.getBranchId(),
-                request.getCartId(),
-                request.getPromoCodes()))
-        .message(ApiMessage.ORDER_CREATED.getMessage())
-        .build();
+            .result(response)
+            .message(ApiMessage.ORDER_CREATED.getMessage())
+            .build();
   }
 
   @PutMapping("/{orderId}")

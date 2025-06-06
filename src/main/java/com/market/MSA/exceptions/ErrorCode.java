@@ -72,7 +72,7 @@ public enum ErrorCode {
 
   INSUFFICIENT_POINTS(150, "Insufficient points", HttpStatus.BAD_REQUEST),
   PAYMENT_ERROR(151, "Payment error", HttpStatus.INTERNAL_SERVER_ERROR),
-  ;
+    INVALID_OTP(152,"Invalid or Expired OTP" , HttpStatus.BAD_REQUEST ),;
 
   private final int code;
   private final String message;

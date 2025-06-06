@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.user;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.models.user.User;
 import com.market.MSA.requests.user.*;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.user.AuthenticationResponse;
@@ -12,6 +13,8 @@ import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import java.text.ParseException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -46,12 +49,14 @@ public class UserController {
   }
 
   @PostMapping("/login")
-  ApiResponse<String> login(@RequestBody @Valid AuthenticationRequest requests)
-      throws MessagingException {
-    return ApiResponse.<String>builder()
-        .result(userService.login(requests.getEmail(), requests.getPassword()))
-        .message(ApiMessage.USER_LOGGED_IN.getMessage())
-        .build();
+  public ApiResponse<UserResponse> login(@RequestBody @Valid AuthenticationRequest request) {
+    UserResponse userResponse = userService.validateCredentials(request);
+    CompletableFuture.runAsync(() -> userService.sendLoginOtp(request.getEmail()));
+
+    return ApiResponse.<UserResponse>builder()
+            .result(userResponse)
+            .message(ApiMessage.USER_LOGGED_IN.getMessage())
+            .build();
   }
 
   @PostMapping("/verify-otp")
@@ -63,12 +68,25 @@ public class UserController {
   }
 
   @PostMapping("/reset-password")
-  ApiResponse<String> resetPassword(@RequestBody @Valid UserRequest requests)
-      throws MessagingException {
-    return ApiResponse.<String>builder()
-        .result(userService.resetPassword(requests.getEmail()))
+  ApiResponse<UserResponse> resetPassword(@RequestBody @Valid AuthenticationRequest request) {
+    UserResponse userResponse = userService.existsByEmail(request.getEmail());
+    CompletableFuture.runAsync(() -> userService.sendLoginOtp(request.getEmail()));
+
+    return ApiResponse.<UserResponse>builder()
+        .result(userResponse)
         .message(ApiMessage.PASSWORD_RESET.getMessage())
         .build();
+  }
+
+  @PostMapping("/resend")
+  ApiResponse<UserResponse> resendOtp(@RequestBody @Valid AuthenticationRequest request) {
+    UserResponse userResponse = userService.existsByEmail(request.getEmail());
+    CompletableFuture.runAsync(() -> userService.resendOTP(request.getEmail()));
+
+    return ApiResponse.<UserResponse>builder()
+            .result(userResponse)
+            .message(ApiMessage.PASSWORD_RESET.getMessage())
+            .build();
   }
 
   @PostMapping("/login/google")

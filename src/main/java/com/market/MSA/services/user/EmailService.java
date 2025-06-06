@@ -1,14 +1,20 @@
 package com.market.MSA.services.user;
 
+import com.market.MSA.exceptions.AppException;
+import com.market.MSA.exceptions.ErrorCode;
+import com.market.MSA.models.others.OtpData;
 import com.market.MSA.responses.user.ZeroBounceResponse;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.security.SecureRandom;
+import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -17,8 +23,9 @@ import org.springframework.web.client.RestTemplate;
 public class EmailService {
 
   final JavaMailSender mailSender;
-  final ConcurrentHashMap<String, String> otpStore = new ConcurrentHashMap<>();
-  final ConcurrentHashMap<String, String> passwordStore = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, OtpData> otpStore = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, String> passwordStore = new ConcurrentHashMap<>();
+  private static final long OTP_VALIDITY_SECONDS = 30;
 
   @Value("${spring.mail.username}")
   private String fromEmail;
@@ -30,43 +37,64 @@ public class EmailService {
     this.mailSender = mailSender;
   }
 
-  // Gửi email
-  public void sendEmail(String to, String subject, String body) throws MessagingException {
-    MimeMessage message = mailSender.createMimeMessage();
-    MimeMessageHelper helper = new MimeMessageHelper(message, true);
-    helper.setFrom(fromEmail);
-    helper.setTo(to);
-    helper.setSubject(subject);
-    helper.setText(body);
-    mailSender.send(message);
+  // Gửi email bất đồng bộ
+  @Async
+  public CompletableFuture<Void> sendEmail(String to, String subject, String body) {
+    try {
+      MimeMessage message = mailSender.createMimeMessage();
+      MimeMessageHelper helper = new MimeMessageHelper(message, true);
+      helper.setFrom(fromEmail);
+      helper.setTo(to);
+      helper.setSubject(subject);
+      helper.setText(body, true);
+      mailSender.send(message);
+      return CompletableFuture.completedFuture(null);
+    } catch (MessagingException e) {
+      return CompletableFuture.failedFuture(e);
+    }
   }
 
   // Sinh OTP và gửi email
-  public String generateAndSendOTP(String email) throws MessagingException {
+  public String generateAndSendOTP(String email) {
     String otp = generateOTP();
-    sendEmail(email, "Mã OTP của bạn", "Mã OTP của bạn là: " + otp);
-    otpStore.put(otp, email);
+    Instant expiryTime = Instant.now().plusSeconds(OTP_VALIDITY_SECONDS);
+    otpStore.put(otp, new OtpData(email, expiryTime));
+    sendEmail(email, "Mã OTP của bạn", 
+        String.format("Mã OTP của bạn là: %s\nMã có hiệu lực trong %d giây.", otp, OTP_VALIDITY_SECONDS));
     return otp;
+  }
+  
+  // Gửi lại OTP
+  public String resendOTP(String email) {
+    // Xóa OTP cũ nếu có
+    otpStore.entrySet().removeIf(entry -> 
+        entry.getValue().getEmail().equals(email) && 
+        entry.getValue().getExpiryTime().isAfter(Instant.now()));
+    return generateAndSendOTP(email);
   }
 
   // Kiểm tra OTP hợp lệ
   public String validateOTP(String otp) {
     otp = otp.trim();
-    log.info("Received OTP: '{}'", otp);
-    log.info("Current OTP Store: {}", otpStore);
-
-    if (!otpStore.containsKey(otp)) {
-      log.error("OTP not found in store! Received: '{}', Store: {}", otp, otpStore);
-      throw new IllegalArgumentException("Invalid OTP");
+    
+    OtpData otpData = otpStore.get(otp);
+    
+    if (otpData == null) {
+      throw new AppException(ErrorCode.INVALID_OTP);
     }
-
-    String email = otpStore.remove(otp);
-    log.info("OTP verified for email: {}", email);
+    
+    if (otpData.getExpiryTime().isBefore(Instant.now())) {
+      otpStore.remove(otp);
+      throw new AppException(ErrorCode.INVALID_OTP);
+    }
+    
+    String email = otpData.getEmail();
+    otpStore.remove(otp);
     return email;
   }
 
   // Sinh mật khẩu tạm thời và gửi email
-  public String generateAndSendPassword(String email) throws MessagingException {
+  public String generateAndSendPassword(String email) {
     String password = generateRandomPassword();
     sendEmail(email, "Your Temporary Password", "Your temporary password is: " + password);
     passwordStore.put(email, password);

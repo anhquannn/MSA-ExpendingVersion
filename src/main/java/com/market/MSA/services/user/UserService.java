@@ -9,16 +9,17 @@ import com.market.MSA.models.user.Role;
 import com.market.MSA.models.user.User;
 import com.market.MSA.repositories.user.RoleRepository;
 import com.market.MSA.repositories.user.UserRepository;
+import com.market.MSA.requests.user.AuthenticationRequest;
 import com.market.MSA.requests.user.UpdateUserRequest;
 import com.market.MSA.requests.user.UserRequest;
 import com.market.MSA.responses.user.GoogleUser;
 import com.market.MSA.responses.user.UserResponse;
-import jakarta.mail.MessagingException;
 import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -52,9 +54,9 @@ public class UserService {
 
   @Transactional
   public UserResponse registerUser(UserRequest request) {
-    //      if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-    //      throw new AppException(ErrorCode.USER_EXISTED);
-    //    }
+          if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+          throw new AppException(ErrorCode.USER_EXISTED);
+        }
     User user = userMapper.toUser(request);
     Role customerRole =
         roleRepository
@@ -66,16 +68,32 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
-  public String login(String email, String password) throws MessagingException {
-    User user =
-        userRepository
+  public UserResponse existsByEmail(String email) {
+    User user = userRepository
             .findByEmail(email)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    return userMapper.toUserResponse(user);
+  }
 
-    if (!passwordEncoder.matches(password, user.getPassword())) {
+  public UserResponse validateCredentials(AuthenticationRequest request) {
+    User user = userRepository
+        .findByEmail(request.getEmail())
+        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
       throw new AppException(ErrorCode.INVALID_CREDENTIALS);
     }
-    return emailService.generateAndSendOTP(email);
+      return userMapper.toUserResponse(user);
+  }
+
+  @Async
+  public void sendLoginOtp(String email) {
+    CompletableFuture.runAsync(() -> emailService.generateAndSendOTP(email));
+  }
+
+  @Async
+  public void resendOTP(String email) {
+    CompletableFuture.runAsync(() -> emailService.resendOTP(email));
   }
 
   public String verifyOtp(String otp) {
@@ -85,10 +103,6 @@ public class UserService {
             .findByEmail(email)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
     return authenticationService.generateToken(user);
-  }
-
-  public String resetPassword(String email) throws MessagingException {
-    return emailService.generateAndSendOTP(email);
   }
 
   @Transactional
@@ -138,17 +152,12 @@ public class UserService {
                     User savedUser = userRepository.save(newUser);
 
                     // Gửi email thông báo mật khẩu
-                    try {
                       emailService.sendEmail(
                           savedUser.getEmail(),
                           "Your Account Password",
                           "Your password is: " + randomPassword);
-                    } catch (MessagingException e) {
-                      // TODO Auto-generated catch block
-                      throw new AppException(ErrorCode.CANNOT_SEND_EMAIL);
-                    }
 
-                    return savedUser;
+                      return savedUser;
                   });
 
       // Tạo JWT token
@@ -226,11 +235,7 @@ public class UserService {
     user.setPassword(hashedPassword);
     userRepository.save(user);
 
-    try {
-      emailService.sendEmail(email, "Your New Password", "Your new password is: " + newPassword);
-    } catch (MessagingException e) {
-      throw new AppException(ErrorCode.CANNOT_SEND_EMAIL);
-    }
+    emailService.sendEmail(email, "Your New Password", "Your new password is: " + newPassword);
     return "Password sent via email and updated successfully";
   }
 

@@ -2,7 +2,7 @@ package com.market.MSA.models.user;
 
 import com.market.MSA.models.order.Order;
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -22,7 +22,7 @@ public class RewardPointTransaction {
   double pointChange;
   String type;
   String description;
-  Date createdAt;
+  LocalDateTime createdAt;
 
   @ManyToOne
   @JoinColumn(name = "userId", nullable = false)

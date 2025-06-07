@@ -1,7 +1,7 @@
 package com.market.MSA.responses.product;
 
 import com.market.MSA.responses.user.UserResponse;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +19,7 @@ public class FeedbackResponse {
 
   int rating;
   String comments;
-  Date createAt;
+  LocalDateTime createAt;
 
   UserResponse user;
   ProductResponse product;

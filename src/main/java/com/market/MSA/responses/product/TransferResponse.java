@@ -1,7 +1,7 @@
 package com.market.MSA.responses.product;
 
 import com.market.MSA.responses.user.UserResponse;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,8 +15,8 @@ public class TransferResponse {
 
   String status;
   String note;
-  Date createdAt;
-  Date updatedAt;
+  LocalDateTime createdAt;
+  LocalDateTime updatedAt;
 
   UserResponse requesterResponse;
   UserResponse approverResponse;

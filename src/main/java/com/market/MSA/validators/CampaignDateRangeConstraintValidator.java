@@ -20,10 +20,10 @@ public class CampaignDateRangeConstraintValidator
 
     // Kiểm tra startDate của PromoCode phải sau hoặc bằng startDate của Campaign
     boolean isStartDateValid =
-        !promoCode.getStartDate().before(promoCode.getCampaign().getStartDate());
+        !promoCode.getStartDate().isBefore(promoCode.getCampaign().getStartDate());
 
     // Kiểm tra endDate của PromoCode phải trước hoặc bằng endDate của Campaign
-    boolean isEndDateValid = !promoCode.getEndDate().after(promoCode.getCampaign().getEndDate());
+    boolean isEndDateValid = !promoCode.getEndDate().isAfter(promoCode.getCampaign().getEndDate());
 
     return isStartDateValid && isEndDateValid;
   }

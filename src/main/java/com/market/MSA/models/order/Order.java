@@ -7,7 +7,7 @@ import com.market.MSA.models.product.Branch;
 import com.market.MSA.models.user.RewardPointTransaction;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -37,7 +37,7 @@ public class Order {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long orderId;
 
-  Date orderDate;
+  LocalDateTime orderDate;
 
   double grandTotal;
 

@@ -15,7 +15,7 @@ import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.product.TransferRequest;
 import com.market.MSA.responses.product.TransferResponse;
 import com.market.MSA.services.others.EntityFinderService;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -56,7 +56,7 @@ public class TransferRequestService {
             userRepository, transferRequest.getRequesterId(), ErrorCode.USER_NOT_EXISTED));
     transfer.setApprover(
         entityFinderService.findByIdOrThrow(userRepository, 1L, ErrorCode.USER_NOT_EXISTED));
-    transfer.setCreatedAt(new Date());
+    transfer.setCreatedAt(LocalDateTime.now());
 
     Transfer saveTransfer = transferRequestRepository.save(transfer);
 
@@ -224,7 +224,7 @@ public class TransferRequestService {
 
     // Update transfer request status
     transfer.setStatus(ProductStatus.APPROVED.getValue());
-    transfer.setUpdatedAt(new Date());
+    transfer.setUpdatedAt(LocalDateTime.now());
     Transfer updatedTransfer = transferRequestRepository.save(transfer);
 
     return transferRequestMapper.toTransferResponse(updatedTransfer);
@@ -245,7 +245,7 @@ public class TransferRequestService {
     // Update transfer request status
     transfer.setStatus(ProductStatus.REJECTED.getValue());
     transfer.setNote(note);
-    transfer.setUpdatedAt(new Date());
+    transfer.setUpdatedAt(LocalDateTime.now());
     Transfer updatedTransfer = transferRequestRepository.save(transfer);
 
     return transferRequestMapper.toTransferResponse(updatedTransfer);

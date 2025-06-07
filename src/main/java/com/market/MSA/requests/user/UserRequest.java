@@ -1,6 +1,7 @@
 package com.market.MSA.requests.user;
 
 import com.market.MSA.validators.PhoneNumberConstraint;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -21,7 +22,7 @@ public class UserRequest {
 
   @PhoneNumberConstraint String phoneNumber;
 
-  String birthday;
+  LocalDateTime birthday;
 
   String password;
   String address;

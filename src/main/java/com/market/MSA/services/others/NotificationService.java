@@ -17,7 +17,7 @@ import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.others.NotificationRequest;
 import com.market.MSA.responses.others.NotificationResponse;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -214,7 +214,7 @@ public class NotificationService {
               .productId(productId)
               .message("Sản phẩm " + product.getName() + " đã được thêm vào cửa hàng")
               .notificationType("product_new")
-              .notificationDate(new Date())
+              .notificationDate(LocalDateTime.now())
               .isRead(false)
               .build();
 
@@ -235,7 +235,7 @@ public class NotificationService {
             .orderId(orderId)
             .message("Đơn hàng #" + orderId + " của bạn đã được tạo thành công")
             .notificationType("order_created")
-            .notificationDate(new Date())
+            .notificationDate(LocalDateTime.now())
             .isRead(false)
             .build();
 
@@ -255,7 +255,7 @@ public class NotificationService {
             .orderId(orderId)
             .message("Đơn hàng #" + orderId + " của bạn đã bị hủy")
             .notificationType("order_cancelled")
-            .notificationDate(new Date())
+            .notificationDate(LocalDateTime.now())
             .isRead(false)
             .build();
 
@@ -293,7 +293,7 @@ public class NotificationService {
                       + threshold
                       + ")")
               .notificationType("low_stock")
-              .notificationDate(new Date())
+              .notificationDate(LocalDateTime.now())
               .isRead(false)
               .build();
 

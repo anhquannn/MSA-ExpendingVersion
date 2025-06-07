@@ -6,7 +6,7 @@ import com.market.MSA.models.others.Notification;
 import com.market.MSA.models.user.UserBehavior;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -46,8 +46,8 @@ public class Product {
   String color;
   String specification;
   String description;
-  Date expiry;
-  Date createAt;
+  LocalDateTime expiry;
+  LocalDateTime createAt;
 
   @Positive double totalRevenue;
 

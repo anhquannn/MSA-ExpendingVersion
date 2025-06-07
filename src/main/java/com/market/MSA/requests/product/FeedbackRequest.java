@@ -1,7 +1,7 @@
 package com.market.MSA.requests.product;
 
 import com.market.MSA.validators.RatingConstraint;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +18,7 @@ public class FeedbackRequest {
   @RatingConstraint int rating;
 
   String comments;
-  Date createAt;
+  LocalDateTime createAt;
 
   Long userId;
   Long productId;

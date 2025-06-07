@@ -2,7 +2,7 @@ package com.market.MSA.models.user;
 
 import com.market.MSA.models.product.Product;
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -27,7 +27,7 @@ public class UserBehavior {
   Long userBehaviorId;
 
   String behaviorType;
-  Date timestamp;
+  LocalDateTime timestamp;
 
   @ManyToOne
   @JoinColumn(name = "userId", nullable = false)

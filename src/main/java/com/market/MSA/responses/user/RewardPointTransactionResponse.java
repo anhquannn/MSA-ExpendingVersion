@@ -1,7 +1,7 @@
 package com.market.MSA.responses.user;
 
 import com.market.MSA.responses.order.OrderResponse;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -16,7 +16,7 @@ public class RewardPointTransactionResponse {
   double pointChange;
   String type;
   String description;
-  Date createdAt;
+  LocalDateTime createdAt;
 
   UserResponse user;
   OrderResponse order;

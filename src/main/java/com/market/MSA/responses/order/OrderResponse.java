@@ -4,7 +4,7 @@ import com.market.MSA.responses.others.DeliveryInfoResponse;
 import com.market.MSA.responses.others.PaymentResponse;
 import com.market.MSA.responses.product.BranchResponse;
 import com.market.MSA.responses.user.UserResponse;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -21,7 +21,7 @@ import lombok.experimental.FieldDefaults;
 public class OrderResponse {
   Long orderId;
 
-  Date orderDate;
+  LocalDateTime orderDate;
   double grandTotal;
   double totalCost;
   String status;

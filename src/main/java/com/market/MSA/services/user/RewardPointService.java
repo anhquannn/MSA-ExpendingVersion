@@ -11,7 +11,7 @@ import com.market.MSA.requests.user.RewardPointRequest;
 import com.market.MSA.requests.user.RewardPointTransactionRequest;
 import com.market.MSA.responses.user.RewardPointResponse;
 import com.market.MSA.services.others.EntityFinderService;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -105,7 +105,7 @@ public class RewardPointService {
                   newRewardPoint.setPoints(0);
                   newRewardPoint.setTotalEarned(0);
                   newRewardPoint.setTotalRedeemed(0);
-                  newRewardPoint.setUpdatedAt(new Date());
+                  newRewardPoint.setUpdatedAt(LocalDateTime.now());
                   return newRewardPoint;
                 });
 
@@ -114,7 +114,7 @@ public class RewardPointService {
     // Update reward point record
     rewardPoint.setPoints(rewardPoint.getPoints() + amount);
     rewardPoint.setTotalEarned(rewardPoint.getTotalEarned() + amount);
-    rewardPoint.setUpdatedAt(new Date());
+    rewardPoint.setUpdatedAt(LocalDateTime.now());
     RewardPoint savedRewardPoint = rewardPointRepository.save(rewardPoint);
 
     // Create transaction record
@@ -125,7 +125,7 @@ public class RewardPointService {
             .pointChange(amount)
             .type(RewardPointTransactionType.EARN.getValue())
             .description("Earned points from order #" + orderId)
-            .createdAt(new Date())
+            .createdAt(LocalDateTime.now())
             .build());
 
     return rewardPointMapper.toRewardPointResponse(savedRewardPoint);
@@ -147,7 +147,7 @@ public class RewardPointService {
     // Update reward point record
     rewardPoint.setPoints(rewardPoint.getPoints() - pointsToRedeem);
     rewardPoint.setTotalRedeemed(rewardPoint.getTotalRedeemed() + pointsToRedeem);
-    rewardPoint.setUpdatedAt(new Date());
+    rewardPoint.setUpdatedAt(LocalDateTime.now());
     RewardPoint savedRewardPoint = rewardPointRepository.save(rewardPoint);
 
     // Create transaction record
@@ -158,7 +158,7 @@ public class RewardPointService {
             .pointChange(-pointsToRedeem)
             .type(RewardPointTransactionType.REDEEM.getValue())
             .description(description)
-            .createdAt(new Date())
+            .createdAt(LocalDateTime.now())
             .build());
 
     return rewardPointMapper.toRewardPointResponse(savedRewardPoint);
@@ -179,7 +179,7 @@ public class RewardPointService {
     } else {
       rewardPoint.setTotalRedeemed(rewardPoint.getTotalRedeemed() + Math.abs(adjustAmount));
     }
-    rewardPoint.setUpdatedAt(new Date());
+    rewardPoint.setUpdatedAt(LocalDateTime.now());
     RewardPoint savedRewardPoint = rewardPointRepository.save(rewardPoint);
 
     // Create transaction record
@@ -190,7 +190,7 @@ public class RewardPointService {
             .pointChange(adjustAmount)
             .type(RewardPointTransactionType.ADJUST.getValue())
             .description(reason)
-            .createdAt(new Date())
+            .createdAt(LocalDateTime.now())
             .build());
 
     return rewardPointMapper.toRewardPointResponse(savedRewardPoint);

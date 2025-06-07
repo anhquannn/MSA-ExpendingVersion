@@ -1,6 +1,6 @@
 package com.market.MSA.responses.order;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,8 +19,8 @@ public class PromoCodeResponse {
   String name;
   String code;
   String description;
-  Date startDate;
-  Date endDate;
+  LocalDateTime startDate;
+  LocalDateTime endDate;
   String status;
   String discountType;
   double discountPercentage;

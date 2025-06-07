@@ -1,6 +1,6 @@
 package com.market.MSA.responses.order;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,6 +15,6 @@ public class CampaignResponse {
   String name;
   String description;
   String status;
-  Date startDate;
-  Date endDate;
+  LocalDateTime startDate;
+  LocalDateTime endDate;
 }

@@ -1,7 +1,7 @@
 package com.market.MSA.models.order;
 
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -27,8 +27,8 @@ public class Campaign {
   String name;
   String description;
   String status;
-  Date startDate;
-  Date endDate;
+  LocalDateTime startDate;
+  LocalDateTime endDate;
 
   @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
   List<PromoCode> promoCodes;

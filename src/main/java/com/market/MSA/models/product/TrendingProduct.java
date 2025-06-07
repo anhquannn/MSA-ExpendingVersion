@@ -1,7 +1,7 @@
 package com.market.MSA.models.product;
 
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -19,7 +19,7 @@ public class TrendingProduct {
   Long trendId;
 
   double trendScore;
-  Date timestamp;
+  LocalDateTime timestamp;
 
   @ManyToOne
   @JoinColumn(name = "productId", nullable = false)

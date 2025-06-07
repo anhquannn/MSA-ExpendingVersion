@@ -2,7 +2,7 @@ package com.market.MSA.responses.others;
 
 import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.user.UserResponse;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +27,7 @@ public class PaymentResponse {
   String bankCode;
   String bankTranNo;
   String responseCode;
-  Date updateDate;
+  LocalDateTime updateDate;
 
   UserResponse user;
   OrderResponse orderResponse;

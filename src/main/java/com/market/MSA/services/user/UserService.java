@@ -14,6 +14,7 @@ import com.market.MSA.requests.user.UpdateUserRequest;
 import com.market.MSA.requests.user.UserRequest;
 import com.market.MSA.responses.user.GoogleUser;
 import com.market.MSA.responses.user.UserResponse;
+import com.market.MSA.services.others.EmailService;
 import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.List;
@@ -54,9 +55,9 @@ public class UserService {
 
   @Transactional
   public UserResponse registerUser(UserRequest request) {
-          if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-          throw new AppException(ErrorCode.USER_EXISTED);
-        }
+    if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+      throw new AppException(ErrorCode.USER_EXISTED);
+    }
     User user = userMapper.toUser(request);
     Role customerRole =
         roleRepository
@@ -69,21 +70,23 @@ public class UserService {
   }
 
   public UserResponse existsByEmail(String email) {
-    User user = userRepository
+    User user =
+        userRepository
             .findByEmail(email)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
     return userMapper.toUserResponse(user);
   }
 
   public UserResponse validateCredentials(AuthenticationRequest request) {
-    User user = userRepository
-        .findByEmail(request.getEmail())
-        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    User user =
+        userRepository
+            .findByEmail(request.getEmail())
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
     if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
       throw new AppException(ErrorCode.INVALID_CREDENTIALS);
     }
-      return userMapper.toUserResponse(user);
+    return userMapper.toUserResponse(user);
   }
 
   @Async
@@ -152,12 +155,12 @@ public class UserService {
                     User savedUser = userRepository.save(newUser);
 
                     // Gửi email thông báo mật khẩu
-                      emailService.sendEmail(
-                          savedUser.getEmail(),
-                          "Your Account Password",
-                          "Your password is: " + randomPassword);
+                    emailService.sendEmail(
+                        savedUser.getEmail(),
+                        "Your Account Password",
+                        "Your password is: " + randomPassword);
 
-                      return savedUser;
+                    return savedUser;
                   });
 
       // Tạo JWT token

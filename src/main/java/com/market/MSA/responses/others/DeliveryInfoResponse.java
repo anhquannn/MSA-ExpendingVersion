@@ -1,6 +1,6 @@
 package com.market.MSA.responses.others;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +27,7 @@ public class DeliveryInfoResponse {
   String length;
   String metadata;
   String status;
-  Date deliveryDate;
+  LocalDateTime deliveryDate;
 
   Long orderId;
 }

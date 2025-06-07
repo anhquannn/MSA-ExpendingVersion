@@ -5,7 +5,7 @@ import com.market.MSA.validators.DateRangeConstraint;
 import com.market.MSA.validators.DiscountPercentageConstraint;
 import com.market.MSA.validators.PositiveAmountConstraint;
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,8 +37,8 @@ public class PromoCode {
   String name;
   String code;
   String description;
-  Date startDate;
-  Date endDate;
+  LocalDateTime startDate;
+  LocalDateTime endDate;
   String status;
   String discountType;
 

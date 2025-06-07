@@ -1,4 +1,4 @@
-package com.market.MSA.services.user;
+package com.market.MSA.services.others;
 
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
@@ -59,35 +59,41 @@ public class EmailService {
     String otp = generateOTP();
     Instant expiryTime = Instant.now().plusSeconds(OTP_VALIDITY_SECONDS);
     otpStore.put(otp, new OtpData(email, expiryTime));
-    sendEmail(email, "Mã OTP của bạn", 
-        String.format("Mã OTP của bạn là: %s\nMã có hiệu lực trong %d giây.", otp, OTP_VALIDITY_SECONDS));
+    sendEmail(
+        email,
+        "Mã OTP của bạn",
+        String.format(
+            "Mã OTP của bạn là: %s\nMã có hiệu lực trong %d giây.", otp, OTP_VALIDITY_SECONDS));
     return otp;
   }
-  
+
   // Gửi lại OTP
   public String resendOTP(String email) {
     // Xóa OTP cũ nếu có
-    otpStore.entrySet().removeIf(entry -> 
-        entry.getValue().getEmail().equals(email) && 
-        entry.getValue().getExpiryTime().isAfter(Instant.now()));
+    otpStore
+        .entrySet()
+        .removeIf(
+            entry ->
+                entry.getValue().getEmail().equals(email)
+                    && entry.getValue().getExpiryTime().isAfter(Instant.now()));
     return generateAndSendOTP(email);
   }
 
   // Kiểm tra OTP hợp lệ
   public String validateOTP(String otp) {
     otp = otp.trim();
-    
+
     OtpData otpData = otpStore.get(otp);
-    
+
     if (otpData == null) {
       throw new AppException(ErrorCode.INVALID_OTP);
     }
-    
+
     if (otpData.getExpiryTime().isBefore(Instant.now())) {
       otpStore.remove(otp);
       throw new AppException(ErrorCode.INVALID_OTP);
     }
-    
+
     String email = otpData.getEmail();
     otpStore.remove(otp);
     return email;

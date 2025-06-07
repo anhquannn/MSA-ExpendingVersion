@@ -10,7 +10,7 @@ import com.market.MSA.repositories.order.PromoCodeRepository;
 import com.market.MSA.requests.order.PromoCodeRequest;
 import com.market.MSA.responses.order.PromoCodeResponse;
 import com.market.MSA.services.others.EntityFinderService;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -106,11 +106,11 @@ public class PromoCodeService {
   }
 
   void validatePromoCode(PromoCode promoCode) {
-    Date currentDate = new Date();
-    if (promoCode.getStartDate().after(currentDate)) {
+    LocalDateTime currentDate = LocalDateTime.now();
+    if (promoCode.getStartDate().isAfter(currentDate)) {
       throw new AppException(ErrorCode.PROMO_CODE_NOT_YET_ACTIVE);
     }
-    if (promoCode.getEndDate().before(currentDate)) {
+    if (promoCode.getEndDate().isBefore(currentDate)) {
       promoCode.setStatus(PromocodeStatus.PROMO_CODE_STATUS_2.getStatus());
       promoCodeRepository.save(promoCode);
       throw new AppException(ErrorCode.PROMO_CODE_EXPIRED);

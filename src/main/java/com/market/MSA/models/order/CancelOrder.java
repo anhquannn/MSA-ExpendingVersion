@@ -8,7 +8,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,7 +36,7 @@ public class CancelOrder {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long cancelOrderId;
 
-  Date cancelDate;
+  LocalDateTime cancelDate;
   String status;
   String reason;
   double refundAmount;

@@ -1,6 +1,6 @@
 package com.market.MSA.requests.others;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +23,7 @@ public class PaymentRequest {
   String bankCode;
   String bankTranNo;
   String responseCode;
-  Date updateDate;
+  LocalDateTime updateDate;
 
   Long userId;
   Long orderId;

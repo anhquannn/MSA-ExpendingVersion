@@ -32,7 +32,9 @@ public class OrderController {
 
   @PostMapping
   public ApiResponse<OrderResponse> createOrder(@RequestBody @Valid OrderRequest request) {
-    OrderResponse response = orderService.createOrder(request.getUserId(),
+    OrderResponse response =
+        orderService.createOrder(
+            request.getUserId(),
             request.getBranchId(),
             request.getCartId(),
             request.getPromoCodes());
@@ -40,9 +42,9 @@ public class OrderController {
     orderService.sendRecipe(response.getOrderId(), response.getUser().getEmail());
 
     return ApiResponse.<OrderResponse>builder()
-            .result(response)
-            .message(ApiMessage.ORDER_CREATED.getMessage())
-            .build();
+        .result(response)
+        .message(ApiMessage.ORDER_CREATED.getMessage())
+        .build();
   }
 
   @PutMapping("/{orderId}")
@@ -73,7 +75,8 @@ public class OrderController {
 
   @GetMapping("/search")
   public ApiResponse<List<OrderResponse>> searchOrdersByPhoneNumber(
-      String phoneNumber,  @RequestParam(defaultValue = "0") int page,
+      String phoneNumber,
+      @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int pageSize) {
     return ApiResponse.<List<OrderResponse>>builder()
         .result(orderService.searchOrderByPhoneNumber(phoneNumber, page, pageSize))
@@ -83,7 +86,9 @@ public class OrderController {
 
   @GetMapping("/user/{userId}/status/{status}")
   public ApiResponse<List<OrderResponse>> getOrdersByUserIdAndStatus(
-      @PathVariable Long userId, @PathVariable String status,  @RequestParam(defaultValue = "0") int page,
+      @PathVariable Long userId,
+      @PathVariable String status,
+      @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int pageSize) {
     return ApiResponse.<List<OrderResponse>>builder()
         .result(orderService.getOrdersByUserIDWithStatus(userId, status, page, pageSize))
@@ -93,16 +98,18 @@ public class OrderController {
 
   @GetMapping("/branch/{branchId}/status/{status}")
   public ApiResponse<Page<OrderResponse>> getOrdersByStatusAndBranchId(
-          @RequestParam(defaultValue = "0") int page,
-          @RequestParam(defaultValue = "10") int pageSize,
-          @PathVariable String status,
-          @RequestParam(defaultValue = "orderDate") String sortBy,
-          @RequestParam(defaultValue = "desc") String sortDirection,
-          @PathVariable(required = false) Long branchId) {
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int pageSize,
+      @PathVariable String status,
+      @RequestParam(defaultValue = "orderDate") String sortBy,
+      @RequestParam(defaultValue = "desc") String sortDirection,
+      @PathVariable(required = false) Long branchId) {
     return ApiResponse.<Page<OrderResponse>>builder()
-            .result(orderService.getAllOrdersByStatus(page, pageSize,status, sortBy, sortDirection, branchId))
-            .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
-            .build();
+        .result(
+            orderService.getAllOrdersByStatus(
+                page, pageSize, status, sortBy, sortDirection, branchId))
+        .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping("/preview")

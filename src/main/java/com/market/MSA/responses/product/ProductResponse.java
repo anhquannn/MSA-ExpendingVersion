@@ -1,7 +1,7 @@
 package com.market.MSA.responses.product;
 
 import com.market.MSA.responses.order.OrderDetailResponse;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -26,8 +26,8 @@ public class ProductResponse {
   String color;
   String specification;
   String description;
-  Date expiry;
-  Date createAt;
+  LocalDateTime expiry;
+  LocalDateTime createAt;
   int totalRevenue;
 
   ManufacturerResponse manufacturer;

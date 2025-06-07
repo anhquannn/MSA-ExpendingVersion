@@ -12,7 +12,7 @@ import com.market.MSA.repositories.others.DeliveryInfoRepository;
 import com.market.MSA.requests.goship.RatesRequest;
 import com.market.MSA.requests.goship.ShipmentRequest;
 import com.market.MSA.responses.goship.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -114,7 +114,7 @@ public class GoshipService {
             .district(request.getShipment().getAddress_to().getDistrict())
             .cod(request.getShipment().getParcel().getCod())
             .status(OrderStatus.ORDER_STATUS_1.getStatus())
-            .deliveryDate(new Date())
+            .deliveryDate(LocalDateTime.now())
             .weight(request.getShipment().getParcel().getWeight())
             .width(request.getShipment().getParcel().getWidth())
             .height(request.getShipment().getParcel().getHeight())

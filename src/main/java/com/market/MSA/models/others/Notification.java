@@ -5,7 +5,7 @@ import com.market.MSA.models.product.Inventory;
 import com.market.MSA.models.product.Product;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -32,7 +32,7 @@ public class Notification {
   Long notificationId;
 
   String notificationType;
-  Date notificationDate;
+  LocalDateTime notificationDate;
   boolean isRead;
   String message;
 

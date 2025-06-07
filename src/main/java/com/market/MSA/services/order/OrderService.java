@@ -22,15 +22,14 @@ import com.market.MSA.responses.order.CartItemResponse;
 import com.market.MSA.responses.order.CartResponse;
 import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.PromoCodeResponse;
+import com.market.MSA.services.others.EmailService;
 import com.market.MSA.services.others.NotificationService;
 import com.market.MSA.services.product.BranchService;
 import com.market.MSA.services.product.InventoryProductService;
 import com.market.MSA.services.product.ProductService;
-import com.market.MSA.services.user.EmailService;
-import jakarta.mail.MessagingException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +71,8 @@ public class OrderService {
   final NotificationService notificationService;
 
   @Transactional
-  public OrderResponse createOrder(Long userId, Long branchId, Long cartId, List<String> promoCodes) {
+  public OrderResponse createOrder(
+      Long userId, Long branchId, Long cartId, List<String> promoCodes) {
     // Tính toán tổng tiền và giảm giá
     OrderResponse orderSummary = calculateOrderSummary(userId, cartId, promoCodes);
     double grandTotal = orderSummary.getGrandTotal();
@@ -93,14 +93,12 @@ public class OrderService {
             .findById(branchId)
             .orElseThrow(() -> new AppException(ErrorCode.BRANCH_NOT_FOUND));
 
-    Date orderDate = new Date();
-
     // Tạo đơn hàng mới
     Order order =
         Order.builder()
             .user(user)
             .cart(cart)
-            .orderDate(orderDate)
+            .orderDate(LocalDateTime.now())
             .branch(branch)
             .grandTotal(grandTotal)
             .status(OrderStatus.ORDER_STATUS_1.getStatus())
@@ -220,13 +218,13 @@ public class OrderService {
   }
 
   public Page<OrderResponse> getAllOrdersByStatus(
-          int page,
-          int size,
-          String status,
-          String sortBy,
-          String sortDirection,
-          Long branchId // có thể null
-  ) {
+      int page,
+      int size,
+      String status,
+      String sortBy,
+      String sortDirection,
+      Long branchId // có thể null
+      ) {
     Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
     Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
@@ -273,7 +271,10 @@ public class OrderService {
 
   @Async
   public void sendRecipe(Long orderId, String email) {
-    Order order = orderRepository.findById(orderId).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+    Order order =
+        orderRepository
+            .findById(orderId)
+            .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
     CompletableFuture.runAsync(() -> sendOrderDetails(order, email));
   }
 
@@ -307,84 +308,87 @@ public class OrderService {
   }
 
   private String createEmailHeader(Order order) {
-    return String.format("""
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>Thank you for your order!</h2>
-            <p>Order #%d has been confirmed and is being processed.</p>
-            <p>Order Date: %s</p>
-            <hr style="border: 1px solid #eee; margin: 20px 0;">
-        """,
-            order.getOrderId(),
-            order.getOrderDate().toString()
-    );
+    return String.format(
+        """
+		<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+			<h2>Thank you for your order!</h2>
+			<p>Order #%d has been confirmed and is being processed.</p>
+			<p>Order Date: %s</p>
+			<hr style="border: 1px solid #eee; margin: 20px 0;">
+		""",
+        order.getOrderId(), order.getOrderDate().toString());
   }
 
   private String createOrderSummary(Order order) {
-    return String.format("""
-        <div style="margin-bottom: 20px;">
-            <h3>Order Summary</h3>
-            <p><strong>Order ID:</strong> %d</p>
-            <p><strong>Status:</strong> %s</p>
-            <p><strong>Total Amount:</strong> %.2f VNĐ</p>
-        </div>
-        <hr style="border: 1px solid #eee; margin: 20px 0;">
-        """,
-            order.getOrderId(),
-            order.getStatus(),
-            order.getGrandTotal()
-    );
+    return String.format(
+        """
+		<div style="margin-bottom: 20px;">
+			<h3>Order Summary</h3>
+			<p><strong>Order ID:</strong> %d</p>
+			<p><strong>Status:</strong> %s</p>
+			<p><strong>Total Amount:</strong> %.2f VNĐ</p>
+		</div>
+		<hr style="border: 1px solid #eee; margin: 20px 0;">
+		""",
+        order.getOrderId(), order.getStatus(), order.getGrandTotal());
   }
 
   private String createOrderItemsList(Order order) {
-    StringBuilder itemsList = new StringBuilder("""
-        <div>
-            <h3>Order Items</h3>
-            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                <thead>
-                    <tr style="background-color: #f5f5f5;">
-                        <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Product</th>
-                        <th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Quantity</th>
-                        <th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Price</th>
-                        <th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-        """);
+    StringBuilder itemsList =
+        new StringBuilder(
+            """
+		<div>
+			<h3>Order Items</h3>
+			<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+				<thead>
+					<tr style="background-color: #f5f5f5;">
+						<th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Product</th>
+						<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Quantity</th>
+						<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Price</th>
+						<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Total</th>
+					</tr>
+				</thead>
+				<tbody>
+		""");
 
-    orderDetailService.findOrderDetailsByOrderId(order.getOrderId()).forEach(detail -> {
-      itemsList.append(String.format("""
-            <tr>
-                <td style="padding: 10px; border-bottom: 1px solid #eee;">%s</td>
-                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%d</td>
-                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
-                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
-            </tr>
-            """,
-              detail.getProduct().getName(),
-              detail.getQuantity(),
-              detail.getUnitPrice(),
-              detail.getQuantity() * detail.getUnitPrice()
-      ));
-    });
+    orderDetailService
+        .findOrderDetailsByOrderId(order.getOrderId())
+        .forEach(
+            detail -> {
+              itemsList.append(
+                  String.format(
+                      """
+			<tr>
+				<td style="padding: 10px; border-bottom: 1px solid #eee;">%s</td>
+				<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%d</td>
+				<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
+				<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
+			</tr>
+			""",
+                      detail.getProduct().getName(),
+                      detail.getQuantity(),
+                      detail.getUnitPrice(),
+                      detail.getQuantity() * detail.getUnitPrice()));
+            });
 
     itemsList.append("""
-                </tbody>
-            </table>
-        </div>
-        """);
+				</tbody>
+			</table>
+		</div>
+		""");
 
     return itemsList.toString();
   }
 
   private String createEmailFooter() {
     return """
-        <div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-radius: 5px;">
-            <p>Thank you for shopping with us!</p>
-            <p>If you have any questions about your order, please contact our support team.</p>
-            <p>Best regards,<br>Market Team</p>
-        </div>
-        </div> <!-- Close main container -->
-        """;
+		<div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-radius: 5px;">
+			<p>Thank you for shopping with us!</p>
+			<p>If you have any questions about your order, please contact our support team.</p>
+			<p>Best regards,<br>Market Team</p>
+		</div>
+		</div> <!-- Close main container -->
+		""";
   }
 
   @Cacheable(
@@ -500,5 +504,4 @@ public class OrderService {
 
     return statistics;
   }
-
 }

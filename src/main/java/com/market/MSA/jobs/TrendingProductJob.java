@@ -5,7 +5,7 @@ import com.market.MSA.models.product.TrendingProduct;
 import com.market.MSA.repositories.product.FeedbackRepository;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.product.TrendingProductRepository;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +47,7 @@ public class TrendingProductJob implements Job {
             .map(
                 product -> {
                   Long productId = product.getProductId();
-                  Date currentDate = new Date();
+                  LocalDateTime currentDate = LocalDateTime.now();
                   double avgRating = avgRatings.getOrDefault(productId, 0.0);
                   double totalRevenue = product.getTotalRevenue();
                   double trendScore = calculateTrendScore(avgRating, totalRevenue);
@@ -67,7 +67,7 @@ public class TrendingProductJob implements Job {
                     TrendingProduct.builder()
                         .product(candidate.getProduct())
                         .trendScore(candidate.getTrendScore())
-                        .timestamp(new Date())
+                        .timestamp(LocalDateTime.now())
                         .build())
             .toList();
 

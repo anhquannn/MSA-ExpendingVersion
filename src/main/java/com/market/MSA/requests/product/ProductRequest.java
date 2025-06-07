@@ -1,7 +1,7 @@
 package com.market.MSA.requests.product;
 
 import jakarta.validation.constraints.Positive;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,8 +26,8 @@ public class ProductRequest {
   String color;
   String specification;
   String description;
-  Date expiry;
-  Date createAt;
+  LocalDateTime expiry;
+  LocalDateTime createAt;
 
   @Positive double totalRevenue;
 

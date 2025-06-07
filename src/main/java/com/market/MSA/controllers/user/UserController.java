@@ -1,7 +1,6 @@
 package com.market.MSA.controllers.user;
 
 import com.market.MSA.constants.ApiMessage;
-import com.market.MSA.models.user.User;
 import com.market.MSA.requests.user.*;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.user.AuthenticationResponse;
@@ -9,12 +8,10 @@ import com.market.MSA.responses.user.UserResponse;
 import com.market.MSA.services.user.AuthenticationService;
 import com.market.MSA.services.user.UserService;
 import com.nimbusds.jose.JOSEException;
-import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import java.text.ParseException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -54,9 +51,9 @@ public class UserController {
     CompletableFuture.runAsync(() -> userService.sendLoginOtp(request.getEmail()));
 
     return ApiResponse.<UserResponse>builder()
-            .result(userResponse)
-            .message(ApiMessage.USER_LOGGED_IN.getMessage())
-            .build();
+        .result(userResponse)
+        .message(ApiMessage.USER_LOGGED_IN.getMessage())
+        .build();
   }
 
   @PostMapping("/verify-otp")
@@ -84,9 +81,9 @@ public class UserController {
     CompletableFuture.runAsync(() -> userService.resendOTP(request.getEmail()));
 
     return ApiResponse.<UserResponse>builder()
-            .result(userResponse)
-            .message(ApiMessage.PASSWORD_RESET.getMessage())
-            .build();
+        .result(userResponse)
+        .message(ApiMessage.PASSWORD_RESET.getMessage())
+        .build();
   }
 
   @PostMapping("/login/google")

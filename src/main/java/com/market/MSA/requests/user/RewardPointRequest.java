@@ -1,6 +1,6 @@
 package com.market.MSA.requests.user;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -13,7 +13,7 @@ public class RewardPointRequest {
   double points;
   double totalEarned;
   double totalRedeemed;
-  Date updatedAt;
+  LocalDateTime updatedAt;
 
   Long userId;
 }

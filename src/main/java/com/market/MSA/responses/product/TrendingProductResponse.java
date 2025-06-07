@@ -1,6 +1,6 @@
 package com.market.MSA.responses.product;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 public class TrendingProductResponse {
   Long trendId;
   double trendScore;
-  Date timestamp;
+  LocalDateTime timestamp;
 
   ProductResponse product;
 }

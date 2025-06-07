@@ -1,6 +1,6 @@
 package com.market.MSA.responses.user;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,7 +15,7 @@ public class RewardPointResponse {
   double points;
   double totalEarned;
   double totalRedeemed;
-  Date updatedAt;
+  LocalDateTime updatedAt;
 
   UserResponse user;
 }

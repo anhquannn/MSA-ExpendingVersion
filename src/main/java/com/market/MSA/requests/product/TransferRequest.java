@@ -1,6 +1,6 @@
 package com.market.MSA.requests.product;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,8 +12,8 @@ import lombok.experimental.FieldDefaults;
 public class TransferRequest {
   String status;
   String note;
-  Date createdAt;
-  Date updatedAt;
+  LocalDateTime createdAt;
+  LocalDateTime updatedAt;
 
   Long fromInventoryId;
   Long toInventoryId;

@@ -2,7 +2,7 @@ package com.market.MSA.models.others;
 
 import com.market.MSA.models.order.Order;
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,7 +35,7 @@ public class DeliveryInfo {
   String length;
   String metadata;
   String status;
-  Date deliveryDate;
+  LocalDateTime deliveryDate;
 
   @OneToOne
   @JoinColumn(name = "orderId", nullable = false, unique = true)

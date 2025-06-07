@@ -2,7 +2,7 @@ package com.market.MSA.requests.order;
 
 import com.market.MSA.validators.DiscountPercentageConstraint;
 import com.market.MSA.validators.PositiveAmountConstraint;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,8 +19,8 @@ public class PromoCodeRequest {
   String name;
   String code;
   String description;
-  Date startDate;
-  Date endDate;
+  LocalDateTime startDate;
+  LocalDateTime endDate;
   String status;
   String discountType;
 

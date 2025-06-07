@@ -88,7 +88,7 @@ public class OrderDetailService {
   // Lấy danh sách chi tiết đơn hàng theo Order ID
   public List<OrderDetailResponse> getOrderDetailsByOrderId(Long orderId) {
     return orderDetailRepository.findAll().stream()
-        .filter(od -> od.getOrder().getOrderId() == orderId)
+        .filter(od -> od.getOrder().getOrderId().equals(orderId))
         .map(orderDetailMapper::toOrderDetailResponse)
         .collect(Collectors.toList());
   }
@@ -96,7 +96,7 @@ public class OrderDetailService {
   // Lấy danh sách chi tiết đơn hàng theo Order ID
   public List<OrderDetail> findOrderDetailsByOrderId(Long orderId) {
     return orderDetailRepository.findAll().stream()
-        .filter(od -> od.getOrder().getOrderId() == orderId)
+        .filter(od -> od.getOrder().getOrderId().equals(orderId))
         .collect(Collectors.toList());
   }
 }

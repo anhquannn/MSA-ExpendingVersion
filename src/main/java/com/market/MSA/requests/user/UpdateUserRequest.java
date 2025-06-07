@@ -1,5 +1,6 @@
 package com.market.MSA.requests.user;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -18,7 +19,7 @@ public class UpdateUserRequest {
 
   String email;
   String phoneNumber;
-  String birthday;
+  LocalDateTime birthday;
   String password;
   String address;
   String googleId;

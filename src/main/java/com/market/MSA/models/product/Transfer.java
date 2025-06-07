@@ -2,7 +2,7 @@ package com.market.MSA.models.product;
 
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -45,8 +45,8 @@ public class Transfer {
 
   String status;
   String note;
-  Date createdAt;
-  Date updatedAt;
+  LocalDateTime createdAt;
+  LocalDateTime updatedAt;
 
   @OneToMany(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
   List<TransferItem> transferItems;

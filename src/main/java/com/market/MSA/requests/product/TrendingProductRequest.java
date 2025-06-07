@@ -1,6 +1,6 @@
 package com.market.MSA.requests.product;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TrendingProductRequest {
   double trendScore;
-  Date timestamp;
+  LocalDateTime timestamp;
 
   Long productId;
 }

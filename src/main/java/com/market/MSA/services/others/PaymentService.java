@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -238,7 +239,7 @@ public class PaymentService {
     payment.setBankTranNo(vnp_TransactionNo);
     payment.setPaymentDate(vnp_PayDate);
     payment.setResponseCode(vnp_ResponseCode);
-    payment.setUpdateDate(new Date());
+    payment.setUpdateDate(LocalDateTime.now());
 
     return paymentMapper.toPaymentResponse(paymentRepository.save(payment));
   }

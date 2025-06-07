@@ -1,7 +1,7 @@
 package com.market.MSA.requests.order;
 
 import com.market.MSA.requests.others.DeliveryInfoRequest;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -16,7 +16,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderRequest {
-  Date orderDate;
+  LocalDateTime orderDate;
 
   double grandTotal;
 

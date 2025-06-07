@@ -9,6 +9,7 @@ import com.market.MSA.models.product.Feedback;
 import com.market.MSA.models.product.Transfer;
 import com.market.MSA.validators.PhoneNumberConstraint;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -47,7 +48,7 @@ public class User {
 
   @PhoneNumberConstraint String phoneNumber;
 
-  String birthday;
+  LocalDateTime birthday;
 
   String password;
   String address;

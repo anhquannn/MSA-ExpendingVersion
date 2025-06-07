@@ -1,6 +1,6 @@
 package com.market.MSA.responses.order;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +16,7 @@ import lombok.experimental.FieldDefaults;
 public class CancelOrderResponse {
   Long cancelOrderId;
 
-  Date cancelDate;
+  LocalDateTime cancelDate;
   String status;
   String reason;
   double refundAmount;

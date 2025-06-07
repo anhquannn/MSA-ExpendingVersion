@@ -4,7 +4,7 @@ import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.product.InventoryResponse;
 import com.market.MSA.responses.product.ProductResponse;
 import com.market.MSA.responses.user.UserResponse;
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -17,7 +17,7 @@ import lombok.experimental.FieldDefaults;
 public class NotificationResponse {
   Long notificationId;
   String notificationType;
-  Date notificationDate;
+  LocalDateTime notificationDate;
   boolean isRead;
   String message;
 

@@ -1,0 +1,22 @@
+/* src/components/common/Button/Button.css */
+.custom-button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.custom-button:hover {
+  background-color: #0056b3;
+}
+
+.custom-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}

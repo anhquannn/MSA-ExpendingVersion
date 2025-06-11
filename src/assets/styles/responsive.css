@@ -1,0 +1,15 @@
+/* Dành cho tablet */
+@media (max-width: 768px) {
+  .some-component {
+    padding: 16px;
+    font-size: 14px;
+  }
+}
+
+/* Dành cho mobile */
+@media (max-width: 480px) {
+  .some-component {
+    padding: 8px;
+    font-size: 12px;
+  }
+}

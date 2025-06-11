@@ -4,44 +4,101 @@ final String urlSupabase = 'https://lmtqwglnnbgsrxhelpxz.supabase.co';
 final String anonKey =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtdHF3Z2xubmJnc3J4aGVscHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3MTI1NzIsImV4cCI6MjA2MTI4ODU3Mn0.5D6-g10oFKgB5eJw7jbJPGtOsr2BmrYnm5pTpfjA_J0';
 
-///API ENDPOINTS
-//USER
-final String register='user/register';
-final String login='user/login';
-final String verifyOtp='user/verify-otp';
-final String resetPass='user/reset-password';
-final String resetPassWithoutOtp='user/reset-password/';
-final String updateUser='user/';
-final String deleteUser='user/';
-final String getUserByEmail='user/email/';//user/email/{email}
+//=================================API ENDPOINTS=================================
+//____________________________________USER______________________________________
+final String register = 'user/register';
+final String login = 'user/login';
+final String verifyOtp = 'user/verify-otp';
+final String resetPass = 'user/reset-password';
+final String resetPassWithoutOtp = 'user/reset-password/';
+final String updateUser = 'user/';
+final String deleteUser = 'user/';
+final String getUserByEmail = 'user/email/'; //user/email/{email}
 
-// PRODUCT
-final String getAllProducts='product';//product?page=1&pageSize=10
-final String filterAndSortProducts='product/filter';//product/filter?minPrice=100&maxPrice=500&color=red&categoryId=2&page=1&pageSize=10
-final String getAllProductsInBranch='product/branch/';//product/branch/1?page=1&size=10&sortBy=price&sortDirection=desc
-final String searchProductsInBranch='product/branch/';//product/branch/10/search?keyword=phone&minPrice=100&maxPrice=500&color=black&page=1&pageSize=15&sortBy=price&sortDirection=desc
-final String getProductById='product/';//product/1
-final String searchProducts='product/search';//product/search?keyword=smartphone&minPrice=200&maxPrice=1000&color=red&categoryId=5&manufacturerId=3&page=2&pageSize=20&sortBy=price&sortDirection=desc
-final String createProduct='product';
-final String updateProduct='product/';
-final String deleteProduct='product/';
 
-//MANUFACTURER
+//____________________________________PRODUCT___________________________________
+final String getAllProducts = 'product'; //product?page=1&pageSize=10
+final String filterAndSortProducts =
+    'product/filter'; //product/filter?minPrice=100&maxPrice=500&color=red&categoryId=2&page=1&pageSize=10
+final String getAllProductsInBranch =
+    'product/branch/'; //product/branch/1?page=1&size=10&sortBy=price&sortDirection=desc
+final String searchProductsInBranch =
+    'product/branch/'; //product/branch/10/search?keyword=phone&minPrice=100&maxPrice=500&color=black&page=1&pageSize=15&sortBy=price&sortDirection=desc
+final String getProductById = 'product/'; //product/1
+final String searchProducts =
+    'product/search'; //product/search?keyword=smartphone&minPrice=200&maxPrice=1000&color=red&categoryId=5&manufacturerId=3&page=2&pageSize=20&sortBy=price&sortDirection=desc
+final String createProduct = 'product';
+final String updateProduct = 'product/';
+final String deleteProduct = 'product/';
 
-//CATEGORY
-final String getAllCategories='category';//category?page=1&pageSize=10
-final String getCategoryById='category/';
-final String createCategory='category';
-final String deleteCategory='category/';
-final String updateCategory='category/';
+//____________________________________MANUFACTURER____________________________________
 
-//PROMOCODE
-final String getAllPromoCode='promo-code';//promo-code?page=1&pageSize=10
-final String getPromoCodeById='promo-code/';
-final String createPromoCode='promo-code';  
-final String updatePromoCode='promo-code/';
-final String deletePromoCode='promo-code/';
 
+//____________________________________CATEGORY____________________________________
+final String getAllCategories = 'category'; //category?page=1&pageSize=10
+final String getCategoryById = 'category/';
+final String createCategory = 'category';
+final String deleteCategory = 'category/';
+final String updateCategory = 'category/';
+
+
+//____________________________________PROMOCODE____________________________________
+final String getAllPromoCode = 'promo-code'; //promo-code?page=1&pageSize=10
+final String getPromoCodeById = 'promo-code/';
+final String createPromoCode = 'promo-code';
+final String updatePromoCode = 'promo-code/';
+final String deletePromoCode = 'promo-code/';
+
+
+//____________________________________CART____________________________________
+final String getOrCreateCart = 'cart/user/';
+
+
+//____________________________________CARTITEM____________________________________
+final String getCartItem = 'cart-item/'; //cart-item/1/3{cartId}/{productId}
+final String calculateCartTotal = 'cart-item/calculate-total/'; //{cartId}
+final String getCartItemById = 'cart-item/by-id/';
+final String getCartItemsByCartId = 'cart-item/by-cart/';
+final String addToCart =
+    'cart-item/add'; //cart-item/add?userId=1&productId=7&branchId=3&quantity=1
+final String createCartItem = 'cart-item';
+final String updateCartItemsSelection =
+    'cart-item/update-selection?isSelected=';
+final String deleteCartItem = 'cart-item/';
+final String clearCart = 'cart-item/clear/';
+
+
+//____________________________________ORDER____________________________________
+final String createOrder = 'order';
+final String getOrderById = 'order/';
+final String searchOrdersByPhoneNumber =
+    'order/search'; //order/search?phoneNumber=0912345678&page=0&pageSize=5
+final String getOrdersByUserIdAndStatus =
+    'order/user/'; //order/user/6/status/PENDING?page=0&pageSize=10
+final String previewOrder =
+    'order/preview'; //order/preview?userId=6&cartId=1&promoCodes=TET2026,TET2027
+final String getAllOrders =
+    'order'; //order?page=1&size=20&sortBy=grandTotal&sortDirection=asc
+final String getRevenueStatistics =
+    'order/revenue/statistics'; //order/revenue/statistics?year=2025&month=5&branchId=1&userId=6
+final String getOrdersByBranchId =
+    'order/branch/'; //order/branch/1?page=1&size=20&sortDirection=asc
+final String updateOrder = 'order/';
+final String deleteOrder = 'order/';
+
+
+//____________________________________GOSHIP____________________________________
+final String getCities = 'shipment/cities';
+final String getDistricts = 'shipment/districts/';
+final String getWards = 'shipment/wards/';
+
+
+//____________________________________FEEDBACK____________________________________
+final String getFeedbackByIdUrl = 'feedback/';
+final String getAllFeedbacksByProductIdUrl = 'feedback/product/';
+final String updateFeedbackUrl = 'feedback/';
+final String createFeedbackUrl = 'feedback';
+final String deleteFeedbackUrl = 'feedback/';
 
 
 /// SECURE STORAGE
@@ -87,7 +144,7 @@ final String primaryColorPurple = '#BF83FF';
 final String secondaryColorPurple = '#F3E8FF';
 
 final String actionColor = '#1EBD58';
-final String secondaryActionColor='#D6EDE1';
+final String secondaryActionColor = '#D6EDE1';
 
 ///Image
 final String welcome1 = 'assets/images/welcome1.png';
@@ -143,4 +200,5 @@ final String avtAdmin = 'assets/images/avt_admin.jpg';
 final String avtManager = 'assets/images/avt_manager.jpg';
 
 final String imgBranch = 'assets/images/img_branch.png';
-final String imgProductDefault = 'https://lmtqwglnnbgsrxhelpxz.supabase.co/storage/v1/object/sign/msa/715ddffcb1448a27614572608ab8b6e5.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5XzE5ZTM1ODc1LTdlODYtNDljMy1iOWE3LTQ5OWQ5MGRkOTk3MyJ9.eyJ1cmwiOiJtc2EvNzE1ZGRmZmNiMTQ0OGEyNzYxNDU3MjYwOGFiOGI2ZTUuanBnIiwiaWF0IjoxNzQ3NDgyNzk2LCJleHAiOjE3NzkwMTg3OTZ9.tDTHIEe7SvgaKbuftP9MlsjONd4XULSlWdS9GjDMFlo';
+final String imgProductDefault =
+    'https://lmtqwglnnbgsrxhelpxz.supabase.co/storage/v1/object/sign/msa/715ddffcb1448a27614572608ab8b6e5.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5XzE5ZTM1ODc1LTdlODYtNDljMy1iOWE3LTQ5OWQ5MGRkOTk3MyJ9.eyJ1cmwiOiJtc2EvNzE1ZGRmZmNiMTQ0OGEyNzYxNDU3MjYwOGFiOGI2ZTUuanBnIiwiaWF0IjoxNzQ3NDgyNzk2LCJleHAiOjE3NzkwMTg3OTZ9.tDTHIEe7SvgaKbuftP9MlsjONd4XULSlWdS9GjDMFlo';

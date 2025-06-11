@@ -127,7 +127,7 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
         ),
       );
       if (user != null) {
-        HttpConnection.userModel = user;
+        HttpConnection.userModelGlobal = user;
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => LoginScreen()),

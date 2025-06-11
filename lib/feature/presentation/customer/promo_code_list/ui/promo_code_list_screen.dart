@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:msa/core/config/base_bloc.dart';
-import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
@@ -43,7 +42,7 @@ class PromoCodeListScreen extends BaseView<PromoCodeListBloc> {
 
 Widget listPromoCode(List<PromoCodeModel> promoCodeList, ScrollController controller) {
   return ListView.builder(
-    controller: controller,
+    // controller: controller,
     itemCount: promoCodeList.length,
     itemBuilder: (context, index) {
       final model = promoCodeList[index];

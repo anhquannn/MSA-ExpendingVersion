@@ -18,6 +18,7 @@ void main() async {
   await Firebase.initializeApp();
   getFcmToken();
   setupLocator();
+
   runApp(const MyApp());
 }
 

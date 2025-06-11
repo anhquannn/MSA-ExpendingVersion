@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
+import 'package:msa/core/config/global.dart';
 import 'package:msa/core/utils/prarse_color.dart';
 
 Widget customDropdownButton({
@@ -59,12 +61,17 @@ Future<void> showCustomDialog(
     builder: (BuildContext context) {
       return AlertDialog(
         backgroundColor: toHexToColor(backgroundColor),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10), // Bo góc cho dialog
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        titlePadding:
+            EdgeInsets.zero, // bỏ padding mặc định của title để full width
+        contentPadding: EdgeInsets.fromLTRB(
+          24,
+          20,
+          24,
+          24,
+        ), // hoặc tuỳ chỉnh padding content
         title: Container(
-          width: width,
-          height: height * 0.2,
+          // Bỏ width, height cố định
           decoration: BoxDecoration(
             color: toHexToColor(appBarColor),
             borderRadius: BorderRadius.only(
@@ -72,6 +79,9 @@ Future<void> showCustomDialog(
               topLeft: Radius.circular(10),
             ),
           ),
+          padding: EdgeInsets.symmetric(
+            vertical: height * 0.05,
+          ), // hoặc padding theo ý bạn
           child: Center(
             child: Text(
               title,
@@ -82,39 +92,50 @@ Future<void> showCustomDialog(
             ),
           ),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            icon ?? Container(),
-            SizedBox(height: 10),
-            Center(child: content),
-          ],
+        content: Container(
+          decoration: BoxDecoration(
+            color: toHexToColor(backgroundColor),
+            borderRadius: BorderRadius.only(
+              bottomRight: Radius.circular(10),
+              bottomLeft: Radius.circular(10),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) icon!,
+              SizedBox(height: 10),
+              Center(child: content),
+            ],
+          ),
         ),
+        actionsPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         actions: [
           Wrap(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.of(context).pop(false);
-                  },
-                  child: Container(
-                    width: width * 0.3,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: toHexToColor(secondaryErrorColor),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Đồng ý',
-                        style: TextStyle(color: Colors.white),
+              if (submit == true)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).pop(false);
+                    },
+                    child: Container(
+                      width: width * 0.3,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: toHexToColor(secondaryErrorColor),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Đồng ý',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: InkWell(
@@ -125,13 +146,13 @@ Future<void> showCustomDialog(
                     width: width * 0.3,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: toHexToColor(secondaryColorOrange),
+                      color: toHexToColor(borderColor),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
                       child: Text(
                         'Đóng',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: toHexToColor(primaryTextColor)),
                       ),
                     ),
                   ),
@@ -142,5 +163,21 @@ Future<void> showCustomDialog(
         ],
       );
     },
+  );
+}
+
+Future<void> showCustomMessageError(BuildContext context) async {
+  return await showCustomDialog(
+    context,
+    AppSize.w(0.8),
+    150,
+    'Thông báo',
+    Text(
+      messageError == '' ? 'Lỗi dữ liệu' : messageError,
+      style: TextStyle(color: toHexToColor(primaryTextColor), fontSize: 16),
+    ),
+    true,
+    false,
+    null,
   );
 }

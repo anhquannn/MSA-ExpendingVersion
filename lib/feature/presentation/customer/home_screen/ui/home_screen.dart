@@ -1,6 +1,8 @@
 import 'dart:ffi';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/widget/customBottomSheet.dart';
@@ -485,10 +487,16 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                 shrinkWrap: true,
                 itemCount: products.length > 10 ? 10 : products.length,
                 itemBuilder: (context, index) {
-                  return customItemProductCustomer(
-                    isDiscount: true,
-                    products[index],
-                    width * 0.4,
+                  return InkWell(
+                    onTap: () {
+                      bloc.onTapProductDetail();
+                      // bloc.onTapProductDetail(products[index]);
+                    },
+                    child: customItemProductCustomer(
+                      isDiscount: true,
+                      products[index],
+                      width * 0.4,
+                    ),
                   );
                 },
               );
@@ -534,10 +542,16 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                         ? 10
                         : products.length, // lazy load 10 sản phẩm đầu
                 itemBuilder: (context, index) {
-                  return customItemProductCustomer(
-                    isDiscount: false,
-                    products[index],
-                    width * 0.4,
+                  return InkWell(
+                    onTap: () {
+                      bloc.onTapProductDetail();
+                      // bloc.onTapProductDetail(products[index]);
+                    },
+                    child: customItemProductCustomer(
+                      isDiscount: false,
+                      products[index],
+                      width * 0.4,
+                    ),
                   );
                 },
               );
@@ -1112,8 +1126,20 @@ class CardTab extends StatelessWidget {
   }
 
   Widget cardScreen() {
-    return ListView(
-      children: [itemCard(), itemCard(), itemCard(), itemCard(), itemCard()],
+    return StreamBuilder<List<CartItemModel>>(
+      stream: bloc?.listCartItemModels,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final data = snapshot.data;
+          return ListView.builder(
+            itemCount: data?.length ?? 0,
+            itemBuilder: (context, index) {
+              return itemCard(model: data?[index]);
+            },
+          );
+        }
+        return Center(child: Text('Không có dữ liệu....'));
+      },
     );
   }
 
@@ -1121,8 +1147,18 @@ class CardTab extends StatelessWidget {
     String? img,
     String? name,
     String? price,
-    PromoCodeModel? model,
+    CartItemModel? model,
+    PromoCodeModel? promoCodeModel,
   }) {
+    String discount =
+        (model?.product?.currentPrice != null &&
+                model?.product?.price != null &&
+                model!.product!.price != 0)
+            ? (100 -
+                    ((model.product!.currentPrice! / model.product!.price!) *
+                        100))
+                .toStringAsFixed(0)
+            : '0';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
       child: Card(
@@ -1137,7 +1173,18 @@ class CardTab extends StatelessWidget {
                   flex: 4,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(avtWomen6, fit: BoxFit.cover),
+                    // child: Image.asset(avtWomen6, fit: BoxFit.cover),
+                    child: CachedNetworkImage(
+                      imageUrl: model?.product?.images ?? '',
+                      placeholder:
+                          (context, url) => CircularProgressIndicator(),
+                      errorWidget:
+                          (context, url, error) =>
+                              Image.asset(imgBranch, fit: BoxFit.cover),
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 Expanded(
@@ -1145,29 +1192,31 @@ class CardTab extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(left: 10),
                     child: SizedBox(
-                      height: 100, // Đảm bảo Stack có height xác định
+                      height: 100,
                       child: Stack(
                         children: [
-                          Positioned(
-                            top: 1,
-                            right: 1,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: toHexToColor(primaryErrorColor),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 2,
-                                  horizontal: 8,
+                          discount != '0'
+                              ? Positioned(
+                                top: 1,
+                                right: 1,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: toHexToColor(primaryErrorColor),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 2,
+                                      horizontal: 8,
+                                    ),
+                                    child: Text(
+                                      '$discount%',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
                                 ),
-                                child: Text(
-                                  '${model?.discountPercentage}%',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ),
-                          ),
+                              )
+                              : SizedBox(),
                           Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             mainAxisSize: MainAxisSize.max,
@@ -1176,15 +1225,26 @@ class CardTab extends StatelessWidget {
                               customAutoSizeText(
                                 14,
                                 18,
-                                model?.name ?? '',
+                                model?.product?.name ?? '',
                                 isBold: true,
                                 textColor: toHexToColor(primaryTextColor),
                               ),
                               // customAutoSizeText(8, 12, '100.000đ', isLine: true),
+                              model?.product?.currentPrice !=
+                                      model?.product?.price
+                                  ? customAutoSizeText(
+                                    12,
+                                    16,
+                                    '${model?.product?.price.toString() ?? ''}đ',
+                                    isBold: true,
+                                    isLine: true,
+                                    textColor: toHexToColor(primaryButtonColor),
+                                  )
+                                  : SizedBox(),
                               customAutoSizeText(
                                 12,
                                 16,
-                                'Đơn hàng trên ${model?.minimumOrderValue}đ',
+                                '${model?.product?.currentPrice.toString() ?? ''}đ',
                                 isBold: true,
                                 textColor: toHexToColor(primaryButtonColor),
                               ),
@@ -1196,16 +1256,15 @@ class CardTab extends StatelessWidget {
                                     color: Colors.white,
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        // color: toHexToColor(primaryButtonColor),
                                         color: Colors.grey[300],
                                         borderRadius: BorderRadius.circular(5),
-                                        // border: Border.all(
-                                        //   color: toHexToColor(primaryButtonColor),
-                                        // ),
                                       ),
                                       child: Row(
                                         children: [
                                           InkWell(
+                                            onTap: () {
+                                              bloc?.onMinus(0);
+                                            },
                                             child: Container(
                                               padding: EdgeInsets.symmetric(
                                                 horizontal: 10,
@@ -1228,9 +1287,14 @@ class CardTab extends StatelessWidget {
                                               vertical: 3,
                                             ),
                                             color: Colors.white,
-                                            child: Text('100'),
+                                            child: Text(
+                                              model?.quantity.toString() ?? '0',
+                                            ),
                                           ),
                                           InkWell(
+                                            onTap: () {
+                                              bloc?.onPlus(0);
+                                            },
                                             child: Container(
                                               padding: EdgeInsets.symmetric(
                                                 horizontal: 8,

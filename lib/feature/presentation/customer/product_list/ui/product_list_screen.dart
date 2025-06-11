@@ -42,7 +42,6 @@ class ProductListScreen extends BaseView<ProductListBloc> {
       isHide: false,
       bodyBuilder: (controller) {
         return CustomScrollView(
-          // controller: controller,
           slivers: [
             SliverToBoxAdapter(
               child: StreamBuilder(
@@ -85,6 +84,7 @@ class ProductListScreen extends BaseView<ProductListBloc> {
                 },
               ),
             ),
+            // Thêm các Sliver khác nếu có
           ],
         );
       },

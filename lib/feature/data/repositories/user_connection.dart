@@ -68,8 +68,8 @@ class UserRepositoryImpl implements IUserRepository {
   Future<UserModel?> onGetUserByEmail() async {
     final response = await HttpConnection.get('$getUserByEmail${HttpConnection.email}');
     if (response.isSuccess) {
-      HttpConnection.userModel = UserModel.fromJson(response.data);
-      return HttpConnection.userModel;
+      HttpConnection.userModelGlobal = UserModel.fromJson(response.data);
+      return HttpConnection.userModelGlobal;
     }
     return null;
   }

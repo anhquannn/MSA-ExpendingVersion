@@ -1,0 +1,19 @@
+// Danh sách chỉnh sửa
+API bổ sung
+Tăng giảm CartItem
+update trạng thái order
+get order by status
+lấy thông tin thời gian giao hàng dự kiến
+API tạo vận chuyển
+cho feedback bằng hình ảnh
+
+Lỗi Unable to connect to Redis 
+    {{base_url}}order?page=1&size=20&sortBy=grandTotal&sortDirection=asc
+    {{base_url}}order/branch/1?page=1&size=20&sortDirection=asc
+    {{base_url}}notification/user/6
+    {{base_url}}cart-item/add?userId=1&productId=8&branchId=3&quantity=1
+
+
+Tăng tốc độ xử lí API:
+- tạo đơn hàng
+- tăng, giảm số lượng cartitem

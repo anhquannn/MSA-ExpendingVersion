@@ -1,4 +1,3 @@
-
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
@@ -6,24 +5,23 @@ import '../core/config/config.dart' as Config;
 import '../core/config/constant.dart';
 import '../core/utils/prarse_color.dart';
 
-  Widget customTextSpan(String title, String body, TextStyle primaryStyle, TextStyle? secondaryStyle) {
-    return RichText(
-      text: TextSpan(
-        children: [
-          TextSpan(
-            text: title,
-            style: primaryStyle,
-          ),
-          TextSpan(
-            text: body,
-            style: secondaryStyle,
-          ),
-        ],
-      ),
-    );
-  }
+Widget customTextSpan(
+  String title,
+  String body,
+  TextStyle primaryStyle,
+  TextStyle? secondaryStyle,
+) {
+  return RichText(
+    text: TextSpan(
+      children: [
+        TextSpan(text: title, style: primaryStyle),
+        TextSpan(text: body, style: secondaryStyle),
+      ],
+    ),
+  );
+}
 
-Widget iconBack(BuildContext context,{double? size, Color? color, }) {
+Widget iconBack(BuildContext context, {double? size, Color? color}) {
   return InkWell(
     onTap: () {
       Navigator.of(context, rootNavigator: true).pop();
@@ -138,7 +136,18 @@ Widget customItemProductCustomer(
   ProductModel model,
   width, {
   bool? isDiscount = false,
+  VoidCallback? onBuy,
+  VoidCallback? onAddToCart,
 }) {
+  String discount = '0';
+
+  if (model.price != null &&
+      model.price! > 0 &&
+      model.currentPrice != null &&
+      model.currentPrice! > 0) {
+    double discountPercent = 100 - ((model.currentPrice! / model.price!) * 100);
+    discount = discountPercent.toStringAsFixed(0);
+  }
   return Card(
     color: Colors.white,
     child: Container(
@@ -187,7 +196,7 @@ Widget customItemProductCustomer(
                 ),
 
                 // Thẻ giảm giá
-                isDiscount == true
+                discount != '0'
                     ? Positioned(
                       top: 3,
                       right: 3,
@@ -203,7 +212,8 @@ Widget customItemProductCustomer(
                           ),
                           child: Text(
                             model.currentPrice != null
-                                ? '${((model.price! - model.currentPrice!) / model.price! * 100).toStringAsFixed(0)}%'
+                                // ? '${((model.price! - model.currentPrice!) / model.price! * 100).toStringAsFixed(0)}%'
+                                ? '$discount%'
                                 : 'Giảm giá',
                             style: TextStyle(
                               color: Colors.white,
@@ -233,7 +243,7 @@ Widget customItemProductCustomer(
                   maxFontSize: 18,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                isDiscount == true
+                discount != '0'
                     ? AutoSizeText(
                       model.price != null
                           ? '${model.price}đ'
@@ -277,14 +287,21 @@ Widget customItemProductCustomer(
               children: [
                 Expanded(
                   flex: 7,
-                  child: Center(
-                    child: AutoSizeText(
-                      'Mua ngay',
-                      minFontSize: 14,
-                      maxFontSize: 18,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                  child: InkWell(
+                    onTap: () {
+                      if (onBuy != null) {
+                        onBuy();
+                      }
+                    },
+                    child: Center(
+                      child: AutoSizeText(
+                        'Mua ngay',
+                        minFontSize: 14,
+                        maxFontSize: 18,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -292,6 +309,11 @@ Widget customItemProductCustomer(
                 Expanded(
                   flex: 3,
                   child: InkWell(
+                    onTap: () {
+                      if (onAddToCart != null) {
+                        onAddToCart();
+                      }
+                    },
                     child: Icon(
                       Icons.add_shopping_cart_outlined,
                       color: Colors.white,

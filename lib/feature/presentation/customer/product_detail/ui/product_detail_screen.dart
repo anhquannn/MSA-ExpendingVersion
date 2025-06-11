@@ -1,32 +1,33 @@
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:msa/core/config/global.dart';
+import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../../../core/config/base_bloc.dart';
 import '../../../../../core/config/config.dart';
 import '../../../../../core/config/constant.dart';
 import '../../../../../core/utils/prarse_color.dart';
-import '../../../../../widget/custom_notification.dart';
 import '../../../../../widget/custom_widget.dart';
 import '../../../../../widget/reuseable_screen_hide_appbar.dart';
 import '../bloc/product_detail_bloc.dart';
 
 class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
-  const ProductDetailCustomerScreen({super.key});
+  final ProductModel productModel;
+  ProductDetailCustomerScreen({super.key, required this.productModel});
 
   @override
   ProductDetailBloc createState() => ProductDetailBloc();
 
   @override
   ProductDetailBloc createBloc() => ProductDetailBloc();
-
   Widget build(BuildContext context) {
     final bloc = (context as StatefulElement).state as ProductDetailBloc;
     return CustomScaffold(
       isHide: true,
-      appBarLeading: iconBack( bloc.viewContext,color: Colors.black),
+      appBarLeading: iconBack(bloc.viewContext, color: Colors.black),
       bodyBuilder: (controller) {
-        final double width = AppSize.width();
         return buildBodyContent(bloc: bloc, controller: controller);
       },
 
@@ -34,15 +35,13 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
         BottomBarItem(
           label: 'Mua ngay',
           onTap: (index) {
-            index == 0
-                ? print('Thêm vào giỏ hàng11')
-                : print('Thêm vào giỏ hàng1');
+            bloc.onBuy(mockProduct.productId ?? 0);
           },
         ),
         BottomBarItem(
           label: 'Thêm vào\n giỏ hàng',
           onTap: (index) {
-            print('Thêm vào giỏ hàng');
+            bloc.onAddToCart(mockProduct.productId ?? 0);
           },
         ),
       ],
@@ -54,63 +53,104 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     required ProductDetailBloc bloc,
     required ScrollController controller,
   }) {
-    return ListView(
+    return CustomScrollView(
       controller: controller,
-      // padding: EdgeInsets.all(5),
-      children: [
-        itemImage(imgCategorySuaTam),
-        const SizedBox(height: 5),
-        itemProductDetail('Dưa lưới', '100.000đ', priceDiscount: '900.000đ'),
-        const SizedBox(height: 5),
-        itemDelivery(
-          'Nhận hàng 12/12/2024 - 13/12/2024',
-          'Tặng voucher 20.000 đ nếu giao sau thời gian trên',
+      slivers: [
+        SliverToBoxAdapter(
+          child: itemImage(stringToList(productModel.images), bloc),
         ),
-        const SizedBox(height: 5),
-        itemFeedBack('4.9', 100, () {}),
-        const SizedBox(height: 5),
-        itemDesc(
-          bloc,
-          'Dưa lưới là loại trái cây cao cấp, được yêu thích bởi vị ngọt thanh mát, thơm nhẹ và hàm lượng dinh dưỡng cao. Với lớp vỏ ngoài màu vàng cam hoặc xanh nhạt, có các đường gân lưới đặc trưng, bên trong là phần ruột màu cam hoặc xanh ngọc, mọng nước và ngọt dịu.Đặc điểm nổi bật: Nguồn gốc rõ ràng: Được trồng tại các trang trại sạch, áp dụng quy trình canh tác hữu cơ hiện đại. Giàu dưỡng chất: Cung cấp vitamin A, C, kali và chất xơ, tốt cho hệ miễn dịch, hỗ trợ tiêu hóa và làm đẹp da. An toàn - không hóa chất: Cam kết không thuốc trừ sâu, không chất bảo quản, đảm bảo an toàn cho cả gia đình. Thưởng thức đa dạng: Có thể ăn trực tiếp, làm sinh tố, salad, nước ép hoặc kết hợp trong các món tráng miệng. Trọng lượng: ~1.2kg - 1.8kg/quảBảo quản: Nơi khô ráo, thoáng mát hoặc ngăn mát tủ lạnh, dùng trong vòng 3-5 ngày sau khi cắt.',
+        const SliverToBoxAdapter(child: SizedBox(height: 5)),
+        SliverToBoxAdapter(
+          child: itemProductDetail(
+            productModel.name ?? '',
+            productModel.currentPrice ?? 0,
+            priceDiscount: productModel.price ?? 0,
+          ),
         ),
-        customDivider(
-          color: toHexToColor(primaryTextColor),
-          text: Text('Sản phẩm liên quan'),
+        const SliverToBoxAdapter(child: SizedBox(height: 5)),
+        SliverToBoxAdapter(
+          child: itemDelivery(
+            'Nhận hàng 12/12/2024 - 13/12/2024',
+            'Tặng voucher 20.000 đ nếu giao sau thời gian trên',
+          ),
         ),
-        _buildGridItems(bloc.productModel),
-        Container(height: 1000),
+        const SliverToBoxAdapter(child: SizedBox(height: 5)),
+        SliverToBoxAdapter(child: itemFeedBack('4.9', 100, () {}, bloc)),
+        const SliverToBoxAdapter(child: SizedBox(height: 5)),
+        SliverToBoxAdapter(
+          child: itemDec(bloc, 'Dưa lưới là loại trái cây cao cấp...'),
+        ),
+        SliverToBoxAdapter(
+          child: customDivider(
+            color: toHexToColor(primaryTextColor),
+            text: Text('Sản phẩm liên quan'),
+          ),
+        ),
+        SliverToBoxAdapter(child: _buildGridItems(bloc)),
+        const SliverToBoxAdapter(child: SizedBox(height: 1000)),
       ],
     );
   }
 
-  Widget _buildGridItems(ProductModel model) {
+  Widget _buildGridItems(ProductDetailBloc bloc) {
     return SizedBox(
       width: AppSize.width(),
       child: SingleChildScrollView(
         child: Column(
           children: [
-            SizedBox(
-              width: AppSize.width(),
-              child: Padding(
-                padding: EdgeInsets.all(10),
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            StreamBuilder(
+              stream: bloc.productModels,
+              builder: (context, snapshot) {
+                // if (snapshot.connectionState == ConnectionState.waiting) {
+                //   return const Center(child: CircularProgressIndicator());
+                // }
+                // if (snapshot.hasError) {
+                //   return Center(child: Text('Lỗi: ${snapshot.error}'));
+                // }
+                // if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                //   return const Center(child: Text('Không có sản phẩm'));
+                // }
+                // final products = snapshot.data!;
+                return GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: (AppSize.width() / 2) / (AppSize.h(0.4)),
+                    crossAxisSpacing: 3,
+                    mainAxisSpacing: 3,
+                    mainAxisExtent: 300,
                   ),
-                  physics: NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: 6,
+                  itemCount: 10, //products.length > 10 ? 10 : products.length,
                   itemBuilder: (context, index) {
-                    return SizedBox(
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => ProductDetailCustomerScreen(
+                                  productModel: mockProduct,
+                                ),
+                          ),
+                        );
+                        // bloc.onTapProductDetail(products[index]);
+                      },
                       child: customItemProductCustomer(
-                        model,
-                        AppSize.w(1) * 0.4,
+                        isDiscount: true,
+                        // products[index],
+                        mockProduct,
+                        AppSize.width() * 0.4,
+                        onBuy: () {
+                          bloc.onBuy(mockProduct.productId ?? 0);
+                        },
+                        onAddToCart: () {
+                          bloc.onAddToCart(mockProduct.productId ?? 0);
+                        },
                       ),
                     );
                   },
-                ),
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -118,7 +158,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     );
   }
 
-  Widget itemDesc(ProductDetailBloc bloc, String desc) {
+  Widget itemDec(ProductDetailBloc bloc, String desc) {
     return Card(
       child: Container(
         width: AppSize.w(0.95),
@@ -177,21 +217,77 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     );
   }
 
-  Widget itemImage(String image) {
+  Widget itemImage(List<String> images, ProductDetailBloc bloc) {
+    final PageController _pageController = PageController();
     return Center(
-      child: Container(
-        width: AppSize.w(0.95),
-        height: AppSize.w(0.95),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: Colors.transparent,
-        ),
-        child: Image.asset(imgCategorySuaTam),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: AppSize.w(0.95),
+            height: AppSize.w(0.95),
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: images.length,
+                    itemBuilder: (context, index) {
+                      return CachedNetworkImage(
+                        imageUrl: images[index],
+                        fit: BoxFit.cover,
+                        placeholder:
+                            (context, url) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                        errorWidget:
+                            (context, url, error) =>
+                                Image.asset(imgBranch, fit: BoxFit.cover),
+                      );
+                    },
+                  ),
+                ),
+                Positioned(
+                  top: kToolbarHeight / 2,
+                  left: 8,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pop(bloc.viewContext);
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          SmoothPageIndicator(
+            controller: _pageController,
+            count: images.length,
+            effect: WormEffect(
+              dotHeight: 8,
+              dotWidth: 8,
+              activeDotColor: toHexToColor(primaryButtonColor),
+              dotColor: Colors.grey.shade300,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget itemProductDetail(String name, String price, {String? priceDiscount}) {
+  Widget itemProductDetail(String name, double price, {double? priceDiscount}) {
+    String discount = '0';
+
+    if (price > 0 && priceDiscount != null && priceDiscount > 0) {
+      double discountPercent = 100 - ((priceDiscount / price) * 100);
+      discount = discountPercent.toStringAsFixed(0);
+    }
     return Card(
       child: Container(
         padding: EdgeInsets.all(10),
@@ -204,7 +300,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              name ?? '',
+              name,
               style: TextStyle(
                 color: toHexToColor(primaryTextColor),
                 fontWeight: FontWeight.bold,
@@ -217,7 +313,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
             Row(
               children: [
                 Text(
-                  price,
+                  formatCurrency(price),
                   style: TextStyle(
                     color: toHexToColor(appBarColor),
                     fontWeight: FontWeight.bold,
@@ -225,15 +321,34 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                   ),
                 ),
                 SizedBox(width: 10),
-                Text(
-                  priceDiscount ?? '',
-                  style: TextStyle(
-                    color: toHexToColor(appBarColor),
-                    fontStyle: FontStyle.italic,
-                    fontSize: 14,
-                    decoration: TextDecoration.lineThrough,
+                if (price != priceDiscount) ...[
+                  Text(
+                    formatCurrency(priceDiscount ?? 0),
+                    style: TextStyle(
+                      color: toHexToColor(appBarColor),
+                      fontStyle: FontStyle.italic,
+                      fontSize: 14,
+                      decoration: TextDecoration.lineThrough,
+                    ),
                   ),
-                ),
+                  Spacer(),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: toHexToColor(primaryErrorColor),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 2,
+                        horizontal: 8,
+                      ),
+                      child: Text(
+                        '$discount%',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ],
@@ -284,6 +399,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     String startCount,
     int feedbackCount,
     VoidCallback onSeeMore,
+    ProductDetailBloc? bloc,
   ) {
     return Card(
       child: Container(
@@ -311,7 +427,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                   Text(
                     startCount,
                     style: TextStyle(
-                      color: toHexToColor(primaryTextColor),
+                      color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -322,7 +438,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                   Text(
                     'Đánh giá sản phẩm ($feedbackCount)',
                     style: TextStyle(
-                      color: toHexToColor(primaryTextColor),
+                      color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -333,7 +449,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                     child: Text(
                       'Xem tất cả',
                       style: TextStyle(
-                        color: toHexToColor(primaryColorGreen),
+                        color: Colors.white,
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                       ),
@@ -345,6 +461,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
             SizedBox(height: 10),
 
             buildFeedBack(
+              bloc: bloc,
               avt: avtWomen1,
               name: 'NguyenVanA NguyenVanA NguyenVanA',
               desc:
@@ -366,6 +483,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
               ],
             ),
             buildFeedBack(
+              bloc: bloc,
               avt: avtWomen1,
               name: 'NguyenVanA NguyenVanA NguyenVanA',
               desc:
@@ -399,6 +517,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     String? desc,
     List<String>? imgFeedback,
     double? rating,
+    ProductDetailBloc? bloc,
   }) {
     return Column(
       spacing: 5,
@@ -424,6 +543,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                           builder:
                               (_) => showImageDialog(
                                 imageProvider: AssetImage(imgFeedback[index]),
+                                bloc: bloc,
                               ),
                         );
                       },
@@ -482,7 +602,10 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     );
   }
 
-  Widget showImageDialog({required ImageProvider imageProvider}) {
+  Widget showImageDialog({
+    required ImageProvider imageProvider,
+    ProductDetailBloc? bloc,
+  }) {
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(16),
@@ -498,628 +621,11 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
             child: IconButton(
               icon: const Icon(Icons.close, color: Colors.white),
               onPressed: () {
-                Navigator.of(
-                  context,
-                  rootNavigator: true,
-                ).pop(); // để đảm bảo thoát đúng dialog
+                bloc?.onTapBack();
               },
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget buildFourTabBar(ScrollController controller) {
-    return DefaultTabController(
-      length: 3, // Số lượng tab (đã sửa thành 3 vì chỉ có 3 tab)
-      child: Column(
-        children: [
-          Container(
-            color: toHexToColor(backgroundColor), // Hàm này cần được định nghĩa
-            child: const TabBar(
-              dividerHeight: 0,
-              labelColor: Colors.blueGrey,
-              unselectedLabelColor: Colors.black,
-              indicatorColor: Colors.blueGrey,
-              tabs: [
-                Tab(text: "Đang xử lí"),
-                Tab(text: "Đang giao"),
-                Tab(text: "Hoàn tất"),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: TabBarView(
-              children: [
-                // Tab 1
-                SizedBox(
-                  width: AppSize.width(),
-                  child: ListView(
-                    controller: controller,
-                    children: [
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(AppSize.w(0.9), isPending: true),
-                      ),
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(AppSize.w(0.9), isPending: true),
-                      ),
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(AppSize.w(0.9), isPending: true),
-                      ),
-                    ],
-                  ),
-                ),
-                //"Sản phẩm giảm giá
-                SizedBox(
-                  width: AppSize.width(),
-                  child: ListView(
-                    controller: controller,
-                    children: [
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(
-                          AppSize.w(0.9),
-                          isDelivering: true,
-                        ),
-                      ),
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(
-                          AppSize.w(0.9),
-                          isDelivering: true,
-                        ),
-                      ),
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(
-                          AppSize.w(0.9),
-                          isDelivering: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: AppSize.width(),
-                  child: ListView(
-                    controller: controller,
-                    children: [
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(AppSize.w(0.9), isSuccess: true),
-                      ),
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(AppSize.w(0.9), isSuccess: true),
-                      ),
-                      SizedBox(
-                        width: AppSize.width(),
-                        child: customCardOrder(AppSize.w(0.9), isSuccess: true),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget customCardOrder(
-    double width, {
-    bool isPending = false,
-    bool isDelivering = false,
-    bool isSuccess = false,
-  }) {
-    return Padding(
-      padding: EdgeInsets.all(10.0),
-      child: SizedBox(
-        width: width,
-        height: 200,
-        child: Card(
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  flex: 8,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Expanded(
-                        flex: 4,
-                        child: Padding(
-                          padding: const EdgeInsets.all(5.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(10),
-                                topRight: Radius.circular(10),
-                              ),
-                              image: DecorationImage(
-                                image: AssetImage(imgCategoryBotGiat),
-                                fit:
-                                    BoxFit
-                                        .cover, // Quan trọng để ảnh chiếm toàn bộ
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 6,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(10),
-                                topRight: Radius.circular(10),
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              // mainAxisSize: MainAxisSize.min,
-                              children: [
-                                customAutoSizeText(
-                                  14,
-                                  20,
-                                  'Mã đơn hàng #122222',
-                                  isBold: true,
-                                ),
-                                Card(
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 5,
-                                      horizontal: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: toHexToColor(secondaryColorOrange),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: customAutoSizeText(
-                                      12,
-                                      18,
-                                      'Tổng sản phẩm: 3',
-                                      textColor: toHexToColor(
-                                        secondaryTextColor,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Card(
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 5,
-                                      horizontal: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: toHexToColor(secondaryColorPurple),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: buildSuccessBody(
-                                      isSuccess: isSuccess,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: customBottomCard(
-                    isPending: isPending,
-                    isSuccess: isSuccess,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget customBottomCard({bool isPending = false, bool isSuccess = false}) {
-    return isPending
-        ? Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 7,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: toHexToColor(primaryButtonColor),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                    bottomRight:
-                        isPending ? Radius.circular(0) : Radius.circular(10),
-                  ),
-                ),
-                child: Center(
-                  child: customAutoSizeText(
-                    12,
-                    18,
-                    'Tổng tiền: 100.000đ',
-                    textColor: Colors.white,
-                    isBold: true,
-                  ),
-                ),
-              ),
-            ),
-            isPending
-                ? Expanded(
-                  flex: 3,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.blueGrey,
-                      borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(10),
-                      ),
-                    ),
-
-                    child: Center(
-                      child: customAutoSizeText(
-                        12,
-                        18,
-                        'Trả hàng',
-                        textColor: Colors.white,
-                        isBold: true,
-                      ),
-                    ),
-                  ),
-                )
-                : Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                      bottomRight: Radius.circular(10),
-                    ),
-                  ),
-                ),
-          ],
-        )
-        : isSuccess
-        ? Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 5,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: toHexToColor(primaryButtonColor),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                  ),
-                ),
-                child: Center(
-                  child: customAutoSizeText(
-                    12,
-                    18,
-                    'Mua lại',
-                    textColor: Colors.white,
-                    isBold: true,
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 5,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.blueGrey,
-                  borderRadius: BorderRadius.only(
-                    bottomRight: Radius.circular(10),
-                  ),
-                ),
-
-                child: Center(
-                  child: customAutoSizeText(
-                    12,
-                    18,
-                    'Đánh giá',
-                    textColor: Colors.white,
-                    isBold: true,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        )
-        : Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: toHexToColor(primaryButtonColor),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
-                  ),
-                ),
-                child: Center(
-                  child: customAutoSizeText(
-                    12,
-                    18,
-                    'Đơn hàng sẽ được giao trong 12/12/2020',
-                    textColor: Colors.white,
-                    isBold: true,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-  }
-
-  Widget buildSuccessBody({bool isSuccess = false}) {
-    return !isSuccess
-        ? Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            customAutoSizeText(
-              12,
-              18,
-              'Tổng tiền: 100.000đ',
-              textColor: toHexToColor(secondaryTextColor),
-              maxLine: 1,
-            ),
-            customAutoSizeText(
-              12,
-              18,
-              'Tổng tiền: 100.000đ',
-              textColor: toHexToColor(secondaryTextColor),
-              maxLine: 1,
-            ),
-            customAutoSizeText(
-              12,
-              18,
-              'Tổng tiền: 100.000đ',
-              textColor: toHexToColor(secondaryTextColor),
-              maxLine: 1,
-            ),
-          ],
-        )
-        : Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            customAutoSizeText(
-              12,
-              18,
-              'Tổng tiền: 100.000đ',
-              textColor: toHexToColor(secondaryTextColor),
-              maxLine: 1,
-            ),
-          ],
-        );
-  }
-
-  Widget cardScreen(ScrollController controller) {
-    return ListView(
-      controller: controller,
-      children: [itemCard(), itemCard(), itemCard(), itemCard(), itemCard()],
-    );
-  }
-
-  Widget notificationScreen(ScrollController controller) {
-    return ListView(
-      controller: controller,
-      children: [
-        buildItemNotification(
-          'Bạn có đơn hàng mới',
-          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
-          isRead: false,
-        ),
-        buildItemNotification(
-          'Bạn có đơn hàng mới',
-          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
-          isRead: false,
-        ),
-        buildItemNotification(
-          'Bạn có đơn hàng mới',
-          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
-          isRead: false,
-        ),
-        buildItemNotification(
-          'Bạn có đơn hàng mới',
-          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
-          isRead: false,
-        ),
-      ],
-    );
-  }
-
-  Widget customTitleCategory(String title, String actionText) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-        ),
-        Text(
-          actionText,
-          style: const TextStyle(fontSize: 12, color: Colors.blue),
-        ),
-      ],
-    );
-  }
-
-  Widget widgetCustomItemPromoCode(
-    VoidCallback onTap1,
-    VoidCallback onTap2,
-    PageController controller,
-    int index,
-  ) {
-    return Center(child: _customItemPromoCode(onTap1, onTap2));
-  }
-
-  Widget _customItemPromoCode(VoidCallback onTap1, VoidCallback onTap2) {
-    return GestureDetector(
-      onTap: onTap1,
-      child: SizedBox(
-        width: AppSize.w(0.9),
-        // height: 300,
-        // color: Colors.white,
-        // child: customItemPromoCode(() {}, () {}),
-      ),
-    );
-  }
-
-  Widget itemCard({String? img, String? name, String? price}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
-      child: Card(
-        color: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: SizedBox(
-            height: 100,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 4,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(avtWomen6, fit: BoxFit.cover),
-                  ),
-                ),
-                Expanded(
-                  flex: 6,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          top: 1,
-                          right: 1,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: toHexToColor(primaryErrorColor),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 2,
-                                horizontal: 8,
-                              ),
-                              child: Text(
-                                '10%',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.max,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            customAutoSizeText(
-                              14,
-                              18,
-                              'Dưa lưới',
-                              isBold: true,
-                              textColor: toHexToColor(primaryTextColor),
-                            ),
-                            customAutoSizeText(8, 12, '100.000đ', isLine: true),
-                            customAutoSizeText(
-                              12,
-                              16,
-                              '90.000đ',
-                              isBold: true,
-                              textColor: toHexToColor(primaryButtonColor),
-                            ),
-                            Spacer(),
-                            Row(
-                              children: [
-                                Spacer(),
-                                Card(
-                                  color: Colors.white,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      // color: toHexToColor(primaryButtonColor),
-                                      color: Colors.grey[300],
-                                      borderRadius: BorderRadius.circular(5),
-                                      // border: Border.all(
-                                      //   color: toHexToColor(primaryButtonColor),
-                                      // ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        InkWell(
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 3,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.only(
-                                                topLeft: Radius.circular(5),
-                                                bottomLeft: Radius.circular(5),
-                                              ),
-                                            ),
-                                            child: Text(' - '),
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          color: Colors.white,
-                                          child: Text('100'),
-                                        ),
-                                        InkWell(
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 3,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.only(
-                                                bottomRight: Radius.circular(5),
-                                                topRight: Radius.circular(5),
-                                              ),
-                                              // color: Colors.white,
-                                            ),
-                                            child: Text(' + '),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

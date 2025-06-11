@@ -5,6 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+import 'package:msa/core/config/global.dart';
+import 'package:msa/feature/domain/entities/cart_model.dart';
+import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:path/path.dart' as path;
 
@@ -19,14 +22,21 @@ class HttpConnection {
   static String otp = '';
   static String token = '';
   static String deviceId = '';
-  static UserModel? userModel;
+  static String? messageError;
+
+  static UserModel? userModelGlobal;
+  static CartModel? cartModelGlobal;
   static String email = 'minhquang03082003@gmail.com';
+
+  static List<City>? cityGlobal;
+  static List<Ward>? wardGlobal;
+  static List<District>? districtGlobal;
 
   static onLogout() {
     otp = '';
     token = '';
     deviceId = '';
-    userModel = null;
+    userModelGlobal = null;
     email = '';
   }
 
@@ -37,9 +47,10 @@ class HttpConnection {
     if (queryParams.isEmpty) return baseUrl;
 
     final queryString = queryParams.entries
+        .where((e) => e.value != null)
         .map(
           (e) =>
-              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
+              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value.toString())}',
         )
         .join('&');
 
@@ -157,79 +168,6 @@ class HttpConnection {
     isToken: isToken,
   );
 
-  // static Future<ResponseData> sendRequest({
-  //   required String method,
-  //   required String path,
-  //   Map<String, dynamic>? body,
-  //   Map<String, String>? headers,
-  //   bool isToken = false,
-  // }) async {
-  //   final url = Uri.parse('$_urlConnection$path');
-  //   final requestHeaders = _configHeader(
-  //     extraHeaders: headers,
-  //     isToken: isToken,
-  //   );
-  //   final responseData = ResponseData();
-
-  //   try {
-  //     http.Response response;
-
-  //     switch (method) {
-  //       case 'POST':
-  //         response = await http.post(
-  //           url,
-  //           headers: requestHeaders,
-  //           body: jsonEncode(body ?? {}),
-  //         );
-  //         break;
-  //       case 'GET':
-  //         response = await http.get(url, headers: requestHeaders);
-  //         break;
-  //       case 'PUT':
-  //         response = await http.put(
-  //           url,
-  //           headers: requestHeaders,
-  //           body: jsonEncode(body ?? {}),
-  //         );
-  //         break;
-  //       case 'DELETE':
-  //         response = await http.delete(
-  //           url,
-  //           headers: requestHeaders,
-  //           body: jsonEncode(body ?? {}),
-  //         );
-  //         break;
-  //       default:
-  //         throw Exception('Unsupported HTTP method: $method');
-  //     }
-
-  //     _logRequest(
-  //       method: method,
-  //       url: url,
-  //       headers: requestHeaders,
-  //       body: body,
-  //       response: response,
-  //       statusCode: response.statusCode,
-  //     );
-
-  //     final responseBody = jsonDecode(response.body);
-
-  //     if (response.statusCode >= 200 && response.statusCode < 300) {
-  //       responseData
-  //         ..isSuccess = responseBody['code'] == 200
-  //         ..data = responseBody['result']
-  //         ..message = responseBody['message'];
-  //     } else {
-  //       // context?.go('/err404');
-  //       responseData.isSuccess = false;
-  //     }
-
-  //     return responseData;
-  //   } catch (e) {
-  //     throw Exception('Lỗi $method: $e');
-  //   }
-  // }
-
   static Future<ResponseData> sendRequest({
     required String method,
     required String path,
@@ -307,6 +245,7 @@ class HttpConnection {
           ..data = responseBody['result']
           ..message = responseBody['message'];
       } else {
+        messageError = responseData.message;
         responseData.isSuccess = false;
         responseData.message = responseBody['message'] ?? 'Error';
       }
@@ -328,10 +267,10 @@ class HttpConnection {
     if (kDebugMode) {
       print('''\n
 ############################## [$method REQUEST] ##############################
-URL: $url
-Headers: $headers
-Body: $body
-Response: ${response.body}
+\t URL: $url
+\t Headers: $headers
+\t Body: $body
+\t Response: ${response.body}
 ########################### [STATUS CODE $statusCode] ##########################\n
 ''');
     }

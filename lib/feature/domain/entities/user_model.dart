@@ -1,4 +1,3 @@
-/// YApi QuickType插件生成，具体参考文档:https://plugins.jetbrains.com/plugin/18847-yapi-quicktype/documentation
 library;
 
 import 'dart:convert';
@@ -34,6 +33,7 @@ class UserModel {
     int? userId;
     String? email;
 
+
     factory UserModel.fromJson(Map<dynamic, dynamic> json) => UserModel(
         birthday: json["birthday"]??'',
         password: json["password"]??'',
@@ -45,8 +45,8 @@ class UserModel {
         fullName: json["fullName"]??'',
         userId: json["userId"]??'',
         email: json["email"]??'',
-        image: json["image"]??'',
-        deviceId: json["deviceId"]??'',
+        image: json["image"] ?? '',
+        deviceId: json["deviceId"] ?? '',
         googleId: json["googleId"]??'',
         
     );

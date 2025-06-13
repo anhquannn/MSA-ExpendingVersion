@@ -1,5 +1,6 @@
 package com.market.MSA.models.user;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.market.MSA.models.product.Product;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -31,9 +32,11 @@ public class UserBehavior {
 
   @ManyToOne
   @JoinColumn(name = "userId", nullable = false)
+  @JsonBackReference("user-behaviors")
   User user;
 
   @ManyToOne
   @JoinColumn(name = "productId", nullable = false)
+  @JsonBackReference("product-behaviors")
   Product product;
 }

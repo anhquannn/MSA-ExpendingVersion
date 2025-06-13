@@ -112,11 +112,11 @@ public enum ApiMessage {
   VNPAY_CALLBACK_HANDLED("VNPay callback handled successfully"),
 
   // Manufacturer messages
-  MANUFACTURER_CREATED("Manufacturer created successfully"),
-  MANUFACTURER_UPDATED("Manufacturer updated successfully"),
-  MANUFACTURER_DELETED("Manufacturer deleted successfully"),
-  MANUFACTURER_RETRIEVED("Manufacturer retrieved successfully"),
-  ALL_MANUFACTURERS_RETRIEVED("All manufacturers retrieved successfully"),
+  SUPPLIER_CREATED("Supplier created successfully"),
+  SUPPLIER_UPDATED("Supplier updated successfully"),
+  SUPPLIER_DELETED("Supplier deleted successfully"),
+  SUPPLIER_RETRIEVED("Supplier retrieved successfully"),
+  ALL_SUPPLIERS_RETRIEVED("All suppliers retrieved successfully"),
 
   // Permission messages
   PERMISSION_CREATED("Permission created successfully"),
@@ -223,6 +223,34 @@ public enum ApiMessage {
   POINTS_REDEEMED("Points redeemed successfully"),
   POINTS_ADJUSTED("Points adjusted successfully"),
   POINTS_BALANCE_RETRIEVED("Points balance retrieved successfully"),
+
+  // Product Attribute Value messages
+  PRODUCT_ATTRIBUTE_VALUE_CREATED("Product attribute value created successfully"),
+  PRODUCT_ATTRIBUTE_VALUE_UPDATED("Product attribute value updated successfully"),
+  PRODUCT_ATTRIBUTE_VALUE_DELETED("Product attribute value deleted successfully"),
+  PRODUCT_ATTRIBUTE_VALUE_RETRIEVED("Product attribute value retrieved successfully"),
+  ALL_PRODUCT_ATTRIBUTE_VALUES_RETRIEVED("All product attribute values retrieved successfully"),
+
+  // Product Image messages
+  PRODUCT_IMAGE_CREATED("Product image created successfully"),
+  PRODUCT_IMAGE_UPDATED("Product image updated successfully"),
+  PRODUCT_IMAGE_DELETED("Product image deleted successfully"),
+  PRODUCT_IMAGE_RETRIEVED("Product image retrieved successfully"),
+  ALL_PRODUCT_IMAGES_RETRIEVED("All product images retrieved successfully"),
+
+  // Product Attribute messages
+  PRODUCT_ATTRIBUTE_CREATED("Product attribute created successfully"),
+  PRODUCT_ATTRIBUTE_UPDATED("Product attribute updated successfully"),
+  PRODUCT_ATTRIBUTE_DELETED("Product attribute deleted successfully"),
+  PRODUCT_ATTRIBUTE_RETRIEVED("Product attribute retrieved successfully"),
+  ALL_PRODUCT_ATTRIBUTES_RETRIEVED("All product attributes retrieved successfully"),
+
+  // Promo Code Usage messages
+  PROMO_CODE_USAGE_CREATED("Promo code usage created successfully"),
+  PROMO_CODE_USAGE_UPDATED("Promo code usage updated successfully"),
+  PROMO_CODE_USAGE_DELETED("Promo code usage deleted successfully"),
+  PROMO_CODE_USAGE_RETRIEVED("Promo code usage retrieved successfully"),
+  ALL_PROMO_CODE_USAGES_RETRIEVED("All promo code usages retrieved successfully"),
   ;
 
   private final String message;

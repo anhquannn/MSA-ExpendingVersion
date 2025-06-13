@@ -361,7 +361,7 @@
         "categoryId": 0,
         "categoryName": "string"
       },
-      "manufacturer": {
+      "supplier": {
         "manufacturerId": 0,
         "manufacturerName": "string"
       },
@@ -389,7 +389,7 @@
         "categoryId": 0,
         "categoryName": "string"
       },
-      "manufacturer": {
+      "supplier": {
         "manufacturerId": 0,
         "manufacturerName": "string"
       },
@@ -429,7 +429,7 @@
         "categoryId": 0,
         "categoryName": "string"
       },
-      "manufacturer": {
+      "supplier": {
         "manufacturerId": 0,
         "manufacturerName": "string"
       },
@@ -456,7 +456,7 @@
   - `minPrice` (optional): Minimum price filter
   - `maxPrice` (optional): Maximum price filter
   - `categoryId` (optional): Filter by category
-  - `manufacturerId` (optional): Filter by manufacturer
+  - `manufacturerId` (optional): Filter by supplier
   - `page` (default: 0)
   - `size` (default: 10)
   - `sortBy` (default: "productId")
@@ -475,7 +475,7 @@
             "categoryId": 0,
             "categoryName": "string"
           },
-          "manufacturer": {
+          "supplier": {
             "manufacturerId": 0,
             "manufacturerName": "string"
           },
@@ -523,7 +523,7 @@
   - `minPrice` (optional): Minimum price filter
   - `maxPrice` (optional): Maximum price filter
   - `categoryId` (optional): Filter by category
-  - `manufacturerId` (optional): Filter by manufacturer
+  - `manufacturerId` (optional): Filter by supplier
   - `page` (default: 0)
   - `size` (default: 10)
   - `sortBy` (default: "productId")
@@ -541,7 +541,7 @@
           "categoryId": 0,
           "categoryName": "string"
         },
-        "manufacturer": {
+        "supplier": {
           "manufacturerId": 0,
           "manufacturerName": "string"
         },
@@ -879,7 +879,7 @@
               "categoryId": 0,
               "categoryName": "string"
             },
-            "manufacturer": {
+            "supplier": {
               "manufacturerId": 0,
               "manufacturerName": "string"
             },

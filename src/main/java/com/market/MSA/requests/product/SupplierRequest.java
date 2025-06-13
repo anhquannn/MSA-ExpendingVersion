@@ -1,4 +1,4 @@
-package com.market.MSA.responses.product;
+package com.market.MSA.requests.product;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,10 +12,9 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ManufacturerResponse {
-  Long manufacturerId;
-
+public class SupplierRequest {
   String name;
   String address;
   String contact;
+  String image;
 }

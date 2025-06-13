@@ -1,12 +1,16 @@
 package com.market.MSA.controllers.order;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.constants.OrderStatus;
+import com.market.MSA.exceptions.AppException;
+import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.requests.order.OrderRequest;
 import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.OrderSummaryResponse;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.services.order.OrderService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
@@ -166,6 +170,22 @@ public class OrderController {
       @RequestParam(required = false) Long userId) {
     return ApiResponse.<Map<String, Double>>builder()
         .result(orderService.getRevenueStatistics(year, month, branchId, userId))
+        .message(ApiMessage.REVENUE_STATISTICS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PutMapping("/{orderId}/status")
+  public ApiResponse<OrderResponse> updateOrderStatus(
+      @PathVariable @NotNull(message = "Order ID is required") Long orderId,
+      @RequestParam @NotNull(message = "Status is required") String status) {
+
+    if (!OrderStatus.isValidStatus(status)) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+
+    OrderResponse response = orderService.updateOrderStatus(orderId, status);
+    return ApiResponse.<OrderResponse>builder()
+        .result(response)
         .message(ApiMessage.REVENUE_STATISTICS_RETRIEVED.getMessage())
         .build();
   }

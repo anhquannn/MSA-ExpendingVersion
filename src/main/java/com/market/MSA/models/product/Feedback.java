@@ -1,5 +1,6 @@
 package com.market.MSA.models.product;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.market.MSA.models.user.User;
 import com.market.MSA.validators.RatingConstraint;
 import jakarta.persistence.Entity;
@@ -42,13 +43,15 @@ public class Feedback {
 
   @RatingConstraint int rating;
 
-  LocalDateTime createAt;
+  LocalDateTime createdAt;
 
   @ManyToOne
   @JoinColumn(name = "userId", nullable = false)
+  @JsonBackReference("user-feedbacks")
   User user;
 
   @ManyToOne
   @JoinColumn(name = "productId", nullable = false)
+  @JsonBackReference("product-feedbacks")
   Product product;
 }

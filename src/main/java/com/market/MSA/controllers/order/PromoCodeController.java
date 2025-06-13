@@ -67,20 +67,23 @@ public class PromoCodeController {
   }
 
   // Lấy PromoCode theo mã code
-  @GetMapping("/code/{code}")
-  public ApiResponse<PromoCodeResponse> getPromoCodeByCode(@PathVariable String code) {
+  @GetMapping("/user/{userId}/code/{code}")
+  public ApiResponse<PromoCodeResponse> getPromoCodeByCode(
+      @PathVariable String code, @PathVariable Long userId) {
     return ApiResponse.<PromoCodeResponse>builder()
-        .result(promoCodeService.getPromoCodeByCode(code))
+        .result(promoCodeService.getPromoCodeByCode(code, userId))
         .message(ApiMessage.PROMO_CODE_RETRIEVED.getMessage())
         .build();
   }
 
   // Lấy danh sách tất cả PromoCode
-  @GetMapping
+  @GetMapping("/user/{userId}")
   public ApiResponse<List<PromoCodeResponse>> getAllPromoCodes(
-      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int pageSize) {
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int pageSize,
+      @PathVariable Long userId) {
     return ApiResponse.<List<PromoCodeResponse>>builder()
-        .result(promoCodeService.getAllPromoCodes(page, pageSize))
+        .result(promoCodeService.getAllPromoCodes(page, pageSize, userId))
         .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
         .build();
   }

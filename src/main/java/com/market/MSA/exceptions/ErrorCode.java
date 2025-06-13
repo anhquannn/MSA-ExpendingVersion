@@ -35,7 +35,7 @@ public enum ErrorCode {
   DELIVERY_DETAIL_NOT_FOUND(120, "Delivery detail not found!", HttpStatus.NOT_FOUND),
   DELIVERY_INFO_NOT_FOUND(121, "Delivery info not found!", HttpStatus.NOT_FOUND),
   PARSE_SHIPPO_RESPONSE_ERROR(122, "Error parsing shipment response!", HttpStatus.FORBIDDEN),
-  MANUFACTURER_NOT_FOUND(123, "Manufacturer not found!", HttpStatus.NOT_FOUND),
+  SUPPLIER_NOT_FOUND(123, "Supplier not found!", HttpStatus.NOT_FOUND),
   ORDER_DETAIL_NOT_FOUND(124, "Order detail not found!", HttpStatus.NOT_FOUND),
   PAYMENT_NOT_FOUND(125, "Payment not found!", HttpStatus.NOT_FOUND),
   PROMO_CODE_NOT_FOUND(126, "Promo code not found!", HttpStatus.NOT_FOUND),
@@ -73,6 +73,15 @@ public enum ErrorCode {
   INSUFFICIENT_POINTS(150, "Insufficient points", HttpStatus.BAD_REQUEST),
   PAYMENT_ERROR(151, "Payment error", HttpStatus.INTERNAL_SERVER_ERROR),
   INVALID_OTP(152, "Invalid or Expired OTP", HttpStatus.BAD_REQUEST),
+  PRODUCT_ATTRIBUTE_NOT_FOUND(153, "Product attribute not found!", HttpStatus.NOT_FOUND),
+  PRODUCT_ATTRIBUTE_VALUE_NOT_FOUND(
+      154, "Product attribute value not found!", HttpStatus.NOT_FOUND),
+  PRODUCT_IMAGE_NOT_FOUND(155, "Product image not found!", HttpStatus.NOT_FOUND),
+  PROMO_CODE_USAGE_NOT_FOUND(156, "Promo code usage not found!", HttpStatus.NOT_FOUND),
+  INVENTORY_PRODUCT_EXISTS_WITH_STOCK(
+      157, "Inventory product with stock already exists!", HttpStatus.BAD_REQUEST),
+  INVALID_REFRESH_TOKEN(158, "Invalid refresh token!", HttpStatus.BAD_REQUEST),
+  PROMO_CODE_ALREADY_USED(159, "Promo code already used!", HttpStatus.BAD_REQUEST),
   ;
 
   private final int code;

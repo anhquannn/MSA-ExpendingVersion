@@ -8,42 +8,42 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
-  @Query(
-      "SELECT p FROM Product p "
-          + "WHERE (:branchId IS NULL OR p IN (SELECT ip.product FROM InventoryProduct ip WHERE ip.inventory.branch.branchId = :branchId)) "
-          + "AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-  Page<Product> searchByKeyword(
-      @Param("branchId") Long branchId, @Param("keyword") String keyword, Pageable pageable);
 
   @Query(
-      "SELECT p FROM Product p "
-          + "WHERE p IN (SELECT ip.product FROM InventoryProduct ip WHERE ip.inventory.branch.branchId = :branchId) "
-          + "AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
-          + "AND (:minPrice IS NULL OR p.currentPrice >= :minPrice) "
-          + "AND (:maxPrice IS NULL OR p.currentPrice <= :maxPrice) "
-          + "AND (:color IS NULL OR LOWER(p.color) = LOWER(:color)) ")
+      "SELECT DISTINCT p FROM Product p "
+          + "JOIN p.inventoryProducts ip "
+          + "WHERE ip.inventory.branch.branchId = :branchId "
+          + "AND (:categoryId IS NULL OR p.category.categoryId = :categoryId) "
+          + "AND (:supplierId IS NULL OR p.supplier.supplierId = :supplierId) "
+          + "AND (:keyword IS NULL OR :keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
   Page<Product> findByBranchAndFilters(
       @Param("branchId") Long branchId,
+      @Param("categoryId") Long categoryId,
+      @Param("supplierId") Long supplierId,
       @Param("keyword") String keyword,
-      @Param("minPrice") Double minPrice,
-      @Param("maxPrice") Double maxPrice,
-      @Param("color") String color,
       Pageable pageable);
 
   @Query(
-      "SELECT p FROM Product p "
-          + "WHERE (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
-          + "AND (:minPrice IS NULL OR p.currentPrice >= :minPrice) "
-          + "AND (:maxPrice IS NULL OR p.currentPrice <= :maxPrice) "
-          + "AND (:color IS NULL OR LOWER(p.color) = LOWER(:color)) "
-          + "AND (:categoryId IS NULL OR p.category.categoryId = :categoryId) "
-          + "AND (:manufacturerId IS NULL OR p.manufacturer.manufacturerId = :manufacturerId)")
-  Page<Product> searchProducts(
-      @Param("keyword") String keyword,
+      "SELECT DISTINCT p FROM Product p "
+          + "JOIN FETCH p.supplier s "
+          + "JOIN FETCH p.category c "
+          + "LEFT JOIN p.inventoryProducts ip "
+          + "WHERE (:branchId IS NULL OR ip.inventory.branch.branchId = :branchId) "
+          + "AND (:categoryId IS NULL OR c.categoryId = :categoryId OR c.parentCategory.categoryId = :categoryId) "
+          + "AND (:supplierId IS NULL OR s.supplierId = :supplierId) "
+          + "AND (:unit IS NULL OR p.unit = :unit) "
+          + "AND (:netWeight IS NULL OR p.netWeight = :netWeight) "
+          + "AND (:minPrice IS NULL OR p.price >= :minPrice) "
+          + "AND (:maxPrice IS NULL OR p.price <= :maxPrice) "
+          + "AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) ")
+  Page<Product> findFilteredProducts(
+      @Param("branchId") Long branchId,
+      @Param("categoryId") Long categoryId,
+      @Param("supplierId") Long supplierId,
+      @Param("unit") String unit,
+      @Param("netWeight") String netWeight,
       @Param("minPrice") Double minPrice,
       @Param("maxPrice") Double maxPrice,
-      @Param("color") String color,
-      @Param("categoryId") Long categoryId,
-      @Param("manufacturerId") Long manufacturerId,
+      @Param("keyword") String keyword,
       Pageable pageable);
 }

@@ -22,7 +22,6 @@ public class PromoCodeRequest {
   LocalDateTime startDate;
   LocalDateTime endDate;
   String status;
-  String discountType;
 
   @DiscountPercentageConstraint double discountPercentage;
 

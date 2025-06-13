@@ -17,6 +17,7 @@ import com.market.MSA.responses.product.TransferResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -183,7 +184,52 @@ public class TransferRequestService {
         throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
       }
 
-      InventoryProduct centralInventoryProduct = centralInventoryProducts.getFirst();
+      // Get the source inventory product (first one with available stock)
+      InventoryProduct centralInventoryProduct =
+          centralInventoryProducts.stream()
+              .filter(ip -> ip.getStockNumber() > 0)
+              .findFirst()
+              .orElse(centralInventoryProducts.getFirst());
+
+      // Get the expDate from the source inventory product
+      LocalDateTime sourceExpDate = centralInventoryProduct.getExpDate();
+
+      // Check if we should use this inventory product or create a new one
+      if (centralInventoryProduct.getStockNumber() == 0) {
+        // If stock is zero, we can reuse this inventory product
+        // No need to update expDate as it's already set
+      } else if (sourceExpDate != null) {
+        // If there's an expDate, check if we need to create a new inventory product
+        // Find if there's already an inventory product with the same expDate and zero stock
+        Optional<InventoryProduct> existingZeroStock =
+            centralInventoryProducts.stream()
+                .filter(ip -> ip.getStockNumber() == 0 && sourceExpDate.equals(ip.getExpDate()))
+                .findFirst();
+
+        if (existingZeroStock.isPresent()) {
+          // Use the existing zero-stock item with matching expDate
+          centralInventoryProduct = existingZeroStock.get();
+        } else if (centralInventoryProducts.stream()
+                .filter(ip -> sourceExpDate.equals(ip.getExpDate()) && ip.getStockNumber() > 0)
+                .count()
+            > 1) {
+          // If there are multiple inventory products with the same expDate and positive stock,
+          // create a new one to maintain batch separation
+          InventoryProduct newProduct =
+              InventoryProduct.builder()
+                  .inventory(centralInventory)
+                  .product(item.getProduct())
+                  .expDate(sourceExpDate)
+                  .stockNumber(0)
+                  .currentPrice(centralInventoryProduct.getCurrentPrice())
+                  .isActive(true)
+                  .isDiscounted(centralInventoryProduct.isDiscounted())
+                  .build();
+
+          // Save the new product
+          centralInventoryProduct = inventoryProductRepository.save(newProduct);
+        }
+      }
 
       // Check if central inventory has enough stock
       if (centralInventoryProduct.getStockNumber() < item.getQuantityRequested()) {
@@ -196,19 +242,31 @@ public class TransferRequestService {
       inventoryProductRepository.save(centralInventoryProduct);
 
       // Add stock to destination inventory
+      InventoryProduct finalCentralInventoryProduct = centralInventoryProduct;
       InventoryProduct destinationInventoryProduct =
           inventoryProductRepository
               .findByInventory_InventoryIdAndProduct_ProductId(
                   transfer.getToInventory().getInventoryId(), item.getProduct().getProductId())
               .stream()
+              .filter(
+                  ip ->
+                      sourceExpDate == null
+                          ? ip.getExpDate() == null
+                          : (ip.getExpDate() != null && ip.getExpDate().equals(sourceExpDate)))
               .findFirst()
               .orElseGet(
                   () -> {
-                    InventoryProduct newProduct = new InventoryProduct();
-                    newProduct.setInventory(transfer.getToInventory());
-                    newProduct.setProduct(item.getProduct());
-                    newProduct.setStockNumber(0);
-                    return newProduct;
+                    InventoryProduct newProduct =
+                        InventoryProduct.builder()
+                            .inventory(transfer.getToInventory())
+                            .product(item.getProduct())
+                            .expDate(sourceExpDate)
+                            .stockNumber(0)
+                            .currentPrice(finalCentralInventoryProduct.getCurrentPrice())
+                            .isActive(true)
+                            .isDiscounted(finalCentralInventoryProduct.isDiscounted())
+                            .build();
+                    return inventoryProductRepository.save(newProduct);
                   });
 
       destinationInventoryProduct.setStockNumber(

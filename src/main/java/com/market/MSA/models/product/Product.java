@@ -1,5 +1,7 @@
 package com.market.MSA.models.product;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.models.order.CartItem;
 import com.market.MSA.models.order.OrderDetail;
 import com.market.MSA.models.others.Notification;
@@ -7,6 +9,7 @@ import com.market.MSA.models.user.UserBehavior;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -27,7 +30,7 @@ import lombok.experimental.FieldDefaults;
     name = "products",
     indexes = {
       @Index(name = "idx_product_name", columnList = "name"),
-      @Index(name = "idx_product_manufacturer", columnList = "manufacture_id"),
+      @Index(name = "idx_product_supplier", columnList = "supplier_id"),
       @Index(name = "idx_product_category", columnList = "category_id")
     })
 public class Product {
@@ -36,50 +39,62 @@ public class Product {
   Long productId;
 
   String name;
-  String images;
 
   @Positive double price;
 
-  @Positive double currentPrice;
-
+  double discountPercentage;
+  int discountTriggerDays;
   String unit;
-  String color;
+  String netWeight;
   String specification;
   String description;
-  LocalDateTime expiry;
-  LocalDateTime createAt;
+  LocalDateTime createdAt;
 
   @Positive double totalRevenue;
 
   @ManyToOne
-  @JoinColumn(name = "manufactureId", nullable = false)
-  Manufacturer manufacturer;
+  @JoinColumn(name = "supplierId", nullable = false)
+  @JsonBackReference("product-supplier")
+  Supplier supplier;
 
   @ManyToOne
   @JoinColumn(name = "categoryId", nullable = false)
+  @JsonBackReference("product-category")
   Category category;
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<CartItem> cartItems;
+  @JsonManagedReference("product-cart-items")
+  List<CartItem> cartItems = new ArrayList<>();
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Feedback> feedbacks;
+  @JsonManagedReference("product-feedbacks")
+  List<Feedback> feedbacks = new ArrayList<>();
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<TransferItem> transferItems;
+  @JsonManagedReference("product-images")
+  List<ProductImage> images = new ArrayList<>();
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<OrderDetail> orderDetails;
+  @JsonManagedReference("product-transfer-items")
+  List<TransferItem> transferItems = new ArrayList<>();
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<InventoryProduct> inventoryProducts;
+  @JsonManagedReference("product-order-details")
+  List<OrderDetail> orderDetails = new ArrayList<>();
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<UserBehavior> userBehaviors;
+  @JsonManagedReference("product-inventories")
+  List<InventoryProduct> inventoryProducts = new ArrayList<>();
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Notification> notifications;
+  @JsonManagedReference("product-behaviors")
+  List<UserBehavior> userBehaviors = new ArrayList<>();
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<TrendingProduct> trendingProducts;
+  @JsonManagedReference("product-notifications")
+  List<Notification> notifications = new ArrayList<>();
+
+  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("product-trending")
+  List<TrendingProduct> trendingProducts = new ArrayList<>();
 }

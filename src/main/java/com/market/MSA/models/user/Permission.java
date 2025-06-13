@@ -1,6 +1,8 @@
 package com.market.MSA.models.user;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -26,6 +28,7 @@ public class Permission {
   String name;
   String description;
 
-  @ManyToMany(mappedBy = "permissions")
-  Set<Role> roles;
+  @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
+  @JsonBackReference("role-permissions")
+  Set<Role> roles = new HashSet<>();
 }

@@ -1,8 +1,11 @@
 package com.market.MSA.models.product;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -29,18 +32,22 @@ public class Transfer {
 
   @ManyToOne
   @JoinColumn(name = "fromInventoryId", nullable = false)
+  @JsonBackReference("inventory-from-transfers")
   Inventory fromInventory;
 
   @ManyToOne
   @JoinColumn(name = "toInventoryId", nullable = false)
+  @JsonBackReference("inventory-to-transfers")
   Inventory toInventory;
 
   @ManyToOne
   @JoinColumn(name = "requesterId", nullable = false)
+  @JsonBackReference("user-requested-transfers")
   User requester;
 
   @ManyToOne
   @JoinColumn(name = "approverId")
+  @JsonBackReference("user-approved-transfers")
   User approver;
 
   String status;
@@ -49,5 +56,6 @@ public class Transfer {
   LocalDateTime updatedAt;
 
   @OneToMany(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<TransferItem> transferItems;
+  @JsonManagedReference("transfer-details")
+  List<TransferItem> transferItems = new ArrayList<>();
 }

@@ -9,6 +9,7 @@ import com.market.MSA.models.order.CartItem;
 import com.market.MSA.models.product.Product;
 import com.market.MSA.repositories.order.CartItemRepository;
 import com.market.MSA.repositories.order.CartRepository;
+import com.market.MSA.repositories.product.InventoryProductRepository;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.order.CartItemRequest;
@@ -40,6 +41,7 @@ public class CartItemService {
   final CartItemMapper cartItemMapper;
 
   final InventoryProductService inventoryProductService;
+  private final InventoryProductRepository inventoryProductRepository;
 
   public CartItemResponse createCartItem(CartItemRequest request) {
     CartItem cartItem = cartItemMapper.toCartItem(request);
@@ -108,7 +110,7 @@ public class CartItemService {
               .cart(cart)
               .product(product)
               .quantity(quantity)
-              .price(product.getCurrentPrice())
+              .price(product.getPrice())
               .isSelected(true)
               .build();
     }

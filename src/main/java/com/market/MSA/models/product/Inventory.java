@@ -1,7 +1,10 @@
 package com.market.MSA.models.product;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.models.others.Notification;
 import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -26,17 +29,22 @@ public class Inventory {
 
   @OneToOne
   @JoinColumn(name = "branchId", nullable = false, unique = true)
+  @JsonBackReference("branch-inventory")
   Branch branch;
 
   @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<InventoryProduct> inventoryProducts;
+  @JsonManagedReference("inventory-products")
+  List<InventoryProduct> inventoryProducts = new ArrayList<>();
 
   @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Notification> notifications;
+  @JsonManagedReference("inventory-notifications")
+  List<Notification> notifications = new ArrayList<>();
 
   @OneToMany(mappedBy = "fromInventory", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Transfer> fromTransfers;
+  @JsonManagedReference("inventory-from-transfers")
+  List<Transfer> fromTransfers = new ArrayList<>();
 
   @OneToMany(mappedBy = "toInventory", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Transfer> toTransfers;
+  @JsonManagedReference("inventory-to-transfers")
+  List<Transfer> toTransfers = new ArrayList<>();
 }

@@ -1,5 +1,6 @@
 package com.market.MSA.models.user;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -25,5 +26,6 @@ public class RewardPoint {
 
   @ManyToOne
   @JoinColumn(name = "userId", nullable = false)
+  @JsonBackReference("user-reward-points")
   User user;
 }

@@ -17,6 +17,8 @@ import lombok.experimental.FieldDefaults;
 public class NotificationResponse {
   Long notificationId;
   String notificationType;
+  String deviceTokens;
+  String deviceIds;
   LocalDateTime notificationDate;
   boolean isRead;
   String message;

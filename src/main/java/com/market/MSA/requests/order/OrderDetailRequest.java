@@ -17,6 +17,8 @@ public class OrderDetailRequest {
   double unitPrice;
   double totalPrice;
   String image;
+  String name;
+  String status;
 
   Long orderId;
   Long productId;

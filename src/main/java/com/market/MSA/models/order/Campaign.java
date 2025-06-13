@@ -1,7 +1,9 @@
 package com.market.MSA.models.order;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -31,5 +33,6 @@ public class Campaign {
   LocalDateTime endDate;
 
   @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<PromoCode> promoCodes;
+  @JsonManagedReference("campaign-promocodes")
+  List<PromoCode> promoCodes = new ArrayList<>();
 }

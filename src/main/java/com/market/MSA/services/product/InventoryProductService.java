@@ -52,18 +52,48 @@ public class InventoryProductService {
         entityFinderService.findByIdOrThrow(
             productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND);
 
+    // Check if there's an existing inventory product for this product in the same inventory
+    List<InventoryProduct> existingProducts =
+        inventoryProductRepository.findByInventory_InventoryIdAndProduct_ProductId(
+            inventory.getInventoryId(), product.getProductId());
+
+    if (!existingProducts.isEmpty()) {
+      // Check if any existing product has remaining stock
+      boolean hasStock = existingProducts.stream().anyMatch(ip -> ip.getStockNumber() > 0);
+
+      if (hasStock) {
+        throw new AppException(ErrorCode.INVENTORY_PRODUCT_EXISTS_WITH_STOCK);
+      }
+
+      // If no stock, we can update the existing record instead of creating a new one
+      InventoryProduct existingProduct = existingProducts.getFirst();
+      existingProduct.setStockNumber(request.getStockNumber());
+      existingProduct.setExpDate(request.getExpDate());
+      existingProduct.setCurrentPrice(product.getPrice());
+      existingProduct.setDiscounted(false);
+      existingProduct.setActive(true);
+
+      updateStockLevel(existingProduct);
+
+      return inventoryProductMapper.toInventoryProductResponse(
+          inventoryProductRepository.save(existingProduct));
+    }
+
     // Create new inventory product
     InventoryProduct inventoryProduct =
         InventoryProduct.builder()
             .inventory(inventory)
             .product(product)
             .stockNumber(request.getStockNumber())
-            .stockLevel(request.getStockLevel())
+            .stockLevel(calculateStockLevel(request.getStockNumber()))
+            .expDate(request.getExpDate())
+            .currentPrice(product.getPrice())
+            .isActive(true)
+            .isDiscounted(false)
             .build();
 
-    InventoryProduct saveProduct = inventoryProductRepository.save(inventoryProduct);
-
-    return inventoryProductMapper.toInventoryProductResponse(saveProduct);
+    InventoryProduct savedProduct = inventoryProductRepository.save(inventoryProduct);
+    return inventoryProductMapper.toInventoryProductResponse(savedProduct);
   }
 
   @Transactional
@@ -142,14 +172,22 @@ public class InventoryProductService {
     return inventoryProducts.stream().mapToInt(InventoryProduct::getStockNumber).sum();
   }
 
-  public void updateStockLevel(InventoryProduct inventoryProduct) {
-    int stockNumber = inventoryProduct.getStockNumber();
+  private String calculateStockLevel(int stockNumber) {
     if (stockNumber < 50) {
-      inventoryProduct.setStockLevel("low");
+      return "low";
     } else if (stockNumber <= 300) {
-      inventoryProduct.setStockLevel("medium");
+      return "medium";
     } else {
-      inventoryProduct.setStockLevel("high");
+      return "high";
+    }
+  }
+
+  void updateStockLevel(InventoryProduct inventoryProduct) {
+    inventoryProduct.setStockLevel(calculateStockLevel(inventoryProduct.getStockNumber()));
+
+    // If stock reaches zero, mark as inactive
+    if (inventoryProduct.getStockNumber() <= 0) {
+      inventoryProduct.setActive(false);
     }
   }
 

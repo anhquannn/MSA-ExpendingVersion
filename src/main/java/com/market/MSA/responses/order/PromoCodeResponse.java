@@ -1,6 +1,7 @@
 package com.market.MSA.responses.order;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,4 +28,5 @@ public class PromoCodeResponse {
   double minimumOrderValue;
 
   CampaignResponse campaignResponse;
+  List<PromoCodeUsageResponse> promoCodeUsages;
 }

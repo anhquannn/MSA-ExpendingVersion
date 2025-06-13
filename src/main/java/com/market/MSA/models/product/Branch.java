@@ -1,7 +1,11 @@
 package com.market.MSA.models.product;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.models.order.Order;
+import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -32,8 +36,14 @@ public class Branch {
   String city;
 
   @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Order> orders;
+  @JsonManagedReference("branch-orders")
+  List<Order> orders = new ArrayList<>();
 
   @OneToOne(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("branch-inventory")
   Inventory inventory;
+
+  @ManyToMany(mappedBy = "branches")
+  @JsonBackReference("user-branches")
+  List<User> users = new ArrayList<>();
 }

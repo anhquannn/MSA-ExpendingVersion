@@ -1,5 +1,6 @@
 package com.market.MSA.models.others;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.market.MSA.models.order.Order;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -39,5 +40,6 @@ public class DeliveryInfo {
 
   @OneToOne
   @JoinColumn(name = "orderId", nullable = false, unique = true)
+  @JsonBackReference("order-delivery-info")
   Order order;
 }

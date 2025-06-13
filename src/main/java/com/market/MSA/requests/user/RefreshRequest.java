@@ -1,5 +1,8 @@
 package com.market.MSA.requests.user;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,5 +16,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RefreshRequest {
-  String token;
+  @NotBlank(message = "Refresh token is required")
+  @JsonProperty("refresh_token")
+  @JsonAlias({"token", "refresh_token"}) // Accepts both 'token' and 'refresh_token' in JSON
+  String refreshToken;
 }

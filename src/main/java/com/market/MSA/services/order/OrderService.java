@@ -18,6 +18,7 @@ import com.market.MSA.repositories.order.OrderRepository;
 import com.market.MSA.repositories.product.BranchRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.order.OrderRequest;
+import com.market.MSA.requests.order.PromoCodeUsageRequest;
 import com.market.MSA.responses.order.CartItemResponse;
 import com.market.MSA.responses.order.CartResponse;
 import com.market.MSA.responses.order.OrderResponse;
@@ -27,6 +28,7 @@ import com.market.MSA.services.others.NotificationService;
 import com.market.MSA.services.product.BranchService;
 import com.market.MSA.services.product.InventoryProductService;
 import com.market.MSA.services.product.ProductService;
+import com.market.MSA.services.user.RewardPointService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,6 +71,8 @@ public class OrderService {
   final InventoryProductService inventoryProductService;
   final BranchService branchService;
   final NotificationService notificationService;
+  final PromoCodeUsageService promoCodeUsageService;
+  final RewardPointService rewardPointService;
 
   @Transactional
   public OrderResponse createOrder(
@@ -106,16 +110,32 @@ public class OrderService {
 
     order = orderRepository.save(order);
 
-    // Nếu có mã giảm giá, lưu vào bảng OrderPromoCode
+    // Nếu có mã giảm giá, lưu vào bảng OrderPromoCode và ghi nhận sử dụng
     if (promoCodes != null && !promoCodes.isEmpty()) {
       if (order.getPromoCodes() == null) {
         order.setPromoCodes(new ArrayList<>()); // Khởi tạo nếu bị null
       }
 
       for (String promoCode : promoCodes) {
+        // Check if user has already used this promo code
+        if (promoCodeService.hasUserUsedPromoCode(
+            userId, promoCodeService.findPromoCodeByCode(promoCode).getPromoCodeId())) {
+          throw new AppException(ErrorCode.PROMO_CODE_ALREADY_USED);
+        }
+
         PromoCode promo = promoCodeService.findPromoCodeByCode(promoCode);
         if (!promo.getStatus().equals(PromocodeStatus.PROMO_CODE_STATUS_2.getStatus())) {
           order.getPromoCodes().add(promo);
+
+          // Record promo code usage
+          PromoCodeUsageRequest usageRequest =
+              PromoCodeUsageRequest.builder()
+                  .usedAt(LocalDateTime.now())
+                  .promoCodeId(promo.getPromoCodeId())
+                  .orderId(order.getOrderId())
+                  .userId(order.getUser().getUserId())
+                  .build();
+          promoCodeUsageService.createPromoCodeUsage(usageRequest);
         }
       }
     }
@@ -132,8 +152,8 @@ public class OrderService {
               .order(order)
               .product(product)
               .quantity(cartItem.getQuantity())
-              .unitPrice(product.getCurrentPrice())
-              .totalPrice(cartItem.getQuantity() * product.getCurrentPrice())
+              .unitPrice(product.getPrice())
+              .totalPrice(cartItem.getQuantity() * product.getPrice())
               .build();
 
       orderDetailRepository.save(orderDetail);
@@ -168,7 +188,8 @@ public class OrderService {
 
     if (promoCodes != null && !promoCodes.isEmpty()) {
       for (String promoCode : promoCodes) {
-        PromoCodeResponse promo = promoCodeService.getPromoCodeByCode(promoCode);
+        // Pass userId to check if promo code has been used
+        PromoCodeResponse promo = promoCodeService.getPromoCodeByCode(promoCode, userId);
         if (totalCost >= promo.getMinimumOrderValue()
             && !promo.getStatus().equals(PromocodeStatus.PROMO_CODE_STATUS_2.getStatus())) {
           double currentDiscount = totalCost * (promo.getDiscountPercentage() / 100);
@@ -354,22 +375,21 @@ public class OrderService {
     orderDetailService
         .findOrderDetailsByOrderId(order.getOrderId())
         .forEach(
-            detail -> {
-              itemsList.append(
-                  String.format(
-                      """
-			<tr>
-				<td style="padding: 10px; border-bottom: 1px solid #eee;">%s</td>
-				<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%d</td>
-				<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
-				<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
-			</tr>
-			""",
-                      detail.getProduct().getName(),
-                      detail.getQuantity(),
-                      detail.getUnitPrice(),
-                      detail.getQuantity() * detail.getUnitPrice()));
-            });
+            detail ->
+                itemsList.append(
+                    String.format(
+                        """
+		<tr>
+			<td style="padding: 10px; border-bottom: 1px solid #eee;">%s</td>
+			<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%d</td>
+			<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
+			<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
+		</tr>
+		""",
+                        detail.getProduct().getName(),
+                        detail.getQuantity(),
+                        detail.getUnitPrice(),
+                        detail.getQuantity() * detail.getUnitPrice())));
 
     itemsList.append("""
 				</tbody>
@@ -503,5 +523,71 @@ public class OrderService {
     }
 
     return statistics;
+  }
+
+  @Transactional
+  public OrderResponse updateOrderStatus(Long orderId, String newStatus) {
+    // Validate status
+    if (!OrderStatus.isValidStatus(newStatus)) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+
+    Order order =
+        orderRepository
+            .findById(orderId)
+            .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+    String currentStatus = order.getStatus();
+
+    // Validate status transition
+    validateStatusTransition(currentStatus, newStatus);
+
+    // If order is being marked as success and wasn't success before
+    if (OrderStatus.ORDER_STATUS_8.getStatus().equals(newStatus)
+        && !OrderStatus.ORDER_STATUS_8.getStatus().equals(currentStatus)) {
+
+      // Check if points were already awarded
+      if (!isPointsAwarded(order)) {
+        // Calculate points (1 point per dollar spent, rounded down)
+        long pointsEarned = (long) Math.floor(order.getGrandTotal());
+        if (pointsEarned > 0) {
+          rewardPointService.earnPoints(order.getUser().getUserId(), orderId, pointsEarned);
+
+          // Send notification about points earned
+          //          notificationService.sendPointsEarnedNotification(
+          //              order.getUser().getUserId(),
+          //              orderId,
+          //              pointsEarned);
+        }
+      }
+    }
+
+    // Update order status
+    order.setStatus(newStatus);
+    order = orderRepository.save(order);
+
+    // Send notification about status update
+    //    notificationService.sendOrderStatusUpdateNotification(orderId, newStatus);
+
+    return orderMapper.toOrderResponse(order);
+  }
+
+  private void validateStatusTransition(String currentStatus, String newStatus) {
+    // Prevent invalid status transitions
+    if (OrderStatus.ORDER_STATUS_7.getStatus().equals(currentStatus)
+        || OrderStatus.ORDER_STATUS_8.getStatus().equals(currentStatus)
+        || OrderStatus.ORDER_STATUS_9.getStatus().equals(currentStatus)) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+
+    // Add more specific transition validations as needed
+  }
+
+  private boolean isPointsAwarded(Order order) {
+    // Check if points were already awarded for this order
+    return order.getRewardPointTransactions() != null
+        && !order.getRewardPointTransactions().isEmpty()
+        && order.getRewardPointTransactions().stream()
+            .anyMatch(tx -> tx.getPointChange() > 0 && "EARNED".equals(tx.getType()));
   }
 }

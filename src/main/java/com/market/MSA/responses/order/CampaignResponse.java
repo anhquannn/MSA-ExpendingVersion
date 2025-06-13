@@ -1,6 +1,7 @@
 package com.market.MSA.responses.order;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -17,4 +18,6 @@ public class CampaignResponse {
   String status;
   LocalDateTime startDate;
   LocalDateTime endDate;
+
+  List<PromoCodeResponse> promoCodes;
 }

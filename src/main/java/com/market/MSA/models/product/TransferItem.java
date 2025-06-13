@@ -1,5 +1,6 @@
 package com.market.MSA.models.product;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -26,10 +27,12 @@ public class TransferItem {
 
   @ManyToOne
   @JoinColumn(name = "transferRequestId", nullable = false)
+  @JsonBackReference("transfer-details")
   Transfer transfer;
 
   @ManyToOne
   @JoinColumn(name = "productId", nullable = false)
+  @JsonBackReference("product-transfer-items")
   Product product;
 
   int quantityRequested;

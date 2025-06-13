@@ -1,5 +1,7 @@
 package com.market.MSA.models.order;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.models.others.DeliveryInfo;
 import com.market.MSA.models.others.Notification;
 import com.market.MSA.models.others.Payment;
@@ -8,6 +10,7 @@ import com.market.MSA.models.user.RewardPointTransaction;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -45,33 +48,52 @@ public class Order {
 
   @ManyToOne
   @JoinColumn(name = "branchId", nullable = false)
+  @JsonBackReference("order-branch")
   Branch branch;
 
   @ManyToOne
   @JoinColumn(name = "cartId", nullable = false)
+  @JsonBackReference("order-cart")
   Cart cart;
 
   @ManyToOne
   @JoinColumn(name = "userId", nullable = false)
+  @JsonBackReference("user-orders")
   User user;
 
   @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("order-delivery-info")
   DeliveryInfo deliveryInfo;
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<CancelOrder> cancelOrders;
+  @JsonManagedReference("order-cancel-orders")
+  List<CancelOrder> cancelOrders = new ArrayList<>();
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Payment> payments;
+  @JsonManagedReference("order-payments")
+  List<Payment> payments = new ArrayList<>();
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<OrderDetail> orderDetails;
+  @JsonManagedReference("order-details")
+  List<OrderDetail> orderDetails = new ArrayList<>();
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Notification> notifications;
+  @JsonManagedReference("order-notifications")
+  List<Notification> notifications = new ArrayList<>();
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<RewardPointTransaction> rewardPointTransactions;
+  @JsonManagedReference("order-reward-transactions")
+  List<RewardPointTransaction> rewardPointTransactions = new ArrayList<>();
 
-  @ManyToMany List<PromoCode> promoCodes;
+  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("order-promo-usages")
+  List<PromoCodeUsage> promoCodeUsages = new ArrayList<>();
+
+  @ManyToMany
+  @JoinTable(
+      name = "order_promocodes",
+      joinColumns = @JoinColumn(name = "order_id"),
+      inverseJoinColumns = @JoinColumn(name = "promo_code_id"))
+  @JsonManagedReference("order-promocodes")
+  List<PromoCode> promoCodes = new ArrayList<>();
 }

@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.product.ProductFilterRequest;
 import com.market.MSA.requests.product.ProductRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.ProductResponse;
@@ -75,22 +76,6 @@ public class ProductController {
         .build();
   }
 
-  @GetMapping("/filter")
-  public ApiResponse<List<ProductResponse>> filterAndSortProducts(
-      @RequestParam(required = false) Double minPrice,
-      @RequestParam(required = false) Double maxPrice,
-      @RequestParam(required = false) String color,
-      @RequestParam(required = false) Long categoryId,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize) {
-    return ApiResponse.<List<ProductResponse>>builder()
-        .result(
-            productService.filterAndSortProducts(
-                minPrice, maxPrice, color, categoryId, page, pageSize))
-        .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
-        .build();
-  }
-
   @GetMapping("/branch/{branchId}")
   public ApiResponse<Page<ProductResponse>> getAllProductsInBranch(
       @PathVariable Long branchId,
@@ -104,58 +89,11 @@ public class ProductController {
         .build();
   }
 
-  @GetMapping("/branch/{branchId}/search")
-  public ApiResponse<Page<ProductResponse>> searchProductsInBranch(
-      @PathVariable Long branchId,
-      @RequestParam(required = false) String keyword,
-      @RequestParam(required = false) Double minPrice,
-      @RequestParam(required = false) Double maxPrice,
-      @RequestParam(required = false) String color,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize,
-      @RequestParam(defaultValue = "name") String sortBy,
-      @RequestParam(defaultValue = "asc") String sortDirection) {
+  @PostMapping("/filter")
+  public ApiResponse<Page<ProductResponse>> filterProducts(
+      @Valid @RequestBody ProductFilterRequest filterRequest) {
     return ApiResponse.<Page<ProductResponse>>builder()
-        .result(
-            productService.searchProductsInBranch(
-                branchId,
-                keyword,
-                minPrice,
-                maxPrice,
-                color,
-                page,
-                pageSize,
-                sortBy,
-                sortDirection))
-        .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
-        .build();
-  }
-
-  @GetMapping("/search")
-  public ApiResponse<Page<ProductResponse>> searchProducts(
-      @RequestParam(required = false) String keyword,
-      @RequestParam(required = false) Double minPrice,
-      @RequestParam(required = false) Double maxPrice,
-      @RequestParam(required = false) String color,
-      @RequestParam(required = false) Long categoryId,
-      @RequestParam(required = false) Long manufacturerId,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize,
-      @RequestParam(defaultValue = "name") String sortBy,
-      @RequestParam(defaultValue = "asc") String sortDirection) {
-    return ApiResponse.<Page<ProductResponse>>builder()
-        .result(
-            productService.searchProducts(
-                keyword,
-                minPrice,
-                maxPrice,
-                color,
-                categoryId,
-                manufacturerId,
-                page,
-                pageSize,
-                sortBy,
-                sortDirection))
+        .result(productService.filterProducts(filterRequest))
         .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
         .build();
   }

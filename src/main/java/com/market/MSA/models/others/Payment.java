@@ -1,15 +1,10 @@
 package com.market.MSA.models.others;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.market.MSA.models.order.Order;
 import com.market.MSA.models.user.User;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -51,11 +46,18 @@ public class Payment {
   String responseCode;
   LocalDateTime updateDate;
 
-  @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "userId", nullable = false, foreignKey = @ForeignKey(name = "fk_payment_user"))
+  @JsonBackReference("user-payments")
+  @NotNull(message = "User is required")
   User user;
 
-  @ManyToOne
-  @JoinColumn(name = "orderId", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(
+      name = "orderId",
+      nullable = false,
+      unique = true,
+      foreignKey = @ForeignKey(name = "fk_payment_order"))
+  @JsonBackReference("order-payments")
   Order order;
 }

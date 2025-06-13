@@ -42,7 +42,17 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
   @Query(
       "SELECT SUM(ip.stockNumber) FROM InventoryProduct ip "
           + "WHERE ip.inventory.branch.branchId = :branchId "
-          + "AND ip.product.productId = :productId")
+          + "AND ip.product.productId = :productId AND ip.isActive = true")
   Integer getTotalStockByBranchAndProduct(
       @Param("branchId") Long branchId, @Param("productId") Long productId);
+
+  /**
+   * Find all inventory products that expire on or after the given date and are not yet discounted.
+   *
+   * @param date The minimum expiration date to check
+   * @return List of matching inventory products
+   */
+  @Query("SELECT ip FROM InventoryProduct ip WHERE ip.expDate >= :date AND ip.isDiscounted = false")
+  List<InventoryProduct> findByExpDateGreaterThanEqualAndIsDiscountedFalse(
+      @Param("date") java.time.LocalDate date);
 }

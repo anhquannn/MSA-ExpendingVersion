@@ -1,5 +1,6 @@
 package com.market.MSA.responses.product;
 
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -11,6 +12,11 @@ import lombok.experimental.FieldDefaults;
 public class InventoryProductResponse {
   Long inventoryProductId;
   int stockNumber;
+  double currentPrice;
+  LocalDateTime expDate;
+  boolean isActive;
+  boolean isDiscounted;
+  String batchNumber;
   String stockLevel;
 
   ProductResponse product;

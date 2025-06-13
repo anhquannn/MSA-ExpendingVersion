@@ -1,6 +1,9 @@
 package com.market.MSA.models.user;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -31,5 +34,10 @@ public class Role {
       name = "role_permissions",
       joinColumns = @JoinColumn(name = "role_id"),
       inverseJoinColumns = @JoinColumn(name = "permission_id"))
-  Set<Permission> permissions;
+  @JsonManagedReference("role-permissions")
+  Set<Permission> permissions = new HashSet<>();
+
+  @ManyToMany(mappedBy = "roles")
+  @JsonBackReference("user-roles")
+  Set<User> users = new HashSet<>();
 }

@@ -1,6 +1,7 @@
 package com.market.MSA.responses.order;
 
 import com.market.MSA.responses.user.UserResponse;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,4 +20,7 @@ public class CartResponse {
   String status;
 
   UserResponse user;
+
+  List<CartItemResponse> cartItemResponses;
+  List<OrderResponse> orderResponses;
 }

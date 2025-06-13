@@ -1,5 +1,6 @@
 package com.market.MSA.models.product;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -23,5 +24,6 @@ public class TrendingProduct {
 
   @ManyToOne
   @JoinColumn(name = "productId", nullable = false)
+  @JsonBackReference("product-trending")
   Product product;
 }

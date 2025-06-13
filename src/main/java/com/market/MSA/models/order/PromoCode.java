@@ -1,11 +1,15 @@
 package com.market.MSA.models.order;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.validators.CampaignDateRangeConstraint;
 import com.market.MSA.validators.DateRangeConstraint;
 import com.market.MSA.validators.DiscountPercentageConstraint;
 import com.market.MSA.validators.PositiveAmountConstraint;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,7 +44,6 @@ public class PromoCode {
   LocalDateTime startDate;
   LocalDateTime endDate;
   String status;
-  String discountType;
 
   @DiscountPercentageConstraint double discountPercentage;
 
@@ -48,5 +51,14 @@ public class PromoCode {
 
   @ManyToOne
   @JoinColumn(name = "campaignId", nullable = false)
+  @JsonBackReference("campaign-promocodes")
   Campaign campaign;
+
+  @OneToMany(mappedBy = "promoCode", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("promocode-usages")
+  List<PromoCodeUsage> promoCodeUsages = new ArrayList<>();
+
+  @ManyToMany(mappedBy = "promoCodes")
+  @JsonBackReference("order-promocodes")
+  List<Order> orders = new ArrayList<>();
 }

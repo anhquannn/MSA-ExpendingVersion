@@ -16,21 +16,19 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductRequest {
   String name;
-  String images;
 
   @Positive double price;
 
-  @Positive double currentPrice;
-
+  double discountPercentage;
+  int discountTriggerDays;
   String unit;
-  String color;
+  String netWeight;
   String specification;
   String description;
-  LocalDateTime expiry;
-  LocalDateTime createAt;
+  LocalDateTime createdAt;
 
   @Positive double totalRevenue;
 
-  Long manufactureId;
+  Long supplierId;
   Long categoryId;
 }

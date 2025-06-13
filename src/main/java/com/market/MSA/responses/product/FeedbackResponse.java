@@ -19,7 +19,7 @@ public class FeedbackResponse {
 
   int rating;
   String comments;
-  LocalDateTime createAt;
+  LocalDateTime createdAt;
 
   UserResponse user;
   ProductResponse product;

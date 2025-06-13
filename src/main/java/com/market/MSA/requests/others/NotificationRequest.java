@@ -11,6 +11,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NotificationRequest {
   String notificationType;
+  String deviceTokens;
+  String deviceIds;
   LocalDateTime notificationDate;
   boolean isRead;
   String message;

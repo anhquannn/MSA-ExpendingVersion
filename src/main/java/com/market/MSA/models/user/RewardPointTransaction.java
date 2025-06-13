@@ -1,5 +1,6 @@
 package com.market.MSA.models.user;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.market.MSA.models.order.Order;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -26,9 +27,11 @@ public class RewardPointTransaction {
 
   @ManyToOne
   @JoinColumn(name = "userId", nullable = false)
+  @JsonBackReference("user-reward-transactions")
   User user;
 
   @ManyToOne
   @JoinColumn(name = "orderId", nullable = false)
+  @JsonBackReference("order-reward-transactions")
   Order order;
 }

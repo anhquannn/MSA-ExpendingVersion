@@ -1,7 +1,9 @@
 package com.market.MSA.models.user;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.models.order.Cart;
 import com.market.MSA.models.order.Order;
+import com.market.MSA.models.order.PromoCodeUsage;
 import com.market.MSA.models.others.Notification;
 import com.market.MSA.models.others.Payment;
 import com.market.MSA.models.product.Branch;
@@ -10,6 +12,8 @@ import com.market.MSA.models.product.Transfer;
 import com.market.MSA.validators.PhoneNumberConstraint;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -56,37 +60,63 @@ public class User {
   String image;
   String googleId;
 
-  @ManyToMany Set<Role> roles;
+  @ManyToMany
+  @JoinTable(
+      name = "user_roles",
+      joinColumns = @JoinColumn(name = "user_id"),
+      inverseJoinColumns = @JoinColumn(name = "role_id"))
+  @JsonManagedReference("user-roles")
+  Set<Role> roles = new HashSet<>();
 
-  @ManyToMany List<Branch> branches;
+  @ManyToMany
+  @JoinTable(
+      name = "user_branches",
+      joinColumns = @JoinColumn(name = "user_id"),
+      inverseJoinColumns = @JoinColumn(name = "branch_id"))
+  @JsonManagedReference("user-branches")
+  List<Branch> branches = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Feedback> feedbacks;
+  @JsonManagedReference("user-feedbacks")
+  List<Feedback> feedbacks = new ArrayList<>();
 
   @OneToMany(mappedBy = "requester", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Transfer> fromTransfers;
+  @JsonManagedReference("user-requested-transfers")
+  List<Transfer> fromTransfers = new ArrayList<>();
 
   @OneToMany(mappedBy = "approver", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Transfer> toTransfers;
+  @JsonManagedReference("user-approved-transfers")
+  List<Transfer> toTransfers = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Cart> carts;
+  @JsonManagedReference("user-carts")
+  List<Cart> carts = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Payment> payments;
+  @JsonManagedReference("user-payments")
+  List<Payment> payments = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Order> orders;
+  @JsonManagedReference("user-orders")
+  List<Order> orders = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Notification> notifications;
+  @JsonManagedReference("user-notifications")
+  List<Notification> notifications = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<UserBehavior> userBehaviors;
+  @JsonManagedReference("user-behaviors")
+  List<UserBehavior> userBehaviors = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<RewardPoint> rewardPoints;
+  @JsonManagedReference("user-reward-points")
+  List<RewardPoint> rewardPoints = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<RewardPointTransaction> rewardPointTransactions;
+  @JsonManagedReference("user-reward-transactions")
+  List<RewardPointTransaction> rewardPointTransactions = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("user-promo-usages")
+  List<PromoCodeUsage> promoCodeUsages = new ArrayList<>();
 }

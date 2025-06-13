@@ -12,6 +12,7 @@ import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.user.AuthenticationRequest;
 import com.market.MSA.requests.user.UpdateUserRequest;
 import com.market.MSA.requests.user.UserRequest;
+import com.market.MSA.responses.user.AuthenticationResponse;
 import com.market.MSA.responses.user.GoogleUser;
 import com.market.MSA.responses.user.UserResponse;
 import com.market.MSA.services.others.EmailService;
@@ -99,17 +100,47 @@ public class UserService {
     CompletableFuture.runAsync(() -> emailService.resendOTP(email));
   }
 
-  public String verifyOtp(String otp) {
+  public AuthenticationResponse verifyOtp(String otp) {
     String email = emailService.validateOTP(otp);
     User user =
         userRepository
             .findByEmail(email)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-    return authenticationService.generateToken(user);
+
+    String accessToken = authenticationService.generateToken(user, false);
+    String refreshToken = authenticationService.generateToken(user, true);
+
+    return AuthenticationResponse.builder()
+        .accessToken(accessToken)
+        .refreshToken(refreshToken)
+        .expiresIn(authenticationService.getValidDuration() * 3600)
+        .authenticated(true)
+        .build();
+  }
+
+  public AuthenticationResponse loginAdmin(String email, String password) {
+    User user =
+        userRepository
+            .findByEmail(email)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+    if (!passwordEncoder.matches(password, user.getPassword())) {
+      throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+    }
+
+    String accessToken = authenticationService.generateToken(user, false);
+    String refreshToken = authenticationService.generateToken(user, true);
+
+    return AuthenticationResponse.builder()
+        .accessToken(accessToken)
+        .refreshToken(refreshToken)
+        .expiresIn(authenticationService.getValidDuration() * 3600)
+        .authenticated(true)
+        .build();
   }
 
   @Transactional
-  public String loginWithGoogle(String accessToken) {
+  public AuthenticationResponse loginWithGoogle(String accessToken) {
     // Gọi API Google để lấy thông tin người dùng
     RestTemplate restTemplate = new RestTemplate();
     String googleUrl = "https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + accessToken;
@@ -164,7 +195,15 @@ public class UserService {
                   });
 
       // Tạo JWT token
-      return authenticationService.generateToken(user);
+      String newAccessToken = authenticationService.generateToken(user, false);
+      String newRefreshToken = authenticationService.generateToken(user, true);
+
+      return AuthenticationResponse.builder()
+          .accessToken(newAccessToken)
+          .refreshToken(newRefreshToken)
+          .expiresIn(authenticationService.getValidDuration() * 3600)
+          .authenticated(true)
+          .build();
 
     } catch (JsonProcessingException e) {
       throw new AppException(ErrorCode.PARSE_GOOGLE_RESPONSE_ERROR);

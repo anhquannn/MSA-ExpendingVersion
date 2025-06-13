@@ -73,9 +73,15 @@ public class AuthenticationService {
       throw new AppException(ErrorCode.USER_UNAUTHENTICATED);
     }
 
-    var token = generateToken(user);
+    String accessToken = generateToken(user, false);
+    String refreshToken = generateToken(user, true);
 
-    return AuthenticationResponse.builder().token(token).authenticated(true).build();
+    return AuthenticationResponse.builder()
+        .accessToken(accessToken)
+        .refreshToken(refreshToken)
+        .expiresIn(VALID_DURATION * 3600) // Convert hours to seconds
+        .authenticated(true)
+        .build();
   }
 
   public IntrospectResponse introspect(IntrospectRequest request)
@@ -92,8 +98,11 @@ public class AuthenticationService {
     return IntrospectResponse.builder().active(isValid).build();
   }
 
-  public String generateToken(User user) {
+  public String generateToken(User user, boolean isRefreshToken) {
     JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+
+    long expirationTime = isRefreshToken ? REFRESHABLE_DURATION : VALID_DURATION;
+    String tokenType = isRefreshToken ? "refresh" : "access";
 
     JWTClaimsSet jwtClaimSet =
         new JWTClaimsSet.Builder()
@@ -101,9 +110,10 @@ public class AuthenticationService {
             .issuer("com.msa")
             .issueTime(new Date())
             .expirationTime(
-                new Date(Instant.now().plus(VALID_DURATION, ChronoUnit.HOURS).toEpochMilli()))
+                new Date(Instant.now().plus(expirationTime, ChronoUnit.HOURS).toEpochMilli()))
             .jwtID(UUID.randomUUID().toString())
             .claim("scope", buildScope(user))
+            .claim("token_type", tokenType)
             .build();
 
     Payload payload = new Payload(jwtClaimSet.toJSONObject());
@@ -136,11 +146,18 @@ public class AuthenticationService {
   @Transactional
   public AuthenticationResponse refreshToken(RefreshRequest request)
       throws JOSEException, ParseException {
-    var signedJWT = verifyToken(request.getToken(), true);
+    var signedJWT = verifyToken(request.getRefreshToken(), true);
+
+    // Verify this is a refresh token
+    String tokenType = (String) signedJWT.getJWTClaimsSet().getClaim("token_type");
+    if (!"refresh".equals(tokenType)) {
+      throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+    }
 
     var jit = signedJWT.getJWTClaimsSet().getJWTID();
     var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
+    // Invalidate the used refresh token
     InvalidatedToken invalidatedToken =
         InvalidatedToken.builder().invalidatedTokenId(jit).expiryTime(expiryTime).build();
     invalidatedTokenRepository.save(invalidatedToken);
@@ -151,9 +168,16 @@ public class AuthenticationService {
             .findByEmail(email)
             .orElseThrow(() -> new AppException(ErrorCode.USER_UNAUTHENTICATED));
 
-    var token = generateToken(user);
+    // Generate new access and refresh tokens
+    String newAccessToken = generateToken(user, false);
+    String newRefreshToken = generateToken(user, true);
 
-    return AuthenticationResponse.builder().token(token).authenticated(true).build();
+    return AuthenticationResponse.builder()
+        .accessToken(newAccessToken)
+        .refreshToken(newRefreshToken)
+        .expiresIn(VALID_DURATION * 3600) // Convert hours to seconds
+        .authenticated(true)
+        .build();
   }
 
   String buildScope(User user) {
@@ -199,5 +223,13 @@ public class AuthenticationService {
     }
 
     return signedJWT;
+  }
+
+  public long getValidDuration() {
+    return VALID_DURATION;
+  }
+
+  public long getRefreshableDuration() {
+    return REFRESHABLE_DURATION;
   }
 }

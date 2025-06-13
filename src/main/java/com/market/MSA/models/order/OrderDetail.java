@@ -1,5 +1,6 @@
 package com.market.MSA.models.order;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.market.MSA.models.product.Product;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,15 +32,19 @@ public class OrderDetail {
   Long orderDetailId;
 
   int quantity;
+  String name;
+  String status;
   double unitPrice;
   double totalPrice;
   String image;
 
   @ManyToOne
   @JoinColumn(name = "orderId", nullable = false)
+  @JsonBackReference("order-details")
   Order order;
 
   @ManyToOne
   @JoinColumn(name = "productId", nullable = false)
+  @JsonBackReference("product-order-details")
   Product product;
 }

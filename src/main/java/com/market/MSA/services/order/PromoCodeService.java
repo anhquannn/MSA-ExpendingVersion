@@ -7,6 +7,7 @@ import com.market.MSA.mappers.order.PromoCodeMapper;
 import com.market.MSA.models.order.PromoCode;
 import com.market.MSA.repositories.order.CampaignRepository;
 import com.market.MSA.repositories.order.PromoCodeRepository;
+import com.market.MSA.repositories.order.PromoCodeUsageRepository;
 import com.market.MSA.requests.order.PromoCodeRequest;
 import com.market.MSA.responses.order.PromoCodeResponse;
 import com.market.MSA.services.others.EntityFinderService;
@@ -31,12 +32,12 @@ public class PromoCodeService {
   final PromoCodeMapper promoCodeMapper;
   private final EntityFinderService entityFinderService;
   private final CampaignRepository campaignRepository;
+  private final PromoCodeUsageRepository promoCodeUsageRepository;
 
   // Tạo PromoCode
   @Transactional
   public PromoCodeResponse createPromoCode(PromoCodeRequest request) {
     PromoCode promoCode = promoCodeMapper.toPromoCode(request);
-    promoCode.setDiscountType("percentage");
     promoCode.setStatus(PromocodeStatus.PROMO_CODE_STATUS_3.getStatus());
     promoCode.setCampaign(
         entityFinderService.findByIdOrThrow(
@@ -79,12 +80,31 @@ public class PromoCodeService {
   }
 
   // Lấy PromoCode theo mã code
-  public PromoCodeResponse getPromoCodeByCode(String code) {
-    PromoCode promoCode =
-        promoCodeRepository
-            .findByCode(code)
-            .orElseThrow(() -> new AppException(ErrorCode.PROMO_CODE_NOT_FOUND));
+  public PromoCodeResponse getPromoCodeByCode(String code, Long userId) {
+    PromoCode promoCode = findPromoCodeByCode(code);
+
+    // Check if user has already used this promo code
+    if (userId != null && hasUserUsedPromoCode(userId, promoCode.getPromoCodeId())) {
+      throw new AppException(ErrorCode.PROMO_CODE_ALREADY_USED);
+    }
+
     return promoCodeMapper.toPromoCodeResponse(promoCode);
+  }
+
+  public boolean hasUserUsedPromoCode(Long userId, Long promoCodeId) {
+    return promoCodeUsageRepository.existsByUser_UserIdAndPromoCode_PromoCodeId(
+        userId, promoCodeId);
+  }
+
+  public List<PromoCodeResponse> filterUsedPromoCodes(
+      List<PromoCodeResponse> promoCodes, Long userId) {
+    if (userId == null) {
+      return promoCodes;
+    }
+
+    return promoCodes.stream()
+        .filter(promo -> !hasUserUsedPromoCode(userId, promo.getPromoCodeId()))
+        .collect(Collectors.toList());
   }
 
   // Lấy PromoCode theo mã code
@@ -98,11 +118,14 @@ public class PromoCodeService {
   }
 
   // Lấy danh sách tất cả PromoCode
-  public List<PromoCodeResponse> getAllPromoCodes(int page, int pageSize) {
+  public List<PromoCodeResponse> getAllPromoCodes(int page, int pageSize, Long userId) {
     Pageable pageable = PageRequest.of(page - 1, pageSize);
-    return promoCodeRepository.findAll(pageable).stream()
-        .map(promoCodeMapper::toPromoCodeResponse)
-        .collect(Collectors.toList());
+    List<PromoCodeResponse> promoCodes =
+        promoCodeRepository.findAll(pageable).stream()
+            .map(promoCodeMapper::toPromoCodeResponse)
+            .collect(Collectors.toList());
+
+    return filterUsedPromoCodes(promoCodes, userId);
   }
 
   void validatePromoCode(PromoCode promoCode) {

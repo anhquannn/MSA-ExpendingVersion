@@ -56,9 +56,18 @@ public class UserController {
         .build();
   }
 
+  @PostMapping("/admin/login")
+  public ApiResponse<AuthenticationResponse> loginAdmin(
+      @RequestBody @Valid AuthenticationRequest request) {
+    return ApiResponse.<AuthenticationResponse>builder()
+        .result(userService.loginAdmin(request.getEmail(), request.getPassword()))
+        .message(ApiMessage.USER_LOGGED_IN.getMessage())
+        .build();
+  }
+
   @PostMapping("/verify-otp")
-  ApiResponse<String> verifyOtp(@RequestBody @Valid VerifyOtpRequest requests) {
-    return ApiResponse.<String>builder()
+  ApiResponse<AuthenticationResponse> verifyOtp(@RequestBody @Valid VerifyOtpRequest requests) {
+    return ApiResponse.<AuthenticationResponse>builder()
         .result(userService.verifyOtp(requests.getOtp()))
         .message(ApiMessage.EMAIL_VERIFIED.getMessage())
         .build();
@@ -87,8 +96,8 @@ public class UserController {
   }
 
   @PostMapping("/login/google")
-  ApiResponse<String> loginWithGoogle(@RequestParam String accessToken) {
-    return ApiResponse.<String>builder()
+  ApiResponse<AuthenticationResponse> loginWithGoogle(@RequestParam String accessToken) {
+    return ApiResponse.<AuthenticationResponse>builder()
         .result(userService.loginWithGoogle(accessToken))
         .message(ApiMessage.GOOGLE_LOGIN_SUCCESSFUL.getMessage())
         .build();
@@ -181,7 +190,7 @@ public class UserController {
   }
 
   @PostMapping("/refresh")
-  ApiResponse<AuthenticationResponse> refresh(@RequestBody RefreshRequest request)
+  ApiResponse<AuthenticationResponse> refresh(@RequestBody @Valid RefreshRequest request)
       throws JOSEException, ParseException {
     var result = authenticationService.refreshToken(request);
     return ApiResponse.<AuthenticationResponse>builder()

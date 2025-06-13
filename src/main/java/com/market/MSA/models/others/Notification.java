@@ -1,5 +1,6 @@
 package com.market.MSA.models.others;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.market.MSA.models.order.Order;
 import com.market.MSA.models.product.Inventory;
 import com.market.MSA.models.product.Product;
@@ -32,23 +33,29 @@ public class Notification {
   Long notificationId;
 
   String notificationType;
+  String deviceTokens;
+  String deviceIds;
   LocalDateTime notificationDate;
   boolean isRead;
   String message;
 
   @ManyToOne
   @JoinColumn(name = "productId")
+  @JsonBackReference("product-notifications")
   Product product;
 
   @ManyToOne
   @JoinColumn(name = "orderId")
+  @JsonBackReference("order-notifications")
   Order order;
 
   @ManyToOne
   @JoinColumn(name = "inventoryId")
+  @JsonBackReference("inventory-notifications")
   Inventory inventory;
 
   @ManyToOne
   @JoinColumn(name = "userId")
+  @JsonBackReference("user-notifications")
   User user;
 }

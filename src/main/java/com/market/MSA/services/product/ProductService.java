@@ -5,8 +5,9 @@ import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.product.ProductMapper;
 import com.market.MSA.models.product.Product;
 import com.market.MSA.repositories.product.CategoryRepository;
-import com.market.MSA.repositories.product.ManufacturerRepository;
 import com.market.MSA.repositories.product.ProductRepository;
+import com.market.MSA.repositories.product.SupplierRepository;
+import com.market.MSA.requests.product.ProductFilterRequest;
 import com.market.MSA.requests.product.ProductRequest;
 import com.market.MSA.responses.product.ProductResponse;
 import com.market.MSA.services.others.EntityFinderService;
@@ -18,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -32,21 +32,22 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductService {
   final EntityFinderService entityFinderService;
   final ProductRepository productRepository;
-  final ManufacturerRepository manufacturerRepository;
+  final SupplierRepository supplierRepository;
   final CategoryRepository categoryRepository;
   final ProductMapper productMapper;
   final NotificationService notificationService;
+  static final String DEFAULT_SORT_BY = "price";
+  static final String DEFAULT_SORT_DIRECTION = "asc";
 
   @Transactional
   public ProductResponse createProduct(ProductRequest request, boolean sendNotificationToAll) {
     Product product = productMapper.toProduct(request);
-    product.setManufacturer(
+    product.setSupplier(
         entityFinderService.findByIdOrThrow(
-            manufacturerRepository, request.getManufactureId(), ErrorCode.MANUFACTURER_NOT_FOUND));
+            supplierRepository, request.getSupplierId(), ErrorCode.SUPPLIER_NOT_FOUND));
     product.setCategory(
         entityFinderService.findByIdOrThrow(
             categoryRepository, request.getCategoryId(), ErrorCode.CATEGORY_NOT_FOUND));
-    product.setCurrentPrice(request.getPrice());
 
     Product savedProduct = productRepository.save(product);
 
@@ -63,9 +64,9 @@ public class ProductService {
         productRepository
             .findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
-    product.setManufacturer(
+    product.setSupplier(
         entityFinderService.findByIdOrThrow(
-            manufacturerRepository, request.getManufactureId(), ErrorCode.MANUFACTURER_NOT_FOUND));
+            supplierRepository, request.getSupplierId(), ErrorCode.SUPPLIER_NOT_FOUND));
     product.setCategory(
         entityFinderService.findByIdOrThrow(
             categoryRepository, request.getCategoryId(), ErrorCode.CATEGORY_NOT_FOUND));
@@ -118,78 +119,41 @@ public class ProductService {
         .collect(Collectors.toList());
   }
 
-  //  @Cacheable(
-  //      value = "products",
-  //      key =
-  //          "'filtered_' + #size + '_' + #minPrice + '_' + #maxPrice + '_' + #color + '_' +
-  // #categoryId + '_' +
-  // #page + '_' + #pageSize")
-  public List<ProductResponse> filterAndSortProducts(
-      double minPrice, double maxPrice, String color, Long categoryId, int page, int pageSize) {
-    return productRepository.findAll().stream()
-        .filter(p -> (minPrice <= 0 || p.getPrice() >= minPrice))
-        .filter(p -> (maxPrice <= 0 || p.getPrice() <= maxPrice))
-        .filter(p -> (color == null || color.isEmpty() || p.getColor().equalsIgnoreCase(color)))
-        .filter(
-            p ->
-                (categoryId == null
-                    || categoryId == 0
-                    || p.getCategory().getCategoryId().equals(categoryId)))
-        .sorted(
-            (p1, p2) ->
-                Double.compare(p2.getTotalRevenue(), p1.getTotalRevenue())) // Sắp xếp theo số lượng
-        .skip((long) (page - 1) * pageSize)
-        .limit(pageSize)
-        .map(productMapper::toProductResponse)
-        .collect(Collectors.toList());
-  }
+  public Page<ProductResponse> filterProducts(ProductFilterRequest request) {
+    // Set default values for pagination and sorting
+    String sortBy =
+        (request.getSortBy() != null && !request.getSortBy().isEmpty())
+            ? request.getSortBy()
+            : DEFAULT_SORT_BY;
 
-  //  @Cacheable(
-  //      value = "products",
-  //      key =
-  //          "'branch_' + #branchId + '_' + #keyword + '_' + #minPrice + '_' + #maxPrice + '_' +
-  // #color + '_' + #size
-  // + '_' + #page + '_' + #pageSize + '_' + #sortBy + '_' + #sortDirection")
-  public Page<ProductResponse> searchProductsInBranch(
-      Long branchId,
-      String keyword,
-      Double minPrice,
-      Double maxPrice,
-      String color,
-      int page,
-      int pageSize,
-      String sortBy,
-      String sortDirection) {
+    String sortDirection =
+        (request.getSortDirection() != null && !request.getSortDirection().isEmpty())
+            ? request.getSortDirection()
+            : DEFAULT_SORT_DIRECTION;
 
     // Create pageable with sorting
     Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
-    Pageable pageable = PageRequest.of(page, pageSize, Sort.by(direction, sortBy));
+    Pageable pageable =
+        PageRequest.of(
+            request.getPage() - 1, // Page numbers are 0-based in Spring
+            request.getPageSize(),
+            Sort.by(direction, sortBy));
 
-    // Get filtered products with pagination using searchByKeyword
-    Page<Product> products = productRepository.searchByKeyword(branchId, keyword, pageable);
+    // Call repository with all filters
+    Page<Product> products =
+        productRepository.findFilteredProducts(
+            request.getBranchId(),
+            request.getCategoryId(),
+            request.getSupplierId(),
+            request.getUnit(),
+            request.getNetWeight(),
+            request.getMinPrice(),
+            request.getMaxPrice(),
+            request.getKeyword(),
+            pageable);
 
-    // Apply additional filters
-    List<Product> filteredProducts =
-        products.getContent().stream()
-            .filter(
-                product -> {
-                  boolean matchesPrice =
-                      (minPrice == null || product.getCurrentPrice() >= minPrice)
-                          && (maxPrice == null || product.getCurrentPrice() <= maxPrice);
-                  boolean matchesColor =
-                      color == null
-                          || color.isEmpty()
-                          || product.getColor().equalsIgnoreCase(color);
-                  return matchesPrice && matchesColor;
-                })
-            .collect(Collectors.toList());
-
-    // Create new page with filtered results
-    Page<Product> filteredPage =
-        new PageImpl<>(filteredProducts, pageable, filteredProducts.size());
-
-    // Convert to response DTOs
-    return filteredPage.map(productMapper::toProductResponse);
+    // Convert to DTO and return
+    return products.map(productMapper::toProductResponse);
   }
 
   //  @Cacheable(
@@ -206,39 +170,7 @@ public class ProductService {
 
     // Get all products in branch with pagination using database query
     Page<Product> products =
-        productRepository.findByBranchAndFilters(branchId, null, null, null, null, pageable);
-
-    // Convert to response DTOs
-    return products.map(productMapper::toProductResponse);
-  }
-
-  //  @Cacheable(
-  //      value = "products",
-  //      key =
-  //          "'search_' + #keyword + '_' + #minPrice + '_' + #maxPrice + '_' + #color + '_' + #size
-  // + '_' +
-  // #categoryId + '_' + #manufacturerId + '_' + #page + '_' + #pageSize + '_' + #sortBy + '_' +
-  // #sortDirection")
-  public Page<ProductResponse> searchProducts(
-      String keyword,
-      Double minPrice,
-      Double maxPrice,
-      String color,
-      Long categoryId,
-      Long manufacturerId,
-      int page,
-      int pageSize,
-      String sortBy,
-      String sortDirection) {
-
-    // Create pageable with sorting
-    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
-    Pageable pageable = PageRequest.of(page, pageSize, Sort.by(direction, sortBy));
-
-    // Get products with filters and pagination
-    Page<Product> products =
-        productRepository.searchProducts(
-            keyword, minPrice, maxPrice, color, categoryId, manufacturerId, pageable);
+        productRepository.findByBranchAndFilters(branchId, null, null, null, pageable);
 
     // Convert to response DTOs
     return products.map(productMapper::toProductResponse);

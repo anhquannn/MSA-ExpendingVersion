@@ -18,7 +18,7 @@ public class FeedbackRequest {
   @RatingConstraint int rating;
 
   String comments;
-  LocalDateTime createAt;
+  LocalDateTime createdAt;
 
   Long userId;
   Long productId;

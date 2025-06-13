@@ -1,5 +1,6 @@
 package com.market.MSA.models.order;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -43,5 +44,6 @@ public class CancelOrder {
 
   @ManyToOne
   @JoinColumn(name = "orderId", nullable = false)
+  @JsonBackReference("order-cancel-orders")
   Order order;
 }

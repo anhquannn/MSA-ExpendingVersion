@@ -1,5 +1,7 @@
 package com.market.MSA.models.order;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -10,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -36,11 +39,14 @@ public class Cart {
 
   @ManyToOne
   @JoinColumn(name = "userId", nullable = false)
+  @JsonBackReference("user-carts")
   User user;
 
   @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<CartItem> cartItems;
+  @JsonManagedReference("cart-items")
+  List<CartItem> cartItems = new ArrayList<>();
 
   @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-  List<Order> orders;
+  @JsonManagedReference("cart-orders")
+  List<Order> orders = new ArrayList<>();
 }

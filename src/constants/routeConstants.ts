@@ -1,5 +1,16 @@
 // src/constants/routeConstants.ts
 export const routeConstants = {
-  HOME: '/',
-
+  login: '/login',
+  signup: '/signup',
+  forgotPassword: '/forgot-password',
+  dashboard: '/dashboard',
+  orders: 'orders', // Lưu ý: Đây là relative path cho nested route
+  users: 'users',
+  revenue: 'revenue',
+  inventory: 'inventory',
+  products: 'products', 
+  userDetails: 'users/:userId',
+  branches: 'branches',
+  settings: 'settings',
+  productDetails: 'products/:productId',
 };

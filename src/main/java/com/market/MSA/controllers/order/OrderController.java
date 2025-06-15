@@ -7,6 +7,7 @@ import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.requests.order.OrderRequest;
 import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.OrderSummaryResponse;
+import com.market.MSA.responses.order.RevenueStatisticsResponse;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.services.order.OrderService;
 import jakarta.validation.Valid;
@@ -163,12 +164,12 @@ public class OrderController {
   }
 
   @GetMapping("/revenue/statistics")
-  public ApiResponse<Map<String, Double>> getRevenueStatistics(
+  public ApiResponse<RevenueStatisticsResponse> getRevenueStatistics(
       @RequestParam int year,
       @RequestParam int month,
       @RequestParam(required = false) Long branchId,
       @RequestParam(required = false) Long userId) {
-    return ApiResponse.<Map<String, Double>>builder()
+    return ApiResponse.<RevenueStatisticsResponse>builder()
         .result(orderService.getRevenueStatistics(year, month, branchId, userId))
         .message(ApiMessage.REVENUE_STATISTICS_RETRIEVED.getMessage())
         .build();

@@ -19,10 +19,7 @@ import com.market.MSA.repositories.product.BranchRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.order.OrderRequest;
 import com.market.MSA.requests.order.PromoCodeUsageRequest;
-import com.market.MSA.responses.order.CartItemResponse;
-import com.market.MSA.responses.order.CartResponse;
-import com.market.MSA.responses.order.OrderResponse;
-import com.market.MSA.responses.order.PromoCodeResponse;
+import com.market.MSA.responses.order.*;
 import com.market.MSA.services.others.EmailService;
 import com.market.MSA.services.others.NotificationService;
 import com.market.MSA.services.product.BranchService;
@@ -493,36 +490,66 @@ public class OrderService {
   }
 
   @Transactional(readOnly = true)
-  public Map<String, Double> getRevenueStatistics(int year, int month, Long branchId, Long userId) {
-    Map<String, Double> statistics = new HashMap<>();
+  public RevenueStatisticsResponse getRevenueStatistics(int year, int month, Long branchId, Long userId) {
+    // Calculate current month's data
+    Double currentMonthRevenue = branchId != null ? 
+        calculateMonthlyRevenueByBranch(year, month, branchId) : 
+        calculateMonthlyRevenue(year, month);
+    Long currentMonthOrderCount = branchId != null ?
+        orderRepository.countByMonthAndBranch(year, month, branchId) :
+        orderRepository.countByMonth(year, month);
 
-    // Calculate total revenue
-    statistics.put("totalMonthlyRevenue", calculateMonthlyRevenue(year, month));
-    statistics.put("totalYearlyRevenue", calculateYearlyRevenue(year));
+    // Calculate previous month's data
+    int prevYear = month == 1 ? year - 1 : year;
+    int prevMonth = month == 1 ? 12 : month - 1;
+    
+    Double prevMonthRevenue = branchId != null ? 
+        calculateMonthlyRevenueByBranch(prevYear, prevMonth, branchId) : 
+        calculateMonthlyRevenue(prevYear, prevMonth);
+    Long prevMonthOrderCount = branchId != null ?
+        orderRepository.countByMonthAndBranch(prevYear, prevMonth, branchId) :
+        orderRepository.countByMonth(prevYear, prevMonth);
 
-    // Calculate branch revenue if branchId is provided
-    if (branchId != null) {
-      statistics.put(
-          "branchMonthlyRevenue", calculateMonthlyRevenueByBranch(year, month, branchId));
-      statistics.put("branchYearlyRevenue", calculateYearlyRevenueByBranch(year, branchId));
-    }
+    // Calculate percentage changes
+    double revenueChangePercent = prevMonthRevenue != 0 ? 
+        ((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100 : 
+        (currentMonthRevenue > 0 ? 100.0 : 0.0);
+    
+    double orderCountChangePercent = prevMonthOrderCount != 0 ? 
+        ((double)(currentMonthOrderCount - prevMonthOrderCount) / prevMonthOrderCount) * 100 :
+        (currentMonthOrderCount > 0 ? 100.0 : 0.0);
 
-    // Calculate user revenue if userId is provided
+    // Build response
+    RevenueStatisticsResponse.RevenueStatisticsResponseBuilder builder = RevenueStatisticsResponse.builder()
+        .totalMonthlyRevenue(currentMonthRevenue)
+        .revenueChangePercent(Math.round(revenueChangePercent * 10.0) / 10.0)
+        .totalOrders(currentMonthOrderCount)
+        .orderCountChangePercent(Math.round(orderCountChangePercent * 10.0) / 10.0)
+        .totalYearlyRevenue(branchId != null ? 
+            calculateYearlyRevenueByBranch(year, branchId) : 
+            calculateYearlyRevenue(year));
+
+    // Add user specific data if userId is provided
     if (userId != null) {
-      statistics.put("userMonthlyRevenue", calculateMonthlyRevenueByUser(year, month, userId));
-      statistics.put("userYearlyRevenue", calculateYearlyRevenueByUser(year, userId));
+      builder.userMonthlyRevenue(calculateMonthlyRevenueByUser(year, month, userId))
+             .userYearlyRevenue(calculateYearlyRevenueByUser(year, userId));
     }
 
-    // Calculate combined branch and user revenue if both are provided
+    // Add branch specific data if branchId is provided
+    if (branchId != null) {
+      builder.branchMonthlyRevenue(calculateMonthlyRevenueByBranch(year, month, branchId))
+             .branchYearlyRevenue(calculateYearlyRevenueByBranch(year, branchId));
+    }
+
+    // Add combined branch and user data if both are provided
     if (branchId != null && userId != null) {
-      statistics.put(
-          "branchUserMonthlyRevenue",
-          calculateMonthlyRevenueByBranchAndUser(year, month, branchId, userId));
-      statistics.put(
-          "branchUserYearlyRevenue", calculateYearlyRevenueByBranchAndUser(year, branchId, userId));
+      builder.branchUserMonthlyRevenue(
+              calculateMonthlyRevenueByBranchAndUser(year, month, branchId, userId))
+             .branchUserYearlyRevenue(
+                calculateYearlyRevenueByBranchAndUser(year, branchId, userId));
     }
 
-    return statistics;
+    return builder.build();
   }
 
   @Transactional

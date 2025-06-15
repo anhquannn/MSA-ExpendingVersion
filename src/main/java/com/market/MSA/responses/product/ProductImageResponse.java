@@ -12,8 +12,8 @@ public class ProductImageResponse {
   Long productImageId;
 
   String imageUrl;
-  String isPrimary;
-  String sortOrder;
+  boolean isPrimary;
+  int sortOrder;
 
   ProductResponse productResponse;
 }

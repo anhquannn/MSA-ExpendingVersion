@@ -21,8 +21,8 @@ public class ProductImage {
   Long productImageId;
 
   String imageUrl;
-  String isPrimary;
-  String sortOrder;
+  boolean isPrimary;
+  int sortOrder;
 
   @ManyToOne
   @JoinColumn(name = "productId", nullable = false)

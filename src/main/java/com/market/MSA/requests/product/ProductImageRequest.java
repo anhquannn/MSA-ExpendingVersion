@@ -10,8 +10,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductImageRequest {
   String imageUrl;
-  String isPrimary;
-  String sortOrder;
+  boolean isPrimary;
+  int sortOrder;
 
   Long productId;
 }

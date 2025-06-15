@@ -89,7 +89,7 @@ public class ProductController {
         .build();
   }
 
-  @PostMapping("/filter")
+  @GetMapping("/filter")
   public ApiResponse<Page<ProductResponse>> filterProducts(
       @Valid @RequestBody ProductFilterRequest filterRequest) {
     return ApiResponse.<Page<ProductResponse>>builder()

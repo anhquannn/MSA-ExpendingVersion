@@ -2,16 +2,20 @@ package com.market.MSA.services.product;
 
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
+import com.market.MSA.mappers.product.InventoryProductMapper;
 import com.market.MSA.mappers.product.ProductMapper;
+import com.market.MSA.models.product.Inventory;
+import com.market.MSA.models.product.InventoryProduct;
 import com.market.MSA.models.product.Product;
-import com.market.MSA.repositories.product.CategoryRepository;
-import com.market.MSA.repositories.product.ProductRepository;
-import com.market.MSA.repositories.product.SupplierRepository;
+import com.market.MSA.repositories.product.*;
 import com.market.MSA.requests.product.ProductFilterRequest;
 import com.market.MSA.requests.product.ProductRequest;
+import com.market.MSA.responses.product.InventoryProductResponse;
+import com.market.MSA.responses.product.ProductFilterResponse;
 import com.market.MSA.responses.product.ProductResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import com.market.MSA.services.others.NotificationService;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -36,6 +40,9 @@ public class ProductService {
   final CategoryRepository categoryRepository;
   final ProductMapper productMapper;
   final NotificationService notificationService;
+  final InventoryRepository inventoryRepository;
+  final InventoryProductRepository inventoryProductRepository;
+  final InventoryProductMapper inventoryProductMapper;
   static final String DEFAULT_SORT_BY = "price";
   static final String DEFAULT_SORT_DIRECTION = "asc";
 
@@ -119,7 +126,7 @@ public class ProductService {
         .collect(Collectors.toList());
   }
 
-  public Page<ProductResponse> filterProducts(ProductFilterRequest request) {
+  public ProductFilterResponse filterProducts(ProductFilterRequest request) {
     // Set default values for pagination and sorting
     String sortBy =
         (request.getSortBy() != null && !request.getSortBy().isEmpty())
@@ -139,21 +146,85 @@ public class ProductService {
             request.getPageSize(),
             Sort.by(direction, sortBy));
 
-    // Call repository with all filters
-    Page<Product> products =
-        productRepository.findFilteredProducts(
-            request.getBranchId(),
-            request.getCategoryId(),
-            request.getSupplierId(),
-            request.getUnit(),
-            request.getNetWeight(),
-            request.getMinPrice(),
-            request.getMaxPrice(),
-            request.getKeyword(),
-            pageable);
+    // Check if branchId is provided to handle discounted products
+    if (request.getBranchId() != null) {
+      // First, get the inventory for the branch
+      Inventory inventory =
+          inventoryRepository
+              .findByBranch_BranchId(request.getBranchId())
+              .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
 
-    // Convert to DTO and return
-    return products.map(productMapper::toProductResponse);
+      // Get paginated discounted products for this branch
+      int discountedPageSize = request.getPageSize() * 2; // Show more discounted items
+
+      // Create a separate sort for discounted products to handle field name differences
+      Sort discountedSort = Sort.by(direction, sortBy.equals("price") ? "currentPrice" : sortBy);
+
+      Pageable discountedPageable =
+          PageRequest.of(
+              request.getPage() - 1, // Align page numbers with regular products
+              discountedPageSize,
+              discountedSort);
+
+      // Get paginated discounted products
+      Page<InventoryProduct> discountedPage =
+          inventoryProductRepository.findByInventory_InventoryIdAndIsDiscountedTrue(
+              inventory.getInventoryId(), discountedPageable);
+
+      // Get the list of discounted product IDs to exclude from regular products
+      List<Long> discountedProductIds =
+          discountedPage.getContent().stream()
+              .map(ip -> ip.getProduct().getProductId())
+              .distinct()
+              .collect(Collectors.toList());
+
+      // Map the discounted inventory products to responses with pagination
+      Page<InventoryProductResponse> discountedProductsPage =
+          discountedPage.map(inventoryProductMapper::toInventoryProductResponse);
+
+      // Get filtered products excluding the discounted ones
+      Page<Product> products =
+          productRepository.findFilteredProducts(
+              request.getBranchId(),
+              request.getCategoryId(),
+              request.getSupplierId(),
+              request.getUnit(),
+              request.getNetWeight(),
+              request.getMinPrice(),
+              request.getMaxPrice(),
+              request.getKeyword(),
+              discountedProductIds, // Pass the list of discounted product IDs to exclude
+              pageable);
+
+      // Return both regular and discounted products with pagination
+      return ProductFilterResponse.builder()
+          .products(products.map(productMapper::toProductResponse))
+          .discountedProducts(discountedProductsPage)
+          .build();
+    } else {
+      // If no branchId is provided, just return the regular filtered products
+      Page<Product> products =
+          productRepository.findFilteredProducts(
+              null, // branchId
+              request.getCategoryId(),
+              request.getSupplierId(),
+              request.getUnit(),
+              request.getNetWeight(),
+              request.getMinPrice(),
+              request.getMaxPrice(),
+              request.getKeyword(),
+              Collections.emptyList(), // No products to exclude
+              pageable);
+
+      // Create an empty page for discounted products
+      Page<InventoryProductResponse> emptyDiscountedPage =
+          new org.springframework.data.domain.PageImpl<>(Collections.emptyList(), pageable, 0);
+
+      return ProductFilterResponse.builder()
+          .products(products.map(productMapper::toProductResponse))
+          .discountedProducts(emptyDiscountedPage)
+          .build();
+    }
   }
 
   //  @Cacheable(

@@ -4,6 +4,7 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.product.ProductFilterRequest;
 import com.market.MSA.requests.product.ProductRequest;
 import com.market.MSA.responses.others.ApiResponse;
+import com.market.MSA.responses.product.ProductFilterResponse;
 import com.market.MSA.responses.product.ProductResponse;
 import com.market.MSA.services.product.ProductService;
 import jakarta.validation.Valid;
@@ -89,10 +90,10 @@ public class ProductController {
         .build();
   }
 
-  @GetMapping("/filter")
-  public ApiResponse<Page<ProductResponse>> filterProducts(
+  @PostMapping("/filter")
+  public ApiResponse<ProductFilterResponse> filterProducts(
       @Valid @RequestBody ProductFilterRequest filterRequest) {
-    return ApiResponse.<Page<ProductResponse>>builder()
+    return ApiResponse.<ProductFilterResponse>builder()
         .result(productService.filterProducts(filterRequest))
         .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
         .build();

@@ -43,10 +43,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND o.branch.branchId = :branchId")
   Double calculateYearlyRevenueByBranch(@Param("year") int year, @Param("branchId") Long branchId);
 
-  @Query("SELECT COUNT(o) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month")
+  @Query(
+      "SELECT COUNT(o) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month")
   Long countByMonth(@Param("year") int year, @Param("month") int month);
 
-  @Query("SELECT COUNT(o) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.branch.branchId = :branchId")
+  @Query(
+      "SELECT COUNT(o) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.branch.branchId = :branchId")
   Long countByMonthAndBranch(
       @Param("year") int year, @Param("month") int month, @Param("branchId") Long branchId);
 

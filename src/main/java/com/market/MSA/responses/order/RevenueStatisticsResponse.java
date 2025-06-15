@@ -5,68 +5,42 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
-/**
- * Response DTO for revenue statistics
- */
+/** Response DTO for revenue statistics */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class RevenueStatisticsResponse {
-    /**
-     * Total revenue of the current month
-     */
-    private Double totalMonthlyRevenue;
+  /** Total revenue of the current month */
+  private Double totalMonthlyRevenue;
 
-    /**
-     * Percentage change in revenue compared to previous month
-     */
-    private Double revenueChangePercent;
+  /** Percentage change in revenue compared to previous month */
+  private Double revenueChangePercent;
 
-    /**
-     * Total number of orders in the current month
-     */
-    private Long totalOrders;
+  /** Total number of orders in the current month */
+  private Long totalOrders;
 
-    /**
-     * Percentage change in order count compared to previous month
-     */
-    private Double orderCountChangePercent;
+  /** Percentage change in order count compared to previous month */
+  private Double orderCountChangePercent;
 
-    /**
-     * Total yearly revenue
-     */
-    private Double totalYearlyRevenue;
+  /** Total yearly revenue */
+  private Double totalYearlyRevenue;
 
-    /**
-     * User's monthly revenue (if userId is provided)
-     */
-    private Double userMonthlyRevenue;
+  /** User's monthly revenue (if userId is provided) */
+  private Double userMonthlyRevenue;
 
-    /**
-     * User's yearly revenue (if userId is provided)
-     */
-    private Double userYearlyRevenue;
+  /** User's yearly revenue (if userId is provided) */
+  private Double userYearlyRevenue;
 
-    /**
-     * Branch's monthly revenue (if branchId is provided)
-     */
-    private Double branchMonthlyRevenue;
+  /** Branch's monthly revenue (if branchId is provided) */
+  private Double branchMonthlyRevenue;
 
-    /**
-     * Branch's yearly revenue (if branchId is provided)
-     */
-    private Double branchYearlyRevenue;
+  /** Branch's yearly revenue (if branchId is provided) */
+  private Double branchYearlyRevenue;
 
-    /**
-     * Combined branch and user monthly revenue (if both branchId and userId are provided)
-     */
-    private Double branchUserMonthlyRevenue;
+  /** Combined branch and user monthly revenue (if both branchId and userId are provided) */
+  private Double branchUserMonthlyRevenue;
 
-    /**
-     * Combined branch and user yearly revenue (if both branchId and userId are provided)
-     */
-    private Double branchUserYearlyRevenue;
+  /** Combined branch and user yearly revenue (if both branchId and userId are provided) */
+  private Double branchUserYearlyRevenue;
 }

@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.branch.CreateBranchWithManagerRequest;
 import com.market.MSA.requests.product.BranchRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.BranchResponse;
@@ -31,6 +32,16 @@ public class BranchController {
   @PostMapping
   public ApiResponse<BranchResponse> createBranch(@RequestBody BranchRequest branchRequest) {
     BranchResponse branchResponse = branchService.createBranch(branchRequest);
+    return ApiResponse.<BranchResponse>builder()
+        .result(branchResponse)
+        .message(ApiMessage.BRANCH_CREATED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/admin")
+  public ApiResponse<BranchResponse> createBranchWithManager(
+      @RequestBody CreateBranchWithManagerRequest request) {
+    BranchResponse branchResponse = branchService.createBranchWithManager(request);
     return ApiResponse.<BranchResponse>builder()
         .result(branchResponse)
         .message(ApiMessage.BRANCH_CREATED.getMessage())

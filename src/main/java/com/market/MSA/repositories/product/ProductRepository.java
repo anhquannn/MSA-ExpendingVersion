@@ -35,7 +35,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
           + "AND (:netWeight IS NULL OR p.netWeight = :netWeight) "
           + "AND (:minPrice IS NULL OR p.price >= :minPrice) "
           + "AND (:maxPrice IS NULL OR p.price <= :maxPrice) "
-          + "AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) ")
+          + "AND (:keyword IS NULL OR :keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
+          + "AND (COALESCE(:excludeProductIds, NULL) IS NULL OR p.productId NOT IN :excludeProductIds)")
   Page<Product> findFilteredProducts(
       @Param("branchId") Long branchId,
       @Param("categoryId") Long categoryId,
@@ -45,5 +46,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
       @Param("minPrice") Double minPrice,
       @Param("maxPrice") Double maxPrice,
       @Param("keyword") String keyword,
+      @Param("excludeProductIds") java.util.List<Long> excludeProductIds,
       Pageable pageable);
 }

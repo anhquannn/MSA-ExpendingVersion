@@ -29,9 +29,7 @@ import com.market.MSA.services.user.RewardPointService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -490,63 +488,74 @@ public class OrderService {
   }
 
   @Transactional(readOnly = true)
-  public RevenueStatisticsResponse getRevenueStatistics(int year, int month, Long branchId, Long userId) {
+  public RevenueStatisticsResponse getRevenueStatistics(
+      int year, int month, Long branchId, Long userId) {
     // Calculate current month's data
-    Double currentMonthRevenue = branchId != null ? 
-        calculateMonthlyRevenueByBranch(year, month, branchId) : 
-        calculateMonthlyRevenue(year, month);
-    Long currentMonthOrderCount = branchId != null ?
-        orderRepository.countByMonthAndBranch(year, month, branchId) :
-        orderRepository.countByMonth(year, month);
+    Double currentMonthRevenue =
+        branchId != null
+            ? calculateMonthlyRevenueByBranch(year, month, branchId)
+            : calculateMonthlyRevenue(year, month);
+    Long currentMonthOrderCount =
+        branchId != null
+            ? orderRepository.countByMonthAndBranch(year, month, branchId)
+            : orderRepository.countByMonth(year, month);
 
     // Calculate previous month's data
     int prevYear = month == 1 ? year - 1 : year;
     int prevMonth = month == 1 ? 12 : month - 1;
-    
-    Double prevMonthRevenue = branchId != null ? 
-        calculateMonthlyRevenueByBranch(prevYear, prevMonth, branchId) : 
-        calculateMonthlyRevenue(prevYear, prevMonth);
-    Long prevMonthOrderCount = branchId != null ?
-        orderRepository.countByMonthAndBranch(prevYear, prevMonth, branchId) :
-        orderRepository.countByMonth(prevYear, prevMonth);
+
+    Double prevMonthRevenue =
+        branchId != null
+            ? calculateMonthlyRevenueByBranch(prevYear, prevMonth, branchId)
+            : calculateMonthlyRevenue(prevYear, prevMonth);
+    Long prevMonthOrderCount =
+        branchId != null
+            ? orderRepository.countByMonthAndBranch(prevYear, prevMonth, branchId)
+            : orderRepository.countByMonth(prevYear, prevMonth);
 
     // Calculate percentage changes
-    double revenueChangePercent = prevMonthRevenue != 0 ? 
-        ((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100 : 
-        (currentMonthRevenue > 0 ? 100.0 : 0.0);
-    
-    double orderCountChangePercent = prevMonthOrderCount != 0 ? 
-        ((double)(currentMonthOrderCount - prevMonthOrderCount) / prevMonthOrderCount) * 100 :
-        (currentMonthOrderCount > 0 ? 100.0 : 0.0);
+    double revenueChangePercent =
+        prevMonthRevenue != 0
+            ? ((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100
+            : (currentMonthRevenue > 0 ? 100.0 : 0.0);
+
+    double orderCountChangePercent =
+        prevMonthOrderCount != 0
+            ? ((double) (currentMonthOrderCount - prevMonthOrderCount) / prevMonthOrderCount) * 100
+            : (currentMonthOrderCount > 0 ? 100.0 : 0.0);
 
     // Build response
-    RevenueStatisticsResponse.RevenueStatisticsResponseBuilder builder = RevenueStatisticsResponse.builder()
-        .totalMonthlyRevenue(currentMonthRevenue)
-        .revenueChangePercent(Math.round(revenueChangePercent * 10.0) / 10.0)
-        .totalOrders(currentMonthOrderCount)
-        .orderCountChangePercent(Math.round(orderCountChangePercent * 10.0) / 10.0)
-        .totalYearlyRevenue(branchId != null ? 
-            calculateYearlyRevenueByBranch(year, branchId) : 
-            calculateYearlyRevenue(year));
+    RevenueStatisticsResponse.RevenueStatisticsResponseBuilder builder =
+        RevenueStatisticsResponse.builder()
+            .totalMonthlyRevenue(currentMonthRevenue)
+            .revenueChangePercent(Math.round(revenueChangePercent * 10.0) / 10.0)
+            .totalOrders(currentMonthOrderCount)
+            .orderCountChangePercent(Math.round(orderCountChangePercent * 10.0) / 10.0)
+            .totalYearlyRevenue(
+                branchId != null
+                    ? calculateYearlyRevenueByBranch(year, branchId)
+                    : calculateYearlyRevenue(year));
 
     // Add user specific data if userId is provided
     if (userId != null) {
-      builder.userMonthlyRevenue(calculateMonthlyRevenueByUser(year, month, userId))
-             .userYearlyRevenue(calculateYearlyRevenueByUser(year, userId));
+      builder
+          .userMonthlyRevenue(calculateMonthlyRevenueByUser(year, month, userId))
+          .userYearlyRevenue(calculateYearlyRevenueByUser(year, userId));
     }
 
     // Add branch specific data if branchId is provided
     if (branchId != null) {
-      builder.branchMonthlyRevenue(calculateMonthlyRevenueByBranch(year, month, branchId))
-             .branchYearlyRevenue(calculateYearlyRevenueByBranch(year, branchId));
+      builder
+          .branchMonthlyRevenue(calculateMonthlyRevenueByBranch(year, month, branchId))
+          .branchYearlyRevenue(calculateYearlyRevenueByBranch(year, branchId));
     }
 
     // Add combined branch and user data if both are provided
     if (branchId != null && userId != null) {
-      builder.branchUserMonthlyRevenue(
+      builder
+          .branchUserMonthlyRevenue(
               calculateMonthlyRevenueByBranchAndUser(year, month, branchId, userId))
-             .branchUserYearlyRevenue(
-                calculateYearlyRevenueByBranchAndUser(year, branchId, userId));
+          .branchUserYearlyRevenue(calculateYearlyRevenueByBranchAndUser(year, branchId, userId));
     }
 
     return builder.build();

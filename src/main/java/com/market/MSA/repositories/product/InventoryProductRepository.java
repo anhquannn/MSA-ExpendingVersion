@@ -55,4 +55,16 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
   @Query("SELECT ip FROM InventoryProduct ip WHERE ip.expDate >= :date AND ip.isDiscounted = false")
   List<InventoryProduct> findByExpDateGreaterThanEqualAndIsDiscountedFalse(
       @Param("date") java.time.LocalDate date);
+
+  /**
+   * Find paginated inventory products that are discounted for a specific inventory.
+   *
+   * @param inventoryId The ID of the inventory to search in
+   * @param pageable Pagination information
+   * @return Page of discounted inventory products
+   */
+  @Query(
+      "SELECT ip FROM InventoryProduct ip WHERE ip.inventory.inventoryId = :inventoryId AND ip.isDiscounted = true")
+  Page<InventoryProduct> findByInventory_InventoryIdAndIsDiscountedTrue(
+      @Param("inventoryId") Long inventoryId, Pageable pageable);
 }

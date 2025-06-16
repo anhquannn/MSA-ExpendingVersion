@@ -8,7 +8,7 @@ export interface User {
   Email: string;
   Password?: string; // Mật khẩu thường không được gửi về từ API
   Address: string;
-  Role: 'Admin' | 'Customer'; // Dựa trên mô tả ràng buộc
+  Role: 'admin' | 'customer'; // Dựa trên mô tả ràng buộc
 }
 
 export interface Feedback {

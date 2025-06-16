@@ -2,17 +2,19 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// Import các hằng số route (nếu bạn đã định nghĩa)
+// Import các hằng số route
 import { routeConstants } from './constants/routeConstants';
 
-// --- Auth Pages ---
+// Import LocalStorageManager
+import { LocalStorageManager } from './utils/app_storage';
+
+// Auth Pages
 import LoginPage from './pages/auth/LoginPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import SignupPage from './pages/auth/SignupPage';
 
-// --- Dashboard Components ---
-import DashboardLayout from './components/common/Dashboard/Layout';
-
+// Dashboard Components
+import DashboardLayout from './components/common/Dashboard/Layout'; // Đảm bảo đúng đường dẫn
 import DashboardHome from './pages/Dashboard/DashboardHome';
 import OrdersPage from './pages/Dashboard/OrdersPage';
 import UsersPage from './pages/Dashboard/UsersPage';
@@ -21,51 +23,58 @@ import InventoryPage from './pages/Dashboard/InventoryPage';
 import ProductsPage from './pages/Dashboard/ProductsPage';
 import UserDetailPage from './pages/Dashboard/UserDetailPage';
 import ProductDetailPage from './pages/Dashboard/ProductDetailPage';
+import BranchManagementPage from './pages/Dashboard/BranchManagementPage';
+import BranchDetailPage from './pages/Dashboard/BranchDetailPage';
+import NotificationScreen from './components/NotificationScreen'; // Import NotificationScreen
+import SettingsPage from './pages/Dashboard/SettingsPage';
+
+LocalStorageManager.init();
 
 function App() {
-  // Dữ liệu giả cho người dùng đã đăng nhập
-  // Trong ứng dụng thực tế, bạn sẽ lấy thông tin này từ trạng thái xác thực (Context/Redux)
+  const currentUser = LocalStorageManager.getUser();
+  const isLoggedIn = !!LocalStorageManager.getAccessToken();
+
   const mockLoggedInUser = {
-    name: 'Manager Chi Nhánh',
-    avatar: '../../assets/images/default-avatar.png', // Sử dụng ảnh mặc định
+    name: currentUser ? currentUser.Fullname : 'Guest',
+    avatar: '../../assets/images/default-avatar.png',
   };
 
-  // Hàm xử lý đăng xuất
   const handleLogout = () => {
-    localStorage.removeItem('authToken'); // Xóa token xác thực
-    // Có thể thêm các logic dọn dẹp khác ở đây (ví dụ: xóa state người dùng)
-    window.location.href = '/login'; // Chuyển hướng cứng để đảm bảo reset state hoàn toàn
+    LocalStorageManager.clearAllData();
+    window.location.href = routeConstants.login;
   };
 
   return (
     <Router>
       <Routes>
-        {/* --- Authentication Routes --- */}
         <Route path={routeConstants.login} element={<LoginPage />} />
         <Route path={routeConstants.forgotPassword} element={<ForgotPasswordPage />} />
         <Route path={routeConstants.signup} element={<SignupPage />} />
 
-        {/* --- Dashboard Routes --- */}
-        {/* Sử dụng DashboardLayout làm bố cục chính cho tất cả các trang dashboard */}
+        {/* Protected Dashboard Routes */}
+        {/*
+          Thay vì kiểm tra isLoggedIn ở đây và render DashboardLayout hoặc Navigate,
+          chúng ta sẽ luôn render DashboardLayout cho đường dẫn /dashboard,
+          và để DashboardLayout (hoặc một component wrapper) xử lý việc bảo vệ.
+          Hoặc, cách đơn giản hơn là kiểm tra trực tiếp ở đây:
+        */}
         <Route
-          path={routeConstants.dashboard} // Base path cho dashboard
+          path={routeConstants.dashboard}
           element={
-            // Logic kiểm tra xác thực đơn giản: nếu có authToken trong localStorage
-            // localStorage.getItem('authToken') ? (
-            <DashboardLayout
-              userName={mockLoggedInUser.name}
-              userAvatar={mockLoggedInUser.avatar}
-              onLogout={handleLogout}
-            />
+            // !isLoggedIn ? ( // <-- Đã đổi thành 'isLoggedIn ?'
+              <DashboardLayout
+                userName={mockLoggedInUser.name}
+                userAvatar={mockLoggedInUser.avatar}
+                onLogout={handleLogout}
+                
+              />
             // ) : (
-            // Nếu không có token, chuyển hướng về trang đăng nhập
-            // <Navigate to={routeConstants.login} replace /> 
+              // Nếu KHÔNG có token, chuyển hướng về trang đăng nhập
+              // <Navigate to={routeConstants.login} replace />
             // )
           }
-
         >
           {/* Các trang con (nested routes) của Dashboard */}
-          {/* Khi người dùng truy cập /dashboard, sẽ render DashboardHome */}
           <Route index element={<DashboardHome />} />
           <Route path={routeConstants.orders} element={<OrdersPage />} />
           <Route path={routeConstants.users} element={<UsersPage />} />
@@ -73,10 +82,13 @@ function App() {
           <Route path={routeConstants.inventory} element={<InventoryPage />} />
           <Route path={routeConstants.products} element={<ProductsPage />} />
           <Route path={routeConstants.userDetails} element={<UserDetailPage />} />
-           <Route path={routeConstants.productDetails} element={<ProductDetailPage />} /> 
+          <Route path={routeConstants.productDetails} element={<ProductDetailPage />} />
+          <Route path={routeConstants.branches} element={<BranchManagementPage />} />
+          <Route path={routeConstants.branchDetails} element={<BranchDetailPage />} />
+          {/* Thêm route cho màn hình thông báo là một route con của dashboard */}
+          <Route path={routeConstants.notification} element={<NotificationScreen />} />
+          <Route path={routeConstants.settings} element={<SettingsPage />} />
           {/* Thêm các route cho các trang dashboard khác nếu có */}
-          {/* <Route path={routeConstants.branches} element={<BranchManagementPage />} /> */}
-          {/* <Route path={routeConstants.settings} element={<SettingsPage />} /> */}
         </Route>
 
         {/* --- Default Redirect --- */}

@@ -5,9 +5,12 @@ import axios from 'axios';
 // Giả định các component này đã được tạo và nằm trong thư mục tương ứng
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
-
+ import api, { AuthTokenManager, ApiConfig } from '../../services/api_service'; // <-- Sửa đường dẫn và import đúng cách
 // Đảm bảo đường dẫn đến logo là chính xác
 import logo from '../../assets/images/icon_app.png';
+import { routeConstants } from '../../constants/routeConstants';
+import { LoginApiResponse, LoginCredentials, UserProfileApiResponse } from '../../interfaces/auth.interface';
+import { LocalStorageManager, User } from '../../utils/app_storage';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -16,24 +19,53 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (event: React.FormEvent) => {
+const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      // const response = await axios.post('https://api.yourdomain.com/login', {
-      //   email,
-      //   password,
-      // });
+      const credentials: LoginCredentials = { email, password };
+      const loginResponse = await api.post<LoginApiResponse>('user/admin/login', credentials, undefined, false);
 
-      // const { token, user } = response.data;
-      // localStorage.setItem('authToken', token);
-      // navigate('/dashboard', { state: { user } });
-navigate('/dashboard');
+      if (loginResponse.code === 200 && loginResponse.result.authenticated) {
+        AuthTokenManager.setAccessToken(loginResponse.result.access_token);
+        AuthTokenManager.setRefreshToken(loginResponse.result.refresh_token);
+
+        const userProfileResponse = await api.get<UserProfileApiResponse>(`user/email/${email}`);
+
+        if (userProfileResponse.code === 200 && userProfileResponse.result) {
+          const apiUser = userProfileResponse.result;
+          const userToSave: User = {
+            User_Id: apiUser.userId, 
+            Fullname: apiUser.fullName,
+            Email: apiUser.email,
+            PhoneNumber: apiUser.phoneNumber || '', 
+            Address: apiUser.address || '', 
+            Role: 'admin',  
+            Brithday: String(apiUser.birthday) || '', 
+          };
+          
+          // Bước 3: Ghi lại thông tin người dùng vào local storage
+          LocalStorageManager.saveUser(userToSave);
+
+          navigate(routeConstants.dashboard); // Chuyển hướng đến Dashboard
+        } else {
+          // Xử lý trường hợp không lấy được thông tin người dùng nhưng login thành công
+          console.warn("Đăng nhập thành công nhưng không lấy được thông tin người dùng.");
+          setError(userProfileResponse.message || "Đăng nhập thành công nhưng không tải được thông tin người dùng.");
+          AuthTokenManager.clearTokens(); // Xóa token nếu không thể tải thông tin user
+        }
+      } else {
+        // Nếu API đăng nhập trả về code khác 200 hoặc authenticated là false
+        setError(loginResponse.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
+      }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.';
+      // Xử lý lỗi từ bất kỳ API nào (login hoặc lấy thông tin user)
+      const errorMessage = err.message || 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.';
       setError(errorMessage);
+      // Xóa token nếu có lỗi trong quá trình sau khi đăng nhập (đảm bảo sạch trạng thái)
+      AuthTokenManager.clearTokens(); 
     } finally {
       setLoading(false);
     }
@@ -41,27 +73,18 @@ navigate('/dashboard');
 
   // Hàm xử lý đăng nhập bằng Google
   const handleGoogleLogin = () => {
-    // Đây là nơi bạn sẽ tích hợp API đăng nhập bằng Google.
-    // Thông thường, nó sẽ chuyển hướng người dùng đến trang xác thực của Google
-    // hoặc mở một cửa sổ popup.
-    // Ví dụ: window.location.href = 'URL_API_GOOGL_AUTH';
     console.log('Đăng nhập bằng Google...');
     alert('Chức năng đăng nhập bằng Google đang được phát triển!');
-    // Trong một ứng dụng thực tế, bạn sẽ gửi yêu cầu tới backend của mình
-    // hoặc sử dụng thư viện như @react-oauth/google.
+
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden p-4">
-      {/* Lớp hình nền */}
-      <div 
+      <div
         className="absolute inset-0 bg-login-background bg-cover bg-center filter blur-sm scale-105"
       ></div>
 
-      {/* Lớp phủ mờ */}
       <div className="absolute inset-0 bg-black opacity-30"></div>
-
-      {/* Container chính cho form đăng nhập */}
       <div className="
         relative z-10
         w-full max-w-md md:max-w-lg p-8
@@ -70,12 +93,9 @@ navigate('/dashboard');
         transform transition-all duration-700 ease-out scale-95 hover:scale-100 
         border border-gray-100 overflow-hidden
       ">
-        
-        {/* Hiệu ứng hình học nhẹ nhàng ở góc */}
         <div className="absolute -top-10 -left-10 w-24 h-24 bg-green-200/50 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
         <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-blue-200/50 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
 
-        {/* Header của form đăng nhập */}
         <div className="flex flex-col items-center mb-7 relative z-10">
           <img
             src={logo}
@@ -85,8 +105,6 @@ navigate('/dashboard');
           <h1 className="text-3xl font-bold text-gray-800 tracking-tight mt-4">MSA GROCERY</h1>
           <p className="text-base text-gray-500 mt-1">Đăng nhập để tiếp tục</p>
         </div>
-
-        {/* Form đăng nhập */}
         <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
           <Input
             label="Email"
@@ -120,14 +138,12 @@ navigate('/dashboard');
           </Button>
         </form>
 
-        {/* Đường phân cách HOẶC */}
         <div className="relative flex py-5 items-center relative z-10">
           <div className="flex-grow border-t border-gray-300"></div>
           <span className="flex-shrink mx-4 text-gray-500">HOẶC</span>
           <div className="flex-grow border-t border-gray-300"></div>
         </div>
 
-        {/* Nút Đăng nhập bằng Google */}
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
@@ -137,18 +153,14 @@ navigate('/dashboard');
             ${loading ? 'opacity-70 cursor-not-allowed' : ''}
           `}
         >
-          {/* Icon Google SVG */}
           <svg className="w-5 h-5 mr-2" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-    <path fill="#EA4335" d="M24 9.5c3.15 0 5.77 1.09 7.71 2.89l5.77-5.77C33.44 2.69 28.96 0 24 0 14.64 0 6.84 5.94 3.36 14.5l6.88 5.35C12.45 13.07 17.76 9.5 24 9.5z"/>
-    <path fill="#4285F4" d="M46.47 24.5c0-1.55-.14-3.05-.41-4.5H24v9h12.67c-.55 2.95-2.19 5.46-4.67 7.15l7.19 5.62c4.21-3.9 6.64-9.67 6.64-17.27z"/>
-    <path fill="#FBBC05" d="M10.24 28.65a14.47 14.47 0 0 1 0-9.3l-6.88-5.35a23.98 23.98 0 0 0 0 20l6.88-5.35z"/>
-    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.14 15.9-5.8l-7.19-5.62c-2.01 1.35-4.56 2.12-8.71 2.12-6.24 0-11.55-3.57-13.76-8.85l-6.88 5.35C6.84 42.06 14.64 48 24 48z"/>
-  </svg>
+            <path fill="#EA4335" d="M24 9.5c3.15 0 5.77 1.09 7.71 2.89l5.77-5.77C33.44 2.69 28.96 0 24 0 14.64 0 6.84 5.94 3.36 14.5l6.88 5.35C12.45 13.07 17.76 9.5 24 9.5z" />
+            <path fill="#4285F4" d="M46.47 24.5c0-1.55-.14-3.05-.41-4.5H24v9h12.67c-.55 2.95-2.19 5.46-4.67 7.15l7.19 5.62c4.21-3.9 6.64-9.67 6.64-17.27z" />
+            <path fill="#FBBC05" d="M10.24 28.65a14.47 14.47 0 0 1 0-9.3l-6.88-5.35a23.98 23.98 0 0 0 0 20l6.88-5.35z" />
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.14 15.9-5.8l-7.19-5.62c-2.01 1.35-4.56 2.12-8.71 2.12-6.24 0-11.55-3.57-13.76-8.85l-6.88 5.35C6.84 42.06 14.64 48 24 48z" />
+          </svg>
           Đăng nhập với Google
         </button>
-
-
-        {/* Footer của form */}
         <div className="text-center mt-7 space-y-2 relative z-10">
           <a href="/forgot-password" className="text-sm text-blue-600 hover:underline font-medium">Quên mật khẩu?</a>
           <p className="text-sm text-gray-600">

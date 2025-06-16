@@ -1,3 +1,4 @@
+// src/components/common/Dashboard/Layout.tsx
 import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import AppBar from './AppBar';
@@ -12,34 +13,41 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ userName, userAvatar, onLogout }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); 
   const [isMobile, setIsMobile] = useState(false); 
-  const [unreadCount, setUnreadCount] = useState(3); 
+  const [unreadCount, setUnreadCount] = useState(3); // Giữ lại state này nếu bạn muốn hiển thị số thông báo chưa đọc
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
   const handleMouseEnterSidebar = () => {
-    if (!isMobile) { 
+    // Chỉ tự động mở sidebar nếu không phải mobile và sidebar đang đóng
+    if (!isMobile && !isSidebarOpen) { 
       setIsSidebarOpen(true);
     }
   };
 
   const handleMouseLeaveSidebar = () => {
-    if (!isMobile) { 
+    // Chỉ tự động đóng sidebar nếu không phải mobile và sidebar đang mở
+    // Bạn có thể cần một state để biết sidebar có "thực sự" được người dùng đóng hay không
+    // Để đơn giản, cứ cho là sẽ đóng khi rời chuột
+    if (!isMobile && isSidebarOpen) { 
       setIsSidebarOpen(false);
     }
   };
 
-  const handleNotificationsClick = () => {
-    alert(`Bạn có ${unreadCount} thông báo mới!`);
-    setUnreadCount(0); 
-  };
+  // !!! LOẠI BỎ onNotificationsClick Ở ĐÂY HOẶC ĐỂ TRỐNG !!!
+  // AppBar đã tự xử lý điều hướng đến /dashboard/notifications
+  // const handleNotificationsClick = () => {
+  //   alert(`Bạn có ${unreadCount} thông báo mới!`);
+  //   setUnreadCount(0); // Đặt lại về 0 sau khi người dùng nhấp (hoặc sau khi họ xem màn hình thông báo)
+  // };
 
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768; 
       setIsMobile(mobile);
       // Trên desktop, Sidebar ban đầu mở. Trên mobile, Sidebar ban đầu đóng.
+      // Khi chuyển đổi giữa mobile/desktop, điều chỉnh trạng thái sidebar
       setIsSidebarOpen(!mobile); 
     };
 
@@ -49,9 +57,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ userName, userAvatar,
     return () => window.removeEventListener('resize', handleResize);
   }, []); 
 
+  // Xác định chiều rộng sidebar cho class Tailwind
+  const sidebarWidthClass = isSidebarOpen ? 'w-64' : 'w-24'; // Ví dụ: 64 = 16rem, 20 = 5rem
+  const mainContentMarginClass = isSidebarOpen ? 'ml-8' : 'ml-8'; 
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* 1. Sidebar cho Desktop */}
+      {/* Sidebar cho Desktop (fixed, không ảnh hưởng đến main content margin) */}
       {!isMobile && (
         <Sidebar 
           isSidebarOpen={isSidebarOpen} 
@@ -64,10 +76,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ userName, userAvatar,
       {/* Main content area */}
       <div 
         className={`flex-1 flex flex-col transition-all duration-300 ease-in-out 
-          ${isMobile ? 
-            '' : // Trên mobile, Sidebar là fixed overlay, không ảnh hưởng margin
-            (isSidebarOpen ? 'ml-2' : 'ml-2') // Trên desktop, điều chỉnh margin-left
-          }`} 
+          ${!isMobile ? mainContentMarginClass : ''} // Chỉ áp dụng margin trên desktop
+        `} 
       >
         <AppBar 
           userName={userName} 
@@ -75,9 +85,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ userName, userAvatar,
           onLogout={onLogout} 
           onAvatarClick={toggleSidebar} 
           unreadNotifications={unreadCount} 
-          onNotificationsClick={handleNotificationsClick} 
+          // --- LOẠI BỎ onNotificationsClick HOẶC ĐỂ TRỐNG ---
+          // onNotificationsClick={handleNotificationsClick} // Dòng này không cần thiết nữa
           isSidebarOpen={isSidebarOpen} 
-          isMobile={isMobile} // Truyền isMobile xuống AppBar
+          isMobile={isMobile} 
         />
 
         {/* Backdrop cho mobile khi sidebar mở */}
@@ -88,7 +99,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ userName, userAvatar,
           ></div>
         )}
 
-        {/* 2. Sidebar Overlay cho Mobile (hiển thị có điều kiện) */}
+        {/* Sidebar Overlay cho Mobile (hiển thị có điều kiện) */}
         {isMobile && (
           <Sidebar 
             isSidebarOpen={isSidebarOpen} 

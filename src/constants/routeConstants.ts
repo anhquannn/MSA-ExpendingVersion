@@ -13,4 +13,6 @@ export const routeConstants = {
   branches: 'branches',
   settings: 'settings',
   productDetails: 'products/:productId',
+  branchDetails: 'branches/:branchId',
+  notification: 'notification',
 };

@@ -44,15 +44,10 @@ const ForgotPasswordPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden p-4">
-      {/* Lớp hình nền - sử dụng class 'bg-login-background' đã khai báo trong tailwind.config.js */}
       <div 
         className="absolute inset-0 bg-login-background bg-cover bg-center filter blur-sm scale-105"
       ></div>
-
-      {/* Lớp phủ mờ */}
       <div className="absolute inset-0 bg-black opacity-30"></div>
-
-      {/* Container chính cho form quên mật khẩu */}
       <div className="
         relative z-10
         w-full max-w-md md:max-w-lg p-8
@@ -61,12 +56,8 @@ const ForgotPasswordPage: React.FC = () => {
         transform transition-all duration-700 ease-out scale-95 hover:scale-100 
         border border-gray-100 overflow-hidden
       ">
-        
-        {/* Hiệu ứng hình học nhẹ nhàng ở góc (cần định nghĩa animation trong tailwind.config.js) */}
         <div className="absolute -top-10 -left-10 w-24 h-24 bg-green-200/50 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
         <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-blue-200/50 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-
-        {/* Header của form */}
         <div className="flex flex-col items-center mb-7 relative z-10">
           <img
             src={logo}
@@ -76,8 +67,6 @@ const ForgotPasswordPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-800 tracking-tight mt-4">Quên Mật Khẩu?</h1>
           <p className="text-base text-gray-500 mt-1">Nhập email của bạn để đặt lại mật khẩu</p>
         </div>
-
-        {/* Form gửi email đặt lại */}
         <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
           <Input
             label="Email"
@@ -88,10 +77,8 @@ const ForgotPasswordPage: React.FC = () => {
             required
             disabled={loading}
           />
-
           {message && <p className="text-green-600 text-sm text-center mt-2 animate-fade-in">{message}</p>}
           {error && <p className="text-red-500 text-sm text-center mt-2 animate-fade-in">{error}</p>}
-
           <Button
             type="submit"
             disabled={loading}
@@ -102,8 +89,6 @@ const ForgotPasswordPage: React.FC = () => {
             {loading ? 'Đang gửi...' : 'Gửi Yêu Cầu'}
           </Button>
         </form>
-
-        {/* Footer của form */}
         <div className="text-center mt-7 space-y-2 relative z-10">
           <p className="text-sm text-gray-600">
             Nhớ mật khẩu rồi? <a href="/login" className="text-blue-600 hover:underline font-medium">Đăng nhập</a>

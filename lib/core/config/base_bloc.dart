@@ -57,6 +57,7 @@ abstract class BaseBloc<S extends StatefulWidget> extends State<S>
 
   @override
   void initState() {
+    onInit();
     super.initState();
     viewContext = context;
     viewSetState = setState;
@@ -65,7 +66,7 @@ abstract class BaseBloc<S extends StatefulWidget> extends State<S>
     });
 
     WidgetsBinding.instance.addObserver(this);
-    onInit();
+    
     WidgetsBinding.instance.addPostFrameCallback((_) => onReady());
   }
 

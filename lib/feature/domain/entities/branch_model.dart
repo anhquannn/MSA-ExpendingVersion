@@ -6,6 +6,7 @@ class BranchModel {
   String? ward;
   String? district;
   String? city;
+  bool? isSelect;
   InventoryModel? inventory;
 
   BranchModel({
@@ -28,9 +29,10 @@ class BranchModel {
       ward: json['ward'] as String?,
       district: json['district'] as String?,
       city: json['city'] as String?,
-      inventory: json['inventory'] != null
-          ? InventoryModel.fromJson(json['inventory'])
-          : null,
+      inventory:
+          json['inventory'] != null
+              ? InventoryModel.fromJson(json['inventory'])
+              : null,
     );
   }
 

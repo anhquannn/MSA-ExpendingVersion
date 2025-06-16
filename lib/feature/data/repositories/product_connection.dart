@@ -1,41 +1,29 @@
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import 'package:msa/feature/data/model/request/product_get_all_request_model.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/repositories/product_repository.dart';
 
 class ProductRepositoryImpl extends IProductRepository {
   @override
-  Future<List<ProductModel>> onFilterAndSortProducts({
-    int? minPrice,
-    int? maxPrice,
-    String? color,
-    int? categoryId,
-    int? page,
-    int? pageSize,
-  }) async {
-    final queryParams = {
-      if (minPrice != null) 'minPrice': '$minPrice',
-      if (maxPrice != null) 'maxPrice': '$maxPrice',
-      if (color != null) 'color': color,
-      if (categoryId != null) 'categoryId': '$categoryId',
-      'page': '$page',
-      'pageSize': '$pageSize',
-    };
-    final url = HttpConnection.buildUrlWithQueryParams(
-      filterAndSortProducts,
-      queryParams,
-    );
-    final data = await HttpConnection.get(url);
-    if (data.isSuccess) {
-      List<ProductModel> products = [];
-      for (var item in data.data) {
-        products.add(ProductModel.fromJson(item));
-      }
-      return products;
+Future<List<ProductModel>> onFilterAndSortProducts(ProductGetAllRequest model) async {
+  final data = await HttpConnection.post(filterAndSortProducts, body: model.toJson());
+
+  if (data.isSuccess) {
+    final jsonData = data.data;
+
+    // Đảm bảo 'content' tồn tại và là danh sách
+    if (jsonData != null && jsonData['content'] is List) {
+      final List<dynamic> content = jsonData['content'];
+      return content.map((item) => ProductModel.fromJson(item)).toList();
     } else {
-      throw Exception('Failed to load products');
+      return []; // Trường hợp không có sản phẩm nào
     }
+  } else {
+    throw Exception('Failed to load products');
   }
+}
+
 
   @override
   Future<List<ProductModel>> onGetAllProductsInBranch(

@@ -18,9 +18,9 @@ class VerifyOtpScreen extends BaseView<VerifyOtpBloc> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        leading: InkWell(onTap: () {
-        context.pop();
-      },
+        leading: InkWell( onTap: () {
+          Navigator.pop(context);
+        },
       child: Icon(Icons.arrow_back_ios_new,color: Colors.white,),
       ),),
       backgroundColor: toHexToColor(actionColor),

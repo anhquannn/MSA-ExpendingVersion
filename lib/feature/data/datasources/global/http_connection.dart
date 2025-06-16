@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:msa/core/config/global.dart';
+import 'package:msa/feature/data/datasources/local/starage.dart';
+import 'package:msa/feature/domain/entities/branch_model.dart';
 import 'package:msa/feature/domain/entities/cart_model.dart';
 import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
@@ -19,26 +21,12 @@ class HttpConnection {
   final String tokenSupabase =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtdHF3Z2xubmJnc3J4aGVscHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3MTI1NzIsImV4cCI6MjA2MTI4ODU3Mn0.5D6-g10oFKgB5eJw7jbJPGtOsr2BmrYnm5pTpfjA_J0';
   static BuildContext? context;
-  static String otp = '';
-  static String token = '';
-  static String deviceId = '';
-  static String? messageError;
 
-  static UserModel? userModelGlobal;
-  static CartModel? cartModelGlobal;
-  static String email = 'minhquang03082003@gmail.com';
 
-  static List<City>? cityGlobal;
-  static List<Ward>? wardGlobal;
-  static List<District>? districtGlobal;
+  static List<City> cityGlobal=[];
+  static List<Ward> wardGlobal=[];
+  static List<District> districtGlobal=[];
 
-  static onLogout() {
-    otp = '';
-    token = '';
-    deviceId = '';
-    userModelGlobal = null;
-    email = '';
-  }
 
   static String buildUrlWithQueryParams(
     String baseUrl,
@@ -64,7 +52,7 @@ class HttpConnection {
     final headers = <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     };
-    if (isToken) headers['Authorization'] = token;
+    if (isToken) headers['Authorization'] = 'Bearer ${Storage.token}';
     if (extraHeaders != null) headers.addAll(extraHeaders);
     return headers;
   }
@@ -82,7 +70,7 @@ class HttpConnection {
       final request =
           http.MultipartRequest('POST', url)
             ..headers.addAll({
-              'Authorization': 'Bearer $token',
+              'Authorization': 'Bearer ${Storage.token}',
               'x-upsert': 'false',
             })
             ..files.add(
@@ -245,9 +233,10 @@ class HttpConnection {
           ..data = responseBody['result']
           ..message = responseBody['message'];
       } else {
-        messageError = responseData.message;
-        responseData.isSuccess = false;
-        responseData.message = responseBody['message'] ?? 'Error';
+       responseData
+          ..isSuccess = false
+          ..data = ''
+          ..message = {};
       }
 
       return responseData;

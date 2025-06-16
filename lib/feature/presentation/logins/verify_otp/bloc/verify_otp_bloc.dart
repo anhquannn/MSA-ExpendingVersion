@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:msa/core/config/base_bloc.dart';
+import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
+import '../../../../data/datasources/local/starage.dart';
 import '../../../../domain/usecase/user_use_case.dart';
 import '../ui/verify_otp_screen.dart';
 
@@ -19,11 +22,13 @@ class VerifyOtpBloc extends BaseBloc<VerifyOtpScreen> {
   final UserUseCases _userUseCases = GetIt.I<UserUseCases>();
 
   @override
+  String get contextKey => 'VerifyOtpScreen';
+
+  @override
   void onInit() {}
 
   @override
-  void onDispose() {
-  }
+  void onDispose() {}
 
   @override
   void onReady() {}
@@ -59,11 +64,25 @@ class VerifyOtpBloc extends BaseBloc<VerifyOtpScreen> {
       setState(() {});
       return false;
     }
-    if(otp==HttpConnection.otp){
-      context.push('/login');
+    bool success = await _userUseCases.verifyOtp(otp);
+    if (success) {
+      // Navigator.pushAndRemoveUntil(
+      //   viewContext,
+      //   MaterialPageRoute(builder: (context) => HomeScreen()),
+      //   (route) => false,
+      // );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+    } else {
+      showLoginError('Sai OPT', viewContext);
     }
     return isSuccess;
   }
+
+
+
   void onHide() {
     setState(() {
       isKeyboardVisible = false;

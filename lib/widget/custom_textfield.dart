@@ -24,6 +24,8 @@ Widget customTextField(
   double borderRadius = 10,
   Function(String)? onSubmit,
   Function(bool value)? isObscurePassword,
+  bool? enable = true,
+  TextInputType? typeInput,
 }) {
   return SizedBox(
     height:
@@ -33,11 +35,12 @@ Widget customTextField(
             ? height += 20
             : 0, // Giữ chiều cao cố định
     child: TextFormField(
+      keyboardType: typeInput,
       onFieldSubmitted: onSubmit,
       obscureText: isObscure,
       focusNode: node,
       controller: controller,
-
+      enabled: enable,
       style: TextStyle(fontSize: textSize, color: textColor ?? Colors.white),
       maxLines: maxLine,
       decoration: InputDecoration(

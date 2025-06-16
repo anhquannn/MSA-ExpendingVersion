@@ -1,4 +1,5 @@
 import 'package:msa/core/config/constant.dart';
+import 'package:msa/core/config/global.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/feature/domain/repositories/promo_code_repository.dart';
@@ -31,9 +32,12 @@ class PromoCodeRepositoryImpl extends IPromoCodeRepository {
     int page = 1,
     int pageSize = 10,
   }) async {
-    final queryParameters = {'page': page.toString(), 'pageSize': pageSize.toString()};
+    final queryParameters = {
+      'page': page.toString(),
+      'pageSize': pageSize.toString(),
+    };
     final url = HttpConnection.buildUrlWithQueryParams(
-      getAllPromoCode,
+      '$getAllPromoCode${userModelGlobal?.userId}',
       queryParameters,
     );
     final data = await HttpConnection.get(isToken: true, url);

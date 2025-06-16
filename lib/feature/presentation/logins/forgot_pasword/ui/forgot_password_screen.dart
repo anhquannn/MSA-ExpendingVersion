@@ -21,7 +21,7 @@ class ForgotPasswordScreen extends BaseView<ForgotPasswordBloc> {
         backgroundColor: toHexToColor(actionColor),
         leading: InkWell(
           onTap: () {
-            context.go('/login');
+           Navigator.pop(context);
           },
           child: Icon(Icons.arrow_back_ios, color: Colors.white),
         ),

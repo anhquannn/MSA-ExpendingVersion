@@ -493,6 +493,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                       // bloc.onTapProductDetail(products[index]);
                     },
                     child: customItemProductCustomer(
+                      onBuy: bloc.onBuy,
+                      onAddToCart: bloc.onAddToCart,
                       isDiscount: true,
                       products[index],
                       width * 0.4,

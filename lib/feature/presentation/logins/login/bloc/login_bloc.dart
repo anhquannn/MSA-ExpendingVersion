@@ -5,6 +5,7 @@ import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/user_login_request.dart';
 import 'package:msa/feature/presentation/logins/forgot_pasword/ui/forgot_password_screen.dart';
 import 'package:msa/feature/presentation/logins/register/ui/register_screen.dart';
+import '../../../../data/datasources/local/starage.dart';
 import '../../../../domain/usecase/user_use_case.dart';
 import '../ui/login_screen.dart';
 
@@ -57,7 +58,10 @@ class LoginBloc extends BaseBloc<LoginScreen> {
       UserLoginRequest(email: email, password: password),
     );
 
-    HttpConnection.email = email;
+    Storage.email = email;
+    if (isSuccess == false) {
+      showLoginError('Sai mật khẩu!!!');
+    }
     viewSetState(() {});
     return isSuccess == true;
   }
@@ -72,7 +76,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
   void onRegister() {
     Navigator.push(
       viewContext,
-       MaterialPageRoute(builder: (viewContext) => const RegisterScreen()),
+      MaterialPageRoute(builder: (viewContext) => const RegisterScreen()),
     );
   }
 

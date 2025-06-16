@@ -513,6 +513,7 @@ class LoginScreen extends BaseView<LoginBloc> {
             errorText: bloc.isValidEmail == true ? bloc.validEmail : null,
             node: bloc.emailNode,
             textSize: 16,
+            
             bloc.emailController,
             hintText: 'examp@gmail.com',
             labelText: Text('Email'),
@@ -575,10 +576,9 @@ class LoginScreen extends BaseView<LoginBloc> {
             );
 
             final success = await bloc.login();
-            CustomLoadingDialog.hide(context);
+            CustomLoadingDialog.hide(bloc.viewContext);
 
             if (success) {
-              bloc.viewContext.push('/verify_otp');
               Navigator.push(
                 bloc.viewContext,
                 MaterialPageRoute(builder: (_) => VerifyOtpScreen()),

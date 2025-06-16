@@ -1,3 +1,4 @@
+import 'package:msa/feature/data/model/request/product_get_all_request_model.dart' show ProductGetAllRequest;
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/repositories/product_repository.dart';
 
@@ -85,8 +86,8 @@ class FilterAndSortProductsUseCase{
 
   FilterAndSortProductsUseCase(this._productRepository);
 
-  Future<List<ProductModel>> call({int minPrice = 0, int maxPrice = 0, String color = '', int categoryId = 0, int page = 1, int pageSize = 10}) async {
-    return await _productRepository.onFilterAndSortProducts(minPrice: minPrice, maxPrice: maxPrice, color: color, categoryId: categoryId, page: page, pageSize: pageSize);
+  Future<List<ProductModel>> call(ProductGetAllRequest model) async {
+    return await _productRepository.onFilterAndSortProducts(model);
   }
 }
 class SearchProductsInBranchUseCase{

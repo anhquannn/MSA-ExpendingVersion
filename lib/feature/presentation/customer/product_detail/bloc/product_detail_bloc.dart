@@ -10,6 +10,7 @@ import 'package:msa/feature/domain/usecase/cart_item_use_case.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:msa/widget/custom_dropdown.dart';
 import 'package:rxdart/rxdart.dart';
+import '../../../../data/datasources/local/starage.dart';
 import '../ui/product_detail_screen.dart';
 
 class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
@@ -57,7 +58,7 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   onAddToCart(int productId) async {
     final data = await _cartItemUseCase.addToCart(
       AddToCartRequest(
-        userId: HttpConnection.userModelGlobal?.userId ?? 0,
+        userId: Storage.userModelGlobal?.userId ?? 0,
         productId: productId,
         branchId: mockBranch.branchId ?? 0,
         quantity: 1,

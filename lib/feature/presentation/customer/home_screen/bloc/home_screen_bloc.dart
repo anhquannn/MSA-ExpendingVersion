@@ -6,6 +6,7 @@ import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import 'package:msa/feature/data/model/request/product_get_all_request_model.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/cart_model.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
@@ -17,6 +18,7 @@ import 'package:msa/feature/domain/usecase/category_use_case.dart';
 import 'package:msa/feature/domain/usecase/product_use_case.dart';
 import 'package:msa/feature/domain/usecase/promo_code_use_case.dart';
 import 'package:msa/feature/domain/usecase/user_use_case.dart';
+import 'package:msa/feature/presentation/customer/branch_list/ui/branch_list_screen.dart';
 import 'package:msa/feature/presentation/customer/category_list/ui/category_list_screen.dart';
 import 'package:msa/feature/presentation/customer/product_detail/ui/product_detail_screen.dart';
 import 'package:msa/feature/presentation/customer/product_list/ui/product_list_screen.dart';
@@ -24,6 +26,7 @@ import 'package:msa/feature/presentation/customer/promo_code_list/ui/promo_code_
 import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
 import 'package:msa/widget/custom_dropdown.dart';
 import 'package:rxdart/rxdart.dart';
+import '../../../../data/datasources/local/starage.dart';
 import '../ui/home_screen.dart';
 
 class HomeScreenBloc extends BaseBloc<HomeScreen> {
@@ -74,13 +77,13 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   @override
   void onInit() {
-    listCartItemModels.add([
-      mockCartItem,
-      mockCartItem,
-      mockCartItem,
-      mockCartItem,
-      mockCartItem,
-    ]);
+    // listCartItemModels.add([
+    //   mockCartItem,
+    //   mockCartItem,
+    //   mockCartItem,
+    //   mockCartItem,
+    //   mockCartItem,
+    // ]);
 
     indexScreen.value = 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -107,6 +110,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
               });
         }
       });
+       onRefresh();
     });
   }
 
@@ -128,8 +132,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onRefresh() async {
+    await onGetProfile().catchError((e) => print('Lỗi profile: $e'));
     final List<Future<void>> futures = [
-      onGetProfile().catchError((e) => print('Lỗi profile: $e')),
       onGetPromoCode().catchError((e) => print('Lỗi promo code: $e')),
       onGetCategory().catchError((e) => print('Lỗi category: $e')),
       onGetProduct().catchError((e) => print('Lỗi product: $e')),
@@ -184,21 +188,46 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       } else {
         userModel.add(UserModel());
       }
+      print('Lỗi khi lấy thông tin người dùng: ${userModelGlobal?.userId}');
     } catch (e) {
       print('Lỗi khi lấy thông tin người dùng: $e');
       userModel.add(UserModel());
     }
   }
 
+  // onGetProduct() async {
+  //   final model = ProductGetAllRequest(page: 1, pageSize: 10);
+  //   try {
+  //     List<ProductModel>? product = await _productUseCase
+  //         .filterAndSort(model)
+  //         .timeout(
+  //           const Duration(seconds: 10),
+  //           onTimeout: () {
+  //             showCustomMessageError(viewContext);
+  //             return [];
+  //           },
+  //         );
+  //     productModels.add(product);
+  //   } catch (e) {
+  //     print('Lỗi khi lấy danh sách sản phẩm: $e');
+  //     productModels.add([]); // Fallback nếu có lỗi
+  //   }
+  // }
   onGetProduct() async {
     try {
-      List<ProductModel>? product = await _productUseCase.getAll().timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          showCustomMessageError(viewContext);
-          return [];
-        },
-      );
+      ProductGetAllRequest filter = ProductGetAllRequest(page: 1, pageSize: 10);
+      if (Storage.branchModelGlobal != null) {
+        filter.branchId = Storage.branchModelGlobal?.branchId;
+      }
+      List<ProductModel>? product = await _productUseCase
+          .filterAndSort(filter)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              showCustomMessageError(viewContext);
+              return [];
+            },
+          );
       productModels.add(product);
     } catch (e) {
       print('Lỗi khi lấy danh sách sản phẩm: $e');
@@ -225,7 +254,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   onSearch() {}
 
   onLogout() async {
-    HttpConnection.onLogout();
+    Storage.onLogout();
 
     Navigator.pushAndRemoveUntil(
       context,
@@ -300,7 +329,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     Navigator.push(
       viewContext,
       MaterialPageRoute(
-        builder: (context) => ProductDetailCustomerScreen(productModel: mockProduct),
+        builder:
+            (context) => ProductDetailCustomerScreen(productModel: mockProduct),
       ),
     );
   }
@@ -325,7 +355,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   /// MOCK DATA
   onGetUserCart(int cartId) async {
     final data = await _cartItemUseCase
-        .getCartItemsByCartId(1)
+        .getCartItemsByCartId(userModelGlobal?.userId ?? 0)
         .timeout(
           const Duration(seconds: 10),
           onTimeout: () {
@@ -334,11 +364,22 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
           },
         );
     if (data != null) {
-      // listCartItemModels.add(data);
+      listCartItemModels.add(data);
     }
   }
 
   onMinus(int id) {}
 
   onPlus(int id) {}
+
+  onBuy() async {
+    if (Storage.branchModelGlobal == null) {
+      final id = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => BranchListScreen()),
+      );
+    }
+  }
+
+  onAddToCart() {}
 }

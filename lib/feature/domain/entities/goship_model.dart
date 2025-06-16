@@ -1,4 +1,8 @@
-class City {
+abstract class Nameable {
+  String get name;
+}
+
+class City implements Nameable {
   final String id;
   final String name;
   final List<String> supportCarriers;
@@ -22,7 +26,7 @@ List<City> parseCities(List<dynamic> jsonList) {
   return jsonList.map((json) => City.fromJson(json)).toList();
 }
 
-class District {
+class District implements Nameable {
   final String id;
   final String name;
   final String cityId;
@@ -58,8 +62,8 @@ List<District> parseDistricts(List<dynamic> jsonList) {
   return jsonList.map((json) => District.fromJson(json)).toList();
 }
 
-class Ward {
-  final int id;
+class Ward implements Nameable {
+  final String id;
   final String name;
   final String districtId;
   final List<String> supportCarriers;
@@ -73,7 +77,7 @@ class Ward {
 
   factory Ward.fromJson(Map<String, dynamic> json) {
     return Ward(
-      id: json['id'] as int,
+      id: json['id'].toString(),
       name: json['name'] as String,
       districtId: json['district_id'] as String,
       supportCarriers: List<String>.from(json['support_carriers'] ?? []),
@@ -93,3 +97,90 @@ class Ward {
 List<Ward> parseWards(List<dynamic> jsonList) {
   return jsonList.map((json) => Ward.fromJson(json)).toList();
 }
+
+String parseAddressStringFromModel({
+  required String cityId,
+  required String cityName,
+  required String districtId,
+  required String districtName,
+  required String wardId,
+  required String wardName,
+  required String address,
+}) {
+  return "$address, $wardName ($wardId), $districtName ($districtId), $cityName ($cityId)";
+}
+
+class AddressModel {
+  final String cityId;
+  final String cityName;
+  final String districtId;
+  final String districtName;
+  final int wardId;
+  final String wardName;
+  final String address;
+
+  AddressModel({
+    required this.cityId,
+    required this.cityName,
+    required this.districtId,
+    required this.districtName,
+    required this.wardId,
+    required this.wardName,
+    required this.address,
+  });
+}
+
+AddressModel parseAddressModelFromString(String addressString) {
+  try {
+    final parts = addressString.split(',').map((e) => e.trim()).toList();
+
+    if (parts.length < 4) {
+      throw Exception("Chuỗi địa chỉ không đúng định dạng");
+    }
+
+    final address = parts
+        .sublist(0, parts.length - 3)
+        .join(', '); // hỗ trợ dấu "," trong địa chỉ chi tiết
+    final wardMatch = RegExp(
+      r'^(.*)\s\((\d+)\)$',
+    ).firstMatch(parts[parts.length - 3]);
+    final districtMatch = RegExp(
+      r'^(.*)\s\((\d+)\)$',
+    ).firstMatch(parts[parts.length - 2]);
+    final cityMatch = RegExp(
+      r'^(.*)\s\((\d+)\)$',
+    ).firstMatch(parts[parts.length - 1]);
+
+    if (wardMatch == null || districtMatch == null || cityMatch == null) {
+      throw Exception("Không thể parse ward/district/city");
+    }
+
+    return AddressModel(
+      address: address,
+      wardName: wardMatch.group(1)!,
+      wardId: int.parse(wardMatch.group(2)!),
+      districtName: districtMatch.group(1)!,
+      districtId: districtMatch.group(2)!,
+      cityName: cityMatch.group(1)!,
+      cityId: cityMatch.group(2)!,
+    );
+  } catch (e) {
+    throw Exception("Lỗi parse địa chỉ: $e");
+  }
+}
+
+//final addressStr = parseAddressStringFromModel(
+//   cityId: "700000",
+//   cityName: "TP. Hồ Chí Minh",
+//   districtId: "700400",
+//   districtName: "Quận 10",
+//   wardId: 9220,
+//   wardName: "Phường 10",
+// );
+
+// print(addressStr);
+// // Output: "Phường 10 (9220), Quận 10 (700400), TP. Hồ Chí Minh (700000)"
+
+// final model = parseAddressModelFromString(addressStr);
+// print(model.wardName); // Phường 10
+// print(model.districtId); // 700400

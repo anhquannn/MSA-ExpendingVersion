@@ -9,47 +9,90 @@ class ProductModel {
   final String? specification;
   final String? description;
   final int? expiry;
-  final int? totalRevenue;
+  final double? totalRevenue;
+
+  final String? netWeight;
+  final double? discountPercentage;
+  final int? discountTriggerDays;
+  final String? createdAt;
+
   final ManufacturerModel? manufacturer;
+  final SupplierModel? supplier;
   final CategoryModel? category;
+
   final dynamic inventoryProductResponses;
   final dynamic orderDetails;
+  final dynamic feedbackResponses;
+  final dynamic productImageResponses;
+  final dynamic userBehaviorResponses;
+  final dynamic notificationResponses;
+  final dynamic trendingProductResponses;
 
   ProductModel({
-     this.productId,
-     this.name,
-     this.images,
-     this.price,
-     this.currentPrice,
-     this.unit,
-     this.color,
-     this.specification,
-     this.description,
-     this.expiry,
-     this.totalRevenue,
-     this.manufacturer,
-     this.category,
+    this.productId,
+    this.name,
+    this.images,
+    this.price,
+    this.currentPrice,
+    this.unit,
+    this.color,
+    this.specification,
+    this.description,
+    this.expiry,
+    this.totalRevenue,
+    this.netWeight,
+    this.discountPercentage,
+    this.discountTriggerDays,
+    this.createdAt,
+    this.manufacturer,
+    this.supplier,
+    this.category,
     this.inventoryProductResponses,
     this.orderDetails,
+    this.feedbackResponses,
+    this.productImageResponses,
+    this.userBehaviorResponses,
+    this.notificationResponses,
+    this.trendingProductResponses,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
       productId: int.tryParse(json['productId'].toString()),
-      name: json['name']??'',
-      images: json['images']??'',
-      price: double.tryParse(json['price'].toString()),
-      currentPrice: double.tryParse(json['currentPrice'].toString()),
-      unit: json['unit']??'',
-      color: json['color']??'',
-      specification: json['specification']??'',
-      description: json['description']??'',
-      expiry: json['expiry']!=null?int.tryParse(json['expiry'].toString()):0,
-      totalRevenue: json['totalRevenue']??'',
-      manufacturer: json['manufacturer'] != null ? ManufacturerModel.fromJson(json['manufacturer']) : null,
-      category: json['category']!=null ?CategoryModel.fromJson(json['category']):null,
+      name: json['name'] ?? '',
+      images: json['images'] ?? '',
+      price: (json['price'] as num?)?.toDouble(),
+      currentPrice: (json['currentPrice'] as num?)?.toDouble(),
+      unit: json['unit'] ?? '',
+      color: json['color'] ?? '',
+      specification: json['specification'] ?? '',
+      description: json['description'] ?? '',
+      expiry:
+          json['expiry'] != null ? int.tryParse(json['expiry'].toString()) : 0,
+      totalRevenue: (json['totalRevenue'] as num?)?.toDouble(),
+      netWeight: json['netWeight'],
+      discountPercentage: (json['discountPercentage'] as num?)?.toDouble(),
+      discountTriggerDays: json['discountTriggerDays'],
+      createdAt: json['createdAt'],
+      manufacturer:
+          json['manufacturer'] != null
+              ? ManufacturerModel.fromJson(json['manufacturer'])
+              : null,
+      supplier:
+          json['supplier'] != null
+              ? SupplierModel.fromJson(json['supplier'])
+              : null,
+      category:
+          json['category'] != null
+              ? CategoryModel.fromJson(json['category'])
+              : null,
       inventoryProductResponses: json['inventoryProductResponses'],
       orderDetails: json['orderDetails'],
+      feedbackResponses: json['feedbackResponses'],
+      productImageResponses: json['productImageResponses'],
+      userBehaviorResponses: json['userBehaviorResponses'],
+      notificationResponses: json['notificationResponses'],
+      trendingProductResponses: json['trendingProductResponses'],
     );
   }
 
@@ -66,10 +109,20 @@ class ProductModel {
       'description': description,
       'expiry': expiry,
       'totalRevenue': totalRevenue,
+      'netWeight': netWeight,
+      'discountPercentage': discountPercentage,
+      'discountTriggerDays': discountTriggerDays,
+      'createdAt': createdAt,
       'manufacturer': manufacturer?.toJson(),
+      'supplier': supplier?.toJson(),
       'category': category?.toJson(),
       'inventoryProductResponses': inventoryProductResponses,
       'orderDetails': orderDetails,
+      'feedbackResponses': feedbackResponses,
+      'productImageResponses': productImageResponses,
+      'userBehaviorResponses': userBehaviorResponses,
+      'notificationResponses': notificationResponses,
+      'trendingProductResponses': trendingProductResponses,
     };
   }
 }
@@ -106,25 +159,64 @@ class ManufacturerModel {
   }
 }
 
+class SupplierModel {
+  final int? supplierId;
+  final String? name;
+  final String? address;
+  final String? contact;
+  final String? image;
+
+  SupplierModel({
+    this.supplierId,
+    this.name,
+    this.address,
+    this.contact,
+    this.image,
+  });
+
+  factory SupplierModel.fromJson(Map<String, dynamic> json) {
+    return SupplierModel(
+      supplierId: json['supplierId'],
+      name: json['name'],
+      address: json['address'],
+      contact: json['contact'],
+      image: json['image'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'supplierId': supplierId,
+      'name': name,
+      'address': address,
+      'contact': contact,
+      'image': image,
+    };
+  }
+}
+
 class CategoryModel {
   final int? categoryId;
   final String? name;
   final String? description;
-  final int? parentCategory;
+  final CategoryModel? parentCategory;
 
   CategoryModel({
-     this.categoryId,
-     this.name,
-     this.description,
+    this.categoryId,
+    this.name,
+    this.description,
     this.parentCategory,
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     return CategoryModel(
-      categoryId: int.tryParse(json['categoryId'].toString()),
+      categoryId: json['categoryId'],
       name: json['name'],
       description: json['description'],
-      parentCategory: int.tryParse(json['parentCategory'].toString()),
+      parentCategory:
+          json['parentCategory'] != null
+              ? CategoryModel.fromJson(json['parentCategory'])
+              : null,
     );
   }
 
@@ -133,7 +225,135 @@ class CategoryModel {
       'categoryId': categoryId,
       'name': name,
       'description': description,
-      'parentCategory': parentCategory,
+      'parentCategory': parentCategory?.toJson(),
+    };
+  }
+}
+
+class ProductPageResponse {
+  final List<ProductModel> content;
+  final PageableModel pageable;
+  final bool last;
+  final int totalElements;
+  final int totalPages;
+  final int size;
+  final int number;
+  final SortModel sort;
+  final int numberOfElements;
+  final bool first;
+  final bool empty;
+
+  ProductPageResponse({
+    required this.content,
+    required this.pageable,
+    required this.last,
+    required this.totalElements,
+    required this.totalPages,
+    required this.size,
+    required this.number,
+    required this.sort,
+    required this.numberOfElements,
+    required this.first,
+    required this.empty,
+  });
+
+  factory ProductPageResponse.fromJson(Map<String, dynamic> json) {
+    return ProductPageResponse(
+      content:
+          (json['content'] as List<dynamic>?)
+              ?.map((item) => ProductModel.fromJson(item))
+              .toList() ??
+          [],
+      pageable: PageableModel.fromJson(json['pageable'] ?? {}),
+      last: json['last'] ?? false,
+      totalElements: json['totalElements'] ?? 0,
+      totalPages: json['totalPages'] ?? 0,
+      size: json['size'] ?? 0,
+      number: json['number'] ?? 0,
+      sort: SortModel.fromJson(json['sort'] ?? {}),
+      numberOfElements: json['numberOfElements'] ?? 0,
+      first: json['first'] ?? false,
+      empty: json['empty'] ?? true,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'content': content.map((e) => e.toJson()).toList(),
+      'pageable': pageable.toJson(),
+      'last': last,
+      'totalElements': totalElements,
+      'totalPages': totalPages,
+      'size': size,
+      'number': number,
+      'sort': sort.toJson(),
+      'numberOfElements': numberOfElements,
+      'first': first,
+      'empty': empty,
+    };
+  }
+}
+
+class SortModel {
+  final bool empty;
+  final bool sorted;
+  final bool unsorted;
+
+  SortModel({
+    required this.empty,
+    required this.sorted,
+    required this.unsorted,
+  });
+
+  factory SortModel.fromJson(Map<String, dynamic> json) {
+    return SortModel(
+      empty: json['empty'] ?? false,
+      sorted: json['sorted'] ?? false,
+      unsorted: json['unsorted'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'empty': empty, 'sorted': sorted, 'unsorted': unsorted};
+  }
+}
+
+class PageableModel {
+  final int pageNumber;
+  final int pageSize;
+  final SortModel sort;
+  final int offset;
+  final bool paged;
+  final bool unpaged;
+
+  PageableModel({
+    required this.pageNumber,
+    required this.pageSize,
+    required this.sort,
+    required this.offset,
+    required this.paged,
+    required this.unpaged,
+  });
+
+  factory PageableModel.fromJson(Map<String, dynamic> json) {
+    return PageableModel(
+      pageNumber: json['pageNumber'] ?? 0,
+      pageSize: json['pageSize'] ?? 0,
+      sort: SortModel.fromJson(json['sort'] ?? {}),
+      offset: json['offset'] ?? 0,
+      paged: json['paged'] ?? false,
+      unpaged: json['unpaged'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'pageNumber': pageNumber,
+      'pageSize': pageSize,
+      'sort': sort.toJson(),
+      'offset': offset,
+      'paged': paged,
+      'unpaged': unpaged,
     };
   }
 }

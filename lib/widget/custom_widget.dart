@@ -186,8 +186,8 @@ Widget customItemProductCustomer(
                       model.images ?? imgProductDefault,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        return Image.network(
-                          imgProductDefault,
+                        return Image.asset(
+                          imgBranch,
                           fit: BoxFit.cover,
                         );
                       },

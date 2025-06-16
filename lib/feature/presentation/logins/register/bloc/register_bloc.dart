@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:intl/intl.dart';
 import 'package:msa/core/config/base_bloc.dart';
-import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/user_register_request.dart';
+import 'package:msa/feature/data/repositories/goship_connection.dart';
+import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:msa/feature/domain/usecase/user_use_case.dart';
 import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
 import 'package:msa/feature/presentation/logins/register/ui/register_screen.dart';
 
+import '../../../../data/datasources/local/starage.dart';
+
 class RegisterBloc extends BaseBloc<RegisterScreen> {
+  GoshipRepository? goshipRepo;
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController phoneNumberController = TextEditingController();
@@ -18,6 +23,7 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
   TextEditingController districtController = TextEditingController(); //quan
   TextEditingController wardController = TextEditingController(); //xa
   TextEditingController streetController = TextEditingController(); //duong
+  TextEditingController birthDayController = TextEditingController(); //duong
 
   bool? obscurePassword;
   bool? obscureValidPassword;
@@ -28,6 +34,7 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
   bool? errPassword;
   bool? errValidPassword;
   bool? errProvince;
+  bool? errorBirthDay;
   bool? errDistrict;
   bool? errStreet;
   bool? errWard;
@@ -38,13 +45,20 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
   String? errTextPassword;
   String? errTextValidPassword;
   String? errTextProvince;
+  String? errTextBirthDay;
   String? errTextDistrict;
   String? errTextStreet;
   String? errTextWard;
 
+  List<Ward> listWard = [];
+  List<District> listDistrict = [];
+  List<City> listCity = [];
+
+  Ward? ward;
+  District? district;
+  City? city;
+
   final UserUseCases _userUseCases = GetIt.I<UserUseCases>();
-  String get formattedAddress =>
-      '${streetController.text}, ${wardController.text}, ${districtController.text}, ${provinceController.text}';
 
   @override
   void onDispose() {
@@ -74,6 +88,7 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
     errPassword = false;
     errValidPassword = false;
     errProvince = false;
+    errorBirthDay = false;
     errDistrict = false;
     errStreet = false;
 
@@ -95,13 +110,62 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
     phoneNumberController.text = '';
     passwordController.text = '';
     validPasswordController.text = '';
+
+    fillMockData();
+  }
+
+  void fillMockData() {
+    nameController.text = 'Nguyễn Văn A';
+    emailController.text = 'nguyenvana@example.com';
+    phoneNumberController.text = '0987654321';
+    passwordController.text = '123456@Abc';
+    validPasswordController.text = '123456@Abc';
+    provinceController.text = 'Hồ Chí Minh';
+    districtController.text = 'Quận 1';
+    wardController.text = 'Phường Bến Nghé';
+    streetController.text = '12 Nguyễn Huệ';
+    birthDayController.text =
+        '1998-05-21'; // hoặc "21/05/1998" tùy định dạng bạn cần
   }
 
   @override
-  void onReady() {}
+  void onReady() async {
+    // await onGetCity();
+  }
 
   @override
   void onResumed() {}
+
+  onGetCity() async {
+    try {
+      final data = await GoshipRepository.onGetCities();
+      if (data != []) {
+        listCity = data;
+      }
+      setState(() {});
+    } catch (e) {}
+  }
+
+  onGetDistrict() async {
+    try {
+      final data = await GoshipRepository.onGetDistrictsApi(city?.id ?? '1');
+      if (data != []) {
+        listDistrict = data;
+      }
+
+      setState(() {});
+    } catch (e) {}
+  }
+
+  onGetWard() async {
+    try {
+      final data = await GoshipRepository.onGetWardsApi(district?.id ?? '1');
+      if (data != []) {
+        listWard = data;
+      }
+      setState(() {});
+    } catch (e) {}
+  }
 
   void changObscurePassword(bool value) {
     obscurePassword = value;
@@ -116,6 +180,15 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
   Future<void> onRegister() async {
     final isValidSuccess = validateFields();
     if (isValidSuccess) {
+      final formattedAddress = parseAddressStringFromModel(
+        address: streetController.text,
+        cityId: city?.id ?? '0',
+        cityName: city?.name ?? '',
+        districtId: district?.id ?? '0',
+        districtName: district?.name ?? '0',
+        wardId: ward?.id ?? '0',
+        wardName: ward?.name ?? '0',
+      );
       UserModel? user = await _userUseCases.register(
         UserRegisterRequest(
           fullName: nameController.text,
@@ -123,17 +196,118 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
           phoneNumber: phoneNumberController.text,
           password: passwordController.text,
           address: formattedAddress,
-          birthday: '',
+          birthday: birthDayController.text,
         ),
       );
       if (user != null) {
-        HttpConnection.userModelGlobal = user;
+        Storage.userModelGlobal = user;
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => LoginScreen()),
         );
       }
     }
+  }
+
+  void showPicker(BuildContext context) async {
+    final result = await pickDateTime(context);
+    if (result != null) {
+      birthDayController.text = result;
+      print('Ngày giờ đã chọn: $result');
+      // Ví dụ: 2023-06-08 15:30:00
+    }
+  }
+
+  Future<String?> pickDateTime(BuildContext context) async {
+    // Chọn ngày
+    final DateTime? date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (date == null) return null;
+
+    // Chọn giờ
+    final TimeOfDay? time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (time == null) return null;
+
+    // Kết hợp ngày và giờ thành DateTime
+    final DateTime dateTime = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+
+    // Chuyển thành chuỗi theo định dạng yyyy-MM-dd HH:mm:ss
+    final String formatted = DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
+
+    return formatted;
+  }
+
+  void showWardSelector(BuildContext context) async {
+    await onGetWard();
+    showDialog(
+      context: context,
+      builder:
+          (_) => SelectorDialog<Ward>(
+            items: listWard,
+            title: 'Chọn Phường/Xã',
+            onConfirm: (wardS) {
+              ward = wardS;
+              wardController.text = ward?.name ?? '';
+              Navigator.of(context).pop();
+              print('Đã chọn: ${wardS.name}');
+            },
+          ),
+    );
+    setState(() {});
+  }
+
+  void showCitySelector(BuildContext context) async {
+    await onGetCity();
+    showDialog(
+      context: context,
+      builder:
+          (_) => SelectorDialog<City>(
+            items: listCity,
+            title: 'Chọn Thành Phố',
+            onConfirm: (dt) {
+              city = dt;
+              provinceController.text = city?.name ?? '';
+              Navigator.of(context).pop();
+              print('Đã chọn: ${dt.name}');
+            },
+          ),
+    );
+    setState(() {});
+  }
+
+  void showDistrictSelector(BuildContext context) async {
+    await onGetDistrict();
+    showDialog(
+      context: context,
+      builder:
+          (_) => SelectorDialog<District>(
+            items: listDistrict,
+            title: 'Chọn Quận/Huyện',
+            onConfirm: (wards) {
+              district = wards;
+              districtController.text = district?.name ?? '';
+              Navigator.of(context).pop();
+              print('Đã chọn: ${wards.name}');
+            },
+          ),
+    );
+    await onGetWard();
+    setState(() {});
   }
 
   bool validateFields() {
@@ -222,7 +396,15 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
         errTextProvince = error;
       },
     );
-
+    isValid &= validateField(
+      controller: birthDayController,
+      errorText: 'Vui lòng ngày sinh',
+      validate: (text) => text.isNotEmpty,
+      onError: (error) {
+        errorBirthDay = error.isNotEmpty;
+        errTextBirthDay = error;
+      },
+    );
     // Validate District
     isValid &= validateField(
       controller: districtController,

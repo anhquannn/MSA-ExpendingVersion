@@ -1,3 +1,4 @@
+import 'package:msa/feature/data/model/response/user_login_response.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:msa/feature/data/model/request/user_login_request.dart';
 import 'package:msa/feature/data/model/request/user_register_request.dart';
@@ -5,6 +6,7 @@ import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import '../../../core/config/constant.dart';
 import '../../domain/repositories/user_repository.dart';
+import '../datasources/local/starage.dart';
 
 class UserRepositoryImpl implements IUserRepository {
   @override
@@ -17,7 +19,9 @@ class UserRepositoryImpl implements IUserRepository {
   Future<bool> loginUser(UserLoginRequest request) async {
     final response = await HttpConnection.post(login, body: request.toJson());
     if (response.isSuccess) {
-      HttpConnection.otp = response.data;
+      final data = UserModel.fromJson(response.data);
+      Storage.userModelGlobal = data;
+      Storage.saveUserModel(data);
       return true;
     }
     return false;
@@ -30,7 +34,12 @@ class UserRepositoryImpl implements IUserRepository {
       body: {'otp': otpRequest},
     );
     if (response.isSuccess) {
-      HttpConnection.token = response.data;
+      final data = AccessTokenResponse.fromJson(response.data);
+
+      Storage.refreshToken = data.refreshToken;
+      Storage.token = data.accessToken;
+      Storage.saveToken(data.accessToken);
+      Storage.saveRefreshToken(data.refreshToken);
       return true;
     }
     return false;
@@ -43,7 +52,7 @@ class UserRepositoryImpl implements IUserRepository {
       body: {'email': email},
     );
     if (response.isSuccess) {
-      HttpConnection.otp = response.data;
+      Storage.otp = response.data;
       return true;
     }
     return false;
@@ -66,10 +75,13 @@ class UserRepositoryImpl implements IUserRepository {
 
   @override
   Future<UserModel?> onGetUserByEmail() async {
-    final response = await HttpConnection.get('$getUserByEmail${HttpConnection.email}');
+    // final response = await HttpConnection.get('$getUserByEmail${HttpConnection.email}');
+    final response = await HttpConnection.get(
+      'user/email/nguyenanhquan20102003@gmail.com',
+    );
     if (response.isSuccess) {
-      HttpConnection.userModelGlobal = UserModel.fromJson(response.data);
-      return HttpConnection.userModelGlobal;
+      Storage.userModelGlobal = UserModel.fromJson(response.data);
+      return Storage.userModelGlobal;
     }
     return null;
   }

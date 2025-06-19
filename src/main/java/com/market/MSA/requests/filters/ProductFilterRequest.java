@@ -1,7 +1,8 @@
-package com.market.MSA.requests.product;
+package com.market.MSA.requests.filters;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.PositiveOrZero;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +20,8 @@ public class ProductFilterRequest {
   Long categoryId;
   Long supplierId;
   String unit;
+  LocalDateTime fromDate;
+  LocalDateTime toDate;
   String netWeight;
 
   @PositiveOrZero(message = "Minimum price must be a positive number or zero")

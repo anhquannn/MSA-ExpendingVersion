@@ -5,6 +5,7 @@ import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.product.SupplierMapper;
 import com.market.MSA.models.product.Supplier;
 import com.market.MSA.repositories.product.SupplierRepository;
+import com.market.MSA.requests.filters.SupplierFilterRequest;
 import com.market.MSA.requests.product.SupplierRequest;
 import com.market.MSA.responses.product.SupplierResponse;
 import java.util.List;
@@ -13,6 +14,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +58,7 @@ public class SupplierService {
     return true;
   }
 
+//  @Cacheable(value = "supplier", key = "#supplierId", unless = "#result == null")
   public SupplierResponse getSupplierById(Long supplierId) {
     Supplier supplier =
         supplierRepository
@@ -61,17 +67,21 @@ public class SupplierService {
     return supplierMapper.toSupplierResponse(supplier);
   }
 
-  public SupplierResponse getSupplierByName(String name) {
-    Supplier supplier =
-        supplierRepository
-            .findByName(name)
-            .orElseThrow(() -> new AppException(ErrorCode.SUPPLIER_NOT_FOUND));
-    return supplierMapper.toSupplierResponse(supplier);
-  }
-
-  public List<SupplierResponse> getAllSuppliers() {
-    return supplierRepository.findAll().stream()
+//  @Cacheable("suppliers")
+  public List<SupplierResponse> getAllSuppliers(SupplierFilterRequest request) {
+    return supplierRepository.filter(request.getKeyword()).stream()
         .map(supplierMapper::toSupplierResponse)
         .collect(Collectors.toList());
+  }
+
+//  @Cacheable("suppliers")
+  public Page<SupplierResponse> getAllSuppliersWithPaging(SupplierFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    PageRequest pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+
+    return supplierRepository
+        .filterWithPaging(request.getKeyword(), pageable)
+        .map(supplierMapper::toSupplierResponse);
   }
 }

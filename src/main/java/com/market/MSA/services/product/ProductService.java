@@ -8,7 +8,7 @@ import com.market.MSA.models.product.Inventory;
 import com.market.MSA.models.product.InventoryProduct;
 import com.market.MSA.models.product.Product;
 import com.market.MSA.repositories.product.*;
-import com.market.MSA.requests.product.ProductFilterRequest;
+import com.market.MSA.requests.filters.ProductFilterRequest;
 import com.market.MSA.requests.product.ProductRequest;
 import com.market.MSA.responses.product.InventoryProductResponse;
 import com.market.MSA.responses.product.ProductFilterResponse;
@@ -22,6 +22,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +49,7 @@ public class ProductService {
   static final String DEFAULT_SORT_BY = "price";
   static final String DEFAULT_SORT_DIRECTION = "asc";
 
+//  @CacheEvict(value = "products", allEntries = true)
   @Transactional
   public ProductResponse createProduct(ProductRequest request, boolean sendNotificationToAll) {
     Product product = productMapper.toProduct(request);
@@ -65,6 +69,12 @@ public class ProductService {
     return productMapper.toProductResponse(savedProduct);
   }
 
+//  @Caching(
+//      evict = {
+//        @CacheEvict(value = "product", key = "#id"),
+//        @CacheEvict(value = "product_entity", key = "#id"),
+//        @CacheEvict(value = "products", allEntries = true)
+//      })
   @Transactional
   public ProductResponse updateProduct(Long id, ProductRequest request) {
     Product product =
@@ -83,6 +93,16 @@ public class ProductService {
     return productMapper.toProductResponse(updatedProduct);
   }
 
+//  @CacheEvict(
+//      value = {"product", "products"},
+//      key = "#id",
+//      allEntries = true)
+//  @Caching(
+//      evict = {
+//        @CacheEvict(value = "product", key = "#id"),
+//        @CacheEvict(value = "product_entity", key = "#id"),
+//        @CacheEvict(value = "products", allEntries = true)
+//      })
   @Transactional
   public boolean deleteProduct(Long id) {
     if (!productRepository.existsById(id)) {
@@ -92,14 +112,16 @@ public class ProductService {
     return true;
   }
 
-  // @Cacheable(value = "products", key = "#id")
+//  @Cacheable(value = "product", key = "#id", unless = "#result == null")
   public ProductResponse getProductById(Long id) {
+    log.info("Fetching product from database with id: {}", id);
     Product product = findProductEntityById(id);
     return productMapper.toProductResponse(product);
   }
 
-  // @Cacheable(value = "products", key = "#id")
+//  @Cacheable(value = "product_entity", key = "#id", unless = "#result == null")
   public Product findProductById(Long id) {
+    log.info("Fetching product entity from database with id: {}", id);
     return findProductEntityById(id);
   }
 
@@ -109,7 +131,7 @@ public class ProductService {
         .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
   }
 
-  // @CacheEvict(value = "products", key = "#productId")
+//  @CacheEvict(value = "products", key = "#productId")
   @Transactional
   public void updateTotalRevenue(Long productId, int quantity) {
     Product product = findProductEntityById(productId);
@@ -117,7 +139,7 @@ public class ProductService {
     productRepository.save(product);
   }
 
-  // @Cacheable(value = "products", key = "'all_' + #page + '_' + #pageSize")
+//  @Cacheable(value = "products", key = "'all_' + #page + '_' + #pageSize")
   public List<ProductResponse> getAllProducts(int page, int pageSize) {
     return productRepository.findAll().stream()
         .skip((long) (page - 1) * pageSize)
@@ -126,6 +148,10 @@ public class ProductService {
         .collect(Collectors.toList());
   }
 
+//  @Cacheable(
+//      value = "filtered_products",
+//      key =
+//          "{#request.branchId, #request.categoryId, #request.supplierId, #request.unit, #request.netWeight, #request.minPrice, #request.maxPrice, #request.keyword, #request.page, #request.pageSize, #request.sortBy, #request.sortDirection}")
   public ProductFilterResponse filterProducts(ProductFilterRequest request) {
     // Set default values for pagination and sorting
     String sortBy =
@@ -184,7 +210,7 @@ public class ProductService {
 
       // Get filtered products excluding the discounted ones
       Page<Product> products =
-          productRepository.findFilteredProducts(
+          productRepository.filterWithPaging(
               request.getBranchId(),
               request.getCategoryId(),
               request.getSupplierId(),
@@ -192,19 +218,19 @@ public class ProductService {
               request.getNetWeight(),
               request.getMinPrice(),
               request.getMaxPrice(),
+              request.getFromDate(),
+              request.getToDate(),
               request.getKeyword(),
               discountedProductIds, // Pass the list of discounted product IDs to exclude
               pageable);
 
       // Return both regular and discounted products with pagination
-      return ProductFilterResponse.builder()
-          .products(products.map(productMapper::toProductResponse))
-          .discountedProducts(discountedProductsPage)
-          .build();
+      return ProductFilterResponse.fromPages(
+          products.map(productMapper::toProductResponse), discountedProductsPage);
     } else {
       // If no branchId is provided, just return the regular filtered products
       Page<Product> products =
-          productRepository.findFilteredProducts(
+          productRepository.filterWithPaging(
               null, // branchId
               request.getCategoryId(),
               request.getSupplierId(),
@@ -212,6 +238,8 @@ public class ProductService {
               request.getNetWeight(),
               request.getMinPrice(),
               request.getMaxPrice(),
+              request.getFromDate(),
+              request.getToDate(),
               request.getKeyword(),
               Collections.emptyList(), // No products to exclude
               pageable);
@@ -220,18 +248,12 @@ public class ProductService {
       Page<InventoryProductResponse> emptyDiscountedPage =
           new org.springframework.data.domain.PageImpl<>(Collections.emptyList(), pageable, 0);
 
-      return ProductFilterResponse.builder()
-          .products(products.map(productMapper::toProductResponse))
-          .discountedProducts(emptyDiscountedPage)
-          .build();
+      return ProductFilterResponse.fromPages(
+          products.map(productMapper::toProductResponse), emptyDiscountedPage);
     }
   }
 
-  //  @Cacheable(
-  //      value = "products",
-  //      key =
-  //          "'branch_all_' + #branchId + '_' + #page + '_' + #size + '_' + #sortBy + '_' +
-  // #sortDirection")
+//  @Cacheable(value = "branch_products", key = "{#branchId, #page, #size, #sortBy, #sortDirection}")
   public Page<ProductResponse> getAllProductsInBranch(
       Long branchId, int page, int size, String sortBy, String sortDirection) {
 

@@ -15,10 +15,12 @@ import com.market.MSA.repositories.product.InventoryProductRepository;
 import com.market.MSA.repositories.product.InventoryRepository;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.user.UserRepository;
+import com.market.MSA.requests.filters.NotificationFilterRequest;
 import com.market.MSA.requests.others.NotificationRequest;
 import com.market.MSA.responses.others.NotificationResponse;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -27,6 +29,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -148,48 +151,92 @@ public class NotificationService {
         .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_FOUND));
   }
 
-  @Cacheable(
-      value = "notifications",
-      key =
-          "'user_' + #userId + '_' + #type + '_' + #isRead + '_' + #productId + '_' + #orderId + '_' + #inventoryId + '_' + #page + '_' + #size")
-  public Page<NotificationResponse> getAllByUserId(
-      Long userId,
-      String type,
-      Boolean isRead,
-      Long productId,
-      Long orderId,
-      Long inventoryId,
-      int page,
-      int size) {
-    // Check if user exists
-    if (!userRepository.existsById(userId)) {
-      throw new AppException(ErrorCode.USER_NOT_EXISTED);
+//  @Cacheable("notifications")
+  @Transactional(readOnly = true)
+  public List<NotificationResponse> getAllNotifications(NotificationFilterRequest request) {
+    // Handle date range
+    LocalDateTime fromDate = request.getFromDate();
+    LocalDateTime toDate = request.getToDate();
+
+    // If only one date is provided, set a default range
+    if (fromDate != null && toDate == null) {
+      toDate = LocalDateTime.now();
+    } else if (fromDate == null && toDate != null) {
+      fromDate = toDate.minusMonths(1); // Default to last month if only toDate is provided
     }
 
-    // Create pageable
-    Pageable pageable = PageRequest.of(page, size);
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
-    // Get notifications with filters
-    Page<Notification> notifications =
-        notificationRepository.findAllByUserIdWithFilters(
-            userId, type, isRead, productId, orderId, inventoryId, pageable);
-
-    return notifications.map(notificationMapper::toNotificationResponse);
+    if (request.getUserId() != null) {
+      // Filter with userId
+      return notificationRepository
+          .findAllByUserIdWithFiltersNoPaging(
+              request.getUserId(),
+              request.getType(),
+              request.getIsRead(),
+              request.getProductId(),
+              request.getOrderId(),
+              request.getInventoryId(),
+              fromDate,
+              toDate,
+              sort)
+          .stream()
+          .map(notificationMapper::toNotificationResponse)
+          .collect(Collectors.toList());
+    } else {
+      // Filter without userId
+      return notificationRepository
+          .findAllWithFiltersNoPaging(
+              request.getType(), request.getIsRead(), fromDate, toDate, sort)
+          .stream()
+          .map(notificationMapper::toNotificationResponse)
+          .collect(Collectors.toList());
+    }
   }
 
-  @Cacheable(
-      value = "notifications",
-      key = "'all_' + #type + '_' + #isRead + '_' + #page + '_' + #size")
-  public Page<NotificationResponse> getAllNotifications(
-      String type, Boolean isRead, int page, int size) {
-    // Create pageable
-    Pageable pageable = PageRequest.of(page, size);
+//  @Cacheable("notifications")
+  @Transactional(readOnly = true)
+  public Page<NotificationResponse> getAllNotificationsWithPaging(
+      NotificationFilterRequest request) {
+    // Handle date range
+    LocalDateTime fromDate = request.getFromDate();
+    LocalDateTime toDate = request.getToDate();
 
-    // Get notifications with filters
-    Page<Notification> notifications =
-        notificationRepository.findAllWithFilters(type, isRead, pageable);
+    // If only one date is provided, set a default range
+    if (fromDate != null && toDate == null) {
+      toDate = LocalDateTime.now();
+    } else if (fromDate == null && toDate != null) {
+      fromDate = toDate.minusMonths(1); // Default to last month if only toDate is provided
+    }
 
-    return notifications.map(notificationMapper::toNotificationResponse);
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    Pageable pageable =
+        PageRequest.of(
+            request.getPage() - 1, // Convert to 0-based page index
+            request.getPageSize(),
+            sort);
+
+    if (request.getUserId() != null) {
+      // Filter with userId
+      return notificationRepository
+          .filterWithPaging(
+              request.getUserId(),
+              request.getType(),
+              request.getIsRead(),
+              request.getProductId(),
+              request.getOrderId(),
+              request.getInventoryId(),
+              fromDate,
+              toDate,
+              pageable)
+          .map(notificationMapper::toNotificationResponse);
+    } else {
+      // Filter without userId
+      return notificationRepository
+          .filter(request.getType(), request.getIsRead(), fromDate, toDate, pageable)
+          .map(notificationMapper::toNotificationResponse);
+    }
   }
 
   @Transactional
@@ -313,7 +360,8 @@ public class NotificationService {
     for (Inventory inventory : inventories) {
       // Get products in this inventory
       List<InventoryProduct> inventoryProducts =
-          inventoryProductRepository.findAllByInventory_InventoryId(inventory.getInventoryId());
+          inventoryProductRepository.filter(
+              null, inventory.getInventoryId(), null, null, null, null, null, null);
 
       // Check each product
       for (InventoryProduct inventoryProduct : inventoryProducts) {

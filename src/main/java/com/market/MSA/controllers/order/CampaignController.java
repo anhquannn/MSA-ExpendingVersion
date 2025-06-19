@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.order;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.CampaignFilterRequest;
 import com.market.MSA.requests.order.CampaignRequest;
 import com.market.MSA.responses.order.CampaignResponse;
 import com.market.MSA.responses.others.ApiResponse;
@@ -10,6 +11,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -52,25 +54,19 @@ public class CampaignController {
         .build();
   }
 
-  @GetMapping("/search")
-  ApiResponse<List<CampaignResponse>> getCampaignByName(
-      @RequestParam(required = false) String name,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize,
-      @RequestParam(defaultValue = "name") String sortBy,
-      @RequestParam(defaultValue = "asc") String sortDirection) {
+  @PostMapping("/list")
+  ApiResponse<List<CampaignResponse>> getAllCampaigns(@Valid CampaignFilterRequest request) {
     return ApiResponse.<List<CampaignResponse>>builder()
-        .result(
-            campaignService.getCampaignByCampaignName(name, page, pageSize, sortBy, sortDirection))
+        .result(campaignService.getAllCampaigns(request))
         .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())
         .build();
   }
 
-  @GetMapping
-  ApiResponse<List<CampaignResponse>> getAllCampaigns(
-      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int pageSize) {
-    return ApiResponse.<List<CampaignResponse>>builder()
-        .result(campaignService.getAllCampaigns(page, pageSize))
+  @PostMapping("/paging")
+  ApiResponse<Page<CampaignResponse>> getAllCampaignsWithPaging(
+      @Valid CampaignFilterRequest request) {
+    return ApiResponse.<Page<CampaignResponse>>builder()
+        .result(campaignService.getAllCampaignsWithPaging(request))
         .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())
         .build();
   }

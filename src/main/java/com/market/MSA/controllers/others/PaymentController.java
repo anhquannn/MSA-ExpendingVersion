@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.others;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.PaymentFilterRequest;
 import com.market.MSA.requests.others.PaymentRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.others.PaymentResponse;
@@ -12,6 +13,7 @@ import java.util.Map;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,10 +65,20 @@ public class PaymentController {
         .build();
   }
 
-  @GetMapping
-  ApiResponse<List<PaymentResponse>> getAllPayments() {
+  @PostMapping("/list")
+  ApiResponse<List<PaymentResponse>> filterPayments(
+      @Valid @RequestBody PaymentFilterRequest request) {
     return ApiResponse.<List<PaymentResponse>>builder()
-        .result(paymentService.getAllPayments())
+        .result(paymentService.getAllPayments(request))
+        .message(ApiMessage.ALL_PAYMENTS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/paging")
+  ApiResponse<Page<PaymentResponse>> filterPaymentsWithPaging(
+      @Valid @RequestBody PaymentFilterRequest request) {
+    return ApiResponse.<Page<PaymentResponse>>builder()
+        .result(paymentService.getAllPaymentsWithPaging(request))
         .message(ApiMessage.ALL_PAYMENTS_RETRIEVED.getMessage())
         .build();
   }

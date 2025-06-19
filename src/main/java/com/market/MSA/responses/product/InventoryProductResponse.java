@@ -1,5 +1,7 @@
 package com.market.MSA.responses.product;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -9,11 +11,21 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class InventoryProductResponse {
+public class InventoryProductResponse implements Serializable {
+  private static final long serialVersionUID = 1L;
   Long inventoryProductId;
   int stockNumber;
   double currentPrice;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime expDate;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  LocalDateTime createdAt;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  LocalDateTime updatedAt;
+
   boolean isActive;
   boolean isDiscounted;
   String batchNumber;

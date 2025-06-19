@@ -7,6 +7,7 @@ import com.market.MSA.models.product.Feedback;
 import com.market.MSA.repositories.product.FeedbackRepository;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.user.UserRepository;
+import com.market.MSA.requests.filters.FeedbackFilterRequest;
 import com.market.MSA.requests.product.FeedbackRequest;
 import com.market.MSA.responses.product.FeedbackResponse;
 import com.market.MSA.services.others.EntityFinderService;
@@ -17,6 +18,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,18 +85,44 @@ public class FeedbackService {
   }
 
   // Get Feedback by ID
+//  @Cacheable(value = "feedback", key = "#feedbackId", unless = "#result == null")
   public FeedbackResponse getFeedbackById(long feedbackId) {
-    Optional<Feedback> feedbackOpt = feedbackRepository.findById(feedbackId);
-    return feedbackOpt
+    return feedbackRepository
+        .findById(feedbackId)
         .map(feedbackMapper::toFeedbackResponse)
-        .orElseThrow(
-            () -> new AppException(ErrorCode.FEEDBACK_NOT_FOUND)); // Or throw an exception if not
-    // found
+        .orElseThrow(() -> new AppException(ErrorCode.FEEDBACK_NOT_FOUND));
   }
 
-  // Get all Feedbacks by Product ID
-  public List<FeedbackResponse> getAllFeedbacksByProductId(long productId) {
-    List<Feedback> feedbacks = feedbackRepository.findByProduct_ProductId(productId);
-    return feedbacks.stream().map(feedbackMapper::toFeedbackResponse).collect(Collectors.toList());
+//  @Cacheable("feedbacks")
+  public List<FeedbackResponse> getAllFeedbacks(FeedbackFilterRequest request) {
+    return feedbackRepository
+        .filter(
+            request.getProductId(),
+            request.getUserId(),
+            request.getMinRating(),
+            request.getMaxRating(),
+            request.getFromDate(),
+            request.getToDate())
+        .stream()
+        .map(feedbackMapper::toFeedbackResponse)
+        .collect(Collectors.toList());
+  }
+
+  @Cacheable("feedbacks")
+  public Page<FeedbackResponse> getAllFeedbacksWithPaging(FeedbackFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    PageRequest pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+
+    return feedbackRepository
+        .filterWithPaging(
+            request.getProductId(),
+            request.getUserId(),
+            request.getMinRating(),
+            request.getMaxRating(),
+            request.getFromDate(),
+            request.getToDate(),
+            pageable)
+        .map(feedbackMapper::toFeedbackResponse);
   }
 }

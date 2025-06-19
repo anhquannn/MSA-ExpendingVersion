@@ -7,6 +7,7 @@ import com.market.MSA.models.product.Product;
 import com.market.MSA.models.product.ProductImage;
 import com.market.MSA.repositories.product.ProductImageRepository;
 import com.market.MSA.repositories.product.ProductRepository;
+import com.market.MSA.requests.filters.ProductImageFilterRequest;
 import com.market.MSA.requests.product.ProductImageRequest;
 import com.market.MSA.responses.product.ProductImageResponse;
 import com.market.MSA.services.others.EntityFinderService;
@@ -16,8 +17,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,10 +85,22 @@ public class ProductImageService {
     return productImageMapper.toProductImageResponse(productImage);
   }
 
-  public List<ProductImageResponse> getAllProductImages(int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page - 1, pageSize);
-    return productImageRepository.findAll(pageable).stream()
+//  @Cacheable("product_images")
+  public List<ProductImageResponse> getAllProductImages(ProductImageFilterRequest request) {
+    return productImageRepository.filter(request.getProductId()).stream()
         .map(productImageMapper::toProductImageResponse)
         .collect(Collectors.toList());
+  }
+
+//  @Cacheable("product_images")
+  public Page<ProductImageResponse> getAllProductImagesWithPaging(
+      ProductImageFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+
+    return productImageRepository
+        .filterWithPaging(request.getProductId(), pageable)
+        .map(productImageMapper::toProductImageResponse);
   }
 }

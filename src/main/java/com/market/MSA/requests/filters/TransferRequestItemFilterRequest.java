@@ -10,24 +10,22 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TransferRequestItemFilterRequest {
-    Long transferRequestId;
-    Long productId;
-    Double minQuantity;
-    Double maxQuantity;
-    
-    // Sorting
-    @Builder.Default
-    String sortBy = "createdAt";
-    
-    @Builder.Default
-    String sortDirection = "DESC";
-    
-    // Pagination
-    @Min(value = 1, message = "Page number must be greater than 0")
-    @Builder.Default
-    int page = 1;
+  Long transferRequestId;
+  Long productId;
+  Double minQuantity;
+  Double maxQuantity;
 
-    @Min(value = 1, message = "Page size must be greater than 0")
-    @Builder.Default
-    int pageSize = 10;
+  // Sorting
+  @Builder.Default String sortBy = "createdAt";
+
+  @Builder.Default String sortDirection = "DESC";
+
+  // Pagination
+  @Min(value = 1, message = "Page number must be greater than 0")
+  @Builder.Default
+  int page = 1;
+
+  @Min(value = 1, message = "Page size must be greater than 0")
+  @Builder.Default
+  int pageSize = 10;
 }

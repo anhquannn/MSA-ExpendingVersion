@@ -7,18 +7,22 @@ import com.market.MSA.models.user.RewardPointTransaction;
 import com.market.MSA.repositories.order.OrderRepository;
 import com.market.MSA.repositories.user.RewardPointTransactionRepository;
 import com.market.MSA.repositories.user.UserRepository;
+import com.market.MSA.requests.filters.RewardPointTransactionFilterRequest;
 import com.market.MSA.requests.user.RewardPointTransactionRequest;
 import com.market.MSA.responses.user.RewardPointTransactionResponse;
 import com.market.MSA.services.others.EntityFinderService;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,38 +88,59 @@ public class RewardPointTransactionService {
     return true;
   }
 
+//  @Cacheable("reward_point_transactions")
   public List<RewardPointTransactionResponse> getAllRewardPointTransactions(
-      int page, int pageSize) {
-    return rewardPointTransactionRepository.findAll().stream()
-        .skip((long) (page - 1) * pageSize)
-        .limit(pageSize)
-        .map(rewardPointTransactionMapper::toRewardPointTransactionResponse)
-        .collect(Collectors.toList());
-  }
+      RewardPointTransactionFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
-  public List<RewardPointTransactionResponse> getAllRewardPointTransactionsByUserId(
-      Long userId, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page, pageSize);
-    return rewardPointTransactionRepository.findByUser_UserId(userId, pageable).stream()
-        .map(rewardPointTransactionMapper::toRewardPointTransactionResponse)
-        .collect(Collectors.toList());
-  }
+    // Handle date range
+    LocalDateTime fromDate = request.getFromDate();
+    LocalDateTime toDate = request.getToDate();
 
-  public List<RewardPointTransactionResponse> getAllRewardPointTransactionsByOrderId(
-      Long orderId, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page, pageSize);
-    return rewardPointTransactionRepository.findByOrder_OrderId(orderId, pageable).stream()
-        .map(rewardPointTransactionMapper::toRewardPointTransactionResponse)
-        .collect(Collectors.toList());
-  }
+    // If only one date is provided, set a default range
+    if (fromDate != null && toDate == null) {
+      toDate = LocalDateTime.now();
+    } else if (fromDate == null && toDate != null) {
+      fromDate = toDate.minusMonths(1); // Default to last month if only toDate is provided
+    }
 
-  public List<RewardPointTransactionResponse> getRewardPointHistory(
-      Long userId, Date fromDate, Date toDate, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page, pageSize);
     return rewardPointTransactionRepository
-        .findByUser_UserIdAndCreatedAtBetween(userId, fromDate, toDate, pageable)
+        .filter(
+            request.getUserId(),
+            request.getOrderId(), // orderId not in filter yet
+            fromDate,
+            toDate,
+            sort)
         .stream()
         .map(rewardPointTransactionMapper::toRewardPointTransactionResponse)
         .collect(Collectors.toList());
+  }
+
+//  @Cacheable("reward_point_transactions")
+  public Page<RewardPointTransactionResponse> getAllRewardPointTransactionsWithPaging(
+      RewardPointTransactionFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    // Handle date range
+    LocalDateTime fromDate = request.getFromDate();
+    LocalDateTime toDate = request.getToDate();
+
+    // If only one date is provided, set a default range
+    if (fromDate != null && toDate == null) {
+      toDate = LocalDateTime.now();
+    } else if (fromDate == null && toDate != null) {
+      fromDate = toDate.minusMonths(1); // Default to last month if only toDate is provided
+    }
+
+    Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+
+    return rewardPointTransactionRepository
+        .filterWithPaging(
+            request.getUserId(),
+            request.getOrderId(), // orderId not in filter yet
+            fromDate,
+            toDate,
+            pageable)
+        .map(rewardPointTransactionMapper::toRewardPointTransactionResponse);
   }
 }

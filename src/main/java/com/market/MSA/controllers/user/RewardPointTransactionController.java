@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.user;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.RewardPointTransactionFilterRequest;
 import com.market.MSA.requests.user.RewardPointTransactionRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.user.RewardPointTransactionResponse;
@@ -11,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -48,49 +50,21 @@ public class RewardPointTransactionController {
         .build();
   }
 
-  @GetMapping
-  public ApiResponse<List<RewardPointTransactionResponse>> getAllTransactions(
-      @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
+  @PostMapping("/list")
+  public ApiResponse<List<RewardPointTransactionResponse>> filterTransactions(
+      @Valid @RequestBody RewardPointTransactionFilterRequest request) {
     return ApiResponse.<List<RewardPointTransactionResponse>>builder()
-        .result(rewardPointTransactionService.getAllRewardPointTransactions(page, size))
+        .result(rewardPointTransactionService.getAllRewardPointTransactions(request))
         .message(ApiMessage.ALL_REWARD_POINT_TRANSACTIONS_RETRIEVED.getMessage())
         .build();
   }
 
-  @GetMapping("/user/{userId}")
-  public ApiResponse<List<RewardPointTransactionResponse>> getTransactionsByUserId(
-      @PathVariable Long userId,
-      @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "10") int size) {
-    return ApiResponse.<List<RewardPointTransactionResponse>>builder()
-        .result(
-            rewardPointTransactionService.getAllRewardPointTransactionsByUserId(userId, page, size))
-        .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
-        .build();
-  }
-
-  @GetMapping("/order/{orderId}")
-  public ApiResponse<List<RewardPointTransactionResponse>> getTransactionsByOrderId(
-      @PathVariable Long orderId,
-      @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "10") int size) {
-    return ApiResponse.<List<RewardPointTransactionResponse>>builder()
-        .result(
-            rewardPointTransactionService.getAllRewardPointTransactionsByOrderId(
-                orderId, page, size))
-        .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
-        .build();
-  }
-
-  @GetMapping("/history/{userId}")
-  public ApiResponse<List<RewardPointTransactionResponse>> getTransactionHistory(
-      @PathVariable Long userId,
-      @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "10") int size) {
-
-    return ApiResponse.<List<RewardPointTransactionResponse>>builder()
-        .result(rewardPointTransactionService.getRewardPointHistory(userId, null, null, page, size))
-        .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
+  @PostMapping("/paging")
+  public ApiResponse<Page<RewardPointTransactionResponse>> filterTransactionsWithPaging(
+      @Valid @RequestBody RewardPointTransactionFilterRequest request) {
+    return ApiResponse.<Page<RewardPointTransactionResponse>>builder()
+        .result(rewardPointTransactionService.getAllRewardPointTransactionsWithPaging(request))
+        .message(ApiMessage.ALL_REWARD_POINT_TRANSACTIONS_RETRIEVED.getMessage())
         .build();
   }
 }

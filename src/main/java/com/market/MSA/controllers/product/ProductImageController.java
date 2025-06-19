@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.ProductImageFilterRequest;
 import com.market.MSA.requests.product.ProductImageRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.ProductImageResponse;
@@ -11,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -56,11 +58,20 @@ public class ProductImageController {
         .build();
   }
 
-  @GetMapping
+  @PostMapping("/list")
   public ApiResponse<List<ProductImageResponse>> getAllProductImages(
-      @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int pageSize) {
+      @Valid ProductImageFilterRequest request) {
     return ApiResponse.<List<ProductImageResponse>>builder()
-        .result(productImageService.getAllProductImages(page, pageSize))
+        .result(productImageService.getAllProductImages(request))
+        .message(ApiMessage.ALL_PRODUCT_IMAGES_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/paging")
+  public ApiResponse<Page<ProductImageResponse>> getAllProductImagesWithPaging(
+      @Valid ProductImageFilterRequest request) {
+    return ApiResponse.<Page<ProductImageResponse>>builder()
+        .result(productImageService.getAllProductImagesWithPaging(request))
         .message(ApiMessage.ALL_PRODUCT_IMAGES_RETRIEVED.getMessage())
         .build();
   }

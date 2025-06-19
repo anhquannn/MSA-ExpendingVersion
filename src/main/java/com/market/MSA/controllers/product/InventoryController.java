@@ -1,14 +1,17 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.InventoryFilterRequest;
 import com.market.MSA.requests.product.InventoryRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.InventoryResponse;
 import com.market.MSA.services.product.InventoryService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -52,11 +55,20 @@ public class InventoryController {
         .build();
   }
 
-  @GetMapping
-  public ApiResponse<List<InventoryResponse>> getAllInventory(
-      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int pageSize) {
+  @PostMapping("/list")
+  public ApiResponse<List<InventoryResponse>> filterInventories(
+      @Valid @RequestBody InventoryFilterRequest request) {
     return ApiResponse.<List<InventoryResponse>>builder()
-        .result(inventoryService.getAllInventory(page, pageSize))
+        .result(inventoryService.getAllInventories(request))
+        .message(ApiMessage.ALL_INVENTORIES_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/paging")
+  public ApiResponse<Page<InventoryResponse>> filterInventoriesWithPaging(
+      @Valid @RequestBody InventoryFilterRequest request) {
+    return ApiResponse.<Page<InventoryResponse>>builder()
+        .result(inventoryService.getAllInventoriesWithPaging(request))
         .message(ApiMessage.ALL_INVENTORIES_RETRIEVED.getMessage())
         .build();
   }
@@ -66,17 +78,6 @@ public class InventoryController {
     return ApiResponse.<InventoryResponse>builder()
         .result(inventoryService.getInventoryByBranchId(branchId))
         .message(ApiMessage.INVENTORY_RETRIEVED.getMessage())
-        .build();
-  }
-
-  @GetMapping("/search")
-  public ApiResponse<List<InventoryResponse>> searchInventories(
-      @RequestParam String name,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize) {
-    return ApiResponse.<List<InventoryResponse>>builder()
-        .result(inventoryService.searchInventoryByKeyword(name, page, pageSize))
-        .message(ApiMessage.ALL_INVENTORIES_RETRIEVED.getMessage())
         .build();
   }
 }

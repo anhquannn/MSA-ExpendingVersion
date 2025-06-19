@@ -3,12 +3,39 @@ package com.market.MSA.repositories.product;
 import com.market.MSA.models.product.Branch;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface BranchRepository extends JpaRepository<Branch, Long> {
-  Optional<Branch> findByName(String name);
+  // Không phân trang
+  @Query(
+      "SELECT DISTINCT b FROM Branch b "
+          + "LEFT JOIN b.inventory i "
+          + "LEFT JOIN i.inventoryProducts ip "
+          + "WHERE (:keyword IS NULL OR "
+          + "LOWER(b.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(b.city) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(b.ward) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(b.district) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
+          + "(:productId IS NULL OR ip.product.productId = :productId)")
+  List<Branch> filter(@Param("keyword") String keyword, @Param("productId") Long productId);
+
+  // Có phân trang
+  @Query(
+      "SELECT DISTINCT b FROM Branch b "
+          + "LEFT JOIN b.inventory i "
+          + "LEFT JOIN i.inventoryProducts ip "
+          + "WHERE (:keyword IS NULL OR "
+          + "LOWER(b.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(b.city) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(b.ward) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(b.district) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
+          + "(:productId IS NULL OR ip.product.productId = :productId)")
+  Page<Branch> filterWithPaging(
+      @Param("keyword") String keyword, @Param("productId") Long productId, Pageable pageable);
 
   @Query(
       value =
@@ -21,10 +48,5 @@ public interface BranchRepository extends JpaRepository<Branch, Long> {
       nativeQuery = true)
   Branch findByUserRole(@Param("role") String role);
 
-  @Query(
-      "SELECT DISTINCT b FROM Branch b "
-          + "JOIN b.inventory i "
-          + "JOIN i.inventoryProducts ip "
-          + "WHERE ip.product.productId = :productId")
-  List<Branch> findByProductId(@Param("productId") Long productId);
+  Optional<Branch> findByName(String name);
 }

@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.InventoryProductFilterRequest;
 import com.market.MSA.requests.product.InventoryProductRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.InventoryProductResponse;
@@ -56,25 +57,6 @@ public class InventoryProductController {
         .build();
   }
 
-  @GetMapping("/inventory/{inventoryId}")
-  public ApiResponse<List<InventoryProductResponse>> getInventoryProductByInventoryId(
-      @PathVariable long inventoryId, int page, int pageSize) {
-    return ApiResponse.<List<InventoryProductResponse>>builder()
-        .result(
-            inventoryProductService.getInventoryProductByInventoryId(inventoryId, page, pageSize))
-        .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())
-        .build();
-  }
-
-  @GetMapping("/product/{productId}")
-  public ApiResponse<List<InventoryProductResponse>> getInventoryProductByProductId(
-      @PathVariable long productId) {
-    return ApiResponse.<List<InventoryProductResponse>>builder()
-        .result(inventoryProductService.getInventoryProductByProductId(productId))
-        .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())
-        .build();
-  }
-
   @GetMapping("/statistic/{branchId}")
   public ApiResponse<InventoryStatisticsResponse> getInventoryStatistics(
       @PathVariable long branchId) {
@@ -93,17 +75,20 @@ public class InventoryProductController {
         .build();
   }
 
-  @GetMapping("/branch/{branchId}/products")
-  public ApiResponse<Page<InventoryProductResponse>> getInventoryProductsByBranch(
-      @PathVariable Long branchId,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int size,
-      @RequestParam(defaultValue = "stockNumber") String sortBy,
-      @RequestParam(defaultValue = "desc") String sortDirection) {
+  @PostMapping("/list")
+  public ApiResponse<List<InventoryProductResponse>> filterInventoryProducts(
+      @Valid @RequestBody InventoryProductFilterRequest request) {
+    return ApiResponse.<List<InventoryProductResponse>>builder()
+        .result(inventoryProductService.getAllInventoryProducts(request))
+        .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/paging")
+  public ApiResponse<Page<InventoryProductResponse>> filterInventoryProductsWithPaging(
+      @Valid @RequestBody InventoryProductFilterRequest request) {
     return ApiResponse.<Page<InventoryProductResponse>>builder()
-        .result(
-            inventoryProductService.getInventoryProductsByBranch(
-                branchId, page, size, sortBy, sortDirection))
+        .result(inventoryProductService.getAllInventoryProductsWithPaging(request))
         .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())
         .build();
   }

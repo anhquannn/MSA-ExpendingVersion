@@ -1,8 +1,10 @@
 package com.market.MSA.responses.product;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.market.MSA.responses.order.OrderDetailResponse;
 import com.market.MSA.responses.others.NotificationResponse;
 import com.market.MSA.responses.user.UserBehaviorResponse;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
@@ -17,7 +19,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductResponse {
+public class ProductResponse implements Serializable {
+  private static final long serialVersionUID = 1L;
   Long productId;
 
   String name;
@@ -28,7 +31,13 @@ public class ProductResponse {
   String netWeight;
   String specification;
   String description;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime createdAt;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  LocalDateTime updatedAt;
+
   double totalRevenue;
 
   SupplierResponse supplier;

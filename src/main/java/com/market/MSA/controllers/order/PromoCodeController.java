@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.order;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.PromoCodeFilterRequest;
 import com.market.MSA.requests.order.PromoCodeRequest;
 import com.market.MSA.responses.order.PromoCodeResponse;
 import com.market.MSA.responses.others.ApiResponse;
@@ -10,6 +11,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,7 +19,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -76,14 +77,22 @@ public class PromoCodeController {
         .build();
   }
 
-  // Lấy danh sách tất cả PromoCode
-  @GetMapping("/user/{userId}")
+  // Lấy danh sách tất cả PromoCode (không phân trang)
+  @PostMapping("/list/user/{userId}")
   public ApiResponse<List<PromoCodeResponse>> getAllPromoCodes(
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize,
-      @PathVariable Long userId) {
+      @Valid PromoCodeFilterRequest request, @PathVariable Long userId) {
     return ApiResponse.<List<PromoCodeResponse>>builder()
-        .result(promoCodeService.getAllPromoCodes(page, pageSize, userId))
+        .result(promoCodeService.getAllPromoCodes(request, userId))
+        .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
+        .build();
+  }
+
+  // Lấy danh sách tất cả PromoCode (có phân trang)
+  @PostMapping("/paging/user/{userId}")
+  public ApiResponse<Page<PromoCodeResponse>> getAllPromoCodesWithPaging(
+      @Valid PromoCodeFilterRequest request, @PathVariable Long userId) {
+    return ApiResponse.<Page<PromoCodeResponse>>builder()
+        .result(promoCodeService.getAllPromoCodesWithPaging(request, userId))
         .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
         .build();
   }

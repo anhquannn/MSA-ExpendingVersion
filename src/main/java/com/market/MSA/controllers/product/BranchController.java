@@ -2,10 +2,12 @@ package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.branch.CreateBranchWithManagerRequest;
+import com.market.MSA.requests.filters.BranchFilterRequest;
 import com.market.MSA.requests.product.BranchRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.BranchResponse;
 import com.market.MSA.services.product.BranchService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -88,22 +89,19 @@ public class BranchController {
         .build();
   }
 
-  @GetMapping("/product/{productId}")
-  public ApiResponse<List<BranchResponse>> getBranchesByProductId(@PathVariable Long productId) {
+  @PostMapping("/list")
+  public ApiResponse<List<BranchResponse>> getAllBranches(@Valid BranchFilterRequest request) {
     return ApiResponse.<List<BranchResponse>>builder()
-        .result(branchService.getBranchesByProductId(productId))
+        .result(branchService.getAllBranches(request))
         .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())
         .build();
   }
 
-  @GetMapping
-  public ApiResponse<Page<BranchResponse>> getAllBranches(
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int size,
-      @RequestParam(defaultValue = "branchId") String sortBy,
-      @RequestParam(defaultValue = "asc") String sortDirection) {
+  @PostMapping("/paging")
+  public ApiResponse<Page<BranchResponse>> getAllBranchesWithPaging(
+      @Valid BranchFilterRequest request) {
     return ApiResponse.<Page<BranchResponse>>builder()
-        .result(branchService.getAllBranches(page, size, sortBy, sortDirection))
+        .result(branchService.getAllBranchesWithPaging(request))
         .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())
         .build();
   }

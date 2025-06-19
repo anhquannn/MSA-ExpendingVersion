@@ -1,10 +1,13 @@
 package com.market.MSA.controllers.others;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.NotificationFilterRequest;
 import com.market.MSA.requests.others.NotificationRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.others.NotificationResponse;
 import com.market.MSA.services.others.NotificationService;
+import jakarta.validation.Valid;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -55,32 +58,20 @@ public class NotificationController {
         .build();
   }
 
-  @GetMapping("/user/{userId}")
-  public ApiResponse<Page<NotificationResponse>> getAllByUserId(
-      @PathVariable Long userId,
-      @RequestParam(required = false) String type,
-      @RequestParam(required = false) Boolean isRead,
-      @RequestParam(required = false) Long productId,
-      @RequestParam(required = false) Long orderId,
-      @RequestParam(required = false) Long inventoryId,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int size) {
-    return ApiResponse.<Page<NotificationResponse>>builder()
-        .result(
-            notificationService.getAllByUserId(
-                userId, type, isRead, productId, orderId, inventoryId, page, size))
+  @PostMapping("/list")
+  public ApiResponse<List<NotificationResponse>> filterNotifications(
+      @Valid @RequestBody NotificationFilterRequest request) {
+    return ApiResponse.<List<NotificationResponse>>builder()
+        .result(notificationService.getAllNotifications(request))
         .message(ApiMessage.ALL_NOTIFICATIONS_RETRIEVED.getMessage())
         .build();
   }
 
-  @GetMapping
-  public ApiResponse<Page<NotificationResponse>> getAllNotifications(
-      @RequestParam(required = false) String type,
-      @RequestParam(required = false) Boolean isRead,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int size) {
+  @PostMapping("/paging")
+  public ApiResponse<Page<NotificationResponse>> filterNotificationsWithPaging(
+      @Valid @RequestBody NotificationFilterRequest request) {
     return ApiResponse.<Page<NotificationResponse>>builder()
-        .result(notificationService.getAllNotifications(type, isRead, page, size))
+        .result(notificationService.getAllNotificationsWithPaging(request))
         .message(ApiMessage.ALL_NOTIFICATIONS_RETRIEVED.getMessage())
         .build();
   }

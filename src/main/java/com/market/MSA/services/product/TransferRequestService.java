@@ -12,6 +12,7 @@ import com.market.MSA.repositories.product.InventoryProductRepository;
 import com.market.MSA.repositories.product.InventoryRepository;
 import com.market.MSA.repositories.product.TransferRequestRepository;
 import com.market.MSA.repositories.user.UserRepository;
+import com.market.MSA.requests.filters.TransferRequestFilterRequest;
 import com.market.MSA.requests.product.TransferRequest;
 import com.market.MSA.responses.product.TransferResponse;
 import com.market.MSA.services.others.EntityFinderService;
@@ -23,8 +24,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -107,52 +111,43 @@ public class TransferRequestService {
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_NOT_FOUND)));
   }
 
-  public List<TransferResponse> getAllTransferRequests(int page, int pageSize) {
-    return transferRequestRepository.findAll().stream()
-        .skip((long) (page - 1) * pageSize)
-        .limit(pageSize)
-        .map(transferRequestMapper::toTransferResponse)
-        .collect(Collectors.toList());
-  }
+//  @Cacheable("transfer_requests")
+  public List<TransferResponse> getAllTransferRequests(TransferRequestFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
-  public List<TransferResponse> getTransferRequestsByRequesterId(
-      Long requesterId, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page, pageSize);
     return transferRequestRepository
-        .findByUser_RequesterIdWithPageable(requesterId, pageable)
+        .filter(
+            request.getRequesterId(),
+            request.getApproverId(),
+            request.getFromInventoryId(),
+            request.getToInventoryId(),
+            request.getStatus(),
+            request.getFromDate(),
+            request.getToDate(),
+            sort)
         .stream()
         .map(transferRequestMapper::toTransferResponse)
         .collect(Collectors.toList());
   }
 
-  public List<TransferResponse> getTransferRequestsByApproverId(
-      Long approverId, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page, pageSize);
-    return transferRequestRepository
-        .findByUser_ApproverIdWithPageable(approverId, pageable)
-        .stream()
-        .map(transferRequestMapper::toTransferResponse)
-        .collect(Collectors.toList());
-  }
+//  @Cacheable("transfer_requests")
+  public Page<TransferResponse> getAllTransferRequestsWithPaging(
+      TransferRequestFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
-  public List<TransferResponse> getTransferRequestsByFromInventoryId(
-      Long fromInventoryId, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page, pageSize);
-    return transferRequestRepository
-        .findByInventory_FromInventoryIdWithPageable(fromInventoryId, pageable)
-        .stream()
-        .map(transferRequestMapper::toTransferResponse)
-        .collect(Collectors.toList());
-  }
+    Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
 
-  public List<TransferResponse> getTransferRequestsByToInventoryId(
-      Long toInventoryId, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page, pageSize);
     return transferRequestRepository
-        .findByInventory_ToInventoryIdWithPageable(toInventoryId, pageable)
-        .stream()
-        .map(transferRequestMapper::toTransferResponse)
-        .collect(Collectors.toList());
+        .filterWithPaging(
+            request.getRequesterId(),
+            request.getApproverId(),
+            request.getFromInventoryId(),
+            request.getToInventoryId(),
+            request.getStatus(),
+            request.getFromDate(),
+            request.getToDate(),
+            pageable)
+        .map(transferRequestMapper::toTransferResponse);
   }
 
   @Transactional
@@ -177,8 +172,15 @@ public class TransferRequestService {
     for (TransferItem item : transfer.getTransferItems()) {
       // Check if product exists in central inventory
       List<InventoryProduct> centralInventoryProducts =
-          inventoryProductRepository.findByInventory_InventoryIdAndProduct_ProductId(
-              centralInventory.getInventoryId(), item.getProduct().getProductId());
+          inventoryProductRepository.filter(
+              item.getProduct().getProductId(),
+              centralInventory.getInventoryId(),
+              null,
+              null,
+              null,
+              null,
+              null,
+              null);
 
       if (centralInventoryProducts.isEmpty()) {
         throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
@@ -245,8 +247,15 @@ public class TransferRequestService {
       InventoryProduct finalCentralInventoryProduct = centralInventoryProduct;
       InventoryProduct destinationInventoryProduct =
           inventoryProductRepository
-              .findByInventory_InventoryIdAndProduct_ProductId(
-                  transfer.getToInventory().getInventoryId(), item.getProduct().getProductId())
+              .filter(
+                  item.getProduct().getProductId(),
+                  transfer.getToInventory().getInventoryId(),
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null)
               .stream()
               .filter(
                   ip ->

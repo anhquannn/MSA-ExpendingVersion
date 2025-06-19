@@ -2,30 +2,49 @@ package com.market.MSA.repositories.order;
 
 import com.market.MSA.models.order.Order;
 import com.market.MSA.models.product.Branch;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-  // Tham chiếu đến thuộc tính user của Order
-  Page<Order> findByUser_UserIdAndStatus(Long userId, String status, Pageable pageable);
-
-  // Tham chiếu đến thuộc tính user của Order để tìm theo số điện thoại
-  Page<Order> findByUser_PhoneNumber(String phoneNumber, Pageable pageable);
-
-  Page<Order> findByStatus(String status, Pageable pageable);
-
-  Page<Order> findByStatusAndBranch_BranchId(String status, Long branchId, Pageable pageable);
-
-  @Query("SELECT o FROM Order o WHERE o.branch.branchId = :branchId")
-  Page<Order> findByBranch_BranchId(@Param("branchId") Long branchId, Pageable pageable);
+  @Query(
+      "SELECT o FROM Order o WHERE "
+          + "(:status IS NULL OR o.status = :status) AND "
+          + "(:userId IS NULL OR o.user.userId = :userId) AND "
+          + "(:branchId IS NULL OR o.branch.branchId = :branchId) AND "
+          + "(:phoneNumber IS NULL OR o.user.phoneNumber = :phoneNumber) AND "
+          + "(:fromDate IS NULL OR o.orderDate >= :fromDate) AND "
+          + "(:toDate IS NULL OR o.orderDate <= :toDate)")
+  Page<Order> filterWithPaging(
+      @Param("status") String status,
+      @Param("userId") Long userId,
+      @Param("branchId") Long branchId,
+      @Param("phoneNumber") String phoneNumber,
+      @Param("fromDate") LocalDateTime fromDate,
+      @Param("toDate") LocalDateTime toDate,
+      Pageable pageable);
 
   @Query(
-      "SELECT o FROM Order o JOIN o.user u WHERE o.branch.branchId = :branchId ORDER BY u.phoneNumber")
-  Page<Order> findByBranch_BranchIdWithUserSort(
-      @Param("branchId") Long branchId, Pageable pageable);
+      "SELECT o FROM Order o WHERE "
+          + "(:status IS NULL OR o.status = :status) AND "
+          + "(:userId IS NULL OR o.user.userId = :userId) AND "
+          + "(:branchId IS NULL OR o.branch.branchId = :branchId) AND "
+          + "(:phoneNumber IS NULL OR o.user.phoneNumber = :phoneNumber) AND "
+          + "(:fromDate IS NULL OR o.orderDate >= :fromDate) AND "
+          + "(:toDate IS NULL OR o.orderDate <= :toDate)")
+  List<Order> filter(
+      @Param("status") String status,
+      @Param("userId") Long userId,
+      @Param("branchId") Long branchId,
+      @Param("phoneNumber") String phoneNumber,
+      @Param("fromDate") LocalDateTime fromDate,
+      @Param("toDate") LocalDateTime toDate,
+      Sort sort);
 
   @Query(
       "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month")

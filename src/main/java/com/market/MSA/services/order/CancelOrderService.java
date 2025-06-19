@@ -10,6 +10,7 @@ import com.market.MSA.models.order.OrderDetail;
 import com.market.MSA.repositories.order.CancelOrderRepository;
 import com.market.MSA.repositories.order.OrderDetailRepository;
 import com.market.MSA.repositories.order.OrderRepository;
+import com.market.MSA.requests.filters.CancelOrderFilterRequest;
 import com.market.MSA.requests.order.CancelOrderRequest;
 import com.market.MSA.responses.order.CancelOrderResponse;
 import com.market.MSA.services.others.NotificationService;
@@ -20,6 +21,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -106,5 +111,37 @@ public class CancelOrderService {
     return cancelOrderRepository.findAll().stream()
         .map(cancelOrderMapper::toCancelOrderResponse)
         .collect(Collectors.toList());
+  }
+
+  public List<CancelOrderResponse> getAllCancelOrders(CancelOrderFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+    return cancelOrderRepository
+        .filter(
+            request.getOrderId(),
+            request.getUserId(),
+            request.getStatus(),
+            request.getReason(),
+            request.getFromDate(),
+            request.getToDate(),
+            sort)
+        .stream()
+        .map(cancelOrderMapper::toCancelOrderResponse)
+        .collect(Collectors.toList());
+  }
+
+  public Page<CancelOrderResponse> getAllCancelOrdersWithPaging(CancelOrderFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+    Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+
+    return cancelOrderRepository
+        .filterWithPaging(
+            request.getOrderId(),
+            request.getUserId(),
+            request.getStatus(),
+            request.getReason(),
+            request.getFromDate(),
+            request.getToDate(),
+            pageable)
+        .map(cancelOrderMapper::toCancelOrderResponse);
   }
 }

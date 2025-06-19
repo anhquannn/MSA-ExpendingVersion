@@ -1,14 +1,17 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.SupplierFilterRequest;
 import com.market.MSA.requests.product.SupplierRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.SupplierResponse;
 import com.market.MSA.services.product.SupplierService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,7 +19,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -60,18 +62,19 @@ public class SupplierController {
         .build();
   }
 
-  @GetMapping("/by-name")
-  public ApiResponse<SupplierResponse> getSupplierByName(@RequestParam String name) {
-    return ApiResponse.<SupplierResponse>builder()
-        .result(supplierService.getSupplierByName(name))
-        .message(ApiMessage.SUPPLIER_RETRIEVED.getMessage())
+  @PostMapping("/list")
+  public ApiResponse<List<SupplierResponse>> getAllSuppliers(@Valid SupplierFilterRequest request) {
+    return ApiResponse.<List<SupplierResponse>>builder()
+        .result(supplierService.getAllSuppliers(request))
+        .message(ApiMessage.ALL_SUPPLIERS_RETRIEVED.getMessage())
         .build();
   }
 
-  @GetMapping
-  public ApiResponse<List<SupplierResponse>> getAllSuppliers() {
-    return ApiResponse.<List<SupplierResponse>>builder()
-        .result(supplierService.getAllSuppliers())
+  @PostMapping("/paging")
+  public ApiResponse<Page<SupplierResponse>> getAllSuppliersWithPaging(
+      @Valid SupplierFilterRequest request) {
+    return ApiResponse.<Page<SupplierResponse>>builder()
+        .result(supplierService.getAllSuppliersWithPaging(request))
         .message(ApiMessage.ALL_SUPPLIERS_RETRIEVED.getMessage())
         .build();
   }

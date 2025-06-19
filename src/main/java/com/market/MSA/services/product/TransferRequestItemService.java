@@ -7,6 +7,7 @@ import com.market.MSA.models.product.TransferItem;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.product.TransferRequestItemRepository;
 import com.market.MSA.repositories.product.TransferRequestRepository;
+import com.market.MSA.requests.filters.TransferRequestItemFilterRequest;
 import com.market.MSA.requests.product.TransferRequestItem;
 import com.market.MSA.responses.product.TransferResponseItem;
 import com.market.MSA.services.others.EntityFinderService;
@@ -16,8 +17,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,31 +90,25 @@ public class TransferRequestItemService {
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_ITEM_NOT_FOUND)));
   }
 
-  public List<TransferResponseItem> getAllTransferRequestItems(int page, int pageSize) {
-    return transferRequestItemRepository.findAll().stream()
-        .skip((long) (page - 1) * pageSize)
-        .limit(pageSize)
-        .map(transferRequestItemMapper::toTransferResponseItem)
-        .collect(Collectors.toList());
-  }
-
-  public List<TransferResponseItem> getTransferRequestItemsByProductId(
-      Long productId, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page, pageSize);
+//  @Cacheable("transfer_request_items")
+  public List<TransferResponseItem> getAllTransferRequestItems(
+      TransferRequestItemFilterRequest request) {
     return transferRequestItemRepository
-        .findByProduct_ProductIdWithPageable(productId, pageable)
+        .filter(request.getTransferRequestId(), request.getProductId())
         .stream()
         .map(transferRequestItemMapper::toTransferResponseItem)
         .collect(Collectors.toList());
   }
 
-  public List<TransferResponseItem> getTransferRequestItemsByTransferRequestId(
-      Long transferRequestId, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page, pageSize);
+//  @Cacheable("transfer_request_items")
+  public Page<TransferResponseItem> getAllTransferRequestItemsWithPaging(
+      TransferRequestItemFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+
     return transferRequestItemRepository
-        .findByTransferRequest_TransferRequestIdWithPageable(transferRequestId, pageable)
-        .stream()
-        .map(transferRequestItemMapper::toTransferResponseItem)
-        .collect(Collectors.toList());
+        .filterWithPaging(request.getTransferRequestId(), request.getProductId(), pageable)
+        .map(transferRequestItemMapper::toTransferResponseItem);
   }
 }

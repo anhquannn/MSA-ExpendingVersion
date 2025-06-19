@@ -11,6 +11,7 @@ import com.market.MSA.models.product.Product;
 import com.market.MSA.repositories.product.InventoryProductRepository;
 import com.market.MSA.repositories.product.InventoryRepository;
 import com.market.MSA.repositories.product.ProductRepository;
+import com.market.MSA.requests.filters.InventoryProductFilterRequest;
 import com.market.MSA.requests.product.InventoryProductRequest;
 import com.market.MSA.responses.product.InventoryProductResponse;
 import com.market.MSA.responses.product.InventoryStatisticsResponse;
@@ -54,8 +55,8 @@ public class InventoryProductService {
 
     // Check if there's an existing inventory product for this product in the same inventory
     List<InventoryProduct> existingProducts =
-        inventoryProductRepository.findByInventory_InventoryIdAndProduct_ProductId(
-            inventory.getInventoryId(), product.getProductId());
+        inventoryProductRepository.filter(
+            inventory.getInventoryId(), product.getProductId(), null, null, null, null, null, null);
 
     if (!existingProducts.isEmpty()) {
       // Check if any existing product has remaining stock
@@ -140,25 +141,7 @@ public class InventoryProductService {
     return inventoryProductMapper.toInventoryProductResponse(inventoryProduct);
   }
 
-  public List<InventoryProductResponse> getInventoryProductByProductId(Long productId) {
-    List<InventoryProduct> inventoryProducts =
-        inventoryProductRepository.findByProductId_ProductId(productId);
-    return inventoryProducts.stream()
-        .map(inventoryProductMapper::toInventoryProductResponse)
-        .collect(Collectors.toList());
-  }
-
-  public List<InventoryProductResponse> getInventoryProductByInventoryId(
-      Long inventoryId, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page, pageSize);
-    Page<InventoryProduct> inventoryProducts =
-        inventoryProductRepository.findByInventory_InventoryIdWithPageable(inventoryId, pageable);
-    return inventoryProducts.stream()
-        .map(inventoryProductMapper::toInventoryProductResponse)
-        .collect(Collectors.toList());
-  }
-
-  @Cacheable(value = "inventory_products", key = "'stock_' + #branchId + '_' + #productId")
+//  @Cacheable(value = "inventory_products", key = "'stock_' + #branchId + '_' + #productId")
   public int getTotalStockInBranch(Long branchId, Long productId) {
     Inventory inventory =
         inventoryRepository
@@ -166,8 +149,8 @@ public class InventoryProductService {
             .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
 
     List<InventoryProduct> inventoryProducts =
-        inventoryProductRepository.findByInventory_InventoryIdAndProduct_ProductId(
-            inventory.getInventoryId(), productId);
+        inventoryProductRepository.filter(
+            productId, inventory.getInventoryId(), null, null, null, null, null, null);
 
     return inventoryProducts.stream().mapToInt(InventoryProduct::getStockNumber).sum();
   }
@@ -209,8 +192,8 @@ public class InventoryProductService {
 
       // Find inventory products for this inventory and product
       List<InventoryProduct> inventoryProducts =
-          inventoryProductRepository.findByInventory_InventoryIdAndProduct_ProductId(
-              inventory.getInventoryId(), productId);
+          inventoryProductRepository.filter(
+              productId, inventory.getInventoryId(), null, null, null, null, null, null);
 
       if (inventoryProducts.isEmpty()) {
         throw new AppException(ErrorCode.INVENTORY_PRODUCT_NOT_FOUND);
@@ -243,8 +226,8 @@ public class InventoryProductService {
 
     // Find inventory products for this inventory and product
     List<InventoryProduct> inventoryProducts =
-        inventoryProductRepository.findByInventory_InventoryIdAndProduct_ProductId(
-            inventory.getInventoryId(), productId);
+        inventoryProductRepository.filter(
+            productId, inventory.getInventoryId(), null, null, null, null, null, null);
 
     if (inventoryProducts.isEmpty()) {
       throw new AppException(ErrorCode.INVENTORY_PRODUCT_NOT_FOUND);
@@ -299,40 +282,58 @@ public class InventoryProductService {
         .build();
   }
 
-  @Cacheable(
-      value = "inventory_products",
-      key =
-          "'branch_' + #branchId + '_' + #page + '_' + #size + '_' + #sortBy + '_' + #sortDirection")
-  public Page<InventoryProductResponse> getInventoryProductsByBranch(
-      Long branchId, int page, int size, String sortBy, String sortDirection) {
-    // Tìm inventory của branch
-    Inventory inventory =
-        inventoryRepository
-            .findByBranch_BranchId(branchId)
-            .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
-
-    // Tạo Pageable với sắp xếp
-    Sort sort =
-        Sort.by(
-            sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
-            sortBy);
-    Pageable pageable = PageRequest.of(page, size, sort);
-
-    // Lấy danh sách sản phẩm có phân trang
-    Page<InventoryProduct> inventoryProductsPage =
-        inventoryProductRepository.findByInventory_InventoryIdWithPageable(
-            inventory.getInventoryId(), pageable);
-
-    // Chuyển đổi sang response
-    return inventoryProductsPage.map(inventoryProductMapper::toInventoryProductResponse);
-  }
-
-  //  @Cacheable(
-  //      value = "inventory_products",
-  //      key = "'availability_' + #branchId + '_' + #productId + '_' + #quantity")
+//  @Cacheable(
+//      value = "inventory_products",
+//      key = "'availability_' + #branchId + '_' + #productId + '_' + #quantity")
   public boolean checkStockAvailability(Long branchId, Long productId, int quantity) {
     Integer totalStock =
         inventoryProductRepository.getTotalStockByBranchAndProduct(branchId, productId);
     return totalStock != null && totalStock >= quantity;
+  }
+
+//  @Cacheable(value = "inventory_products", key = "#request.hashCode()")
+  public List<InventoryProductResponse> getAllInventoryProducts(
+      InventoryProductFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    return inventoryProductRepository
+        .filter(
+            request.getProductId(),
+            request.getInventoryId(),
+            request.getBatchNumber(),
+            request.isActive(),
+            request.isDiscounted(),
+            request.getFromDate(),
+            request.getToDate(),
+            sort)
+        .stream()
+        .map(inventoryProductMapper::toInventoryProductResponse)
+        .collect(Collectors.toList());
+  }
+
+//  @Cacheable(value = "inventory_products", key = "'paged_' + #request.hashCode()")
+  public Page<InventoryProductResponse> getAllInventoryProductsWithPaging(
+      InventoryProductFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    // Create pageable with 0-based page number
+    Pageable pageable =
+        PageRequest.of(
+            request.getPage() - 1, // Convert to 0-based page
+            request.getPageSize(),
+            sort);
+
+    // Apply filters
+    return inventoryProductRepository
+        .filterWithPaging(
+            request.getProductId(),
+            request.getInventoryId(),
+            request.getBatchNumber(),
+            request.isActive(),
+            request.isDiscounted(),
+            request.getFromDate(),
+            request.getToDate(),
+            pageable)
+        .map(inventoryProductMapper::toInventoryProductResponse);
   }
 }

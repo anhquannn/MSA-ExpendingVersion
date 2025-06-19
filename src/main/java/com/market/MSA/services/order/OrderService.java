@@ -17,6 +17,7 @@ import com.market.MSA.repositories.order.OrderDetailRepository;
 import com.market.MSA.repositories.order.OrderRepository;
 import com.market.MSA.repositories.product.BranchRepository;
 import com.market.MSA.repositories.user.UserRepository;
+import com.market.MSA.requests.filters.OrderFilterRequest;
 import com.market.MSA.requests.order.OrderRequest;
 import com.market.MSA.requests.order.PromoCodeUsageRequest;
 import com.market.MSA.responses.order.*;
@@ -233,56 +234,90 @@ public class OrderService {
         .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
   }
 
-  public Page<OrderResponse> getAllOrdersByStatus(
-      int page,
-      int size,
-      String status,
-      String sortBy,
-      String sortDirection,
-      Long branchId // có thể null
-      ) {
-    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
-    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-
-    Page<Order> orders;
-
-    if (branchId != null) {
-      orders = orderRepository.findByStatusAndBranch_BranchId(status, branchId, pageable);
-    } else {
-      orders = orderRepository.findByStatus(status, pageable);
+//  @Cacheable(
+//      value = "all_orders",
+//      key =
+//          "{#request.branchId, #request.userId, #request.status, #request.phoneNumber, "
+//              + "#request.sortBy, #request.sortDirection}")
+  public List<OrderResponse> getAllOrders(OrderFilterRequest request) {
+    // Validate sort direction
+    Sort.Direction direction;
+    try {
+      direction = Sort.Direction.fromString(request.getSortDirection().toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Invalid sort direction. Use 'asc' or 'desc'");
     }
 
-    return orders.map(orderMapper::toOrderResponse);
-  }
+    // Handle special case for user phone number sorting
+    Sort sort;
+    if ("user-phoneNumber".equals(request.getSortBy())) {
+      sort = Sort.by(direction, "user.phoneNumber");
+    } else {
+      validateSortField(request.getSortBy());
+      sort = Sort.by(direction, request.getSortBy());
+    }
 
-  public List<OrderResponse> searchOrderByPhoneNumber(String phoneNumber, int page, int pageSize) {
-    Page<Order> orderPage =
-        orderRepository.findByUser_PhoneNumber(phoneNumber, PageRequest.of(page, pageSize));
-    List<Order> orders = orderPage.getContent(); // Get the content as a List
-    return orders.stream().map(orderMapper::toOrderResponse).collect(Collectors.toList());
-  }
-
-  @Cacheable(
-      value = "orders",
-      key = "'all_' + #page + '_' + #size + '_' + #sortBy + '_' + #sortDirection")
-  public Page<OrderResponse> getAllOrders(int page, int size, String sortBy, String sortDirection) {
-    // Create pageable with sorting
-    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
-    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-
-    // Get all orders with pagination
-    Page<Order> orders = orderRepository.findAll(pageable);
+    // Get all orders with filters (without pagination)
+    List<Order> orders =
+        orderRepository.filter(
+            request.getStatus(),
+            request.getUserId(),
+            request.getBranchId(),
+            request.getPhoneNumber(),
+            request.getFromDate(),
+            request.getToDate(),
+            sort);
 
     // Convert to response DTOs
-    return orders.map(orderMapper::toOrderResponse);
+    return orders.stream().map(orderMapper::toOrderResponse).collect(Collectors.toList());
   }
 
-  public List<OrderResponse> getOrdersByUserIDWithStatus(
-      Long userId, String status, int page, int size) {
-    Page<Order> orderPage =
-        orderRepository.findByUser_UserIdAndStatus(userId, status, PageRequest.of(page, size));
-    List<Order> orders = orderPage.getContent(); // Get the content as a List
-    return orders.stream().map(orderMapper::toOrderResponse).collect(Collectors.toList());
+//  @Cacheable(
+//      value = "orders",
+//      key =
+//          "{#request.branchId, #request.userId, #request.status, #request.phoneNumber, "
+//              + "#request.page, #request.pageSize, #request.sortBy, #request.sortDirection}")
+  public Page<OrderResponse> getAllOrdersWithPaging(OrderFilterRequest request) {
+    // Convert from 1-based to 0-based page index
+    int page = request.getPage() > 0 ? request.getPage() - 1 : 0;
+    int size = request.getPageSize();
+
+    // Validate page size
+    if (size > 100) {
+      size = 100;
+    }
+
+    // Validate sort direction
+    Sort.Direction direction;
+    try {
+      direction = Sort.Direction.fromString(request.getSortDirection().toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Invalid sort direction. Use 'asc' or 'desc'");
+    }
+
+    // Handle special case for user phone number sorting
+    Sort sort;
+    if ("user-phoneNumber".equals(request.getSortBy())) {
+      sort = Sort.by(direction, "user.phoneNumber");
+    } else {
+      validateSortField(request.getSortBy()); // Your existing validation method
+      sort = Sort.by(direction, request.getSortBy());
+    }
+
+    Pageable pageable = PageRequest.of(page, size, sort);
+
+    // Get orders with filters
+    Page<Order> orders =
+        orderRepository.filterWithPaging(
+            request.getStatus(),
+            request.getUserId(),
+            request.getBranchId(),
+            request.getPhoneNumber(),
+            request.getFromDate(),
+            request.getToDate(),
+            pageable);
+
+    return orders.map(orderMapper::toOrderResponse);
   }
 
   @Async
@@ -326,26 +361,26 @@ public class OrderService {
   private String createEmailHeader(Order order) {
     return String.format(
         """
-		<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-			<h2>Thank you for your order!</h2>
-			<p>Order #%d has been confirmed and is being processed.</p>
-			<p>Order Date: %s</p>
-			<hr style="border: 1px solid #eee; margin: 20px 0;">
-		""",
+			<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+				<h2>Thank you for your order!</h2>
+				<p>Order #%d has been confirmed and is being processed.</p>
+				<p>Order Date: %s</p>
+				<hr style="border: 1px solid #eee; margin: 20px 0;">
+			""",
         order.getOrderId(), order.getOrderDate().toString());
   }
 
   private String createOrderSummary(Order order) {
     return String.format(
         """
-		<div style="margin-bottom: 20px;">
-			<h3>Order Summary</h3>
-			<p><strong>Order ID:</strong> %d</p>
-			<p><strong>Status:</strong> %s</p>
-			<p><strong>Total Amount:</strong> %.2f VNĐ</p>
-		</div>
-		<hr style="border: 1px solid #eee; margin: 20px 0;">
-		""",
+			<div style="margin-bottom: 20px;">
+				<h3>Order Summary</h3>
+				<p><strong>Order ID:</strong> %d</p>
+				<p><strong>Status:</strong> %s</p>
+				<p><strong>Total Amount:</strong> %.2f VNĐ</p>
+			</div>
+			<hr style="border: 1px solid #eee; margin: 20px 0;">
+			""",
         order.getOrderId(), order.getStatus(), order.getGrandTotal());
   }
 
@@ -353,19 +388,19 @@ public class OrderService {
     StringBuilder itemsList =
         new StringBuilder(
             """
-		<div>
-			<h3>Order Items</h3>
-			<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-				<thead>
-					<tr style="background-color: #f5f5f5;">
-						<th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Product</th>
-						<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Quantity</th>
-						<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Price</th>
-						<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Total</th>
-					</tr>
-				</thead>
-				<tbody>
-		""");
+				<div>
+					<h3>Order Items</h3>
+					<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+						<thead>
+							<tr style="background-color: #f5f5f5;">
+								<th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Product</th>
+								<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Quantity</th>
+								<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Price</th>
+								<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Total</th>
+							</tr>
+						</thead>
+						<tbody>
+				""");
 
     orderDetailService
         .findOrderDetailsByOrderId(order.getOrderId())
@@ -374,13 +409,13 @@ public class OrderService {
                 itemsList.append(
                     String.format(
                         """
-		<tr>
-			<td style="padding: 10px; border-bottom: 1px solid #eee;">%s</td>
-			<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%d</td>
-			<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
-			<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
-		</tr>
-		""",
+							<tr>
+								<td style="padding: 10px; border-bottom: 1px solid #eee;">%s</td>
+								<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%d</td>
+								<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
+								<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
+							</tr>
+							""",
                         detail.getProduct().getName(),
                         detail.getQuantity(),
                         detail.getUnitPrice(),
@@ -404,39 +439,6 @@ public class OrderService {
 		</div>
 		</div> <!-- Close main container -->
 		""";
-  }
-
-  @Cacheable(
-      value = "orders",
-      key =
-          "'branch_' + #branchId + '_' + #page + '_' + #size + '_' + #sortBy + '_' + #sortDirection")
-  public Page<OrderResponse> getOrdersByBranchId(
-      Long branchId, int page, int size, String sortBy, String sortDirection) {
-    // Check if branch exists
-    branchService.getBranchById(branchId);
-
-    // Create pageable with sorting
-    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
-
-    // Handle special sorting by user phone number
-    if ("user-phoneNumber".equals(sortBy)) {
-      // Create a custom sort that joins with the user table
-      Sort sort = Sort.by(direction, "user.phoneNumber");
-      Pageable pageable = PageRequest.of(page, size, sort);
-
-      // Use a custom query to join with user table
-      Page<Order> orders = orderRepository.findByBranch_BranchIdWithUserSort(branchId, pageable);
-      return orders.map(orderMapper::toOrderResponse);
-    } else {
-      // Validate sort field
-      validateSortField(sortBy);
-
-      // Standard sorting for order fields (orderDate, grandTotal, status)
-      Sort sort = Sort.by(direction, sortBy);
-      Pageable pageable = PageRequest.of(page, size, sort);
-      Page<Order> orders = orderRepository.findByBranch_BranchId(branchId, pageable);
-      return orders.map(orderMapper::toOrderResponse);
-    }
   }
 
   private void validateSortField(String sortBy) {

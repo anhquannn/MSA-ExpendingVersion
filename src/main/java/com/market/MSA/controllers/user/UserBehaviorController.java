@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.user;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.UserBehaviorFilterRequest;
 import com.market.MSA.requests.user.UserBehaviorRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.user.UserBehaviorResponse;
@@ -11,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -61,24 +63,20 @@ public class UserBehaviorController {
         .build();
   }
 
-  // Lấy tất cả UserBehavior (phân trang)
-  @GetMapping
-  public ApiResponse<List<UserBehaviorResponse>> getAllUserBehaviors(
-      @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int pageSize) {
+  @PostMapping("/list")
+  public ApiResponse<List<UserBehaviorResponse>> filterUserBehaviors(
+      @Valid @RequestBody UserBehaviorFilterRequest request) {
     return ApiResponse.<List<UserBehaviorResponse>>builder()
-        .result(userBehaviorService.getAllUserBehaviors(page, pageSize))
+        .result(userBehaviorService.getAllUserBehaviors(request))
         .message(ApiMessage.ALL_USER_BEHAVIORS_RETRIEVED.getMessage())
         .build();
   }
 
-  // Lấy UserBehavior theo userId (phân trang)
-  @GetMapping("/user/{userId}")
-  public ApiResponse<List<UserBehaviorResponse>> getUserBehaviorsByUserId(
-      @PathVariable long userId,
-      @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "10") int pageSize) {
-    return ApiResponse.<List<UserBehaviorResponse>>builder()
-        .result(userBehaviorService.getUserBehaviorsByUserId(userId, page, pageSize))
+  @PostMapping("/paging")
+  public ApiResponse<Page<UserBehaviorResponse>> filterUserBehaviorsWithPaging(
+      @Valid @RequestBody UserBehaviorFilterRequest request) {
+    return ApiResponse.<Page<UserBehaviorResponse>>builder()
+        .result(userBehaviorService.getAllUserBehaviorsWithPaging(request))
         .message(ApiMessage.ALL_USER_BEHAVIORS_RETRIEVED.getMessage())
         .build();
   }

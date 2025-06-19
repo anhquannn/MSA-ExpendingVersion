@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.FeedbackFilterRequest;
 import com.market.MSA.requests.product.FeedbackRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.FeedbackResponse;
@@ -10,6 +11,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,13 +62,19 @@ public class FeedbackController {
         .build();
   }
 
-  @GetMapping("/product/{productId}")
-  public ApiResponse<List<FeedbackResponse>> getAllFeedbacksByProductId(
-      @PathVariable Long productId) {
-    List<FeedbackResponse> feedbackResponses =
-        feedbackService.getAllFeedbacksByProductId(productId);
+  @PostMapping("/list")
+  public ApiResponse<List<FeedbackResponse>> getAllFeedbacks(@Valid FeedbackFilterRequest request) {
     return ApiResponse.<List<FeedbackResponse>>builder()
-        .result(feedbackResponses)
+        .result(feedbackService.getAllFeedbacks(request))
+        .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/paging")
+  public ApiResponse<Page<FeedbackResponse>> getAllFeedbacksWithPaging(
+      @Valid FeedbackFilterRequest request) {
+    return ApiResponse.<Page<FeedbackResponse>>builder()
+        .result(feedbackService.getAllFeedbacksWithPaging(request))
         .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())
         .build();
   }

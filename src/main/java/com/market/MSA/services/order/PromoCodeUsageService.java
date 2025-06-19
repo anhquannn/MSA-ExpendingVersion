@@ -9,6 +9,7 @@ import com.market.MSA.models.order.PromoCodeUsage;
 import com.market.MSA.repositories.order.OrderRepository;
 import com.market.MSA.repositories.order.PromoCodeRepository;
 import com.market.MSA.repositories.order.PromoCodeUsageRepository;
+import com.market.MSA.requests.filters.PromoCodeUsageFilterRequest;
 import com.market.MSA.requests.order.PromoCodeUsageRequest;
 import com.market.MSA.responses.order.PromoCodeUsageResponse;
 import com.market.MSA.services.others.EntityFinderService;
@@ -18,8 +19,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -99,10 +102,36 @@ public class PromoCodeUsageService {
     return promoCodeUsageMapper.toResponse(promoCodeUsage);
   }
 
-  public List<PromoCodeUsageResponse> getAllPromoCodeUsages(int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page - 1, pageSize);
-    return promoCodeUsageRepository.findAll(pageable).stream()
+  @Transactional(readOnly = true)
+  public List<PromoCodeUsageResponse> getAllPromoCodeUsages(PromoCodeUsageFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    return promoCodeUsageRepository
+        .filter(
+            request.getUserId(),
+            request.getPromoCodeId(),
+            request.getFromDate(),
+            request.getToDate(),
+            sort)
+        .stream()
         .map(promoCodeUsageMapper::toResponse)
         .collect(Collectors.toList());
+  }
+
+  @Transactional(readOnly = true)
+  public Page<PromoCodeUsageResponse> getAllPromoCodeUsagesWithPaging(
+      PromoCodeUsageFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+
+    return promoCodeUsageRepository
+        .filterWithPaging(
+            request.getUserId(),
+            request.getPromoCodeId(),
+            request.getFromDate(),
+            request.getToDate(),
+            pageable)
+        .map(promoCodeUsageMapper::toResponse);
   }
 }

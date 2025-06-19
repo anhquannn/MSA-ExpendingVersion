@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.CategoryFilterRequest;
 import com.market.MSA.requests.product.CategoryRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.CategoryResponse;
@@ -10,6 +11,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -61,10 +63,20 @@ public class CategoryController {
         .build();
   }
 
-  @GetMapping
-  public ApiResponse<List<CategoryResponse>> getAllCategories() {
+  @PostMapping("/list")
+  public ApiResponse<List<CategoryResponse>> getAllCategories(
+      @Valid CategoryFilterRequest request) {
     return ApiResponse.<List<CategoryResponse>>builder()
-        .result(categoryService.getAllCategories())
+        .result(categoryService.getAllCategories(request))
+        .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/paging")
+  public ApiResponse<Page<CategoryResponse>> getAllCategoriesWithPaging(
+      @Valid CategoryFilterRequest request) {
+    return ApiResponse.<Page<CategoryResponse>>builder()
+        .result(categoryService.getAllCategoriesWithPaging(request))
         .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())
         .build();
   }

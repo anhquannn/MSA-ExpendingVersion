@@ -15,10 +15,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   Optional<User> findByGoogleId(String googleId);
 
-  @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :role")
+  @Query("SELECT u FROM User u JOIN u.roles r " + "WHERE (:role IS NULL OR r.name = :role)")
   Page<User> findByRoleWithPagination(@Param("role") String role, Pageable pageable);
 
-  @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :role")
+  @Query("SELECT u FROM User u JOIN u.roles r " + "WHERE (:role IS NULL OR r.name = :role)")
   List<User> findAllByRole(@Param("role") String role);
 
   @Query(
@@ -29,4 +29,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
   @Query(
       "SELECT u FROM User u JOIN u.roles r JOIN u.branches b JOIN b.inventory i WHERE r.name = 'MANAGER' AND i.inventoryId = :inventoryId")
   List<User> findAllManagersByInventoryId(@Param("inventoryId") Long inventoryId);
+
+  @Query(
+      "SELECT u FROM User u JOIN u.roles r JOIN u.branches b JOIN b.inventory i "
+          + "WHERE (:inventoryId IS NULL OR i.inventoryId = :inventoryId) "
+          + "AND (:role IS NULL OR r.name = :role)")
+  List<User> findListByInventoryAndRole(
+      @Param("inventoryId") Long inventoryId, @Param("role") String role);
+
+  @Query(
+      "SELECT u FROM User u JOIN u.roles r "
+          + "WHERE (:role IS NULL OR r.name = :role) AND "
+          + "(:keyword IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) "
+          + "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) "
+          + "OR LOWER(u.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+  Page<User> searchByKeywordAndRole(
+      @Param("keyword") String keyword, @Param("role") String role, Pageable pageable);
 }

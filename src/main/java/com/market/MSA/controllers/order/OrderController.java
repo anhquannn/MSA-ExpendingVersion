@@ -4,6 +4,7 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
+import com.market.MSA.requests.filters.OrderFilterRequest;
 import com.market.MSA.requests.order.OrderRequest;
 import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.OrderSummaryResponse;
@@ -77,45 +78,6 @@ public class OrderController {
         .build();
   }
 
-  @GetMapping("/search")
-  public ApiResponse<List<OrderResponse>> searchOrdersByPhoneNumber(
-      String phoneNumber,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize) {
-    return ApiResponse.<List<OrderResponse>>builder()
-        .result(orderService.searchOrderByPhoneNumber(phoneNumber, page, pageSize))
-        .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
-        .build();
-  }
-
-  @GetMapping("/user/{userId}/status/{status}")
-  public ApiResponse<List<OrderResponse>> getOrdersByUserIdAndStatus(
-      @PathVariable Long userId,
-      @PathVariable String status,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize) {
-    return ApiResponse.<List<OrderResponse>>builder()
-        .result(orderService.getOrdersByUserIDWithStatus(userId, status, page, pageSize))
-        .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
-        .build();
-  }
-
-  @GetMapping("/branch/{branchId}/status/{status}")
-  public ApiResponse<Page<OrderResponse>> getOrdersByStatusAndBranchId(
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize,
-      @PathVariable String status,
-      @RequestParam(defaultValue = "orderDate") String sortBy,
-      @RequestParam(defaultValue = "desc") String sortDirection,
-      @PathVariable(required = false) Long branchId) {
-    return ApiResponse.<Page<OrderResponse>>builder()
-        .result(
-            orderService.getAllOrdersByStatus(
-                page, pageSize, status, sortBy, sortDirection, branchId))
-        .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
-        .build();
-  }
-
   @GetMapping("/preview")
   public ApiResponse<OrderSummaryResponse> previewOrder(
       @RequestParam Long userId,
@@ -137,27 +99,19 @@ public class OrderController {
         .build();
   }
 
-  @GetMapping
-  public ApiResponse<Page<OrderResponse>> getAllOrders(
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int size,
-      @RequestParam(defaultValue = "orderDate") String sortBy,
-      @RequestParam(defaultValue = "desc") String sortDirection) {
-    return ApiResponse.<Page<OrderResponse>>builder()
-        .result(orderService.getAllOrders(page, size, sortBy, sortDirection))
+  @PostMapping("/list")
+  public ApiResponse<List<OrderResponse>> getAllOrders(@RequestBody OrderFilterRequest request) {
+    return ApiResponse.<List<OrderResponse>>builder()
+        .result(orderService.getAllOrders(request))
         .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
         .build();
   }
 
-  @GetMapping("/branch/{branchId}")
-  public ApiResponse<Page<OrderResponse>> getOrdersByBranchId(
-      @PathVariable Long branchId,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int size,
-      @RequestParam(defaultValue = "orderDate") String sortBy,
-      @RequestParam(defaultValue = "desc") String sortDirection) {
+  @PostMapping("/paging")
+  public ApiResponse<Page<OrderResponse>> getAllOrdersWithPaging(
+      @RequestBody OrderFilterRequest request) {
     return ApiResponse.<Page<OrderResponse>>builder()
-        .result(orderService.getOrdersByBranchId(branchId, page, size, sortBy, sortDirection))
+        .result(orderService.getAllOrdersWithPaging(request))
         .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
         .build();
   }

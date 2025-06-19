@@ -1,28 +1,53 @@
 package com.market.MSA.repositories.product;
 
 import com.market.MSA.models.product.InventoryProduct;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface InventoryProductRepository extends JpaRepository<InventoryProduct, Long> {
-  @Query("SELECT i FROM InventoryProduct i WHERE i.product.productId = :productId")
-  List<InventoryProduct> findByProductId_ProductId(@Param("productId") Long productId);
-
-  @Query("SELECT i FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId")
-  Page<InventoryProduct> findByInventory_InventoryIdWithPageable(
-      @Param("inventoryId") Long inventoryId, Pageable pageable);
-
-  @Query("SELECT i FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId")
-  List<InventoryProduct> findAllByInventory_InventoryId(@Param("inventoryId") Long inventoryId);
+  @Query(
+      "SELECT ip FROM InventoryProduct ip WHERE "
+          + "(:productId IS NULL OR ip.product.productId = :productId) AND "
+          + "(:inventoryId IS NULL OR ip.inventory.inventoryId = :inventoryId) AND "
+          + "(:batchNumber IS NULL OR ip.batchNumber = :batchNumber) AND "
+          + "(:isActive IS NULL OR ip.isActive = :isActive) AND "
+          + "(:isDiscounted IS NULL OR ip.isDiscounted = :isDiscounted) AND "
+          + "(:fromDate IS NULL OR ip.expDate >= :fromDate) AND "
+          + "(:toDate IS NULL OR ip.expDate <= :toDate)")
+  Page<InventoryProduct> filterWithPaging(
+      @Param("productId") Long productId,
+      @Param("inventoryId") Long inventoryId,
+      @Param("batchNumber") String batchNumber,
+      @Param("isActive") Boolean isActive,
+      @Param("isDiscounted") Boolean isDiscounted,
+      @Param("fromDate") LocalDateTime fromDate,
+      @Param("toDate") LocalDateTime toDate,
+      Pageable pageable);
 
   @Query(
-      "SELECT i FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId AND i.product.productId = :productId")
-  List<InventoryProduct> findByInventory_InventoryIdAndProduct_ProductId(
-      @Param("inventoryId") Long inventoryId, @Param("productId") Long productId);
+      "SELECT ip FROM InventoryProduct ip WHERE "
+          + "(:productId IS NULL OR ip.product.productId = :productId) AND "
+          + "(:inventoryId IS NULL OR ip.inventory.inventoryId = :inventoryId) AND "
+          + "(:batchNumber IS NULL OR ip.batchNumber = :batchNumber) AND "
+          + "(:isActive IS NULL OR ip.isActive = :isActive) AND "
+          + "(:isDiscounted IS NULL OR ip.isDiscounted = :isDiscounted) AND "
+          + "(:fromDate IS NULL OR ip.expDate >= :fromDate) AND "
+          + "(:toDate IS NULL OR ip.expDate <= :toDate)")
+  List<InventoryProduct> filter(
+      @Param("productId") Long productId,
+      @Param("inventoryId") Long inventoryId,
+      @Param("batchNumber") String batchNumber,
+      @Param("isActive") Boolean isActive,
+      @Param("isDiscounted") Boolean isDiscounted,
+      @Param("fromDate") LocalDateTime fromDate,
+      @Param("toDate") LocalDateTime toDate,
+      Sort sort);
 
   @Query("SELECT COUNT(i) FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId")
   int countProductsByInventoryId(@Param("inventoryId") Long inventoryId);

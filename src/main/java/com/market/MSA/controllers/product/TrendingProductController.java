@@ -68,7 +68,6 @@ public class TrendingProductController {
   @GetMapping
   public ApiResponse<List<TrendingProductResponse>> getAllTrendingProducts(
       @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int pageSize) {
-    log.info("Fetching all trending products, page: {}, pageSize: {}", page, pageSize);
     return ApiResponse.<List<TrendingProductResponse>>builder()
         .result(trendingProductService.getAllTrendingProducts(page, pageSize))
         .message(ApiMessage.ALL_TRENDING_PRODUCTS_RETRIEVED.getMessage())

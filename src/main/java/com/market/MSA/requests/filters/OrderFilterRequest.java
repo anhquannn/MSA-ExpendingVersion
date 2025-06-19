@@ -10,15 +10,17 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CampaignFilterRequest {
-  String name;
+public class OrderFilterRequest {
+  // Filter fields
+  Long branchId;
+  Long userId;
   String status;
   LocalDateTime fromDate;
   LocalDateTime toDate;
-  String keyword;
+  String phoneNumber;
 
   // Sorting
-  @Builder.Default String sortBy = "endDate";
+  @Builder.Default String sortBy = "orderDate";
 
   @Builder.Default String sortDirection = "DESC";
 

@@ -1,15 +1,18 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.TransferRequestFilterRequest;
 import com.market.MSA.requests.product.TransferRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.TransferResponse;
 import com.market.MSA.services.product.TransferRequestService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -53,59 +56,20 @@ public class TransferRequestController {
         .build();
   }
 
-  @GetMapping
-  public ApiResponse<List<TransferResponse>> getAllTransferRequests(
-      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int pageSize) {
+  @PostMapping("/list")
+  public ApiResponse<List<TransferResponse>> filterTransferRequests(
+      @Valid @RequestBody TransferRequestFilterRequest request) {
     return ApiResponse.<List<TransferResponse>>builder()
-        .result(transferRequestService.getAllTransferRequests(page, pageSize))
+        .result(transferRequestService.getAllTransferRequests(request))
         .message(ApiMessage.ALL_TRANSFER_REQUESTS_RETRIEVED.getMessage())
         .build();
   }
 
-  @GetMapping("/from/{inventoryId}")
-  public ApiResponse<List<TransferResponse>> getTransferRequestsByFromInventoryId(
-      @PathVariable Long inventoryId,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize) {
-    return ApiResponse.<List<TransferResponse>>builder()
-        .result(
-            transferRequestService.getTransferRequestsByFromInventoryId(
-                inventoryId, page, pageSize))
-        .message(ApiMessage.ALL_TRANSFER_REQUESTS_RETRIEVED.getMessage())
-        .build();
-  }
-
-  @GetMapping("/to/{inventoryId}")
-  public ApiResponse<List<TransferResponse>> getTransferRequestsByToInventoryId(
-      @PathVariable Long inventoryId,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize) {
-    return ApiResponse.<List<TransferResponse>>builder()
-        .result(
-            transferRequestService.getTransferRequestsByToInventoryId(inventoryId, page, pageSize))
-        .message(ApiMessage.ALL_TRANSFER_REQUESTS_RETRIEVED.getMessage())
-        .build();
-  }
-
-  @GetMapping("/requester/{requesterId}")
-  public ApiResponse<List<TransferResponse>> getTransferRequestsByRequesterId(
-      @PathVariable Long requesterId,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize) {
-    return ApiResponse.<List<TransferResponse>>builder()
-        .result(
-            transferRequestService.getTransferRequestsByRequesterId(requesterId, page, pageSize))
-        .message(ApiMessage.ALL_TRANSFER_REQUESTS_RETRIEVED.getMessage())
-        .build();
-  }
-
-  @GetMapping("/approver/{approverId}")
-  public ApiResponse<List<TransferResponse>> getTransferRequestByApproverId(
-      @PathVariable Long approverId,
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize) {
-    return ApiResponse.<List<TransferResponse>>builder()
-        .result(transferRequestService.getTransferRequestsByApproverId(approverId, page, pageSize))
+  @PostMapping("/paging")
+  public ApiResponse<Page<TransferResponse>> filterTransferRequestsWithPaging(
+      @Valid @RequestBody TransferRequestFilterRequest request) {
+    return ApiResponse.<Page<TransferResponse>>builder()
+        .result(transferRequestService.getAllTransferRequestsWithPaging(request))
         .message(ApiMessage.ALL_TRANSFER_REQUESTS_RETRIEVED.getMessage())
         .build();
   }

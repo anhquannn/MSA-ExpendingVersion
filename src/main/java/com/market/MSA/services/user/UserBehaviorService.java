@@ -7,6 +7,7 @@ import com.market.MSA.models.user.UserBehavior;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.user.UserBehaviorRepository;
 import com.market.MSA.repositories.user.UserRepository;
+import com.market.MSA.requests.filters.UserBehaviorFilterRequest;
 import com.market.MSA.requests.user.UserBehaviorRequest;
 import com.market.MSA.responses.user.UserBehaviorResponse;
 import com.market.MSA.services.others.EntityFinderService;
@@ -16,8 +17,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,20 +90,24 @@ public class UserBehaviorService {
     return userBehaviorMapper.toUserBehaviorResponse(userBehavior);
   }
 
-  // Lấy tất cả UserBehavior (phân trang)
-  public List<UserBehaviorResponse> getAllUserBehaviors(int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page - 1, pageSize); // Page bắt đầu từ 0
-    return userBehaviorRepository.findAll(pageable).stream()
+//  @Cacheable("user_behaviors")
+  public List<UserBehaviorResponse> getAllUserBehaviors(UserBehaviorFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    return userBehaviorRepository.filter(request.getUserId(), request.getProductId(), sort).stream()
         .map(userBehaviorMapper::toUserBehaviorResponse)
         .collect(Collectors.toList());
   }
 
-  // Lấy UserBehavior theo userId (phân trang)
-  public List<UserBehaviorResponse> getUserBehaviorsByUserId(Long userId, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page - 1, pageSize);
-    List<UserBehavior> userBehaviors = userBehaviorRepository.findByUserId(userId, pageable);
-    return userBehaviors.stream()
-        .map(userBehaviorMapper::toUserBehaviorResponse)
-        .collect(Collectors.toList());
+//  @Cacheable("user_behaviors")
+  public Page<UserBehaviorResponse> getAllUserBehaviorsWithPaging(
+      UserBehaviorFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+
+    return userBehaviorRepository
+        .filterWithPaging(request.getUserId(), request.getProductId(), pageable)
+        .map(userBehaviorMapper::toUserBehaviorResponse);
   }
 }

@@ -7,6 +7,7 @@ import com.market.MSA.mappers.user.RewardPointMapper;
 import com.market.MSA.models.user.RewardPoint;
 import com.market.MSA.repositories.user.RewardPointRepository;
 import com.market.MSA.repositories.user.UserRepository;
+import com.market.MSA.requests.filters.RewardPointFilterRequest;
 import com.market.MSA.requests.user.RewardPointRequest;
 import com.market.MSA.requests.user.RewardPointTransactionRequest;
 import com.market.MSA.responses.user.RewardPointResponse;
@@ -18,8 +19,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,19 +77,20 @@ public class RewardPointService {
             .orElseThrow(() -> new AppException(ErrorCode.REWARD_POINT_NOT_FOUND)));
   }
 
-  public List<RewardPointResponse> getAllRewardPoints(int page, int pageSize) {
-    return rewardPointRepository.findAll().stream()
-        .skip((long) (page - 1) * pageSize)
-        .limit(pageSize)
+  public List<RewardPointResponse> getAllRewardPoints(RewardPointFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+    return rewardPointRepository.filter(request.getUserId(), sort).stream()
         .map(rewardPointMapper::toRewardPointResponse)
         .collect(Collectors.toList());
   }
 
-  public List<RewardPointResponse> getAllRewardPointsByUserId(Long userId, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page, pageSize);
-    return rewardPointRepository.findByUser_UserId(userId, pageable).stream()
-        .map(rewardPointMapper::toRewardPointResponse)
-        .collect(Collectors.toList());
+  public Page<RewardPointResponse> getAllRewardPointsWithPaging(RewardPointFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    PageRequest pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+    return rewardPointRepository
+        .filterWithPaging(request.getUserId(), pageable)
+        .map(rewardPointMapper::toRewardPointResponse);
   }
 
   @Transactional

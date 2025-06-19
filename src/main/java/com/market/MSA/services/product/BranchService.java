@@ -14,6 +14,7 @@ import com.market.MSA.repositories.user.PermissionRepository;
 import com.market.MSA.repositories.user.RoleRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.branch.CreateBranchWithManagerRequest;
+import com.market.MSA.requests.filters.BranchFilterRequest;
 import com.market.MSA.requests.product.BranchRequest;
 import com.market.MSA.responses.product.BranchResponse;
 import java.util.*;
@@ -22,6 +23,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -42,15 +46,20 @@ public class BranchService {
   final UserRepository userRepository;
   final PasswordEncoder passwordEncoder;
   final BranchMapper branchMapper;
-  final ProductService productService;
 
   // Create Branch
+//  @CacheEvict(
+//      value = {"branches", "branch", "branch_entity"},
+//      allEntries = true)
   public BranchResponse createBranch(BranchRequest branchRequest) {
     Branch branch = branchMapper.toBranch(branchRequest);
     branch = branchRepository.save(branch);
     return branchMapper.toBranchResponse(branch);
   }
 
+//  @CacheEvict(
+//      value = {"branches", "branch", "branch_entity"},
+//      allEntries = true)
   @Transactional
   public BranchResponse createBranchWithManager(CreateBranchWithManagerRequest request) {
     // 1. Create the branch
@@ -140,6 +149,13 @@ public class BranchService {
   }
 
   // Update Branch
+//  @Caching(
+//      evict = {
+//        @CacheEvict(value = "branch", key = "#branchId"),
+//        @CacheEvict(value = "branch_entity", key = "#branchId"),
+//        @CacheEvict(value = "branches", allEntries = true)
+//      })
+  @Transactional
   public BranchResponse updateBranch(Long branchId, BranchRequest branchRequest) {
     Optional<Branch> optionalBranch = branchRepository.findById(branchId);
     if (optionalBranch.isPresent()) {
@@ -153,6 +169,13 @@ public class BranchService {
   }
 
   // Delete Branch
+//  @Caching(
+//      evict = {
+//        @CacheEvict(value = "branch", key = "#branchId"),
+//        @CacheEvict(value = "branch_entity", key = "#branchId"),
+//        @CacheEvict(value = "branches", allEntries = true)
+//      })
+  @Transactional
   public boolean deleteBranch(Long branchId) {
     Optional<Branch> optionalBranch = branchRepository.findById(branchId);
     if (optionalBranch.isPresent()) {
@@ -164,7 +187,9 @@ public class BranchService {
   }
 
   // Get Branch by ID
+//  @Cacheable(value = "branch", key = "#branchId", unless = "#result == null")
   public BranchResponse getBranchById(Long branchId) {
+    log.info("Fetching branch from database with id: {}", branchId);
     Optional<Branch> optionalBranch = branchRepository.findById(branchId);
     if (optionalBranch.isPresent()) {
       return branchMapper.toBranchResponse(optionalBranch.get());
@@ -178,27 +203,23 @@ public class BranchService {
     return branchMapper.toBranchResponse(optionalBranch);
   }
 
-  public List<BranchResponse> getBranchesByProductId(Long productId) {
-    // Kiểm tra sản phẩm có tồn tại không
-    productService.findProductById(productId);
+//  @Cacheable("branches")
+  public List<BranchResponse> getAllBranches(BranchFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
-    // Lấy danh sách chi nhánh có sản phẩm này
-    List<Branch> branches = branchRepository.findByProductId(productId);
-
-    // Chuyển đổi sang response
-    return branches.stream().map(branchMapper::toBranchResponse).collect(Collectors.toList());
+    return branchRepository.filter(request.getKeyword(), request.getProductId()).stream()
+        .map(branchMapper::toBranchResponse)
+        .collect(Collectors.toList());
   }
 
-  public Page<BranchResponse> getAllBranches(
-      int page, int size, String sortBy, String sortDirection) {
-    // Create pageable with sorting
-    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
-    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+//  @Cacheable("branches")
+  public Page<BranchResponse> getAllBranchesWithPaging(BranchFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
-    // Get all branches with pagination
-    Page<Branch> branches = branchRepository.findAll(pageable);
+    Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
 
-    // Convert to response DTOs
-    return branches.map(branchMapper::toBranchResponse);
+    return branchRepository
+        .filterWithPaging(request.getKeyword(), request.getProductId(), pageable)
+        .map(branchMapper::toBranchResponse);
   }
 }

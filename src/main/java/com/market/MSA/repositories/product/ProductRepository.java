@@ -1,6 +1,8 @@
 package com.market.MSA.repositories.product;
 
 import com.market.MSA.models.product.Product;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -35,9 +37,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
           + "AND (:netWeight IS NULL OR p.netWeight = :netWeight) "
           + "AND (:minPrice IS NULL OR p.price >= :minPrice) "
           + "AND (:maxPrice IS NULL OR p.price <= :maxPrice) "
+          + "AND (:fromDate IS NULL OR p.createdAt >= :fromDate) "
+          + "AND (:toDate IS NULL OR p.createdAt <= :toDate) "
           + "AND (:keyword IS NULL OR :keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
           + "AND (COALESCE(:excludeProductIds, NULL) IS NULL OR p.productId NOT IN :excludeProductIds)")
-  Page<Product> findFilteredProducts(
+  Page<Product> filterWithPaging(
       @Param("branchId") Long branchId,
       @Param("categoryId") Long categoryId,
       @Param("supplierId") Long supplierId,
@@ -45,7 +49,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
       @Param("netWeight") String netWeight,
       @Param("minPrice") Double minPrice,
       @Param("maxPrice") Double maxPrice,
+      @Param("fromDate") LocalDateTime fromDate,
+      @Param("toDate") LocalDateTime toDate,
       @Param("keyword") String keyword,
-      @Param("excludeProductIds") java.util.List<Long> excludeProductIds,
+      @Param("excludeProductIds") List<Long> excludeProductIds,
       Pageable pageable);
 }

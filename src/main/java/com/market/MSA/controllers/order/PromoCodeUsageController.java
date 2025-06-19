@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.order;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.PromoCodeUsageFilterRequest;
 import com.market.MSA.requests.order.PromoCodeUsageRequest;
 import com.market.MSA.responses.order.PromoCodeUsageResponse;
 import com.market.MSA.responses.others.ApiResponse;
@@ -11,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -56,11 +58,20 @@ public class PromoCodeUsageController {
         .build();
   }
 
-  @GetMapping
+  @PostMapping("/list")
   public ApiResponse<List<PromoCodeUsageResponse>> getAllPromoCodeUsages(
-      @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int pageSize) {
+      @Valid PromoCodeUsageFilterRequest request) {
     return ApiResponse.<List<PromoCodeUsageResponse>>builder()
-        .result(promoCodeUsageService.getAllPromoCodeUsages(page, pageSize))
+        .result(promoCodeUsageService.getAllPromoCodeUsages(request))
+        .message(ApiMessage.ALL_PROMO_CODE_USAGES_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/paging")
+  public ApiResponse<Page<PromoCodeUsageResponse>> getAllPromoCodeUsagesWithPaging(
+      @Valid PromoCodeUsageFilterRequest request) {
+    return ApiResponse.<Page<PromoCodeUsageResponse>>builder()
+        .result(promoCodeUsageService.getAllPromoCodeUsagesWithPaging(request))
         .message(ApiMessage.ALL_PROMO_CODE_USAGES_RETRIEVED.getMessage())
         .build();
   }

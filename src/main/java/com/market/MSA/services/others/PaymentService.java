@@ -9,6 +9,7 @@ import com.market.MSA.models.others.Payment;
 import com.market.MSA.repositories.order.OrderRepository;
 import com.market.MSA.repositories.others.PaymentRepository;
 import com.market.MSA.repositories.user.UserRepository;
+import com.market.MSA.requests.filters.PaymentFilterRequest;
 import com.market.MSA.requests.others.PaymentRequest;
 import com.market.MSA.responses.others.PaymentResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -106,11 +112,68 @@ public class PaymentService {
     return paymentMapper.toPaymentResponse(payment);
   }
 
+//  @Cacheable("payments")
   @Transactional(readOnly = true)
-  public List<PaymentResponse> getAllPayments() {
-    return paymentRepository.findAll().stream()
+  public List<PaymentResponse> getAllPayments(PaymentFilterRequest request) {
+    // Handle date range
+    LocalDateTime fromDate = request.getFromDate();
+    LocalDateTime toDate = request.getToDate();
+
+    // If only one date is provided, set a default range
+    if (fromDate != null && toDate == null) {
+      toDate = LocalDateTime.now();
+    } else if (fromDate == null && toDate != null) {
+      fromDate = toDate.minusMonths(1); // Default to last month if only toDate is provided
+    }
+
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    return paymentRepository
+        .filter(
+            request.getUserId(),
+            request.getOrderId(),
+            request.getStatus(),
+            request.getPaymentMethod(),
+            fromDate,
+            toDate,
+            sort)
+        .stream()
         .map(paymentMapper::toPaymentResponse)
         .collect(Collectors.toList());
+  }
+
+//  @Cacheable("payments")
+  @Transactional(readOnly = true)
+  public Page<PaymentResponse> getAllPaymentsWithPaging(PaymentFilterRequest request) {
+    // Handle date range
+    LocalDateTime fromDate = request.getFromDate();
+    LocalDateTime toDate = request.getToDate();
+
+    // If only one date is provided, set a default range
+    if (fromDate != null && toDate == null) {
+      toDate = LocalDateTime.now();
+    } else if (fromDate == null && toDate != null) {
+      fromDate = toDate.minusMonths(1); // Default to last month if only toDate is provided
+    }
+
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    Pageable pageable =
+        PageRequest.of(
+            request.getPage() - 1, // Convert to 0-based page index
+            request.getPageSize(),
+            sort);
+
+    return paymentRepository
+        .filterWithPaging(
+            request.getUserId(),
+            request.getOrderId(),
+            request.getStatus(),
+            request.getPaymentMethod(),
+            fromDate,
+            toDate,
+            pageable)
+        .map(paymentMapper::toPaymentResponse);
   }
 
   @Transactional

@@ -27,6 +27,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -70,6 +74,7 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
+//  @Cacheable(value = "users", key = "'email:' + #email")
   public UserResponse existsByEmail(String email) {
     User user =
         userRepository
@@ -78,6 +83,7 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
+//  @Cacheable(value = "users", key = "'auth:' + #request.email")
   public UserResponse validateCredentials(AuthenticationRequest request) {
     User user =
         userRepository
@@ -211,6 +217,11 @@ public class UserService {
   }
 
   @Transactional
+//  @Caching(
+//      put = {
+//        @CachePut(value = "users", key = "'email:' + #request.email"),
+//        @CachePut(value = "users", key = "'id:' + #result.id", condition = "#result != null")
+//      })
   public UserResponse createUser(UserRequest request) {
     User user = userMapper.toUser(request);
     user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -224,6 +235,10 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
+//  @Cacheable(
+//      value = "users",
+//      key =
+//          "'me:' + T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
   public UserResponse getMyInfo() {
     var context = SecurityContextHolder.getContext();
     String email = context.getAuthentication().getName();
@@ -248,17 +263,20 @@ public class UserService {
   }
 
   // @PostAuthorize("returnObject.username == authentication.name")
+//  @Cacheable(value = "users", key = "'id:' + #userId")
   public UserResponse getUserByID(long userId) {
     log.info("In method get user by ID");
     User user = getUserEntityByID(userId);
     return userMapper.toUserResponse(user);
   }
 
+//  @Cacheable(value = "users", key = "'email:' + #email")
   public UserResponse getUserByEmail(String email) {
     Optional<User> user = userRepository.findByEmail(email);
     return user.map(UserResponse::fromUser).orElse(null);
   }
 
+//  @Cacheable(value = "users", key = "'google:' + #googleID")
   public UserResponse getUserByGoogleID(String googleID) {
     Optional<User> user = userRepository.findByGoogleId(googleID);
     return user.map(UserResponse::fromUser).orElse(null);
@@ -282,6 +300,16 @@ public class UserService {
   }
 
   @Transactional
+//  @Caching(
+//      evict = {
+//        @CacheEvict(value = "users", key = "'id:' + #userId"),
+//        @CacheEvict(
+//            value = "users",
+//            key = "'email:' + #result.email",
+//            condition = "#result != null"),
+//        @CacheEvict(value = "users", key = "'me:' + #result.email", condition = "#result != null"),
+//        @CacheEvict(value = "users", allEntries = true, condition = "#result != null")
+//      })
   public UserResponse updateUser(long userId, UpdateUserRequest request) {
     User user = getUserEntityByID(userId);
 
@@ -296,6 +324,11 @@ public class UserService {
   }
 
   @Transactional
+//  @Caching(
+//      evict = {
+//        @CacheEvict(value = "users", key = "'id:' + #userId"),
+//        @CacheEvict(value = "users", allEntries = true)
+//      })
   public boolean deleteUser(long userId) {
     if (!userRepository.existsById(userId)) {
       throw new AppException(ErrorCode.USER_NOT_EXISTED);
@@ -315,7 +348,7 @@ public class UserService {
     return password.toString();
   }
 
-  // @Cacheable(value = "users", key = "'role:' + #role + ':page:' + #page + ':size:' + #size")
+//  @Cacheable(value = "user_pages", key = "'role:' + #role + ':page:' + #page + ':size:' + #size")
   public Page<UserResponse> getAllUsersByRoleWithPagination(String role, int page, int size) {
     if (role == null || role.trim().isEmpty()) {
       throw new AppException(ErrorCode.INVALID_INPUT);
@@ -331,7 +364,7 @@ public class UserService {
     return userPage.map(userMapper::toUserResponse);
   }
 
-  // @Cacheable(value = "users", key = "'role:all:' + #role")
+//  @Cacheable(value = "user_lists", key = "'role:all:' + #role")
   public List<UserResponse> getAllUsersByRole(String role) {
     if (role == null || role.trim().isEmpty()) {
       throw new AppException(ErrorCode.INVALID_INPUT);
@@ -341,9 +374,9 @@ public class UserService {
         .collect(Collectors.toList());
   }
 
-  //  @Cacheable(
-  //      value = "users",
-  //      key = "'managers:inventory:' + #inventoryId + ':page:' + #page + ':size:' + #size")
+//  @Cacheable(
+//      value = "user_pages",
+//      key = "'managers:inventory:' + #inventoryId + ':page:' + #page + ':size:' + #size")
   public Page<UserResponse> getManagersByInventoryIdWithPagination(
       Long inventoryId, int page, int size) {
     if (inventoryId == null) {
@@ -361,7 +394,7 @@ public class UserService {
     return userPage.map(userMapper::toUserResponse);
   }
 
-  // @Cacheable(value = "users", key = "'managers:inventory:all:' + #inventoryId")
+//  @Cacheable(value = "user_lists", key = "'managers:inventory:all:' + #inventoryId")
   public List<UserResponse> getAllManagersByInventoryId(Long inventoryId) {
     if (inventoryId == null) {
       throw new AppException(ErrorCode.INVALID_INPUT);

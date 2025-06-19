@@ -1,6 +1,7 @@
 package com.market.MSA.controllers.user;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.RewardPointFilterRequest;
 import com.market.MSA.requests.user.RewardPointRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.user.RewardPointResponse;
@@ -11,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -56,22 +58,20 @@ public class RewardPointController {
         .build();
   }
 
-  @GetMapping
-  public ApiResponse<List<RewardPointResponse>> getAllRewardPoints(
-      @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
+  @PostMapping("/list")
+  public ApiResponse<List<RewardPointResponse>> getAllRewardPoint(
+      @RequestBody RewardPointFilterRequest request) {
     return ApiResponse.<List<RewardPointResponse>>builder()
-        .result(rewardPointService.getAllRewardPoints(page, size))
-        .message(ApiMessage.ALL_REWARD_POINTS_RETRIEVED.getMessage())
+        .result(rewardPointService.getAllRewardPoints(request))
+        .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
         .build();
   }
 
-  @GetMapping("/user/{userId}")
-  public ApiResponse<List<RewardPointResponse>> getRewardPointsByUserId(
-      @PathVariable Long userId,
-      @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "10") int size) {
-    return ApiResponse.<List<RewardPointResponse>>builder()
-        .result(rewardPointService.getAllRewardPointsByUserId(userId, page, size))
+  @PostMapping("/paging")
+  public ApiResponse<Page<RewardPointResponse>> getAllRewardPointWithPaging(
+      @RequestBody RewardPointFilterRequest request) {
+    return ApiResponse.<Page<RewardPointResponse>>builder()
+        .result(rewardPointService.getAllRewardPointsWithPaging(request))
         .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
         .build();
   }

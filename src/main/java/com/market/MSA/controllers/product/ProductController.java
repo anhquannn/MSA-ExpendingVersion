@@ -1,7 +1,7 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
-import com.market.MSA.requests.product.ProductFilterRequest;
+import com.market.MSA.requests.filters.ProductFilterRequest;
 import com.market.MSA.requests.product.ProductRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.ProductFilterResponse;

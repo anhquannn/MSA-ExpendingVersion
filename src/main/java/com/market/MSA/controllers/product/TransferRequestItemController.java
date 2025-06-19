@@ -1,15 +1,18 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.TransferRequestItemFilterRequest;
 import com.market.MSA.requests.product.TransferRequestItem;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.TransferResponseItem;
 import com.market.MSA.services.product.TransferRequestItemService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -54,37 +57,20 @@ public class TransferRequestItemController {
         .build();
   }
 
-  @GetMapping
-  public ApiResponse<List<TransferResponseItem>> getAllTransferRequestItems(
-      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int pageSize) {
+  @PostMapping("/list")
+  public ApiResponse<List<TransferResponseItem>> filterTransferRequestItems(
+      @Valid @RequestBody TransferRequestItemFilterRequest request) {
     return ApiResponse.<List<TransferResponseItem>>builder()
-        .result(transferRequestItemService.getAllTransferRequestItems(page, pageSize))
+        .result(transferRequestItemService.getAllTransferRequestItems(request))
         .message(ApiMessage.ALL_TRANSFER_REQUEST_ITEMS_RETRIEVED.getMessage())
         .build();
   }
 
-  @GetMapping("/product/{productId}")
-  public ApiResponse<List<TransferResponseItem>> getTransferRequestItemsByProductId(
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize,
-      @PathVariable Long productId) {
-    return ApiResponse.<List<TransferResponseItem>>builder()
-        .result(
-            transferRequestItemService.getTransferRequestItemsByProductId(
-                productId, page, pageSize))
-        .message(ApiMessage.ALL_TRANSFER_REQUEST_ITEMS_RETRIEVED.getMessage())
-        .build();
-  }
-
-  @GetMapping("/transfer/{transferId}")
-  public ApiResponse<List<TransferResponseItem>> getTransferRequestItemsByTransferId(
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "10") int pageSize,
-      @PathVariable Long transferId) {
-    return ApiResponse.<List<TransferResponseItem>>builder()
-        .result(
-            transferRequestItemService.getTransferRequestItemsByTransferRequestId(
-                transferId, page, pageSize))
+  @PostMapping("/paging")
+  public ApiResponse<Page<TransferResponseItem>> filterTransferRequestItemsWithPaging(
+      @Valid @RequestBody TransferRequestItemFilterRequest request) {
+    return ApiResponse.<Page<TransferResponseItem>>builder()
+        .result(transferRequestItemService.getAllTransferRequestItemsWithPaging(request))
         .message(ApiMessage.ALL_TRANSFER_REQUEST_ITEMS_RETRIEVED.getMessage())
         .build();
   }

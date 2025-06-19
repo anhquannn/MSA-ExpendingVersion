@@ -6,6 +6,7 @@ import com.market.MSA.mappers.product.InventoryMapper;
 import com.market.MSA.models.product.Inventory;
 import com.market.MSA.repositories.product.BranchRepository;
 import com.market.MSA.repositories.product.InventoryRepository;
+import com.market.MSA.requests.filters.InventoryFilterRequest;
 import com.market.MSA.requests.product.InventoryRequest;
 import com.market.MSA.responses.product.InventoryResponse;
 import com.market.MSA.services.others.EntityFinderService;
@@ -15,8 +16,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,12 +78,22 @@ public class InventoryService {
     return inventoryMapper.toInventoryResponse(inventory);
   }
 
-  public List<InventoryResponse> getAllInventory(int page, int pageSize) {
-    return inventoryRepository.findAll().stream()
-        .skip((long) (page - 1) * pageSize)
-        .limit(pageSize)
+//  @Cacheable("inventories")
+  public List<InventoryResponse> getAllInventories(InventoryFilterRequest request) {
+    return inventoryRepository.filter(request.getKeyword(), request.getBranchId()).stream()
         .map(inventoryMapper::toInventoryResponse)
         .collect(Collectors.toList());
+  }
+
+//  @Cacheable("inventories")
+  public Page<InventoryResponse> getAllInventoriesWithPaging(InventoryFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+
+    Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+
+    return inventoryRepository
+        .filterWithPaging(request.getKeyword(), request.getBranchId(), pageable)
+        .map(inventoryMapper::toInventoryResponse);
   }
 
   public InventoryResponse getInventoryByBranchId(Long branchId) {
@@ -88,14 +102,6 @@ public class InventoryService {
             .findByBranch_BranchId(branchId)
             .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
     return inventoryMapper.toInventoryResponse(inventory);
-  }
-
-  public List<InventoryResponse> searchInventoryByKeyword(String keyword, int page, int pageSize) {
-    Pageable pageable = PageRequest.of(page - 1, pageSize);
-    List<Inventory> inventories = inventoryRepository.searchByKeyword(keyword, pageable);
-    return inventories.stream()
-        .map(inventoryMapper::toInventoryResponse)
-        .collect(Collectors.toList());
   }
 
   @Transactional

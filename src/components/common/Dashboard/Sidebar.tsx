@@ -21,34 +21,30 @@ const Sidebar: React.FC<SidebarProps> = ({
     { name: 'Trang Chủ', icon: '🏠', path: '/dashboard' },
     { name: 'Đơn Hàng', icon: '📦', path: '/dashboard/orders' },
     { name: 'Người Dùng', icon: '👤', path: '/dashboard/users' },
-    // { name: 'Thống Kê Doanh Thu', icon: '📊', path: '/dashboard/revenue' },
     { name: 'Kho Hàng', icon: '📝', path: '/dashboard/inventory' },
     { name: 'Tất Cả Sản Phẩm', icon: '🍎', path: '/dashboard/products' },
     { name: 'Quản Lý Chi Nhánh', icon: '🏪', path: '/dashboard/branches' },
+      { name: 'Loại Sản Phẩm', icon: '🏷️', path: '/dashboard/categories' },
+    { name: 'Mã Giảm Giá', icon: '🎟️', path: '/dashboard/suppliers' },
     { name: 'Cài Đặt', icon: '⚙️', path: '/dashboard/settings' },
   ];
 
   return (
     <div 
-      // Các class Tailwind CSS được áp dụng có điều kiện dựa trên isMobileOverlay và isSidebarOpen
       className={`
         h-screen p-4 
         bg-white/80 backdrop-blur-md border-r border-gray-100 shadow-xl 
         transition-all duration-300 ease-in-out z-30
         
         ${isMobileOverlay ? 
-          // Styles cho Mobile Overlay Sidebar
           `fixed top-0 left-0 w-64 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}` 
           : 
-          // Styles cho Desktop Static Sidebar (luôn chiếm không gian)
           `static ${isSidebarOpen ? 'w-64' : 'w-20'} md:shadow-none md:rounded-r-3xl md:overflow-hidden`
         }
       `}
-      // Chỉ áp dụng onMouseEnter/Leave cho Sidebar desktop (không phải mobile overlay)
       onMouseEnter={!isMobileOverlay ? onMouseEnterSidebar : undefined} 
       onMouseLeave={!isMobileOverlay ? onMouseLeaveSidebar : undefined} 
     >
-      {/* Header của Sidebar: Logo và Nút đóng (mobile) */}
       <div className="flex items-center justify-between pb-6 mb-4 border-b border-gray-200">
         <div className="flex items-center space-x-2">
           {isSidebarOpen ? ( 
@@ -61,7 +57,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
         
-        {/* Nút đóng Sidebar chỉ cho Mobile (hiển thị khi là mobile overlay) */}
         {isMobileOverlay && (
           <button 
             onClick={onToggleSidebar} 
@@ -78,7 +73,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           <NavLink
             key={item.path}
             to={item.path}
-            // Chỉ đóng sidebar trên mobile khi click vào NavLink
             onClick={() => { if (isMobileOverlay) onToggleSidebar(); }} 
             className={({ isActive }) =>
               `flex items-center space-x-3 p-3 rounded-xl 

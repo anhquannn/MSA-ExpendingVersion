@@ -30,6 +30,8 @@ import SettingsPage from './pages/Dashboard/SettingsPage';
 import ProductAddPage from './pages/Dashboard/ProductUpsertPage';
 import BranchUpsertPage from './pages/Dashboard/BranchUpsertPage';
 import ProductUpsertPage from './pages/Dashboard/ProductUpsertPage';
+import CategoryManagementPage from './pages/Dashboard/CategoryManagementPage';
+import SupplierManagementPage from './pages/Dashboard/SupplierManagementPage';
 
 LocalStorageManager.init();
 
@@ -88,6 +90,8 @@ function App() {
           <Route path={routeConstants.branchUpdate} element={<BranchUpsertPage  />} />
 
           <Route path="products/edit/:productId" element={<ProductUpsertPage />} />
+          <Route path={routeConstants.category} element={<CategoryManagementPage />} />
+          <Route path={routeConstants.supply} element={<SupplierManagementPage />} />
           {/* Thêm các route cho các trang dashboard khác nếu có */}
         </Route>
 
@@ -100,6 +104,13 @@ function App() {
           - trả về avt người dùng
 
           -- viết thêm hàm cập nhật thông tin người dùng (manager admin) -> admin sử dụng
+          - lỗi sửa đơn hàng
+          - lỗi lấy đơn hàng theo id
+          - danh sách đơn hàng
+          - họp về thông báo (các loại thông báo, xử lí thông báo,...)
+
+          - đơn hàng - thông báo - dashboard - mã giảm giá - phân quyền - loại sản phẩm - nhà sản xuất 
+
         --- */}
         {/* Chuyển hướng người dùng về trang đăng nhập nếu truy cập một route không tồn tại */}
          <Route index element={<DashboardHome />} />

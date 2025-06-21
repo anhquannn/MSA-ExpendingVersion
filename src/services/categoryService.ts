@@ -54,13 +54,25 @@ export const categoryService = {
     return fullResponse.result;
   },
 
-  createCategory: (payload: CreateCategoryPayload): Promise<{ result: Category }> => {
-    return api.post<{ result: Category }>('category', payload);
+  // createCategory: (payload: CreateCategoryPayload): Promise<{ result: Category }> => {
+  //   return api.post<{ result: Category }>('category', payload);
+  // },
+  createCategory: async (payload: CreateCategoryPayload): Promise<Category> => {
+    // API trả về { result: Category }, ta sẽ "mở gói" nó
+    const response = await api.post<{ result: Category }>('category', payload);
+    return response.result;
   },
 
-  updateCategory: (categoryId: number, payload: UpdateCategoryPayload): Promise<Category> => {
-    // Sử dụng template literal để tạo URL động
-    return api.put<Category>(`category/${categoryId}`, payload);
+  // updateCategory: (categoryId: number, payload: UpdateCategoryPayload): Promise<Category> => {
+  //   // Sử dụng template literal để tạo URL động
+  //   return api.put<Category>(`category/${categoryId}`, payload);
+  // },
+
+    updateCategory: async (categoryId: number, payload: UpdateCategoryPayload): Promise<Category> => {
+    // Giả định API update cũng trả về { result: Category } để nhất quán
+    // Nếu nó trả về thẳng Category, bạn chỉ cần return api.put(...)
+    const response = await api.put<{ result: Category }>(`category/${categoryId}`, payload);
+    return response.result;
   },
 
   deleteCategory: (categoryId: number): Promise<void> => {

@@ -35,11 +35,11 @@ public enum ErrorCode {
   DELIVERY_DETAIL_NOT_FOUND(120, "Delivery detail not found!", HttpStatus.NOT_FOUND),
   DELIVERY_INFO_NOT_FOUND(121, "Delivery info not found!", HttpStatus.NOT_FOUND),
   PARSE_SHIPPO_RESPONSE_ERROR(122, "Error parsing shipment response!", HttpStatus.FORBIDDEN),
-  MANUFACTURER_NOT_FOUND(123, "Manufacturer not found!", HttpStatus.NOT_FOUND),
+  SUPPLIER_NOT_FOUND(123, "Supplier not found!", HttpStatus.NOT_FOUND),
   ORDER_DETAIL_NOT_FOUND(124, "Order detail not found!", HttpStatus.NOT_FOUND),
   PAYMENT_NOT_FOUND(125, "Payment not found!", HttpStatus.NOT_FOUND),
   PROMO_CODE_NOT_FOUND(126, "Promo code not found!", HttpStatus.NOT_FOUND),
-  RETURN_ORDER_NOT_FOUND(127, "Return order not found!", HttpStatus.NOT_FOUND),
+  CANCEL_ORDER_NOT_FOUND(127, "Cancel order not found!", HttpStatus.NOT_FOUND),
   FEEDBACK_NOT_FOUND(128, "Feedback not found!", HttpStatus.NOT_FOUND),
 
   TRENDING_PRODUCT_NOT_FOUND(129, "Trending product not found!", HttpStatus.NOT_FOUND),
@@ -49,6 +49,39 @@ public enum ErrorCode {
   WRONG_PROMO_CODE(134, "Wrong promo code!", HttpStatus.BAD_REQUEST),
   CANNOT_SEND_EMAIL(135, "Can not send email!", HttpStatus.BAD_REQUEST),
   PERMISSION_NOT_FOUND(136, "Permission not found!", HttpStatus.NOT_FOUND),
+
+  INVENTORY_NOT_FOUND(137, "Inventory not found!", HttpStatus.NOT_FOUND),
+  INVENTORY_PRODUCT_NOT_FOUND(138, "InventoryProduct not found!", HttpStatus.NOT_FOUND),
+  INSUFFICIENT_STOCK(139, "Insufficient stock!", HttpStatus.BAD_REQUEST),
+  INVALID_SORT_FIELD(140, "Invalid sort field!", HttpStatus.BAD_REQUEST),
+
+  NOTIFICATION_NOT_FOUND(141, "Notification not found!", HttpStatus.NOT_FOUND),
+  INVALID_INPUT(142, "Invalid input!", HttpStatus.BAD_REQUEST),
+
+  CAMPAIGN_NOT_FOUND(143, "Campaign not found!", HttpStatus.NOT_FOUND),
+  PROMO_CODE_OUTSIDE_CAMPAIGN_DATES(
+      144, "PromoCode dates must be within Campaign date range!", HttpStatus.BAD_REQUEST),
+
+  TRANSFER_REQUEST_ALREADY_PROCESSED(
+      145, "Transfer request has already been processed", HttpStatus.BAD_REQUEST),
+  TRANSFER_REQUEST_NOT_FOUND(146, "Transfer request not found", HttpStatus.NOT_FOUND),
+  TRANSFER_REQUEST_ITEM_NOT_FOUND(147, "Transfer request item not found", HttpStatus.NOT_FOUND),
+  REWARD_POINT_NOT_FOUND(146, "Reward point not found", HttpStatus.NOT_FOUND),
+  REWARD_POINT_TRANSACTION_NOT_FOUND(
+      147, "Reward point transaction not found", HttpStatus.NOT_FOUND),
+
+  INSUFFICIENT_POINTS(150, "Insufficient points", HttpStatus.BAD_REQUEST),
+  PAYMENT_ERROR(151, "Payment error", HttpStatus.INTERNAL_SERVER_ERROR),
+  INVALID_OTP(152, "Invalid or Expired OTP", HttpStatus.BAD_REQUEST),
+  PRODUCT_ATTRIBUTE_NOT_FOUND(153, "Product attribute not found!", HttpStatus.NOT_FOUND),
+  PRODUCT_ATTRIBUTE_VALUE_NOT_FOUND(
+      154, "Product attribute value not found!", HttpStatus.NOT_FOUND),
+  PRODUCT_IMAGE_NOT_FOUND(155, "Product image not found!", HttpStatus.NOT_FOUND),
+  PROMO_CODE_USAGE_NOT_FOUND(156, "Promo code usage not found!", HttpStatus.NOT_FOUND),
+  INVENTORY_PRODUCT_EXISTS_WITH_STOCK(
+      157, "Inventory product with stock already exists!", HttpStatus.BAD_REQUEST),
+  INVALID_REFRESH_TOKEN(158, "Invalid refresh token!", HttpStatus.BAD_REQUEST),
+  PROMO_CODE_ALREADY_USED(159, "Promo code already used!", HttpStatus.BAD_REQUEST),
   ;
 
   private final int code;

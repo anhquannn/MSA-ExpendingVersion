@@ -9,14 +9,32 @@ public enum OrderStatus {
   ORDER_STATUS_3("paid"),
   ORDER_STATUS_4("delivering"),
   ORDER_STATUS_5("shipped"),
-  ORDER_STATUS_6("returning"),
-  ORDER_STATUS_7("returned"),
+  ORDER_STATUS_6("canceling"),
+  ORDER_STATUS_7("cancel"),
   ORDER_STATUS_8("success"),
-  ;
+  ORDER_STATUS_9("failed");
 
   private final String status;
 
   OrderStatus(String status) {
     this.status = status;
+  }
+
+  /**
+   * Check if a given status string is a valid order status
+   *
+   * @param status The status string to check
+   * @return true if valid, false otherwise
+   */
+  public static boolean isValidStatus(String status) {
+    if (status == null) {
+      return false;
+    }
+    for (OrderStatus orderStatus : values()) {
+      if (orderStatus.getStatus().equalsIgnoreCase(status)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

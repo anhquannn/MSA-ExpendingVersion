@@ -1,11 +1,11 @@
 package com.market.MSA.jobs;
 
-import com.market.MSA.models.Product;
-import com.market.MSA.models.TrendingProduct;
-import com.market.MSA.repositories.FeedbackRepository;
-import com.market.MSA.repositories.ProductRepository;
-import com.market.MSA.repositories.TrendingProductRepository;
-import java.util.Date;
+import com.market.MSA.models.product.Product;
+import com.market.MSA.models.product.TrendingProduct;
+import com.market.MSA.repositories.product.FeedbackRepository;
+import com.market.MSA.repositories.product.ProductRepository;
+import com.market.MSA.repositories.product.TrendingProductRepository;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,12 +47,12 @@ public class TrendingProductJob implements Job {
             .map(
                 product -> {
                   Long productId = product.getProductId();
-                  Date currentDate = new Date();
+                  LocalDateTime currentDate = LocalDateTime.now();
                   double avgRating = avgRatings.getOrDefault(productId, 0.0);
-                  int sales = product.getSales();
-                  double trendScore = calculateTrendScore(avgRating, sales);
+                  double totalRevenue = product.getTotalRevenue();
+                  double trendScore = calculateTrendScore(avgRating, totalRevenue);
 
-                  return new TrendingProduct(0, trendScore, currentDate, product);
+                  return new TrendingProduct(0L, trendScore, currentDate, product);
                 })
             .sorted((c1, c2) -> Double.compare(c2.getTrendScore(), c1.getTrendScore()))
             .limit(5)
@@ -67,16 +67,16 @@ public class TrendingProductJob implements Job {
                     TrendingProduct.builder()
                         .product(candidate.getProduct())
                         .trendScore(candidate.getTrendScore())
-                        .timestamp(new Date())
+                        .timestamp(LocalDateTime.now())
                         .build())
             .toList();
 
     trendingProductRepository.saveAll(trendingProducts);
   }
 
-  private double calculateTrendScore(double avgRating, int sales) {
+  private double calculateTrendScore(double avgRating, double totalRevenue) {
     double weightRating = 0.3;
     double weightSales = 0.7;
-    return (avgRating * weightRating) + (sales * weightSales);
+    return (avgRating * weightRating) + (totalRevenue * weightSales);
   }
 }

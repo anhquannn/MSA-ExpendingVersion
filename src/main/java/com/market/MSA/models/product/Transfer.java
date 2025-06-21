@@ -1,0 +1,61 @@
+package com.market.MSA.models.product;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.models.user.User;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Table(
+    name = "transfer_requests",
+    indexes = {
+      @Index(name = "idx_transfer_request_from_inventory", columnList = "from_inventory_id"),
+      @Index(name = "idx_transfer_request_to_inventory", columnList = "to_inventory_id"),
+      @Index(name = "idx_transfer_request_requester", columnList = "requester_id"),
+      @Index(name = "idx_transfer_request_approver", columnList = "approver_id")
+    })
+public class Transfer {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  Long transferRequestId;
+
+  @ManyToOne
+  @JoinColumn(name = "fromInventoryId", nullable = false)
+  @JsonBackReference("inventory-from-transfers")
+  Inventory fromInventory;
+
+  @ManyToOne
+  @JoinColumn(name = "toInventoryId", nullable = false)
+  @JsonBackReference("inventory-to-transfers")
+  Inventory toInventory;
+
+  @ManyToOne
+  @JoinColumn(name = "requesterId", nullable = false)
+  @JsonBackReference("user-requested-transfers")
+  User requester;
+
+  @ManyToOne
+  @JoinColumn(name = "approverId")
+  @JsonBackReference("user-approved-transfers")
+  User approver;
+
+  String status;
+  String note;
+  LocalDateTime createdAt;
+  LocalDateTime updatedAt;
+
+  @OneToMany(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("transfer-details")
+  List<TransferItem> transferItems = new ArrayList<>();
+}

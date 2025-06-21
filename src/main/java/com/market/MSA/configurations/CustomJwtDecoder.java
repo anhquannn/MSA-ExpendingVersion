@@ -1,7 +1,7 @@
 package com.market.MSA.configurations;
 
-import com.market.MSA.requests.IntrospectRequest;
-import com.market.MSA.services.AuthenticationService;
+import com.market.MSA.requests.user.IntrospectRequest;
+import com.market.MSA.services.user.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import java.text.ParseException;
 import java.util.Objects;

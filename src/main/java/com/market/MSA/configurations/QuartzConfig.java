@@ -1,8 +1,6 @@
 package com.market.MSA.configurations;
 
-import com.market.MSA.jobs.TrendingProductJob;
-import com.market.MSA.jobs.UpdateExpiryTimeJob;
-import com.market.MSA.jobs.UpdatePromoCodeStatusJob;
+import com.market.MSA.jobs.*;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -50,20 +48,27 @@ public class QuartzConfig {
   }
 
   @Bean
-  public ApplicationRunner checkScheduler(SchedulerFactoryBean schedulerFactoryBean,
-                                          JobDetail updateExpiryTimeJobDetail,
-                                          Trigger updateExpiryTimeTrigger,
-                                          JobDetail updatePromoCodeStatusJobDetail,
-                                          Trigger updatePromoCodeStatusTrigger,
-                                          JobDetail createTrendingProductDataJobDetail,
-                                          Trigger createTrendingProductDataTrigger) {
+  public ApplicationRunner checkScheduler(
+      SchedulerFactoryBean schedulerFactoryBean,
+      JobDetail updateExpiryTimeJobDetail,
+      Trigger updateExpiryTimeTrigger,
+      JobDetail updatePromoCodeStatusJobDetail,
+      Trigger updatePromoCodeStatusTrigger,
+      JobDetail updateCampaignStatusJobDetail,
+      Trigger updateCampaignStatusTrigger,
+      JobDetail createTrendingProductDataJobDetail,
+      Trigger createTrendingProductDataTrigger,
+      JobDetail lowStockCheckJobDetail,
+      Trigger lowStockCheckTrigger) {
     return args -> {
       Scheduler scheduler = schedulerFactoryBean.getScheduler();
 
       // Đăng ký các job và trigger
       scheduler.scheduleJob(updateExpiryTimeJobDetail, updateExpiryTimeTrigger);
       scheduler.scheduleJob(updatePromoCodeStatusJobDetail, updatePromoCodeStatusTrigger);
+      scheduler.scheduleJob(updateCampaignStatusJobDetail, updateCampaignStatusTrigger);
       scheduler.scheduleJob(createTrendingProductDataJobDetail, createTrendingProductDataTrigger);
+      scheduler.scheduleJob(lowStockCheckJobDetail, lowStockCheckTrigger);
 
       // Khởi động scheduler (nếu chưa tự động chạy)
       if (!scheduler.isStarted()) {
@@ -77,57 +82,94 @@ public class QuartzConfig {
   @Bean
   public JobDetail updateExpiryTimeJobDetail() {
     return JobBuilder.newJob(UpdateExpiryTimeJob.class)
-            .withIdentity("updateExpiryTimeJob")
-            .storeDurably()
-            .build();
+        .withIdentity("updateExpiryTimeJob")
+        .storeDurably()
+        .build();
   }
 
   @Bean
   public Trigger updateExpiryTimeTrigger() {
     return TriggerBuilder.newTrigger()
-            .forJob(updateExpiryTimeJobDetail())
-            .withIdentity("updateExpiryTimeTrigger")
-            .withSchedule(
-                    CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
-                            .withMisfireHandlingInstructionFireAndProceed())
-            .build();
+        .forJob(updateExpiryTimeJobDetail())
+        .withIdentity("updateExpiryTimeTrigger")
+        .withSchedule(
+            CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                .withMisfireHandlingInstructionFireAndProceed())
+        .build();
   }
 
   @Bean
   public JobDetail updatePromoCodeStatusJobDetail() {
     return JobBuilder.newJob(UpdatePromoCodeStatusJob.class)
-            .withIdentity("updatePromoCodeStatusJob")
-            .storeDurably()
-            .build();
+        .withIdentity("updatePromoCodeStatusJob")
+        .storeDurably()
+        .build();
   }
 
   @Bean
   public Trigger updatePromoCodeStatusTrigger() {
     return TriggerBuilder.newTrigger()
-            .forJob(updatePromoCodeStatusJobDetail())
-            .withIdentity("updatePromoCodeStatusTrigger")
-            .withSchedule(
-                    CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
-                            .withMisfireHandlingInstructionFireAndProceed())
-            .build();
+        .forJob(updatePromoCodeStatusJobDetail())
+        .withIdentity("updatePromoCodeStatusTrigger")
+        .withSchedule(
+            CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                .withMisfireHandlingInstructionFireAndProceed())
+        .build();
+  }
+
+  @Bean
+  public JobDetail updateCampaignStatusJobDetail() {
+    return JobBuilder.newJob(UpdateCampaignStatusJob.class)
+        .withIdentity("updateCampaignStatusJob")
+        .storeDurably()
+        .build();
+  }
+
+  @Bean
+  public Trigger updateCampaignStatusTrigger() {
+    return TriggerBuilder.newTrigger()
+        .forJob(updateCampaignStatusJobDetail())
+        .withIdentity("updateCampaignStatusTrigger")
+        .withSchedule(
+            CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                .withMisfireHandlingInstructionFireAndProceed())
+        .build();
   }
 
   @Bean
   public JobDetail createTrendingProductDataJobDetail() {
     return JobBuilder.newJob(TrendingProductJob.class)
-            .withIdentity("createTrendingProductDataJob")
-            .storeDurably()
-            .build();
+        .withIdentity("createTrendingProductDataJob")
+        .storeDurably()
+        .build();
   }
 
   @Bean
   public Trigger createTrendingProductDataTrigger() {
     return TriggerBuilder.newTrigger()
-            .forJob(createTrendingProductDataJobDetail())
-            .withIdentity("createTrendingProductDataTrigger")
-            .withSchedule(
-                    CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
-                            .withMisfireHandlingInstructionFireAndProceed())
-            .build();
+        .forJob(createTrendingProductDataJobDetail())
+        .withIdentity("createTrendingProductDataTrigger")
+        .withSchedule(
+            CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                .withMisfireHandlingInstructionFireAndProceed())
+        .build();
+  }
+
+  @Bean
+  public JobDetail lowStockCheckJobDetail() {
+    return JobBuilder.newJob(LowStockCheckJob.class)
+        .withIdentity("lowStockCheckJob")
+        .storeDurably()
+        .build();
+  }
+
+  @Bean
+  public Trigger lowStockCheckTrigger() {
+    return TriggerBuilder.newTrigger()
+        .forJob(lowStockCheckJobDetail())
+        .withIdentity("lowStockCheckTrigger")
+        .withSchedule(
+            SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(60).repeatForever())
+        .build();
   }
 }

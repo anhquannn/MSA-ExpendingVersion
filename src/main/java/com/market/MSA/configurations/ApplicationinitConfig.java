@@ -1,12 +1,16 @@
 package com.market.MSA.configurations;
 
-import com.market.MSA.exceptions.AppException;
-import com.market.MSA.exceptions.ErrorCode;
-import com.market.MSA.models.Role;
-import com.market.MSA.models.User;
-import com.market.MSA.repositories.RoleRepository;
-import com.market.MSA.repositories.UserRepository;
-import java.util.Set;
+import com.market.MSA.models.product.Branch;
+import com.market.MSA.models.product.Inventory;
+import com.market.MSA.models.user.Permission;
+import com.market.MSA.models.user.Role;
+import com.market.MSA.models.user.User;
+import com.market.MSA.repositories.product.BranchRepository;
+import com.market.MSA.repositories.product.InventoryRepository;
+import com.market.MSA.repositories.user.PermissionRepository;
+import com.market.MSA.repositories.user.RoleRepository;
+import com.market.MSA.repositories.user.UserRepository;
+import java.util.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -25,29 +29,104 @@ public class ApplicationinitConfig {
 
   @Bean
   ApplicationRunner applicationRunner(
-      UserRepository userRepository, RoleRepository roleRepository) {
+      UserRepository userRepository,
+      RoleRepository roleRepository,
+      PermissionRepository permissionRepository,
+      BranchRepository branchRepository,
+      InventoryRepository inventoryRepository) {
     return args -> {
-      if (roleRepository.findByName("ADMIN").isEmpty()) {
-        roleRepository.save(Role.builder().name("ADMIN").build());
-      }
-      if (roleRepository.findByName("CUSTOMER").isEmpty()) {
-        roleRepository.save(Role.builder().name("CUSTOMER").build());
-      }
-      var adminRole =
+      // Create FULL_ACCESS permission if not exists
+      Permission fullAccessPermission =
+          permissionRepository
+              .findByName("FULL_ACCESS")
+              .orElseGet(
+                  () ->
+                      permissionRepository.save(
+                          Permission.builder()
+                              .name("FULL_ACCESS")
+                              .description("Toàn quyền")
+                              .build()));
+
+      // Create ADMIN role with FULL_ACCESS permission if not exists
+      Role adminRole =
           roleRepository
-              .findById((long) 1)
-              .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
-      if (userRepository.findByEmail("nguyenanhquan20102003@gmail.com").isEmpty()) {
-        User user =
+              .findByName("ADMIN")
+              .orElseGet(
+                  () -> {
+                    Role role =
+                        Role.builder().name("ADMIN").description("Quản trị viên hệ thống").build();
+                    role.setPermissions(Set.of(fullAccessPermission));
+                    return roleRepository.save(role);
+                  });
+
+      // Create default branch if not exists
+      Branch defaultBranch =
+          branchRepository
+              .findByName("HEAD")
+              .orElseGet(
+                  () -> {
+                    // Create branch first without saving
+                    Branch branch =
+                        Branch.builder()
+                            .name("HEAD")
+                            .phone("0123456789")
+                            .street("Default Street")
+                            .ward("Default Ward")
+                            .district("Default District")
+                            .city("Default City")
+                            .build();
+
+                    // Create inventory
+                    Inventory inventory =
+                        Inventory.builder()
+                            .name("Kho chính")
+                            .address(
+                                branch.getStreet()
+                                    + ", "
+                                    + branch.getWard()
+                                    + ", "
+                                    + branch.getDistrict()
+                                    + ", "
+                                    + branch.getCity())
+                            .contact(branch.getPhone())
+                            .totalRevenue(0)
+                            .build();
+
+                    // Set the bidirectional relationship
+                    inventory.setBranch(branch);
+                    branch.setInventory(inventory);
+
+                    // Save the branch (will cascade to inventory due to CascadeType.ALL)
+                    branch = branchRepository.save(branch);
+                    log.info(
+                        "Created branch with ID: {} and inventory with ID: {}",
+                        branch.getBranchId(),
+                        branch.getInventory().getInventoryId());
+                    return branch;
+                  });
+
+      // Create admin user if not exists
+      if (userRepository.findByEmail("admin@example.com").isEmpty()) {
+        User adminUser =
             User.builder()
-                .email("nguyenanhquan20102003@gmail.com")
-                .fullName("admin")
-                .password(passwordEncoder.encode("admin"))
-                .roles(Set.of(adminRole))
+                .email("admin@example.com")
+                .password(passwordEncoder.encode("admin123"))
+                .fullName("Admin")
+                .phoneNumber("0123456789")
+                .branches(new ArrayList<>(List.of(defaultBranch)))
                 .build();
 
-        userRepository.save(user);
-        log.warn("admin user has been created!");
+        adminUser.setRoles(Set.of(adminRole));
+
+        // Save the admin user
+        adminUser = userRepository.save(adminUser);
+
+        // Update the branch with the admin user
+        if (defaultBranch.getUsers() == null) {
+          defaultBranch.setUsers(new ArrayList<>());
+        }
+        defaultBranch.getUsers().add(adminUser);
+        branchRepository.save(defaultBranch);
       }
     };
   }

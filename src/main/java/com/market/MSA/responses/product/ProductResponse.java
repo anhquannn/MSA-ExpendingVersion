@@ -43,10 +43,7 @@ public class ProductResponse implements Serializable {
   SupplierResponse supplier;
   CategoryResponse category;
   List<InventoryProductResponse> inventoryProductResponses;
-  List<OrderDetailResponse> orderDetails;
   List<FeedbackResponse> feedbackResponses;
   List<ProductImageResponse> productImageResponses;
-  List<UserBehaviorResponse> userBehaviorResponses;
-  List<NotificationResponse> notificationResponses;
   List<TrendingProductResponse> trendingProductResponses;
 }

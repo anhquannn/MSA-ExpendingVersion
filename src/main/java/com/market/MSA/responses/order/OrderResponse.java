@@ -34,11 +34,9 @@ public class OrderResponse {
   UserResponse user;
 
   DeliveryInfoResponse deliveryInfo;
-  List<CancelOrderResponse> cancelOrders;
+  //List<CancelOrderResponse> cancelOrders;
   List<PaymentResponse> payments;
   List<PromoCodeResponse> promoCodes;
-  List<OrderDetailResponse> orderDetails;
-  List<NotificationResponse> notifications;
   List<RewardPointTransactionResponse> rewardPointTransactions;
   List<PromoCodeUsageResponse> promoCodeUsages;
 }

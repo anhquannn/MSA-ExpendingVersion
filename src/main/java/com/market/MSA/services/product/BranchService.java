@@ -48,18 +48,12 @@ public class BranchService {
   final BranchMapper branchMapper;
 
   // Create Branch
-//  @CacheEvict(
-//      value = {"branches", "branch", "branch_entity"},
-//      allEntries = true)
   public BranchResponse createBranch(BranchRequest branchRequest) {
     Branch branch = branchMapper.toBranch(branchRequest);
     branch = branchRepository.save(branch);
     return branchMapper.toBranchResponse(branch);
   }
 
-//  @CacheEvict(
-//      value = {"branches", "branch", "branch_entity"},
-//      allEntries = true)
   @Transactional
   public BranchResponse createBranchWithManager(CreateBranchWithManagerRequest request) {
     // 1. Create the branch
@@ -149,12 +143,6 @@ public class BranchService {
   }
 
   // Update Branch
-//  @Caching(
-//      evict = {
-//        @CacheEvict(value = "branch", key = "#branchId"),
-//        @CacheEvict(value = "branch_entity", key = "#branchId"),
-//        @CacheEvict(value = "branches", allEntries = true)
-//      })
   @Transactional
   public BranchResponse updateBranch(Long branchId, BranchRequest branchRequest) {
     Optional<Branch> optionalBranch = branchRepository.findById(branchId);
@@ -169,12 +157,6 @@ public class BranchService {
   }
 
   // Delete Branch
-//  @Caching(
-//      evict = {
-//        @CacheEvict(value = "branch", key = "#branchId"),
-//        @CacheEvict(value = "branch_entity", key = "#branchId"),
-//        @CacheEvict(value = "branches", allEntries = true)
-//      })
   @Transactional
   public boolean deleteBranch(Long branchId) {
     Optional<Branch> optionalBranch = branchRepository.findById(branchId);
@@ -187,7 +169,6 @@ public class BranchService {
   }
 
   // Get Branch by ID
-//  @Cacheable(value = "branch", key = "#branchId", unless = "#result == null")
   public BranchResponse getBranchById(Long branchId) {
     log.info("Fetching branch from database with id: {}", branchId);
     Optional<Branch> optionalBranch = branchRepository.findById(branchId);
@@ -219,7 +200,7 @@ public class BranchService {
         .collect(Collectors.toList());
   }
 
-//  @Cacheable("branches")
+  @Cacheable("branches")
   public Page<BranchResponse> getAllBranchesWithPaging(BranchFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

@@ -59,7 +59,6 @@ public class SupplierService {
     return true;
   }
 
-  @Cacheable(value = "supplier", key = "#supplierId", unless = "#result == null")
   public SupplierResponse getSupplierById(Long supplierId) {
     Supplier supplier =
         supplierRepository

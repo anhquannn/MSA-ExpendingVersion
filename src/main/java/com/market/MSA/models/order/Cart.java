@@ -47,6 +47,6 @@ public class Cart {
   List<CartItem> cartItems = new ArrayList<>();
 
   @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("cart-orders")
+  @JsonManagedReference("order-carts")
   List<Order> orders = new ArrayList<>();
 }

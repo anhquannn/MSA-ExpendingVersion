@@ -74,7 +74,6 @@ public class TrendingProductService {
   }
 
   // Lấy TrendingProduct theo ID
-  @Cacheable("trending_products")
   public TrendingProductResponse getTrendingProductById(Long id) {
     TrendingProduct trendingProduct =
         trendingProductRepository

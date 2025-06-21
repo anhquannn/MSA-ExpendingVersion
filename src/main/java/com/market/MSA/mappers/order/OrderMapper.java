@@ -16,6 +16,7 @@ public interface OrderMapper {
   Order toOrder(OrderRequest request);
 
   @Mapping(target = "branch.inventory", ignore = true)
+  @Mapping(target = "orderDetails.product.orderDetails", ignore = true)
   OrderResponse toOrderResponse(Order order);
 
   @Mapping(target = "orderId", ignore = true)

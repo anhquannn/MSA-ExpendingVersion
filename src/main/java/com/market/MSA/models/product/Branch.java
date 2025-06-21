@@ -36,7 +36,7 @@ public class Branch {
   String city;
 
   @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("branch-orders")
+  @JsonManagedReference("order-branches")
   List<Order> orders = new ArrayList<>();
 
   @OneToOne(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)

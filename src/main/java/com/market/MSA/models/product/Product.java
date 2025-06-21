@@ -54,12 +54,12 @@ public class Product {
 
   @ManyToOne
   @JoinColumn(name = "supplierId", nullable = false)
-  @JsonBackReference("product-supplier")
+  @JsonBackReference("supplier-products")
   Supplier supplier;
 
   @ManyToOne
   @JoinColumn(name = "categoryId", nullable = false)
-  @JsonBackReference("product-category")
+  @JsonBackReference("product-categories")
   Category category;
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public interface ProductImageMapper {
   ProductImage toProductImage(ProductImageRequest productImageRequest);
 
+  @Mapping(target = "productResponse", ignore = true) // Prevent circular reference
   ProductImageResponse toProductImageResponse(ProductImage productImage);
 
   @Mapping(target = "productImageId", ignore = true)

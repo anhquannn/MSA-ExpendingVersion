@@ -86,7 +86,6 @@ public class FeedbackService {
   }
 
   // Get Feedback by ID
-  @Cacheable(value = "feedback", key = "#feedbackId", unless = "#result == null")
   public FeedbackResponse getFeedbackById(long feedbackId) {
     return feedbackRepository
         .findById(feedbackId)

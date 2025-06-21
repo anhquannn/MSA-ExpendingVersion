@@ -33,6 +33,6 @@ public class Campaign {
   LocalDateTime endDate;
 
   @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("campaign-promocodes")
+  @JsonManagedReference("campaign-promoCodes")
   List<PromoCode> promoCodes = new ArrayList<>();
 }

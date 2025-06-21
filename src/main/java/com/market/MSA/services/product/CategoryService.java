@@ -36,9 +36,6 @@ public class CategoryService {
   final CategoryRepository categoryRepository;
   final CategoryMapper categoryMapper;
 
-  @CacheEvict(
-      value = {"categories", "category"},
-      allEntries = true)
   @Transactional
   public CategoryResponse createCategory(CategoryRequest request) {
     Category category = categoryMapper.toCategory(request);
@@ -55,12 +52,6 @@ public class CategoryService {
     return categoryMapper.toCategoryResponse(category);
   }
 
-  @Caching(
-      evict = {
-        @CacheEvict(value = "category", key = "#categoryId"),
-        @CacheEvict(value = "category_entity", key = "#categoryId"),
-        @CacheEvict(value = "categories", allEntries = true)
-      })
   @Transactional
   public CategoryResponse updateCategory(Long categoryId, CategoryRequest request) {
     Category category =
@@ -83,12 +74,6 @@ public class CategoryService {
     return categoryMapper.toCategoryResponse(categoryUpdate);
   }
 
-  @Caching(
-      evict = {
-        @CacheEvict(value = "category", key = "#categoryId"),
-        @CacheEvict(value = "category_entity", key = "#categoryId"),
-        @CacheEvict(value = "categories", allEntries = true)
-      })
   @Transactional
   public boolean deleteCategory(Long categoryId) {
     if (!categoryRepository.existsById(categoryId)) {
@@ -98,9 +83,7 @@ public class CategoryService {
     return true;
   }
 
-  @Cacheable(value = "category", key = "#categoryId", unless = "#result == null")
   public CategoryResponse getCategoryById(Long categoryId) {
-    log.info("Fetching category from database with id: {}", categoryId);
     Category category =
         categoryRepository
             .findById(categoryId)

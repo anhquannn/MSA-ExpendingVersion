@@ -48,12 +48,12 @@ public class Order {
 
   @ManyToOne
   @JoinColumn(name = "branchId", nullable = false)
-  @JsonBackReference("order-branch")
+  @JsonBackReference("order-branches")
   Branch branch;
 
   @ManyToOne
   @JoinColumn(name = "cartId", nullable = false)
-  @JsonBackReference("order-cart")
+  @JsonBackReference("order-carts")
   Cart cart;
 
   @ManyToOne
@@ -94,6 +94,6 @@ public class Order {
       name = "order_promocodes",
       joinColumns = @JoinColumn(name = "order_id"),
       inverseJoinColumns = @JoinColumn(name = "promo_code_id"))
-  @JsonManagedReference("order-promocodes")
+  @JsonManagedReference("promoCode-orders")
   List<PromoCode> promoCodes = new ArrayList<>();
 }

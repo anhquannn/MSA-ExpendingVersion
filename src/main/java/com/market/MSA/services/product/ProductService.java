@@ -49,7 +49,6 @@ public class ProductService {
   static final String DEFAULT_SORT_BY = "price";
   static final String DEFAULT_SORT_DIRECTION = "asc";
 
-  @CacheEvict(value = "products", allEntries = true)
   @Transactional
   public ProductResponse createProduct(ProductRequest request, boolean sendNotificationToAll) {
     Product product = productMapper.toProduct(request);
@@ -69,12 +68,6 @@ public class ProductService {
     return productMapper.toProductResponse(savedProduct);
   }
 
-  @Caching(
-      evict = {
-        @CacheEvict(value = "product", key = "#id"),
-        @CacheEvict(value = "product_entity", key = "#id"),
-        @CacheEvict(value = "products", allEntries = true)
-      })
   @Transactional
   public ProductResponse updateProduct(Long id, ProductRequest request) {
     Product product =
@@ -93,16 +86,6 @@ public class ProductService {
     return productMapper.toProductResponse(updatedProduct);
   }
 
-  @CacheEvict(
-      value = {"product", "products"},
-      key = "#id",
-      allEntries = true)
-  @Caching(
-      evict = {
-        @CacheEvict(value = "product", key = "#id"),
-        @CacheEvict(value = "product_entity", key = "#id"),
-        @CacheEvict(value = "products", allEntries = true)
-      })
   @Transactional
   public boolean deleteProduct(Long id) {
     if (!productRepository.existsById(id)) {
@@ -112,16 +95,12 @@ public class ProductService {
     return true;
   }
 
-  @Cacheable(value = "product", key = "#id", unless = "#result == null")
   public ProductResponse getProductById(Long id) {
-    log.info("Fetching product from database with id: {}", id);
     Product product = findProductEntityById(id);
     return productMapper.toProductResponse(product);
   }
 
-  @Cacheable(value = "product_entity", key = "#id", unless = "#result == null")
   public Product findProductById(Long id) {
-    log.info("Fetching product entity from database with id: {}", id);
     return findProductEntityById(id);
   }
 
@@ -131,7 +110,6 @@ public class ProductService {
         .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
   }
 
-  @CacheEvict(value = "products", key = "#productId")
   @Transactional
   public void updateTotalRevenue(Long productId, int quantity) {
     Product product = findProductEntityById(productId);

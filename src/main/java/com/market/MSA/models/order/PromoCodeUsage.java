@@ -24,7 +24,7 @@ public class PromoCodeUsage {
 
   @ManyToOne
   @JoinColumn(name = "promoCodeId", nullable = false)
-  @JsonBackReference("promocode-usages")
+  @JsonBackReference("promoCode-usages")
   PromoCode promoCode;
 
   @ManyToOne

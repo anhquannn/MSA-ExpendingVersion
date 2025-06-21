@@ -22,5 +22,5 @@ public class CartResponse {
   UserResponse user;
 
   List<CartItemResponse> cartItemResponses;
-  List<OrderResponse> orderResponses;
+//  List<OrderResponse> orderResponses;
 }

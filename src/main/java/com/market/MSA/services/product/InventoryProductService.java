@@ -283,9 +283,6 @@ public class InventoryProductService {
         .build();
   }
 
-  @Cacheable(
-      value = "inventory_products",
-      key = "'availability_' + #branchId + '_' + #productId + '_' + #quantity")
   public boolean checkStockAvailability(Long branchId, Long productId, int quantity) {
     Integer totalStock =
         inventoryProductRepository.getTotalStockByBranchAndProduct(branchId, productId);

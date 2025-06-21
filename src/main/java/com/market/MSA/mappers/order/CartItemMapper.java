@@ -20,7 +20,6 @@ public interface CartItemMapper {
   @Mapping(target = "isSelected", source = "selected")
   @Mapping(target = "price", source = "price")
   @Mapping(target = "quantity", source = "quantity")
-  @Mapping(target = "product.orderDetails", ignore = true)
   @Mapping(target = "product", source = "product")
   @Mapping(target = "cart", source = "cart")
   CartItemResponse toCartItemResponse(CartItem cartItem);

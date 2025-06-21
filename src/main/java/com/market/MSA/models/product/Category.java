@@ -39,7 +39,7 @@ public class Category {
 
   @ManyToOne
   @JoinColumn(name = "parent_category_id")
-  @JsonBackReference("category-parent")
+  @JsonBackReference("category-children")
   Category parentCategory;
 
   @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -47,6 +47,6 @@ public class Category {
   List<Category> subCategories = new ArrayList<>();
 
   @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("category-products")
+  @JsonManagedReference("product-categories")
   List<Product> products = new ArrayList<>();
 }

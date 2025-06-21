@@ -51,14 +51,14 @@ public class PromoCode {
 
   @ManyToOne
   @JoinColumn(name = "campaignId", nullable = false)
-  @JsonBackReference("campaign-promocodes")
+  @JsonBackReference("campaign-promoCodes")
   Campaign campaign;
 
   @OneToMany(mappedBy = "promoCode", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("promocode-usages")
+  @JsonManagedReference("promoCode-usages")
   List<PromoCodeUsage> promoCodeUsages = new ArrayList<>();
 
   @ManyToMany(mappedBy = "promoCodes")
-  @JsonBackReference("order-promocodes")
+  @JsonBackReference("promoCode-orders")
   List<Order> orders = new ArrayList<>();
 }

@@ -9,6 +9,7 @@ import com.market.MSA.repositories.product.ProductImageRepository;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.requests.filters.ProductImageFilterRequest;
 import com.market.MSA.requests.product.ProductImageRequest;
+import com.market.MSA.responses.product.InventoryResponse;
 import com.market.MSA.responses.product.ProductImageResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -85,14 +86,19 @@ public class ProductImageService {
     return productImageMapper.toProductImageResponse(productImage);
   }
 
-//  @Cacheable("product_images")
+  @Cacheable("all_product_images")
+  public List<ProductImageResponse> getAll() {
+    return productImageRepository.findAll().stream().map(productImageMapper::toProductImageResponse).collect(Collectors.toList());
+  }
+
+  @Cacheable("product_images")
   public List<ProductImageResponse> getAllProductImages(ProductImageFilterRequest request) {
     return productImageRepository.filter(request.getProductId()).stream()
         .map(productImageMapper::toProductImageResponse)
         .collect(Collectors.toList());
   }
 
-//  @Cacheable("product_images")
+  @Cacheable("product_images")
   public Page<ProductImageResponse> getAllProductImagesWithPaging(
       ProductImageFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

@@ -22,6 +22,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -163,11 +164,13 @@ public class CartItemService {
     return cartItemMapper.toCartItemResponse(cartItem);
   }
 
+  @Cacheable("cart_items")
   public List<CartItemResponse> getCartItemsByCartId(Long cartId) {
     List<CartItem> cartItems = cartItemRepository.findByCart_CartIdAndIsSelected(cartId, true);
     return cartItems.stream().map(cartItemMapper::toCartItemResponse).collect(Collectors.toList());
   }
 
+  @Cacheable("cart_items")
   public List<CartItemResponse> getAllCartItemsByCartId(Long cartId) {
     List<CartItem> cartItems = cartItemRepository.findByCart_CartId(cartId);
     return cartItems.stream().map(cartItemMapper::toCartItemResponse).collect(Collectors.toList());

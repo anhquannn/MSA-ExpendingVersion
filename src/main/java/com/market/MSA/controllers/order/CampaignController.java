@@ -5,6 +5,7 @@ import com.market.MSA.requests.filters.CampaignFilterRequest;
 import com.market.MSA.requests.order.CampaignRequest;
 import com.market.MSA.responses.order.CampaignResponse;
 import com.market.MSA.responses.others.ApiResponse;
+import com.market.MSA.responses.product.TrendingProductResponse;
 import com.market.MSA.services.order.CampaignService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -52,6 +53,14 @@ public class CampaignController {
         .result(campaignService.getCampaignById(campaignId))
         .message(ApiMessage.CAMPAIGN_RETRIEVED.getMessage())
         .build();
+  }
+
+  @GetMapping
+  public ApiResponse<List<CampaignResponse>> getAll() {
+    return ApiResponse.<List<CampaignResponse>>builder()
+            .result(campaignService.getAll())
+            .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())
+            .build();
   }
 
   @PostMapping("/list")

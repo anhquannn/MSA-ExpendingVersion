@@ -9,6 +9,7 @@ import com.market.MSA.repositories.user.RewardPointTransactionRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.RewardPointTransactionFilterRequest;
 import com.market.MSA.requests.user.RewardPointTransactionRequest;
+import com.market.MSA.responses.user.RewardPointResponse;
 import com.market.MSA.responses.user.RewardPointTransactionResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.time.LocalDateTime;
@@ -88,7 +89,12 @@ public class RewardPointTransactionService {
     return true;
   }
 
-//  @Cacheable("reward_point_transactions")
+  @Cacheable("all_reward_point_transactions")
+  public List<RewardPointTransactionResponse> getAll() {
+    return rewardPointTransactionRepository.findAll().stream().map(rewardPointTransactionMapper::toRewardPointTransactionResponse).collect(Collectors.toList());
+  }
+
+  @Cacheable("reward_point_transactions")
   public List<RewardPointTransactionResponse> getAllRewardPointTransactions(
       RewardPointTransactionFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
@@ -116,7 +122,7 @@ public class RewardPointTransactionService {
         .collect(Collectors.toList());
   }
 
-//  @Cacheable("reward_point_transactions")
+  @Cacheable("reward_point_transactions")
   public Page<RewardPointTransactionResponse> getAllRewardPointTransactionsWithPaging(
       RewardPointTransactionFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

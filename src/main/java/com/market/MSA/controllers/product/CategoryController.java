@@ -4,6 +4,7 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.CategoryFilterRequest;
 import com.market.MSA.requests.product.CategoryRequest;
 import com.market.MSA.responses.others.ApiResponse;
+import com.market.MSA.responses.product.BranchResponse;
 import com.market.MSA.responses.product.CategoryResponse;
 import com.market.MSA.services.product.CategoryService;
 import jakarta.validation.Valid;
@@ -61,6 +62,14 @@ public class CategoryController {
         .result(categoryService.getCategoryById(id))
         .message(ApiMessage.CATEGORY_RETRIEVED.getMessage())
         .build();
+  }
+
+  @GetMapping
+  public ApiResponse<List<CategoryResponse>> getAll() {
+    return ApiResponse.<List<CategoryResponse>>builder()
+            .result(categoryService.getAll())
+            .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())
+            .build();
   }
 
   @PostMapping("/list")

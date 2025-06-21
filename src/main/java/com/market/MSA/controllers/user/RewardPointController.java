@@ -4,6 +4,7 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.RewardPointFilterRequest;
 import com.market.MSA.requests.user.RewardPointRequest;
 import com.market.MSA.responses.others.ApiResponse;
+import com.market.MSA.responses.product.TransferResponseItem;
 import com.market.MSA.responses.user.RewardPointResponse;
 import com.market.MSA.services.user.RewardPointService;
 import jakarta.validation.Valid;
@@ -56,6 +57,14 @@ public class RewardPointController {
         .result(rewardPointService.getRewardPointById(rewardPointId))
         .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
         .build();
+  }
+
+  @GetMapping
+  public ApiResponse<List<RewardPointResponse>> getAll() {
+    return ApiResponse.<List<RewardPointResponse>>builder()
+            .result(rewardPointService.getAll())
+            .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
+            .build();
   }
 
   @PostMapping("/list")

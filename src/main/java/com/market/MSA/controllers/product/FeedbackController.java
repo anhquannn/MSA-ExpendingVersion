@@ -4,6 +4,7 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.FeedbackFilterRequest;
 import com.market.MSA.requests.product.FeedbackRequest;
 import com.market.MSA.responses.others.ApiResponse;
+import com.market.MSA.responses.product.CategoryResponse;
 import com.market.MSA.responses.product.FeedbackResponse;
 import com.market.MSA.services.product.FeedbackService;
 import jakarta.validation.Valid;
@@ -60,6 +61,14 @@ public class FeedbackController {
         .result(feedbackService.getFeedbackById(id))
         .message(ApiMessage.FEEDBACK_RETRIEVED.getMessage())
         .build();
+  }
+
+  @GetMapping
+  public ApiResponse<List<FeedbackResponse>> getAll() {
+    return ApiResponse.<List<FeedbackResponse>>builder()
+            .result(feedbackService.getAll())
+            .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())
+            .build();
   }
 
   @PostMapping("/list")

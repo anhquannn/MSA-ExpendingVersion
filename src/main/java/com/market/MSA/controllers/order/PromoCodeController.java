@@ -3,6 +3,7 @@ package com.market.MSA.controllers.order;
 import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.PromoCodeFilterRequest;
 import com.market.MSA.requests.order.PromoCodeRequest;
+import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.PromoCodeResponse;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.services.order.PromoCodeService;
@@ -75,6 +76,14 @@ public class PromoCodeController {
         .result(promoCodeService.getPromoCodeByCode(code, userId))
         .message(ApiMessage.PROMO_CODE_RETRIEVED.getMessage())
         .build();
+  }
+
+  @GetMapping
+  public ApiResponse<List<PromoCodeResponse>> getAll() {
+    return ApiResponse.<List<PromoCodeResponse>>builder()
+            .result(promoCodeService.getAll())
+            .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
+            .build();
   }
 
   // Lấy danh sách tất cả PromoCode (không phân trang)

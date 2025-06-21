@@ -1,8 +1,11 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.requests.filters.TransferRequestItemFilterRequest;
+import com.market.MSA.requests.filters.TrendingProductFilterRequest;
 import com.market.MSA.requests.product.TrendingProductRequest;
 import com.market.MSA.responses.others.ApiResponse;
+import com.market.MSA.responses.product.TransferResponseItem;
 import com.market.MSA.responses.product.TrendingProductResponse;
 import com.market.MSA.services.product.TrendingProductService;
 import jakarta.validation.Valid;
@@ -11,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -64,13 +68,29 @@ public class TrendingProductController {
         .build();
   }
 
-  // Lấy tất cả TrendingProduct (phân trang)
   @GetMapping
-  public ApiResponse<List<TrendingProductResponse>> getAllTrendingProducts(
-      @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int pageSize) {
+  public ApiResponse<List<TrendingProductResponse>> getAllTrendingProducts() {
     return ApiResponse.<List<TrendingProductResponse>>builder()
-        .result(trendingProductService.getAllTrendingProducts(page, pageSize))
+        .result(trendingProductService.getAll())
         .message(ApiMessage.ALL_TRENDING_PRODUCTS_RETRIEVED.getMessage())
         .build();
+  }
+
+  @PostMapping("/list")
+  public ApiResponse<List<TrendingProductResponse>> filterTrendingProducts(
+          @Valid @RequestBody TrendingProductFilterRequest request) {
+    return ApiResponse.<List<TrendingProductResponse>>builder()
+            .result(trendingProductService.getAllTrendingProducts(request))
+            .message(ApiMessage.ALL_TRENDING_PRODUCTS_RETRIEVED.getMessage())
+            .build();
+  }
+
+  @PostMapping("/paging")
+  public ApiResponse<Page<TrendingProductResponse>> filterTrendingProductsWithPaging(
+          @Valid @RequestBody TrendingProductFilterRequest request) {
+    return ApiResponse.<Page<TrendingProductResponse>>builder()
+            .result(trendingProductService.getAllTrendingProductsWithPaging(request))
+            .message(ApiMessage.ALL_TRENDING_PRODUCTS_RETRIEVED.getMessage())
+            .build();
   }
 }

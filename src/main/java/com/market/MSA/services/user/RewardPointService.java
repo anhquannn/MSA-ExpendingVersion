@@ -10,6 +10,7 @@ import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.RewardPointFilterRequest;
 import com.market.MSA.requests.user.RewardPointRequest;
 import com.market.MSA.requests.user.RewardPointTransactionRequest;
+import com.market.MSA.responses.product.TrendingProductResponse;
 import com.market.MSA.responses.user.RewardPointResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.time.LocalDateTime;
@@ -19,6 +20,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -77,6 +79,12 @@ public class RewardPointService {
             .orElseThrow(() -> new AppException(ErrorCode.REWARD_POINT_NOT_FOUND)));
   }
 
+  @Cacheable("all_reward_points")
+  public List<RewardPointResponse> getAll() {
+    return rewardPointRepository.findAll().stream().map(rewardPointMapper::toRewardPointResponse).collect(Collectors.toList());
+  }
+
+  @Cacheable("reward_points")
   public List<RewardPointResponse> getAllRewardPoints(RewardPointFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return rewardPointRepository.filter(request.getUserId(), sort).stream()
@@ -84,6 +92,7 @@ public class RewardPointService {
         .collect(Collectors.toList());
   }
 
+  @Cacheable("reward_points")
   public Page<RewardPointResponse> getAllRewardPointsWithPaging(RewardPointFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

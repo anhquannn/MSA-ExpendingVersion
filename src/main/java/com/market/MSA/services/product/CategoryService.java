@@ -7,6 +7,7 @@ import com.market.MSA.models.product.Category;
 import com.market.MSA.repositories.product.CategoryRepository;
 import com.market.MSA.requests.filters.CategoryFilterRequest;
 import com.market.MSA.requests.product.CategoryRequest;
+import com.market.MSA.responses.others.PaymentResponse;
 import com.market.MSA.responses.product.CategoryResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -35,9 +36,9 @@ public class CategoryService {
   final CategoryRepository categoryRepository;
   final CategoryMapper categoryMapper;
 
-//  @CacheEvict(
-//      value = {"categories", "category"},
-//      allEntries = true)
+  @CacheEvict(
+      value = {"categories", "category"},
+      allEntries = true)
   @Transactional
   public CategoryResponse createCategory(CategoryRequest request) {
     Category category = categoryMapper.toCategory(request);
@@ -54,12 +55,12 @@ public class CategoryService {
     return categoryMapper.toCategoryResponse(category);
   }
 
-//  @Caching(
-//      evict = {
-//        @CacheEvict(value = "category", key = "#categoryId"),
-//        @CacheEvict(value = "category_entity", key = "#categoryId"),
-//        @CacheEvict(value = "categories", allEntries = true)
-//      })
+  @Caching(
+      evict = {
+        @CacheEvict(value = "category", key = "#categoryId"),
+        @CacheEvict(value = "category_entity", key = "#categoryId"),
+        @CacheEvict(value = "categories", allEntries = true)
+      })
   @Transactional
   public CategoryResponse updateCategory(Long categoryId, CategoryRequest request) {
     Category category =
@@ -82,12 +83,12 @@ public class CategoryService {
     return categoryMapper.toCategoryResponse(categoryUpdate);
   }
 
-//  @Caching(
-//      evict = {
-//        @CacheEvict(value = "category", key = "#categoryId"),
-//        @CacheEvict(value = "category_entity", key = "#categoryId"),
-//        @CacheEvict(value = "categories", allEntries = true)
-//      })
+  @Caching(
+      evict = {
+        @CacheEvict(value = "category", key = "#categoryId"),
+        @CacheEvict(value = "category_entity", key = "#categoryId"),
+        @CacheEvict(value = "categories", allEntries = true)
+      })
   @Transactional
   public boolean deleteCategory(Long categoryId) {
     if (!categoryRepository.existsById(categoryId)) {
@@ -97,15 +98,7 @@ public class CategoryService {
     return true;
   }
 
-//  @Cacheable(value = "category_entity", key = "#categoryId", unless = "#result == null")
-  public Category getCategoryEntityById(Long categoryId) {
-    log.info("Fetching category entity from database with id: {}", categoryId);
-    return categoryRepository
-        .findById(categoryId)
-        .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
-  }
-
-//  @Cacheable(value = "category", key = "#categoryId", unless = "#result == null")
+  @Cacheable(value = "category", key = "#categoryId", unless = "#result == null")
   public CategoryResponse getCategoryById(Long categoryId) {
     log.info("Fetching category from database with id: {}", categoryId);
     Category category =
@@ -115,14 +108,19 @@ public class CategoryService {
     return categoryMapper.toCategoryResponse(category);
   }
 
-//  @Cacheable("categories")
+  @Cacheable("all_categories")
+  public List<CategoryResponse> getAll() {
+    return categoryRepository.findAll().stream().map(categoryMapper::toCategoryResponse).collect(Collectors.toList());
+  }
+
+  @Cacheable("categories")
   public List<CategoryResponse> getAllCategories(CategoryFilterRequest request) {
     return categoryRepository.filter(request.getName(), request.getParentId()).stream()
         .map(categoryMapper::toCategoryResponse)
         .collect(Collectors.toList());
   }
 
-//  @Cacheable("categories")
+  @Cacheable("categories")
   public Page<CategoryResponse> getAllCategoriesWithPaging(CategoryFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

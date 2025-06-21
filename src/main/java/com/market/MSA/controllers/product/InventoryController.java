@@ -4,6 +4,7 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.InventoryFilterRequest;
 import com.market.MSA.requests.product.InventoryRequest;
 import com.market.MSA.responses.others.ApiResponse;
+import com.market.MSA.responses.product.FeedbackResponse;
 import com.market.MSA.responses.product.InventoryResponse;
 import com.market.MSA.services.product.InventoryService;
 import jakarta.validation.Valid;
@@ -62,6 +63,14 @@ public class InventoryController {
         .result(inventoryService.getAllInventories(request))
         .message(ApiMessage.ALL_INVENTORIES_RETRIEVED.getMessage())
         .build();
+  }
+
+  @GetMapping
+  public ApiResponse<List<InventoryResponse>> getAll() {
+    return ApiResponse.<List<InventoryResponse>>builder()
+            .result(inventoryService.getAll())
+            .message(ApiMessage.ALL_INVENTORIES_RETRIEVED.getMessage())
+            .build();
   }
 
   @PostMapping("/paging")

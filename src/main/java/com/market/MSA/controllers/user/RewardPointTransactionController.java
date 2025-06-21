@@ -4,6 +4,7 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.RewardPointTransactionFilterRequest;
 import com.market.MSA.requests.user.RewardPointTransactionRequest;
 import com.market.MSA.responses.others.ApiResponse;
+import com.market.MSA.responses.user.RewardPointResponse;
 import com.market.MSA.responses.user.RewardPointTransactionResponse;
 import com.market.MSA.services.user.RewardPointTransactionService;
 import jakarta.validation.Valid;
@@ -48,6 +49,14 @@ public class RewardPointTransactionController {
         .result(true)
         .message(ApiMessage.REWARD_POINT_TRANSACTION_DELETED.getMessage())
         .build();
+  }
+
+  @GetMapping
+  public ApiResponse<List<RewardPointTransactionResponse>> getAll() {
+    return ApiResponse.<List<RewardPointTransactionResponse>>builder()
+            .result(rewardPointTransactionService.getAll())
+            .message(ApiMessage.ALL_REWARD_POINT_TRANSACTIONS_RETRIEVED.getMessage())
+            .build();
   }
 
   @PostMapping("/list")

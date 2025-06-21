@@ -4,6 +4,7 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.ProductImageFilterRequest;
 import com.market.MSA.requests.product.ProductImageRequest;
 import com.market.MSA.responses.others.ApiResponse;
+import com.market.MSA.responses.product.InventoryProductResponse;
 import com.market.MSA.responses.product.ProductImageResponse;
 import com.market.MSA.services.product.ProductImageService;
 import jakarta.validation.Valid;
@@ -56,6 +57,14 @@ public class ProductImageController {
         .result(productImageService.getProductImageById(imageId))
         .message(ApiMessage.PRODUCT_IMAGE_RETRIEVED.getMessage())
         .build();
+  }
+
+  @GetMapping
+  public ApiResponse<List<ProductImageResponse>> getAll() {
+    return ApiResponse.<List<ProductImageResponse>>builder()
+            .result(productImageService.getAll())
+            .message(ApiMessage.ALL_PRODUCT_IMAGES_RETRIEVED.getMessage())
+            .build();
   }
 
   @PostMapping("/list")

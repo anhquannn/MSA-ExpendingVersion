@@ -9,6 +9,7 @@ import com.market.MSA.repositories.product.TransferRequestItemRepository;
 import com.market.MSA.repositories.product.TransferRequestRepository;
 import com.market.MSA.requests.filters.TransferRequestItemFilterRequest;
 import com.market.MSA.requests.product.TransferRequestItem;
+import com.market.MSA.responses.product.SupplierResponse;
 import com.market.MSA.responses.product.TransferResponseItem;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -90,7 +91,12 @@ public class TransferRequestItemService {
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_ITEM_NOT_FOUND)));
   }
 
-//  @Cacheable("transfer_request_items")
+  @Cacheable("all_transfer_request_items")
+  public List<TransferResponseItem> getAll() {
+    return transferRequestItemRepository.findAll().stream().map(transferRequestItemMapper::toTransferResponseItem).collect(Collectors.toList());
+  }
+
+  @Cacheable("transfer_request_items")
   public List<TransferResponseItem> getAllTransferRequestItems(
       TransferRequestItemFilterRequest request) {
     return transferRequestItemRepository
@@ -100,7 +106,7 @@ public class TransferRequestItemService {
         .collect(Collectors.toList());
   }
 
-//  @Cacheable("transfer_request_items")
+  @Cacheable("transfer_request_items")
   public Page<TransferResponseItem> getAllTransferRequestItemsWithPaging(
       TransferRequestItemFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

@@ -8,6 +8,7 @@ import com.market.MSA.repositories.product.BranchRepository;
 import com.market.MSA.repositories.product.InventoryRepository;
 import com.market.MSA.requests.filters.InventoryFilterRequest;
 import com.market.MSA.requests.product.InventoryRequest;
+import com.market.MSA.responses.product.InventoryProductResponse;
 import com.market.MSA.responses.product.InventoryResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -78,14 +79,19 @@ public class InventoryService {
     return inventoryMapper.toInventoryResponse(inventory);
   }
 
-//  @Cacheable("inventories")
+  @Cacheable("all_inventories")
+  public List<InventoryResponse> getAll() {
+    return inventoryRepository.findAll().stream().map(inventoryMapper::toInventoryResponse).collect(Collectors.toList());
+  }
+
+  @Cacheable("inventories")
   public List<InventoryResponse> getAllInventories(InventoryFilterRequest request) {
     return inventoryRepository.filter(request.getKeyword(), request.getBranchId()).stream()
         .map(inventoryMapper::toInventoryResponse)
         .collect(Collectors.toList());
   }
 
-//  @Cacheable("inventories")
+  @Cacheable("inventories")
   public Page<InventoryResponse> getAllInventoriesWithPaging(InventoryFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

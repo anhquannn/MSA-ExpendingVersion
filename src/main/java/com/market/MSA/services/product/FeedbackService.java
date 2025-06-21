@@ -9,6 +9,7 @@ import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.FeedbackFilterRequest;
 import com.market.MSA.requests.product.FeedbackRequest;
+import com.market.MSA.responses.product.CategoryResponse;
 import com.market.MSA.responses.product.FeedbackResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -85,7 +86,7 @@ public class FeedbackService {
   }
 
   // Get Feedback by ID
-//  @Cacheable(value = "feedback", key = "#feedbackId", unless = "#result == null")
+  @Cacheable(value = "feedback", key = "#feedbackId", unless = "#result == null")
   public FeedbackResponse getFeedbackById(long feedbackId) {
     return feedbackRepository
         .findById(feedbackId)
@@ -93,7 +94,12 @@ public class FeedbackService {
         .orElseThrow(() -> new AppException(ErrorCode.FEEDBACK_NOT_FOUND));
   }
 
-//  @Cacheable("feedbacks")
+  @Cacheable("all_feedbacks")
+  public List<FeedbackResponse> getAll() {
+    return feedbackRepository.findAll().stream().map(feedbackMapper::toFeedbackResponse).collect(Collectors.toList());
+  }
+
+  @Cacheable("feedbacks")
   public List<FeedbackResponse> getAllFeedbacks(FeedbackFilterRequest request) {
     return feedbackRepository
         .filter(

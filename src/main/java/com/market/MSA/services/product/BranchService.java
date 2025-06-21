@@ -203,11 +203,18 @@ public class BranchService {
     return branchMapper.toBranchResponse(optionalBranch);
   }
 
-//  @Cacheable("branches")
+  @Cacheable(value = "branches")
   public List<BranchResponse> getAllBranches(BranchFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
     return branchRepository.filter(request.getKeyword(), request.getProductId()).stream()
+        .map(branchMapper::toBranchResponse)
+        .collect(Collectors.toList());
+  }
+
+  @Cacheable(value = "all_branches")
+  public List<BranchResponse> getAll() {
+    return branchRepository.findAll().stream()
         .map(branchMapper::toBranchResponse)
         .collect(Collectors.toList());
   }

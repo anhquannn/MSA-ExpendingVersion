@@ -11,6 +11,7 @@ import com.market.MSA.repositories.order.PromoCodeRepository;
 import com.market.MSA.repositories.order.PromoCodeUsageRepository;
 import com.market.MSA.requests.filters.PromoCodeUsageFilterRequest;
 import com.market.MSA.requests.order.PromoCodeUsageRequest;
+import com.market.MSA.responses.order.PromoCodeResponse;
 import com.market.MSA.responses.order.PromoCodeUsageResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -19,6 +20,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -102,7 +104,13 @@ public class PromoCodeUsageService {
     return promoCodeUsageMapper.toResponse(promoCodeUsage);
   }
 
+  @Cacheable("all_promo_code_usages")
+  public List<PromoCodeUsageResponse> getAll() {
+    return promoCodeUsageRepository.findAll().stream().map(promoCodeUsageMapper::toResponse).collect(Collectors.toList());
+  }
+
   @Transactional(readOnly = true)
+  @Cacheable("promo_code_usages")
   public List<PromoCodeUsageResponse> getAllPromoCodeUsages(PromoCodeUsageFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
@@ -119,6 +127,7 @@ public class PromoCodeUsageService {
   }
 
   @Transactional(readOnly = true)
+  @Cacheable("promo_code_usages")
   public Page<PromoCodeUsageResponse> getAllPromoCodeUsagesWithPaging(
       PromoCodeUsageFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

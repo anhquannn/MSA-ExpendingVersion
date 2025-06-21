@@ -6,6 +6,7 @@ import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.requests.filters.OrderFilterRequest;
 import com.market.MSA.requests.order.OrderRequest;
+import com.market.MSA.responses.order.CancelOrderResponse;
 import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.OrderSummaryResponse;
 import com.market.MSA.responses.order.RevenueStatisticsResponse;
@@ -97,6 +98,14 @@ public class OrderController {
         .result(response)
         .message(ApiMessage.ORDER_SUMMARY_RETRIEVED.getMessage())
         .build();
+  }
+
+  @GetMapping
+  public ApiResponse<List<OrderResponse>> getAll() {
+    return ApiResponse.<List<OrderResponse>>builder()
+            .result(orderService.getAll())
+            .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
+            .build();
   }
 
   @PostMapping("/list")

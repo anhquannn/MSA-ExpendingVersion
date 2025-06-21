@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -62,7 +63,12 @@ public class CampaignService {
         .map(campaignMapper::toCampaignResponse)
         .orElseThrow(() -> new AppException(ErrorCode.CAMPAIGN_NOT_FOUND));
   }
+  @Cacheable("all_campaigns")
+  public List<CampaignResponse> getAll() {
+      return campaignRepository.findAll().stream().map(campaignMapper::toCampaignResponse).collect(Collectors.toList());
+  }
 
+  @Cacheable("campaigns")
   public List<CampaignResponse> getAllCampaigns(CampaignFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return campaignRepository
@@ -78,6 +84,7 @@ public class CampaignService {
         .collect(Collectors.toList());
   }
 
+  @Cacheable("campaigns")
   public Page<CampaignResponse> getAllCampaignsWithPaging(CampaignFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     Pageable pageable =

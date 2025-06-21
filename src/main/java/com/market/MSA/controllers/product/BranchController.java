@@ -5,6 +5,7 @@ import com.market.MSA.requests.branch.CreateBranchWithManagerRequest;
 import com.market.MSA.requests.filters.BranchFilterRequest;
 import com.market.MSA.requests.product.BranchRequest;
 import com.market.MSA.responses.others.ApiResponse;
+import com.market.MSA.responses.others.PaymentResponse;
 import com.market.MSA.responses.product.BranchResponse;
 import com.market.MSA.services.product.BranchService;
 import jakarta.validation.Valid;
@@ -89,10 +90,26 @@ public class BranchController {
         .build();
   }
 
+  @GetMapping
+  public ApiResponse<List<BranchResponse>> getAll() {
+    return ApiResponse.<List<BranchResponse>>builder()
+            .result(branchService.getAll())
+            .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())
+            .build();
+  }
+
   @PostMapping("/list")
   public ApiResponse<List<BranchResponse>> getAllBranches(@Valid BranchFilterRequest request) {
     return ApiResponse.<List<BranchResponse>>builder()
         .result(branchService.getAllBranches(request))
+        .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @GetMapping("/all")
+  public ApiResponse<List<BranchResponse>> getAllBranches() {
+    return ApiResponse.<List<BranchResponse>>builder()
+        .result(branchService.getAll())
         .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())
         .build();
   }

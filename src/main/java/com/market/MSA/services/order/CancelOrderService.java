@@ -21,6 +21,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -107,12 +108,14 @@ public class CancelOrderService {
   }
 
   @Transactional(readOnly = true)
-  public List<CancelOrderResponse> getAllCancelOrders() {
+  @Cacheable("all_cancel_orders")
+  public List<CancelOrderResponse> getAll() {
     return cancelOrderRepository.findAll().stream()
         .map(cancelOrderMapper::toCancelOrderResponse)
         .collect(Collectors.toList());
   }
 
+  @Cacheable("cancel_orders")
   public List<CancelOrderResponse> getAllCancelOrders(CancelOrderFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return cancelOrderRepository
@@ -129,6 +132,7 @@ public class CancelOrderService {
         .collect(Collectors.toList());
   }
 
+  @Cacheable("cancel_orders")
   public Page<CancelOrderResponse> getAllCancelOrdersWithPaging(CancelOrderFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);

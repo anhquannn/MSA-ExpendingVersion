@@ -4,6 +4,7 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.TransferRequestItemFilterRequest;
 import com.market.MSA.requests.product.TransferRequestItem;
 import com.market.MSA.responses.others.ApiResponse;
+import com.market.MSA.responses.product.TransferResponse;
 import com.market.MSA.responses.product.TransferResponseItem;
 import com.market.MSA.services.product.TransferRequestItemService;
 import jakarta.validation.Valid;
@@ -55,6 +56,14 @@ public class TransferRequestItemController {
         .result(transferRequestItemService.getTransferRequestItemById(id))
         .message(ApiMessage.TRANSFER_REQUEST_ITEM_RETRIEVED.getMessage())
         .build();
+  }
+
+  @GetMapping
+  public ApiResponse<List<TransferResponseItem>> getAll() {
+    return ApiResponse.<List<TransferResponseItem>>builder()
+            .result(transferRequestItemService.getAll())
+            .message(ApiMessage.ALL_TRANSFER_REQUEST_ITEMS_RETRIEVED.getMessage())
+            .build();
   }
 
   @PostMapping("/list")

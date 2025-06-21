@@ -234,11 +234,16 @@ public class OrderService {
         .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
   }
 
-//  @Cacheable(
-//      value = "all_orders",
-//      key =
-//          "{#request.branchId, #request.userId, #request.status, #request.phoneNumber, "
-//              + "#request.sortBy, #request.sortDirection}")
+  @Cacheable("orders")
+  public List<OrderResponse> getAll() {
+    return orderRepository.findAll().stream().map(orderMapper::toOrderResponse).collect(Collectors.toList());
+  }
+
+  @Cacheable(
+      value = "all_orders",
+      key =
+          "{#request.branchId, #request.userId, #request.status, #request.phoneNumber, "
+              + "#request.sortBy, #request.sortDirection}")
   public List<OrderResponse> getAllOrders(OrderFilterRequest request) {
     // Validate sort direction
     Sort.Direction direction;
@@ -272,11 +277,11 @@ public class OrderService {
     return orders.stream().map(orderMapper::toOrderResponse).collect(Collectors.toList());
   }
 
-//  @Cacheable(
-//      value = "orders",
-//      key =
-//          "{#request.branchId, #request.userId, #request.status, #request.phoneNumber, "
-//              + "#request.page, #request.pageSize, #request.sortBy, #request.sortDirection}")
+  @Cacheable(
+      value = "orders",
+      key =
+          "{#request.branchId, #request.userId, #request.status, #request.phoneNumber, "
+              + "#request.page, #request.pageSize, #request.sortBy, #request.sortDirection}")
   public Page<OrderResponse> getAllOrdersWithPaging(OrderFilterRequest request) {
     // Convert from 1-based to 0-based page index
     int page = request.getPage() > 0 ? request.getPage() - 1 : 0;

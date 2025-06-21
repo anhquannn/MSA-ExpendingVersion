@@ -17,6 +17,7 @@ import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.NotificationFilterRequest;
 import com.market.MSA.requests.others.NotificationRequest;
+import com.market.MSA.responses.order.PromoCodeUsageResponse;
 import com.market.MSA.responses.others.NotificationResponse;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -151,7 +152,12 @@ public class NotificationService {
         .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_FOUND));
   }
 
-//  @Cacheable("notifications")
+  @Cacheable("all_notifications")
+  public List<NotificationResponse> getAll() {
+    return notificationRepository.findAll().stream().map(notificationMapper::toNotificationResponse).collect(Collectors.toList());
+  }
+
+  @Cacheable("notifications")
   @Transactional(readOnly = true)
   public List<NotificationResponse> getAllNotifications(NotificationFilterRequest request) {
     // Handle date range
@@ -194,7 +200,7 @@ public class NotificationService {
     }
   }
 
-//  @Cacheable("notifications")
+  @Cacheable("notifications")
   @Transactional(readOnly = true)
   public Page<NotificationResponse> getAllNotificationsWithPaging(
       NotificationFilterRequest request) {

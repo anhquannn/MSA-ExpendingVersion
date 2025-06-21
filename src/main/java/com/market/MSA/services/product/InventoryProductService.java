@@ -13,6 +13,7 @@ import com.market.MSA.repositories.product.InventoryRepository;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.requests.filters.InventoryProductFilterRequest;
 import com.market.MSA.requests.product.InventoryProductRequest;
+import com.market.MSA.responses.product.FeedbackResponse;
 import com.market.MSA.responses.product.InventoryProductResponse;
 import com.market.MSA.responses.product.InventoryStatisticsResponse;
 import com.market.MSA.services.others.EntityFinderService;
@@ -282,16 +283,22 @@ public class InventoryProductService {
         .build();
   }
 
-//  @Cacheable(
-//      value = "inventory_products",
-//      key = "'availability_' + #branchId + '_' + #productId + '_' + #quantity")
+  @Cacheable(
+      value = "inventory_products",
+      key = "'availability_' + #branchId + '_' + #productId + '_' + #quantity")
   public boolean checkStockAvailability(Long branchId, Long productId, int quantity) {
     Integer totalStock =
         inventoryProductRepository.getTotalStockByBranchAndProduct(branchId, productId);
     return totalStock != null && totalStock >= quantity;
   }
 
-//  @Cacheable(value = "inventory_products", key = "#request.hashCode()")
+  @Cacheable("all_inventory_products")
+  public List<InventoryProductResponse> getAll() {
+    return inventoryProductRepository.findAll().stream().map(inventoryProductMapper::toInventoryProductResponse).collect(Collectors.toList());
+  }
+
+
+  @Cacheable(value = "inventory_products", key = "#request.hashCode()")
   public List<InventoryProductResponse> getAllInventoryProducts(
       InventoryProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
@@ -311,7 +318,7 @@ public class InventoryProductService {
         .collect(Collectors.toList());
   }
 
-//  @Cacheable(value = "inventory_products", key = "'paged_' + #request.hashCode()")
+  @Cacheable(value = "inventory_products", key = "'paged_' + #request.hashCode()")
   public Page<InventoryProductResponse> getAllInventoryProductsWithPaging(
       InventoryProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

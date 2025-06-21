@@ -1,115 +1,91 @@
-// src/services/branchService.ts
+// File: src/services/branchService.ts
 
-import { Branch, mockBranchesData, BranchFormData } from '../types/branch';
+import {api} from './apiService';
+import { PagedResponse } from './categoryService';
 
-// Giả lập ID tự tăng
-let nextBranchId = mockBranchesData.length > 0 ? Math.max(...mockBranchesData.map(b => parseInt(b.id.substring(1)))) + 1 : 1;
 
-const simulateDelay = (ms: number) => new Promise(res => setTimeout(res, ms));
+export interface Branch {
+  branchId: number;
+  name: string;
+  phone: string;
+  street: string;
+  ward: string;
+  district: string;
+  city: string;
+  inventory: {
+    inventoryId: number;
+    name: string;
+    address: string;
+    contact: string;
+    totalRevenue: number;
+    branch: {
+      branchId: number;
+      name: string;
+      phone: string;
+      street: string;
+      ward: string;
+      district: string;
+      city: string;
+    } | null;
+  } | null;
 
-interface PaginationParams {
-  page: number;
-  limit: number;
-  search?: string;
 }
 
-interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
+export interface BranchPagingParams {
+  keyword?: string;
+  productId?: number;
+  sortBy?: string;
+  sortDirection?: 'ASC' | 'DESC';
+  page?: number;
+  pageSize?: number;
 }
 
-const branchService = {
-  // Lấy danh sách chi nhánh có phân trang và tìm kiếm
-  async getBranches({ page, limit, search }: PaginationParams): Promise<PaginatedResponse<Branch>> {
-    await simulateDelay(500);
+export interface CreateBranchWithManagerPayload {
+  branchName: string;
+  branchPhone: string;
+  branchStreet: string;
+  branchWard: string;
+  branchDistrict: string;
+  branchCity: string;
 
-    let filteredBranches = [...mockBranchesData];
+  inventoryName: string;
+  inventoryAddress: string;
+  inventoryContact: string;
 
-    if (search) {
-      const lowercasedSearch = search.toLowerCase();
-      filteredBranches = filteredBranches.filter(
-        branch =>
-          branch.name.toLowerCase().includes(lowercasedSearch) ||
-          branch.id.toLowerCase().includes(lowercasedSearch) ||
-          branch.city.toLowerCase().includes(lowercasedSearch) ||
-          branch.phone.includes(lowercasedSearch) ||
-          branch.email.toLowerCase().includes(lowercasedSearch)
-      );
-    }
+  managerFullName: string;
+  managerEmail: string;
+  managerPhoneNumber: string;
+  managerPassword?: string;
+}
 
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedBranches = filteredBranches.slice(startIndex, endIndex);
+export const branchService = {
 
-    return {
-      data: paginatedBranches,
-      total: filteredBranches.length,
-      page,
-      limit,
-    };
+  getAllBranchesWithPaging: async (params: BranchPagingParams): Promise<PagedResponse<Branch>> => {
+    type FullApiResponse = { result: PagedResponse<Branch> };
+    const response = await api.post<FullApiResponse>('branch/paging', params);
+    return response.result;
   },
 
-  // Lấy một chi nhánh theo ID
-  async getBranchById(id: string): Promise<Branch | undefined> {
-    await simulateDelay(300);
-    return mockBranchesData.find(b => b.id === id);
+  getBranchById: async (branchId: number): Promise<Branch> => {
+    type FullApiResponse = { result: Branch };
+    const response = await api.get<FullApiResponse>(`branch/${branchId}`);
+    return response.result;
   },
 
-  // Thêm chi nhánh mới
-  async addBranch(branchData: Omit<BranchFormData, 'id'>): Promise<Branch> {
-    await simulateDelay(500);
-    const newBranch: Branch = {
-      ...branchData,
-      id: `B${String(nextBranchId++).padStart(3, '0')}`,
-      status: 'active', // Mặc định trạng thái là active khi thêm mới
-    };
-    mockBranchesData.push(newBranch);
-    return newBranch;
+  createBranchWithManager: async (payload: CreateBranchWithManagerPayload): Promise<Branch> => {
+    type FullApiResponse = { result: Branch };
+    // Endpoint đặc biệt là 'branch/admin'
+    const response = await api.post<FullApiResponse>('branch/admin', payload);
+    return response.result;
   },
 
-  // Cập nhật chi nhánh
-  async updateBranch(id: string, updatedFields: Partial<BranchFormData>): Promise<Branch> {
-    await simulateDelay(500);
-    const index = mockBranchesData.findIndex(b => b.id === id);
-    if (index === -1) {
-      throw new Error('Branch not found');
-    }
-    const currentBranch = mockBranchesData[index];
-    const updatedBranch = {
-      ...currentBranch,
-      ...updatedFields,
-      id: currentBranch.id, // Đảm bảo ID không đổi
-    } as Branch; // Ép kiểu lại để đảm bảo là Branch
-    mockBranchesData[index] = updatedBranch;
-    return updatedBranch;
+  updateBranch: async (branchId: number, payload: Partial<Omit<Branch, 'branchId' | 'inventory'>>): Promise<Branch> => {
+    type FullApiResponse = { result: Branch };
+    const response = await api.put<FullApiResponse>(`branch/${branchId}`, payload);
+    return response.result;
   },
 
-  // Xóa chi nhánh
-  async deleteBranch(id: string): Promise<void> {
-    await simulateDelay(300);
-    const initialLength = mockBranchesData.length;
-    const index = mockBranchesData.findIndex(b => b.id === id);
-    if (index !== -1) {
-      mockBranchesData.splice(index, 1);
-    }
-    if (mockBranchesData.length === initialLength) {
-      throw new Error('Branch not found');
-    }
+  deleteBranch: (branchId: number): Promise<void> => {
+    return api.delete<void>(`branch/${branchId}`);
   },
-
-  // Cập nhật trạng thái chi nhánh
-  async updateBranchStatus(id: string, status: 'active' | 'inactive'): Promise<Branch> {
-    await simulateDelay(300);
-    const index = mockBranchesData.findIndex(b => b.id === id);
-    if (index === -1) {
-      throw new Error('Branch not found');
-    }
-    const branchToUpdate = mockBranchesData[index];
-    branchToUpdate.status = status;
-    return branchToUpdate;
-  }
 };
-
-export default branchService;

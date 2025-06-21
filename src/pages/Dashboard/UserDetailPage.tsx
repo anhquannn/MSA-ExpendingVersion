@@ -1,255 +1,427 @@
-import React, { useState, useMemo } from 'react'; // Import useState
+// // File: src/pages/Dashboard/UserDetailPage.tsx
+
+// import React, { useState, useEffect, useMemo } from 'react';
+// import { useParams, useNavigate } from 'react-router-dom';
+// import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+// // --- Import các service và types thật ---
+// import { userService, User, UserUpdatePayload } from '../../services/userService';
+// import { AuthTokenManager } from '../../services/apiService';
+
+// const UserDetailPage: React.FC = () => {
+//   const { userId } = useParams<{ userId: string }>();
+//   const navigate = useNavigate();
+//   const queryClient = useQueryClient();
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [editData, setEditData] = useState<Partial<UserUpdatePayload>>({});
+
+//   const { 
+//     data: user, 
+//     isLoading, 
+//     isError, 
+//     error 
+//   } = useQuery({
+//     queryKey: ['user', userId],
+//     queryFn: () => userService.getUserById(Number(userId)),
+//     enabled: !!userId, 
+//   });
+
+//   useEffect(() => {
+//     if (user) {
+//       setEditData({
+//         fullName: user.fullName || '',
+//         phoneNumber: user.phoneNumber || '',
+//         address: user.address || '',
+//       });
+//     }
+//   }, [user]); 
+
+// const canModify = useMemo(() => {
+//     if (!user?.roles) return false;
+
+//     return user.roles.some(
+//       (role: any) => role.name === 'ADMIN' || role.name.startsWith('MANAGER')
+//     );
+//   }, [user]); // Phụ thuộc vào `user` từ API, không phải `currentUser`.
+
+
+//   // --- MUTATIONS ĐỂ CẬP NHẬT VÀ XÓA ---
+//   const updateUserMutation = useMutation({
+//     mutationFn: ({ id, payload }: { id: number, payload: UserUpdatePayload }) =>
+//       userService.updateUser(id, payload),
+//     onSuccess: (updatedUser) => {
+//       alert('Cập nhật thông tin thành công!');
+//       queryClient.setQueryData(['user', userId], updatedUser);
+//       queryClient.invalidateQueries({ queryKey: ['users'] });
+//       setIsEditing(false); // Thoát chế độ sửa
+//     },
+//     onError: (err: Error) => alert(`Lỗi khi cập nhật: ${err.message}`),
+//   });
+
+//   const deleteUserMutation = useMutation({
+//     mutationFn: (id: number) => userService.deleteUser(id),
+//     onSuccess: () => {
+//       alert('Xóa người dùng thành công!');
+//       queryClient.invalidateQueries({ queryKey: ['users'] });
+//       navigate('/dashboard/users');
+//     },
+//     onError: (err: Error) => alert(`Lỗi: ${err.message}`),
+//   });
+
+//   // --- EVENT HANDLERS ---
+//   const handleEditClick = () => {
+//     setIsEditing(true);
+//     // useEffect ở trên đã đảm bảo editData được cập nhật từ `user`
+//   };
+
+//   const handleCancelClick = () => {
+//     setIsEditing(false);
+//     // Đặt lại editData về giá trị gốc của user đang xem
+//     if (user) {
+//        setEditData({
+//         fullName: user.fullName || '',
+//         phoneNumber: user.phoneNumber || '',
+//         address: user.address || '',
+//       });
+//     }
+//   };
+
+//   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     setEditData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+//   };
+
+//   const handleSaveClick = () => {
+//     if (!user) return;
+//     // Sửa ở đây: tên biến phải là `userId` để khớp với `mutationFn`
+//     updateUserMutation.mutate({ id: user.userId, payload: editData });
+//   };
+
+//   const handleDelete = () => {
+//     if (!user) return;
+//     if (window.confirm(`Bạn có chắc muốn xóa người dùng "${user.fullName}"?`)) {
+//       deleteUserMutation.mutate(user.userId);
+//     }
+//   };
+
+//   // --- RENDER ---
+//   if (isLoading) return <div className="p-8 text-center">Đang tải chi tiết...</div>;
+//   if (isError) return <div className="p-8 text-center text-red-500">Lỗi: {(error as Error).message}</div>;
+//   if (!user) return <div className="p-8 text-center">Không tìm thấy người dùng.</div>;
+
+//   return (
+//     <div className="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto mt-10">
+//       <div className="flex justify-between items-center mb-6">
+//         <h2 className="text-3xl font-bold text-gray-800">{isEditing ? 'Chỉnh Sửa Thông Tin' : 'Chi Tiết Người Dùng'}</h2>
+//         <div className="flex space-x-2">
+//           {isEditing ? (
+//             <>
+//               <button onClick={handleSaveClick} disabled={updateUserMutation.isPending} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:bg-gray-400">
+//                 {updateUserMutation.isPending ? 'Đang lưu...' : 'Lưu'}
+//               </button>
+//               <button onClick={handleCancelClick} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400">Hủy</button>
+//             </>
+//           ) : (
+//             <>
+//               <button onClick={() => navigate(-1)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Quay lại</button>
+//               {canModify && (
+//                 <>
+//                   <button onClick={handleEditClick} className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600">Chỉnh Sửa</button>
+//                   <button onClick={handleDelete} disabled={deleteUserMutation.isPending} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:bg-gray-400">
+//                     {deleteUserMutation.isPending ? '...' : 'Xóa'}
+//                   </button>
+//                 </>
+//               )}
+//             </>
+//           )}
+//         </div>
+//       </div>
+
+//       <div className="space-y-4">
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+//           <div className="flex flex-col">
+//             <label className="text-sm font-semibold text-gray-600 mb-1">Họ và tên</label>
+//             <input type="text" name="fullName" value={isEditing ? editData.fullName : user.fullName} readOnly={!isEditing} onChange={handleFormChange} className={`p-2 border rounded-md transition-colors ${!isEditing ? 'bg-gray-100 border-transparent' : 'bg-white border-gray-300'}`} />
+//           </div>
+//           <div className="flex flex-col">
+//             <label className="text-sm font-semibold text-gray-600 mb-1">Email</label>
+//             <input type="email" value={user.email} readOnly className="p-2 border rounded-md bg-gray-200 cursor-not-allowed" title="Không thể thay đổi email" />
+//           </div>
+//           <div className="flex flex-col">
+//             <label className="text-sm font-semibold text-gray-600 mb-1">Số điện thoại</label>
+//             <input type="tel" name="phoneNumber" value={isEditing ? editData.phoneNumber || '' : user.phoneNumber || ''} readOnly={!isEditing} onChange={handleFormChange} className={`p-2 border rounded-md transition-colors ${!isEditing ? 'bg-gray-100 border-transparent' : 'bg-white border-gray-300'}`} />
+//           </div>
+//           <div className="flex flex-col">
+//             <label className="text-sm font-semibold text-gray-600 mb-1">Ngày sinh</label>
+//             <input type="text" value={user.birthday ? new Date(user.birthday).toLocaleDateString('vi-VN') : 'Chưa cập nhật'} readOnly className="p-2 border rounded-md bg-gray-100" />
+//           </div>
+//           <div className="md:col-span-2 flex flex-col">
+//             <label className="text-sm font-semibold text-gray-600 mb-1">Địa chỉ</label>
+//             <input type="text" name="address" value={isEditing ? editData.address || '' : user.address || ''} readOnly={!isEditing} onChange={handleFormChange} className={`p-2 border rounded-md transition-colors ${!isEditing ? 'bg-gray-100 border-transparent' : 'bg-white border-gray-300'}`} />
+//           </div>
+//            <div className="flex flex-col">
+//             <label className="text-sm font-semibold text-gray-600 mb-1">Vai trò</label>
+//             <input type="text" value={user.roles?.map(r => r.name).join(', ') || 'N/A'} readOnly className="p-2 border rounded-md bg-gray-100" />
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default UserDetailPage;
+
+// File: src/pages/Dashboard/UserDetailPage.tsx
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-// Định nghĩa kiểu dữ liệu cho người dùng (tương tự như UsersPage)
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  role: 'Khách hàng' | 'Manager';
-  status: 'Active' | 'Inactive';
-  registeredDate: string;
-  branch?: string; // Chỉ có ở Manager
-}
+// --- Import các service và types thật ---
+import { userService, User, UserUpdatePayload, Role } from '../../services/userService';
+import { roleService } from '../../services/roleService';
+import { AuthTokenManager } from '../../services/apiService';
 
-// Dữ liệu người dùng giả (đã thêm Manager)
-const mockUsersData: User[] = [
-  // --- Khách hàng ---
-  { id: 'U001', name: 'Nguyễn Thanh Tùng', email: 'tung.nt@example.com', phone: '0901234567', address: '123 Đường ABC, Quận 1, TP.HCM', role: 'Khách hàng', status: 'Active', registeredDate: '2023-01-15' },
-  { id: 'U002', name: 'Phạm Thị Lan', email: 'lan.pt@example.com', phone: '0912345678', address: '456 Đường XYZ, Quận 3, TP.HCM', role: 'Khách hàng', status: 'Active', registeredDate: '2023-03-20' },
-  { id: 'U003', name: 'Đỗ Văn Khoa', email: 'khoa.dv@example.com', phone: '0987654321', address: '789 Đường KLN, Quận Bình Thạnh, TP.HCM', role: 'Khách hàng', status: 'Inactive', registeredDate: '2023-05-10' },
-  // --- Managers ---
-  { id: 'M001', name: 'Nguyễn Văn Quản Lý 1', email: 'manager1@example.com', phone: '0910000001', address: '888 Đường Đinh Bộ Lĩnh, Quận Bình Thạnh, TP.HCM', role: 'Manager', status: 'Active', branch: 'Chi nhánh 1', registeredDate: '2022-01-01' },
-  { id: 'M002', name: 'Trần Thị Quản Lý 2', email: 'manager2@example.com', phone: '0910000002', address: '999 Đường Cách Mạng Tháng 8, Quận 3, TP.HCM', role: 'Manager', status: 'Active', branch: 'Chi nhánh 2', registeredDate: '2022-03-10' },
-  { id: 'M003', name: 'Lê Văn Quản Lý 3', email: 'manager3@example.com', phone: '0910000003', address: '111 Đường Lê Lợi, Quận 1, TP.HCM', role: 'Manager', status: 'Inactive', branch: 'Chi nhánh 3', registeredDate: '2022-05-20' },
-];
+const formatDateForInput = (dateString: string | null | undefined): string => {
+  if (!dateString) return '';
+  const parsableDateString = dateString.replace(' ', 'T');
+  try {
+    const date = new Date(parsableDateString);
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString().slice(0, 16);
+  } catch (error) {
+    return '';
+  }
+};
+
 
 const UserDetailPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  // Tìm người dùng trong dữ liệu giả
-  const initialUser = useMemo(() => {
-    return mockUsersData.find(u => u.id === userId);
-  }, [userId]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState<Partial<UserUpdatePayload>>({});
 
-  const [user, setUser] = useState<User | undefined>(initialUser); // State để có thể chỉnh sửa user
-  const [isEditing, setIsEditing] = useState(false); // State để bật/tắt chế độ chỉnh sửa
-  const [editFormData, setEditFormData] = useState<Partial<User>>({}); // Dữ liệu form chỉnh sửa
+  const {
+    data: user,
+    isLoading,
+    isError,
+    error
+  } = useQuery({
+    queryKey: ['user', userId],
+    queryFn: () => userService.getUserById(Number(userId)),
+    enabled: !!userId,
+  });
 
-  // Cập nhật state user khi initialUser (từ useParams) thay đổi (ví dụ: khi chuyển giữa các trang chi tiết user)
-  React.useEffect(() => {
-    setUser(initialUser);
-    setIsEditing(false); // Thoát chế độ chỉnh sửa khi user thay đổi
-    setEditFormData({});
-  }, [initialUser]);
+  const { data: allRoles = [] } = useQuery({
+    queryKey: ['allRoles'],
+    queryFn: () => roleService.getAllRoles(),
+  });
 
+  useEffect(() => {
+    if (user) {
+      setEditData({
+        fullName: user.fullName || '',
+        phoneNumber: user.phoneNumber || '',
+        address: user.address || '',
+        birthday: formatDateForInput(user.birthday),
+        roles: user.roles?.[0] ? [user.roles[0].roleId] : [],
+      });
+    }
+  }, [user]);
 
-  if (!user) {
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-md text-center text-red-600">
-        <h2 className="text-2xl font-semibold mb-4">Không tìm thấy người dùng</h2>
-        <p className="mb-4">ID người dùng "{userId}" không tồn tại.</p>
-        <button 
-          onClick={() => navigate('/dashboard/users')}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-200"
-        >
-          Quay lại danh sách người dùng
-        </button>
-      </div>
+  const { currentUser } = useMemo(() => ({ currentUser: AuthTokenManager.getCurrentUser() as User | null }), []);
+  const canModify = useMemo(() => {
+    if (!user?.roles) return false;
+
+    return user.roles.some(
+      (role: any) => role.name === 'ADMIN' || role.name.startsWith('MANAGER')
     );
-  }
+  }, [user]);
 
-  const getStatusClasses = (status: string) => {
-    return status === 'Active' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800';
-  };
+  const updateUserMutation = useMutation({
+    mutationFn: ({ userId, payload }: { userId: number; payload: UserUpdatePayload }) =>
+      userService.updateUser(userId, payload),
+    onSuccess: (updatedUser) => {
+      alert('Cập nhật thông tin thành công!');
+      queryClient.setQueryData(['user', userId], updatedUser);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setIsEditing(false);
+    },
+    onError: (err: Error) => alert(`Lỗi khi cập nhật: ${err.message}`),
+  });
 
-  const handleEdit = () => {
-    setIsEditing(true);
-    setEditFormData({ ...user }); // Đổ dữ liệu hiện tại vào form
-  };
+  const deleteUserMutation = useMutation({
+    mutationFn: (id: number) => userService.deleteUser(id),
+    onSuccess: () => {
+      alert('Xóa người dùng thành công!');
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      navigate('/dashboard/users');
+    },
+    onError: (err: Error) => alert(`Lỗi: ${err.message}`),
+  });
 
-  const handleCancelEdit = () => {
+  const handleCancelClick = () => {
     setIsEditing(false);
-    setEditFormData({});
+    if (user) {
+      setEditData({
+        fullName: user.fullName || '',
+        phoneNumber: user.phoneNumber || '',
+        address: user.address || '',
+        birthday: formatDateForInput(user.birthday),
+        roles: user.roles?.map(r => r.roleId) || [],
+      });
+    }
   };
 
-  const handleSave = () => {
-    // Simulate API call to save changes
-    // console.log("Saving changes for user:", editingManagerId, editFormData);
-    // Trong thực tế:
-    // try {
-    //   await axios.put(`/api/users/${user.id}`, editFormData);
-    //   setUser(prev => ({ ...prev, ...editFormData } as User)); // Cập nhật UI sau khi lưu thành công
-    //   setIsEditing(false);
-    //   setEditFormData({});
-    // } catch (error) {
-    //   console.error("Failed to save user data", error);
-    //   // Xử lý lỗi
-    // }
-    
-    // Đối với dữ liệu giả:
-    setUser(prev => ({ ...prev!, ...editFormData })); // Cập nhật state user
-    setIsEditing(false); // Thoát chế độ chỉnh sửa
-    setEditFormData({});
-    alert("Thông tin đã được lưu (chỉ là giả lập)!");
-  };
 
+  const handleEditClick = () => {
+    setIsEditing(true);
+    if (user) {
+      setEditData({
+        fullName: user.fullName || '',
+        phoneNumber: user.phoneNumber || '',
+        address: user.address || '',
+        birthday: formatDateForInput(user.birthday),
+        roles: user.roles?.[0] ? [user.roles[0].roleId] : [],
+      });
+    }
+  };
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setEditFormData(prev => ({ ...prev, [name]: value }));
+    setEditData(prev => ({
+      ...prev,
+      [name]: name === 'roleId' ? Number(value) || undefined : value
+    }));
   };
 
-  const handleToggleStatus = () => {
-    const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
-    // Simulate API call
-    console.log(`Updating user ${user.id} status to ${newStatus}`);
-    // Trong thực tế:
-    // try {
-    //   await axios.put(`/api/users/${user.id}/status`, { status: newStatus });
-    //   setUser(prev => ({ ...prev!, status: newStatus }));
-    // } catch (error) {
-    //   console.error("Failed to toggle status", error);
-    // }
-    setUser(prev => ({ ...prev!, status: newStatus })); // Cập nhật state user
+  const handleSaveClick = () => {
+    if (!user) return;
+    const formattedBirthday = editData.birthday
+      ? new Date(editData.birthday).toISOString().slice(0, 19).replace('T', ' ')
+      : undefined;
+
+    const payload: UserUpdatePayload = {
+      fullName: editData.fullName,
+      phoneNumber: editData.phoneNumber,
+      address: editData.address,
+      birthday: formattedBirthday,
+      roles: editData.roles || [],
+    };
+
+    updateUserMutation.mutate({ userId: user.userId, payload });
   };
+
+  const handleRolesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value: roleName, checked } = e.target;
+    const currentRoles = editData.roles || [];
+    if (checked) {
+      setEditData(prev => ({
+        ...prev,
+        roles: [...currentRoles, Number(roleName)],
+      }));
+    } else {
+      setEditData(prev => ({
+        ...prev,
+        roles: currentRoles.filter(role => role !== Number(roleName)),
+      }));
+    }
+  };
+  const handleDelete = () => {
+    if (!user) return;
+    if (window.confirm(`Bạn có chắc muốn xóa người dùng "${user.fullName}"?`)) {
+      deleteUserMutation.mutate(user.userId);
+    }
+  };
+
+  // --- RENDER ---
+  if (isLoading) return <div className="p-8 text-center">Đang tải chi tiết...</div>;
+  if (isError) return <div className="p-8 text-center text-red-500">Lỗi: {(error as Error).message}</div>;
+  if (!user) return <div className="p-8 text-center">Không tìm thấy người dùng.</div>;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-gray-700">Chi Tiết Người Dùng: {user.name}</h2>
-        <div className="flex space-x-3">
-          <button 
-            onClick={() => navigate(-1)} // Quay lại trang trước
-            className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-200"
-          >
-            Quay lại
-          </button>
-          {user.role === 'Manager' && ( // Nút sửa chỉ cho Manager
-            isEditing ? (
-              <>
-                <button 
-                  onClick={handleSave}
-                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-200"
-                >
-                  Lưu
-                </button>
-                <button 
-                  onClick={handleCancelEdit}
-                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition duration-200"
-                >
-                  Hủy
-                </button>
-              </>
-            ) : (
-              <button 
-                onClick={handleEdit}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-200"
-              >
-                Chỉnh sửa
+    <div className="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto mt-10">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold text-gray-800">{isEditing ? 'Chỉnh Sửa Thông Tin' : `Chi Tiết: ${user.fullName}`}</h2>
+        <div className="flex space-x-2">
+          {isEditing ? (
+            <>
+              <button onClick={handleSaveClick} disabled={updateUserMutation.isPending} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:bg-gray-400">
+                {updateUserMutation.isPending ? 'Đang lưu...' : 'Lưu'}
               </button>
-            )
+              <button onClick={handleCancelClick} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400">Hủy</button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => navigate(-1)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Quay lại</button>
+              {canModify && (
+                <>
+                  <button onClick={handleEditClick} className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600">Chỉnh Sửa</button>
+                  <button onClick={handleDelete} disabled={deleteUserMutation.isPending} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:bg-gray-400">
+                    {deleteUserMutation.isPending ? '...' : 'Xóa'}
+                  </button>
+                </>
+              )}
+            </>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-gray-700">
-        <div className="mb-2">
-          <span className="font-semibold">ID Người Dùng:</span> {user.id}
-        </div>
-        <div className="mb-2">
-          <span className="font-semibold">Email:</span> 
-          {isEditing && user.role === 'Manager' ? (
-            <input 
-              type="email" 
-              name="email" 
-              value={editFormData.email || ''} 
-              onChange={handleFormChange} 
-              className="ml-2 border rounded px-2 py-1"
-            />
-          ) : (
-            <span className="ml-2">{user.email}</span>
-          )}
-        </div>
-        <div className="mb-2">
-          <span className="font-semibold">Số Điện Thoại:</span> 
-          {isEditing && user.role === 'Manager' ? (
-            <input 
-              type="text" 
-              name="phone" 
-              value={editFormData.phone || ''} 
-              onChange={handleFormChange} 
-              className="ml-2 border rounded px-2 py-1"
-            />
-          ) : (
-            <span className="ml-2">{user.phone || 'Chưa cập nhật'}</span>
-          )}
-        </div>
-        <div className="mb-2 col-span-1 md:col-span-2">
-          <span className="font-semibold">Địa Chỉ:</span> 
-          {isEditing && user.role === 'Manager' ? (
-            <input 
-              type="text" 
-              name="address" 
-              value={editFormData.address || ''} 
-              onChange={handleFormChange} 
-              className="ml-2 border rounded px-2 py-1 w-full"
-            />
-          ) : (
-            <span className="ml-2">{user.address || 'Chưa cập nhật'}</span>
-          )}
-        </div>
-        <div className="mb-2">
-          <span className="font-semibold">Vai Trò:</span> {user.role}
-        </div>
-        {user.role === 'Manager' && ( // Chỉ hiển thị chi nhánh cho Manager
-          <div className="mb-2">
-            <span className="font-semibold">Chi nhánh:</span>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold text-gray-600 mb-1">Họ và tên</label>
+            <input type="text" name="fullName" value={isEditing ? editData.fullName : user.fullName} readOnly={!isEditing} onChange={handleFormChange} className={`p-2 border rounded-md transition-colors ${!isEditing ? 'bg-gray-100 border-transparent' : 'bg-white border-gray-300'}`} />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold text-gray-600 mb-1">Email</label>
+            <input type="email" value={user.email} readOnly className="p-2 border rounded-md bg-gray-200 cursor-not-allowed" title="Không thể thay đổi email" />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold text-gray-600 mb-1">Số điện thoại</label>
+            <input type="tel" name="phoneNumber" value={isEditing ? editData.phoneNumber || '' : user.phoneNumber || ''} readOnly={!isEditing} onChange={handleFormChange} className={`p-2 border rounded-md transition-colors ${!isEditing ? 'bg-gray-100 border-transparent' : 'bg-white border-gray-300'}`} />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-sm font-semibold text-gray-600 mb-1">Ngày sinh</label>
             {isEditing ? (
-              <input 
-                type="text" 
-                name="branch" 
-                value={editFormData.branch || ''} 
-                onChange={handleFormChange} 
-                className="ml-2 border rounded px-2 py-1"
-              />
+              <input type="datetime-local" name="birthday" value={editData.birthday || ''} onChange={handleFormChange} className="p-2 border rounded-md bg-white border-gray-300" />
             ) : (
-              <span className="ml-2">{user.branch || 'Chưa cập nhật'}</span>
+              <input type="text" value={user.birthday ? new Date(user.birthday).toLocaleString('vi-VN') : 'Chưa cập nhật'} readOnly className="p-2 border rounded-md bg-gray-100" />
             )}
           </div>
-        )}
-        <div className="mb-2">
-          <span className="font-semibold">Ngày Đăng Ký:</span> {user.registeredDate}
-        </div>
-        <div className="mb-2">
-          <span className="font-semibold">Trạng Thái:</span> 
-          <span className={`ml-2 px-3 py-1 rounded-full text-sm font-semibold ${getStatusClasses(user.status)}`}>
-            {user.status}
-          </span>
-          {user.role === 'Manager' && ( // Nút toggle status chỉ cho Manager
-            <button
-              onClick={handleToggleStatus}
-              className={`ml-3 px-3 py-1 rounded-md text-xs transition duration-200 
-                ${user.status === 'Active' 
-                   ? 'bg-red-500 text-white hover:bg-red-600' 
-                   : 'bg-green-500 text-white hover:bg-green-600'
-                }`}
-            >
-              {user.status === 'Active' ? 'Vô hiệu hóa' : 'Kích hoạt'}
-            </button>
-          )}
+          <div className="md:col-span-2 flex flex-col">
+            <label className="text-sm font-semibold text-gray-600 mb-1">Địa chỉ</label>
+            <input type="text" name="address" value={isEditing ? editData.address || '' : user.address || ''} readOnly={!isEditing} onChange={handleFormChange} className={`p-2 border rounded-md transition-colors ${!isEditing ? 'bg-gray-100 border-transparent' : 'bg-white border-gray-300'}`} />
+          </div>
+
+          <div className="md:col-span-2 flex flex-col">
+            <label className="text-sm font-semibold text-gray-600 mb-1">Vai trò</label>
+            {isEditing ? (
+              <select
+                name="roleId"
+                value={editData.roles?.[0] ?? ''}
+                onChange={handleFormChange}
+                className="p-2 border rounded-md bg-white border-gray-300"
+              >
+                <option value="">-- Chọn vai trò --</option>
+                {allRoles.map((role: Role) => (
+                  <option key={role.roleId} value={role.roleId}>
+                    {role.description} ({role.name})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={user.roles?.map(r => r.name).join(', ') || 'N/A'}
+                readOnly
+                className="p-2 border rounded-md bg-gray-100 border-transparent"
+              />
+            )}
+          </div>
+
         </div>
       </div>
-
-      {/* Lịch sử đơn hàng chỉ hiển thị cho Khách hàng */}
-      {user.role === 'Khách hàng' && (
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <h3 className="text-xl font-semibold text-gray-700 mb-4">Lịch Sử Đơn Hàng (Chưa có dữ liệu)</h3>
-          <p className="text-gray-500">Thông tin lịch sử đơn hàng của người dùng sẽ được hiển thị tại đây.</p>
-        </div>
-      )}
     </div>
   );
 };

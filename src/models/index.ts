@@ -12,6 +12,6 @@ export * from './delivery.model';
 export * from './mapper/cart.mapper';
 export * from './mapper/delivery.mapper';
 export * from './mapper/order.mapper';
-export * from './mapper/product.mapper';
+// export * from './mapper/product.mapper';
 export * from './mapper/promo.mapper';
 export * from './mapper/user.mapper';

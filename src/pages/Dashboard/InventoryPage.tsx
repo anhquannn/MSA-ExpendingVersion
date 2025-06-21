@@ -1,338 +1,239 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import inventoryService from '../../services/inventoryService';
-import { Product, BranchStock, mockBranches } from '../../types/inventory';
-import ProductModal from '../../components/Inventory/ProductModal';
-import Button from '../../components/common/Button';
-import { Link, useNavigate } from 'react-router-dom';
+// src/pages/Dashboard/InventoryPage.tsx
 
-// Định nghĩa kiểu dữ liệu cho form sản phẩm
-interface ProductFormData {
-  id?: string;
-  name: string;
-  category: string;
-  unit: string;
-  lowStockThreshold: number;
-  branchStocks: { branchId: string; stock: number; }[];
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+
+// --- Import các service và types thật ---
+import { 
+  inventoryService, 
+  Inventory, 
+  InventoryListParams,
+  InventoryCreateParams
+} from '../../services/inventoryService';
+import { branchService, Branch } from '../../services/branchService';
+
+// --- Custom Hook để Debounce ---
+function useDebounce(value: string, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
 }
 
-const InventoryPage: React.FC = () => {
-    const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [inputSearchValue, setInputSearchValue] = useState(''); // State mới cho giá trị input khi gõ
-  const [searchTerm, setSearchTerm] = useState(''); // State chính thức cho từ khóa tìm kiếm (khi nhấn Enter)
-  const [currentPage, setCurrentPage] = useState(1);
-  const [productsPerPage] = useState(10);
-  const [totalProducts, setTotalProducts] = useState(0);
+// --- Component Modal cho việc Thêm/Sửa Kho ---
+// (Bạn có thể tách ra file riêng để tái sử dụng)
+const InventoryModal = ({ isOpen, onClose, onSave, initialData }: {
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: (data: InventoryCreateParams) => void;
+    initialData: Partial<InventoryCreateParams> | null;
+}) => {
+    const [formData, setFormData] = useState<Partial<InventoryCreateParams>>({});
 
+    // Lấy danh sách chi nhánh cho dropdown
+    const { data: branches = [] } = useQuery({
+        queryKey: ['allBranchesForSelect'],
+        queryFn: () => branchService.getAllBranchesWithPaging({ pageSize: 999 }).then(res => res.content),
+    });
+
+    useEffect(() => {
+        // Khi mở modal, điền dữ liệu có sẵn (cho việc sửa) hoặc reset form
+        setFormData(initialData || { name: '', address: '', contact: '', branchId: undefined });
+    }, [initialData, isOpen]);
+
+    if (!isOpen) return null;
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: name === 'branchId' ? Number(value) : value }));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave(formData as InventoryCreateParams);
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg space-y-4">
+                <h2 className="text-xl font-bold">{initialData?.name ? 'Sửa Kho Hàng' : 'Thêm Kho Hàng Mới'}</h2>
+                <input name="name" value={formData.name || ''} onChange={handleChange} placeholder="Tên kho (*)" required className="w-full p-2 border rounded-md" />
+                <select name="branchId" value={formData.branchId || ''} onChange={handleChange} required className="w-full p-2 border rounded-md">
+                    <option value="">Chọn chi nhánh (*)</option>
+                    {branches.map(b => <option key={b.branchId} value={b.branchId}>{b.name}</option>)}
+                </select>
+                <input name="address" value={formData.address || ''} onChange={handleChange} placeholder="Địa chỉ" className="w-full p-2 border rounded-md" />
+                <input name="contact" value={formData.contact || ''} onChange={handleChange} placeholder="Thông tin liên hệ" className="w-full p-2 border rounded-md" />
+                <div className="flex justify-end space-x-2">
+                    <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-300 rounded-md">Hủy</button>
+                    <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-md">Lưu</button>
+                </div>
+            </form>
+        </div>
+    );
+};
+
+
+const InventoryManagementPage: React.FC = () => {
+  const queryClient = useQueryClient();
+
+  // --- STATE CHO BỘ LỌC VÀ UI ---
+  const [filters, setFilters] = useState<InventoryListParams>({
+    keyword: '',
+    branchId: undefined,
+    sortBy: 'inventoryId',
+    sortDirection: 'ASC',
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState<ProductFormData | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [editingInventory, setEditingInventory] = useState<Partial<InventoryCreateParams> | null>(null);
 
-  // Hàm để fetch dữ liệu sản phẩm
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await inventoryService.getProducts({
-        page: currentPage,
-        limit: productsPerPage,
-        search: searchTerm,
-      });
-      setProducts(response.data);
-      setTotalProducts(response.total);
-    } catch (err: any) {
-      setError('Lỗi khi tải dữ liệu tồn kho: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, productsPerPage, searchTerm]); // `searchTerm` ở đây để kích hoạt khi Enter
-  const handleViewDetails = (productId: string) => {
-    navigate(`/dashboard/products/${productId}`);
+  const debouncedKeyword = useDebounce(filters.keyword || '', 500);
+
+  // --- API CALLS VỚI REACT QUERY ---
+
+  // Lấy danh sách kho hàng (đã được lọc)
+  const { data: inventories = [], isLoading, isError, error } = useQuery({
+    queryKey: ['inventories', { ...filters, keyword: debouncedKeyword }],
+    queryFn: () => inventoryService.getAllInventories({ ...filters, keyword: debouncedKeyword }),
+  });
+
+  // Lấy danh sách chi nhánh cho dropdown bộ lọc
+  const { data: branchesForFilter = [] } = useQuery({
+    queryKey: ['allBranchesForFilter'],
+    queryFn: () => branchService.getAllBranchesWithPaging({ pageSize: 999 }).then(res => res.content),
+  });
+  
+  // --- MUTATIONS CHO CÁC HÀNH ĐỘNG ---
+
+  const createInventoryMutation = useMutation({
+    mutationFn: (payload: InventoryCreateParams) => inventoryService.createInventory(payload),
+    onSuccess: () => {
+      alert('Thêm kho thành công!');
+      queryClient.invalidateQueries({ queryKey: ['inventories'] });
+      setIsModalOpen(false);
+    },
+    onError: (err: Error) => alert(`Lỗi: ${err.message}`),
+  });
+  
+  const updateInventoryMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: number, payload: InventoryCreateParams }) => inventoryService.updateInventory(id, payload),
+    onSuccess: () => {
+      alert('Cập nhật kho thành công!');
+      queryClient.invalidateQueries({ queryKey: ['inventories'] });
+      setIsModalOpen(false);
+    },
+    onError: (err: Error) => alert(`Lỗi: ${err.message}`),
+  });
+
+  const deleteInventoryMutation = useMutation({
+    mutationFn: (id: number) => inventoryService.deleteInventory(id),
+    onSuccess: () => {
+      alert('Xóa kho thành công!');
+      queryClient.invalidateQueries({ queryKey: ['inventories'] });
+    },
+    onError: (err: Error) => alert(`Lỗi: ${err.message}`),
+  });
+
+  // --- EVENT HANDLERS ---
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value === '' ? undefined : value }));
   };
-  // Gọi API khi component mount, khi phân trang thay đổi, hoặc khi searchTerm chính thức thay đổi
-  useEffect(() => {
-    // Chỉ fetch dữ liệu khi trang tải lần đầu hoặc khi phân trang/tìm kiếm thay đổi
-    // Tránh fetch ngay lập tức khi `inputSearchValue` thay đổi
-    fetchProducts();
-  }, [fetchProducts]);
-
-  // --- Hàm xử lý thay đổi input khi người dùng gõ ---
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputSearchValue(e.target.value); // Chỉ cập nhật giá trị hiển thị trong input
-  };
-
-  // --- Hàm xử lý khi nhấn phím (để bắt Enter) ---
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      // Khi nhấn Enter, cập nhật searchTerm chính thức và reset trang về 1
-      setSearchTerm(inputSearchValue);
-      setCurrentPage(1);
-      // fetchProducts() sẽ được gọi thông qua useEffect vì `searchTerm` đã thay đổi
-    }
-  };
-
-  // --- Hàm mở/đóng Modal ---
-  const openAddModal = () => {
-    setCurrentProduct({
-      name: '',
-      category: '',
-      unit: '',
-      lowStockThreshold: 0,
-      branchStocks: mockBranches.map(branch => ({ branchId: branch.id, stock: 0 })),
-    });
-    setIsEditing(false);
+  
+  const handleOpenAddModal = () => {
+    setEditingInventory(null);
     setIsModalOpen(true);
   };
-
-  const openEditModal = (product: Product) => {
-    setCurrentProduct({
-      id: product.id,
-      name: product.name,
-      category: product.category,
-      unit: product.unit,
-      lowStockThreshold: product.lowStockThreshold,
-      branchStocks: product.branchStocks.map(bs => ({ branchId: bs.branchId, stock: bs.stock })),
+  
+  const handleOpenEditModal = (inventory: Inventory) => {
+    setEditingInventory({
+      name: inventory.name,
+      address: inventory.address,
+      contact: inventory.contact,
+      branchId: inventory.branch.branchId,
     });
-    setIsEditing(true);
     setIsModalOpen(true);
   };
-
-  const closeProductModal = () => {
-    setIsModalOpen(false);
-    setCurrentProduct(null);
-    setIsEditing(false);
-  };
-
-  // --- Hàm xử lý thêm/chỉnh sửa sản phẩm ---
-  const handleSaveProduct = async (formData: ProductFormData) => {
-    setLoading(true);
-    try {
-      if (isEditing && formData.id) {
-        await inventoryService.updateProduct(formData.id, {
-          ...formData,
-          branchStocks: formData.branchStocks.map(bs => {
-            const branch = mockBranches.find(b => b.id === bs.branchId);
-            return {
-              branchId: bs.branchId,
-              branchName: branch ? branch.name : '',
-              stock: bs.stock,
-            };
-          }),
-        });
-        console.log(`Đã cập nhật sản phẩm: ${formData.name}`);
-      } else {
-        await inventoryService.addProduct(formData);
-        console.log(`Đã thêm sản phẩm mới: ${formData.name}`);
-      }
-      closeProductModal();
-      setSearchTerm(''); // Xóa từ khóa tìm kiếm sau khi thêm/sửa
-      setInputSearchValue(''); // Xóa giá trị trong ô input
-      setCurrentPage(1); // Reset về trang 1
-      fetchProducts(); // Tải lại danh sách sản phẩm sau khi thay đổi
-    } catch (err: any) {
-      setError('Lỗi khi lưu sản phẩm: ' + err.message);
-    } finally {
-      setLoading(false);
+  
+  const handleSave = (formData: InventoryCreateParams) => {
+    if (editingInventory && (editingInventory as any).inventoryId) {
+        updateInventoryMutation.mutate({ id: (editingInventory as any).inventoryId, payload: formData });
+    } else {
+      formData.totalRevenue=1;
+        createInventoryMutation.mutate(formData);
     }
   };
 
-  // --- Hàm xử lý xóa sản phẩm ---
-  const handleDeleteProduct = async (productId: string) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm ${productId} không?`)) {
-      setLoading(true);
-      try {
-        await inventoryService.deleteProduct(productId);
-        console.log(`Đã xóa sản phẩm: ${productId}`);
-        setSearchTerm(''); // Xóa từ khóa tìm kiếm sau khi xóa
-        setInputSearchValue(''); // Xóa giá trị trong ô input
-        setCurrentPage(1); // Reset về trang 1
-        fetchProducts(); // Tải lại danh sách sản phẩm
-      } catch (err: any) {
-        setError('Lỗi khi xóa sản phẩm: ' + err.message);
-      } finally {
-        setLoading(false);
-      }
+  const handleDelete = (inventory: Inventory) => {
+    if (window.confirm(`Bạn có chắc muốn xóa kho "${inventory.name}"?`)) {
+      deleteInventoryMutation.mutate(inventory.inventoryId);
     }
   };
-
-  // --- Phân trang ---
-  const totalPages = useMemo(() => Math.ceil(totalProducts / productsPerPage), [totalProducts, productsPerPage]);
-
-  const goToPage = (page: number) => {
-    if (page > 0 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
-  const getStockStatus = (totalStock: number, lowStockThreshold: number) => {
-    if (totalStock === 0) return { text: 'Hết Hàng', class: 'bg-red-200 text-red-800' };
-    if (totalStock <= lowStockThreshold) return { text: 'Sắp Hết', class: 'bg-yellow-200 text-yellow-800' };
-    return { text: 'Đủ Hàng', class: 'bg-green-200 text-green-800' };
-  };
-
-  if (loading) {
-    return <div className="text-center py-8">Đang tải dữ liệu tồn kho...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-8 text-red-600">Lỗi: {error}</div>;
-  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">Quản lý Kho Hàng</h2>
 
-      {/* Thanh tìm kiếm và nút Thêm Sản Phẩm */}
-      <div className="flex justify-between items-center mb-6">
-        <input
-          type="text"
-          placeholder="Tìm kiếm theo tên, mã, loại sản phẩm..."
-          className="p-2 border border-gray-300 rounded-md w-1/3"
-          value={inputSearchValue} // Sử dụng inputSearchValue cho input
-          onChange={handleInputChange} // Cập nhật inputSearchValue khi gõ
-          onKeyDown={handleKeyDown} // Bắt sự kiện nhấn phím
-        />
-        <button
-          onClick={openAddModal}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-300"
-        >
-          Thêm Sản Phẩm Mới
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <input type="text" name="keyword" placeholder="Tìm theo tên kho..." value={filters.keyword} onChange={handleFilterChange} className="p-2 border rounded-md" />
+        <select name="branchId" value={filters.branchId || ''} onChange={handleFilterChange} className="p-2 border rounded-md">
+          <option value="">Tất cả chi nhánh</option>
+          {branchesForFilter.map(b => <option key={b.branchId} value={b.branchId}>{b.name}</option>)}
+        </select>
+        <button onClick={handleOpenAddModal} className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition h-full">
+          + Thêm Kho Hàng
         </button>
       </div>
 
+      {isLoading && <p>Đang tải dữ liệu...</p>}
+      {isError && <p className="text-red-500">Lỗi: {error.message}</p>}
+
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-200">
-          <thead>
-            <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-              <th className="py-3 px-6 text-left">Mã SP</th>
-              <th className="py-3 px-6 text-left">Tên Sản Phẩm</th>
-              <th className="py-3 px-6 text-left">Loại</th>
-              <th className="py-3 px-6 text-left">Đơn Vị</th>
-              {mockBranches.map(branch => (
-                <th key={branch.id} className="py-3 px-6 text-left">Tồn Kho {branch.name}</th>
-              ))}
-              <th className="py-3 px-6 text-left">Tổng Tồn Kho</th>
-              <th className="py-3 px-6 text-left">Trạng Thái</th>
+        <table className="min-w-full bg-white border">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="py-3 px-6 text-left">ID Kho</th>
+              <th className="py-3 px-6 text-left">Tên Kho</th>
+              <th className="py-3 px-6 text-left">Chi Nhánh</th>
+              <th className="py-3 px-6 text-left">Địa chỉ</th>
               <th className="py-3 px-6 text-center">Hành Động</th>
             </tr>
           </thead>
-          <tbody className="text-gray-600 text-sm font-light">
-            {products.length === 0 ? (
-              <tr>
-                <td colSpan={6 + mockBranches.length} className="py-6 text-center">Không tìm thấy sản phẩm nào.</td>
+          <tbody className="text-gray-600 text-sm">
+            {inventories.map((inv) => (
+              <tr key={inv.inventoryId} className="border-b hover:bg-gray-50">
+                <td className="py-3 px-6">{inv.inventoryId}</td>
+                <td className="py-3 px-6 font-medium">{inv.name}</td>
+                <td className="py-3 px-6">{inv.branch.name}</td>
+                <td className="py-3 px-6">{inv.address}</td>
+                <td className="py-3 px-6 text-center">
+                  <button onClick={() => handleOpenEditModal(inv)} className="text-yellow-600 hover:underline mr-4">Sửa</button>
+                  <button onClick={() => handleDelete(inv)} disabled={deleteInventoryMutation.isPending} className="text-red-600 hover:underline disabled:text-gray-400">Xóa</button>
+                </td>
               </tr>
-            ) : (
-              products.map((product) => {
-                const totalStock = product.branchStocks.reduce((sum, bs) => sum + bs.stock, 0);
-                const status = getStockStatus(totalStock, product.lowStockThreshold);
-
-                function handleCopyProductId(id: string, e: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
-                  throw new Error('Function not implemented.');
-                }
-
-                return (
-                  <tr key={product.id} className="border-b border-gray-200 hover:bg-gray-50">
-                       <td className="py-3 px-6 text-left whitespace-nowrap">
-                      <Link
-                        to={`/dashboard/products/${product.id}`} // Đường dẫn đến trang chi tiết
-                        className="text-blue-600 hover:text-blue-800 hover:underline flex items-center"
-                      >
-                        {product.id}
-                      </Link>
-                    </td>
-                     <td className="py-3 px-6 text-left font-bold">{product.name}</td>
-                      <td className="py-3 px-6 text-left font-bold">{product.category}</td>
-                       <td className="py-3 px-6 text-left font-bold">{product.unit}</td>
-                     {mockBranches.map(branch => {
-                      const branchStock = product.branchStocks.find(bs => bs.branchId === branch.id);
-                      return (
-                        <td key={`${product.id}-${branch.id}`} className="py-3 px-6 text-left">
-                          {branchStock ? branchStock.stock : 0}
-                        </td>
-                      );
-                    })}
-                    <td className="py-3 px-6 text-left font-bold">{totalStock}</td>
-                    <td className="py-3 px-6 text-left">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${status.class}`}>
-                        {status.text}
-                      </span>
-                    </td>
-                    <td className="py-3 px-6 text-center">
-                      <div className="flex item-center justify-center">
-                        <button
-                          onClick={() => openEditModal(product)}
-                          className="w-8 h-8 rounded-full bg-yellow-100 text-yellow-700 flex items-center justify-center mr-2 hover:bg-yellow-200"
-                          title="Chỉnh sửa"
-                        >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                            <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className="w-8 h-8 rounded-full bg-red-100 text-red-700 flex items-center justify-center hover:bg-red-200"
-                          title="Xóa"
-                        >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
+            ))}
+             {inventories.length === 0 && !isLoading && (
+                <tr><td colSpan={5} className="text-center py-4">Không có dữ liệu.</td></tr>
             )}
           </tbody>
         </table>
       </div>
+      
+      {/* Phân trang (nếu API `/inventory/list` có hỗ trợ) có thể được thêm ở đây */}
 
-      {/* Phân trang */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6">
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-l disabled:opacity-50"
-          >
-            Trước
-          </button>
-          {[...Array(totalPages)].map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToPage(index + 1)}
-              className={`bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 mx-1 ${
-                currentPage === index + 1 ? 'bg-blue-500 text-white' : ''
-              }`}
-            >
-              {index + 1}
-            </button>
-          ))}
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r disabled:opacity-50"
-          >
-            Tiếp
-          </button>
-        </div>
-      )}
-
-      {/* Modal Thêm/Chỉnh sửa Sản Phẩm */}
-      {isModalOpen && (
-        <ProductModal
-          isOpen={isModalOpen}
-          onClose={closeProductModal}
-          onSave={handleSaveProduct}
-          initialData={currentProduct}
-          isEditing={isEditing}
-        />
-      )}
+      <InventoryModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSave}
+        initialData={editingInventory}
+      />
     </div>
   );
 };
 
-export default InventoryPage;
+export default InventoryManagementPage;

@@ -5,7 +5,7 @@ import axios from 'axios';
 // Giả định các component này đã được tạo và nằm trong thư mục tương ứng
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
- import api, { AuthTokenManager, ApiConfig } from '../../services/api_service'; // <-- Sửa đường dẫn và import đúng cách
+ import  { AuthTokenManager, ApiConfig,api } from '../../services/apiService'; // <-- Sửa đường dẫn và import đúng cách
 // Đảm bảo đường dẫn đến logo là chính xác
 import logo from '../../assets/images/icon_app.png';
 import { routeConstants } from '../../constants/routeConstants';
@@ -26,7 +26,7 @@ const handleSubmit = async (event: React.FormEvent) => {
 
     try {
       const credentials: LoginCredentials = { email, password };
-      const loginResponse = await api.post<LoginApiResponse>('user/admin/login', credentials, undefined, false);
+      const loginResponse = await api.post<LoginApiResponse>('user/admin/login', credentials, undefined);
 
       if (loginResponse.code === 200 && loginResponse.result.authenticated) {
         AuthTokenManager.setAccessToken(loginResponse.result.access_token);
@@ -46,22 +46,17 @@ const handleSubmit = async (event: React.FormEvent) => {
             Brithday: String(apiUser.birthday) || '', 
           };
           
-          // Bước 3: Ghi lại thông tin người dùng vào local storage
           LocalStorageManager.saveUser(userToSave);
 
           navigate(routeConstants.dashboard); // Chuyển hướng đến Dashboard
         } else {
-          // Xử lý trường hợp không lấy được thông tin người dùng nhưng login thành công
-          console.warn("Đăng nhập thành công nhưng không lấy được thông tin người dùng.");
           setError(userProfileResponse.message || "Đăng nhập thành công nhưng không tải được thông tin người dùng.");
-          AuthTokenManager.clearTokens(); // Xóa token nếu không thể tải thông tin user
+          AuthTokenManager.clearTokens();
         }
       } else {
-        // Nếu API đăng nhập trả về code khác 200 hoặc authenticated là false
         setError(loginResponse.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
       }
     } catch (err: any) {
-      // Xử lý lỗi từ bất kỳ API nào (login hoặc lấy thông tin user)
       const errorMessage = err.message || 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.';
       setError(errorMessage);
       // Xóa token nếu có lỗi trong quá trình sau khi đăng nhập (đảm bảo sạch trạng thái)

@@ -15,4 +15,7 @@ export const routeConstants = {
   productDetails: 'products/:productId',
   branchDetails: 'branches/:branchId',
   notification: 'notification',
+  addProduct:'products/add',
+  branchbranchAdd: '/dashboard/branches/add',
+  branchUpdate:'/dashboard/branches/edit/:branchId'
 };

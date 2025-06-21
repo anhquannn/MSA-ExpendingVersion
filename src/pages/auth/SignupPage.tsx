@@ -154,7 +154,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 // import axios from 'axios'; // KHÔNG CẦN AXIOS NỮA, CHÚNG TA SẼ DÙNG apiService
 
-import api from '../../services/api_service'; // <-- Import instance api của bạn
+import {api} from '../../services/apiService'; // <-- Import instance api của bạn
 import { routeConstants } from '../../constants/routeConstants'; // Import hằng số route
 import Input from '../../components/common/Input'; // Điều chỉnh đường dẫn
 import Button from '../../components/common/Button'; // Điều chỉnh đường dẫn
@@ -253,7 +253,7 @@ const SignupPage: React.FC = () => {
         address,
       };
 
-      const response = await api.post<RegisterApiResponse>('user/register', payload, undefined, false);
+      const response = await api.post<RegisterApiResponse>('user/register', payload, undefined);
 
       if (response.code === 200) {
         alert('Đăng ký thành công! Vui lòng đăng nhập.');

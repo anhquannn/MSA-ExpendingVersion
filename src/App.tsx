@@ -27,6 +27,9 @@ import BranchManagementPage from './pages/Dashboard/BranchManagementPage';
 import BranchDetailPage from './pages/Dashboard/BranchDetailPage';
 import NotificationScreen from './components/NotificationScreen'; // Import NotificationScreen
 import SettingsPage from './pages/Dashboard/SettingsPage';
+import ProductAddPage from './pages/Dashboard/ProductUpsertPage';
+import BranchUpsertPage from './pages/Dashboard/BranchUpsertPage';
+import ProductUpsertPage from './pages/Dashboard/ProductUpsertPage';
 
 LocalStorageManager.init();
 
@@ -50,14 +53,6 @@ function App() {
         <Route path={routeConstants.login} element={<LoginPage />} />
         <Route path={routeConstants.forgotPassword} element={<ForgotPasswordPage />} />
         <Route path={routeConstants.signup} element={<SignupPage />} />
-
-        {/* Protected Dashboard Routes */}
-        {/*
-          Thay vì kiểm tra isLoggedIn ở đây và render DashboardLayout hoặc Navigate,
-          chúng ta sẽ luôn render DashboardLayout cho đường dẫn /dashboard,
-          và để DashboardLayout (hoặc một component wrapper) xử lý việc bảo vệ.
-          Hoặc, cách đơn giản hơn là kiểm tra trực tiếp ở đây:
-        */}
         <Route
           path={routeConstants.dashboard}
           element={
@@ -88,12 +83,26 @@ function App() {
           {/* Thêm route cho màn hình thông báo là một route con của dashboard */}
           <Route path={routeConstants.notification} element={<NotificationScreen />} />
           <Route path={routeConstants.settings} element={<SettingsPage />} />
+          <Route path={routeConstants.addProduct} element={<ProductAddPage />} />
+          <Route path={routeConstants.branchbranchAdd} element={<BranchUpsertPage  />} />
+          <Route path={routeConstants.branchUpdate} element={<BranchUpsertPage  />} />
+
+          <Route path="products/edit/:productId" element={<ProductUpsertPage />} />
           {/* Thêm các route cho các trang dashboard khác nếu có */}
         </Route>
 
-        {/* --- Default Redirect --- */}
+        {/* --- Default Redirect
+          - không thể xóa kho hàng
+          - không thể sửa kho hàng
+          - danh sách sản phẩm trả về có thêm danh sách hình ảnh
+          - sửa lại hàm lấy danh sách manager 
+          - Cần thêm người dùng role quản lí không
+          - trả về avt người dùng
+
+          -- viết thêm hàm cập nhật thông tin người dùng (manager admin) -> admin sử dụng
+        --- */}
         {/* Chuyển hướng người dùng về trang đăng nhập nếu truy cập một route không tồn tại */}
-        <Route path="*" element={<Navigate to={routeConstants.login} replace />} />
+         <Route index element={<DashboardHome />} />
       </Routes>
     </Router>
   );

@@ -64,7 +64,7 @@ public class CampaignController {
   }
 
   @PostMapping("/list")
-  ApiResponse<List<CampaignResponse>> getAllCampaigns(@Valid CampaignFilterRequest request) {
+  ApiResponse<List<CampaignResponse>> getAllCampaigns(@RequestBody @Valid CampaignFilterRequest request) {
     return ApiResponse.<List<CampaignResponse>>builder()
         .result(campaignService.getAllCampaigns(request))
         .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())
@@ -73,7 +73,7 @@ public class CampaignController {
 
   @PostMapping("/paging")
   ApiResponse<Page<CampaignResponse>> getAllCampaignsWithPaging(
-      @Valid CampaignFilterRequest request) {
+          @RequestBody @Valid CampaignFilterRequest request) {
     return ApiResponse.<Page<CampaignResponse>>builder()
         .result(campaignService.getAllCampaignsWithPaging(request))
         .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())

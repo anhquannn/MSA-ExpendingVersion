@@ -20,7 +20,9 @@ public class ProductImage {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long productImageId;
 
+  @Column(columnDefinition = "TEXT")
   String imageUrl;
+
   boolean isPrimary;
   int sortOrder;
 

@@ -96,7 +96,7 @@ public class TransferRequestItemService {
     return transferRequestItemRepository.findAll().stream().map(transferRequestItemMapper::toTransferResponseItem).collect(Collectors.toList());
   }
 
-  @Cacheable("transfer_request_items")
+  @Cacheable("transfer_request_items_list")
   public List<TransferResponseItem> getAllTransferRequestItems(
       TransferRequestItemFilterRequest request) {
     return transferRequestItemRepository
@@ -106,7 +106,7 @@ public class TransferRequestItemService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("transfer_request_items")
+  @Cacheable("transfer_request_items_paging")
   public Page<TransferResponseItem> getAllTransferRequestItemsWithPaging(
       TransferRequestItemFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

@@ -72,14 +72,14 @@ public class SupplierService {
     return supplierRepository.findAll().stream().map(supplierMapper::toSupplierResponse).collect(Collectors.toList());
   }
 
-  @Cacheable("suppliers")
+  @Cacheable("suppliers_list")
   public List<SupplierResponse> getAllSuppliers(SupplierFilterRequest request) {
     return supplierRepository.filter(request.getKeyword()).stream()
         .map(supplierMapper::toSupplierResponse)
         .collect(Collectors.toList());
   }
 
-  @Cacheable("suppliers")
+  @Cacheable("suppliers_paging")
   public Page<SupplierResponse> getAllSuppliersWithPaging(SupplierFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

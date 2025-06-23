@@ -7,10 +7,11 @@ import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.models.order.Order;
 import com.market.MSA.models.others.DeliveryInfo;
+import com.market.MSA.models.user.UserAddress;
 import com.market.MSA.repositories.order.OrderRepository;
 import com.market.MSA.repositories.others.DeliveryInfoRepository;
-import com.market.MSA.requests.goship.RatesRequest;
-import com.market.MSA.requests.goship.ShipmentRequest;
+import com.market.MSA.repositories.user.UserAddressRepository;
+import com.market.MSA.requests.goship.*;
 import com.market.MSA.responses.goship.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +27,7 @@ public class GoshipService {
   private final EntityFinderService entityFinderService;
   private final OrderRepository orderRepository;
   private final DeliveryInfoRepository deliveryInfoRepository;
+  private final UserAddressRepository userAddressRepository;
 
   @Value("${goship.token}")
   private String TOKEN;
@@ -37,16 +39,17 @@ public class GoshipService {
   private final ObjectMapper objectMapper;
 
   public GoshipService(
-      RestTemplate restTemplate,
-      ObjectMapper objectMapper,
-      DeliveryInfoRepository deliveryInfoRepository,
-      EntityFinderService entityFinderService,
-      OrderRepository orderRepository) {
+          RestTemplate restTemplate,
+          ObjectMapper objectMapper,
+          DeliveryInfoRepository deliveryInfoRepository,
+          EntityFinderService entityFinderService,
+          OrderRepository orderRepository, UserAddressRepository userAddressRepository) {
     this.restTemplate = restTemplate;
     this.objectMapper = objectMapper;
     this.entityFinderService = entityFinderService;
     this.orderRepository = orderRepository;
     this.deliveryInfoRepository = deliveryInfoRepository;
+    this.userAddressRepository = userAddressRepository;
   }
 
   // Generic method to call API and parse response
@@ -96,7 +99,35 @@ public class GoshipService {
     return response.getData();
   }
 
-  public List<RatesResponse> createRates(RatesRequest request) {
+  public List<RatesResponse> createRates(Long orderId, Long userAddressId) {
+    Order order = entityFinderService.findByIdOrThrow(orderRepository, orderId, ErrorCode.ORDER_NOT_FOUND);
+    UserAddress userAddress = entityFinderService.findByIdOrThrow(userAddressRepository, userAddressId, ErrorCode.ADDRESS_NOT_FOUND);
+    RatesAddressRequest addressFrom = RatesAddressRequest.builder()
+            .city(order.getBranch().getCityCode())
+            .district(order.getBranch().getDistrictCode())
+            .ward(order.getBranch().getWardCode())
+            .build();
+    RatesAddressRequest addressTo = RatesAddressRequest.builder()
+            .city(userAddress.getCityCode())
+            .district(userAddress.getDistrictCode())
+            .ward(userAddress.getWardCode())
+            .build();
+    RatesParcelRequest parcelRequest = RatesParcelRequest.builder()
+            .cod(order.getGrandTotal() + "")
+            .height("15")
+            .length("15")
+            .width("15")
+            .weight("10")
+            .build();
+    RatesApiRequest apiRequest = RatesApiRequest.builder()
+            .address_from(addressFrom)
+            .address_to(addressTo)
+            .parcel(parcelRequest)
+            .build();
+    RatesRequest request = RatesRequest.builder()
+            .shipment(apiRequest)
+            .build();
+    
     RatesApiResponse response =
         callApi(API_URL + "/rates", HttpMethod.POST, request, RatesApiResponse.class);
     return response.getData();
@@ -153,5 +184,66 @@ public class GoshipService {
     }
     ShipmentListResponse response = callApi(url, HttpMethod.GET, null, ShipmentListResponse.class);
     return response.getData();
+  }
+
+  public ShipmentResponse createShipmentWithDefaultRate(Long orderId, Long userAddressId) {
+    // First, get the rates
+    List<RatesResponse> rates = createRates(orderId, userAddressId);
+    if (rates == null || rates.isEmpty()) {
+      throw new AppException(ErrorCode.RATES_NOT_FOUND);
+    }
+    
+    // Get the first rate
+    RatesResponse firstRate = rates.getFirst();
+    
+    // Get order and user address
+    Order order = entityFinderService.findByIdOrThrow(orderRepository, orderId, ErrorCode.ORDER_NOT_FOUND);
+    UserAddress userAddress = entityFinderService.findByIdOrThrow(userAddressRepository, userAddressId, ErrorCode.ADDRESS_NOT_FOUND);
+
+    // Create address from (branch address)
+    AddressRequest addressFrom = AddressRequest.builder()
+        .name(order.getBranch().getName())
+        .phone(order.getBranch().getPhone())
+        .street(order.getBranch().getStreet())
+        .ward(order.getBranch().getWardCode())
+        .district(order.getBranch().getDistrictCode())
+        .city(order.getBranch().getCityCode())
+        .build();
+    
+    // Create address to (user address)
+    AddressRequest addressTo = AddressRequest.builder()
+        .name(userAddress.getUser().getFullName())
+        .phone(userAddress.getUser().getPhoneNumber())
+        .street(userAddress.getStreet())
+        .ward(userAddress.getWardCode())
+        .district(userAddress.getDistrictCode())
+        .city(userAddress.getCityCode())
+        .build();
+    
+    // Create parcel
+    ParcelRequest parcel = ParcelRequest.builder()
+        .cod(order.getGrandTotal() + "")
+        .height("15")
+        .length("15")
+        .width("15")
+        .weight("10")
+        .metadata("Hàng dễ vỡ, xin nhẹ tay")
+        .build();
+    
+    // Create shipment request
+    ShipmentApiRequest shipmentRequest = ShipmentApiRequest.builder()
+        .rate(firstRate.getId())
+        .payer(0)
+        .address_from(addressFrom)
+        .address_to(addressTo)
+        .parcel(parcel)
+        .build();
+    
+    ShipmentRequest request = ShipmentRequest.builder()
+        .shipment(shipmentRequest)
+        .build();
+    
+    // Create and return the shipment
+    return createShipment(request, orderId);
   }
 }

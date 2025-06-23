@@ -63,25 +63,25 @@ public class RewardPointController {
   public ApiResponse<List<RewardPointResponse>> getAll() {
     return ApiResponse.<List<RewardPointResponse>>builder()
             .result(rewardPointService.getAll())
-            .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
+            .message(ApiMessage.ALL_REWARD_POINTS_RETRIEVED.getMessage())
             .build();
   }
 
   @PostMapping("/list")
   public ApiResponse<List<RewardPointResponse>> getAllRewardPoint(
-      @RequestBody RewardPointFilterRequest request) {
+      @RequestBody @Valid RewardPointFilterRequest request) {
     return ApiResponse.<List<RewardPointResponse>>builder()
         .result(rewardPointService.getAllRewardPoints(request))
-        .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
+        .message(ApiMessage.ALL_REWARD_POINTS_RETRIEVED.getMessage())
         .build();
   }
 
   @PostMapping("/paging")
   public ApiResponse<Page<RewardPointResponse>> getAllRewardPointWithPaging(
-      @RequestBody RewardPointFilterRequest request) {
+      @RequestBody @Valid RewardPointFilterRequest request) {
     return ApiResponse.<Page<RewardPointResponse>>builder()
         .result(rewardPointService.getAllRewardPointsWithPaging(request))
-        .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
+        .message(ApiMessage.ALL_REWARD_POINTS_RETRIEVED.getMessage())
         .build();
   }
 

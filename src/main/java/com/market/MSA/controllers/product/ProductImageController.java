@@ -69,7 +69,7 @@ public class ProductImageController {
 
   @PostMapping("/list")
   public ApiResponse<List<ProductImageResponse>> getAllProductImages(
-      @Valid ProductImageFilterRequest request) {
+          @RequestBody @Valid ProductImageFilterRequest request) {
     return ApiResponse.<List<ProductImageResponse>>builder()
         .result(productImageService.getAllProductImages(request))
         .message(ApiMessage.ALL_PRODUCT_IMAGES_RETRIEVED.getMessage())
@@ -78,7 +78,7 @@ public class ProductImageController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<ProductImageResponse>> getAllProductImagesWithPaging(
-      @Valid ProductImageFilterRequest request) {
+          @RequestBody @Valid ProductImageFilterRequest request) {
     return ApiResponse.<Page<ProductImageResponse>>builder()
         .result(productImageService.getAllProductImagesWithPaging(request))
         .message(ApiMessage.ALL_PRODUCT_IMAGES_RETRIEVED.getMessage())

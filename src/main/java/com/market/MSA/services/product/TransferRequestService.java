@@ -117,7 +117,7 @@ public class TransferRequestService {
     return transferRequestRepository.findAll().stream().map(transferRequestMapper::toTransferResponse).collect(Collectors.toList());
   }
 
-  @Cacheable("transfer_requests")
+  @Cacheable("transfer_requests_list")
   public List<TransferResponse> getAllTransferRequests(TransferRequestFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
@@ -136,7 +136,7 @@ public class TransferRequestService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("transfer_requests")
+  @Cacheable("transfer_requests_paging")
   public Page<TransferResponse> getAllTransferRequestsWithPaging(
       TransferRequestFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

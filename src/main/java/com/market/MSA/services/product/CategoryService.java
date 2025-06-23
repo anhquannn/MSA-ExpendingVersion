@@ -96,19 +96,18 @@ public class CategoryService {
     return categoryRepository.findAll().stream().map(categoryMapper::toCategoryResponse).collect(Collectors.toList());
   }
 
-  @Cacheable("categories")
+  @Cacheable("categories_list")
   public List<CategoryResponse> getAllCategories(CategoryFilterRequest request) {
     return categoryRepository.filter(request.getName(), request.getParentId()).stream()
         .map(categoryMapper::toCategoryResponse)
         .collect(Collectors.toList());
   }
 
-  @Cacheable("categories")
+  @Cacheable("categories_paging")
   public Page<CategoryResponse> getAllCategoriesWithPaging(CategoryFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
     Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
-
     return categoryRepository
         .filterWithPaging(request.getName(), request.getParentId(), pageable)
         .map(categoryMapper::toCategoryResponse);

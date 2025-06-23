@@ -109,7 +109,7 @@ public class OrderController {
   }
 
   @PostMapping("/list")
-  public ApiResponse<List<OrderResponse>> getAllOrders(@RequestBody OrderFilterRequest request) {
+  public ApiResponse<List<OrderResponse>> getAllOrders(@RequestBody @Valid OrderFilterRequest request) {
     return ApiResponse.<List<OrderResponse>>builder()
         .result(orderService.getAllOrders(request))
         .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
@@ -118,7 +118,7 @@ public class OrderController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<OrderResponse>> getAllOrdersWithPaging(
-      @RequestBody OrderFilterRequest request) {
+      @RequestBody @Valid OrderFilterRequest request) {
     return ApiResponse.<Page<OrderResponse>>builder()
         .result(orderService.getAllOrdersWithPaging(request))
         .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
@@ -149,7 +149,7 @@ public class OrderController {
     OrderResponse response = orderService.updateOrderStatus(orderId, status);
     return ApiResponse.<OrderResponse>builder()
         .result(response)
-        .message(ApiMessage.REVENUE_STATISTICS_RETRIEVED.getMessage())
+        .message(ApiMessage.ORDER_UPDATED.getMessage())
         .build();
   }
 }

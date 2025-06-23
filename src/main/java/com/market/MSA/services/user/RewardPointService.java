@@ -32,11 +32,11 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class RewardPointService {
-  private final RewardPointMapper rewardPointMapper;
-  private final EntityFinderService entityFinderService;
-  private final UserRepository userRepository;
-  private final RewardPointRepository rewardPointRepository;
-  private final RewardPointTransactionService rewardPointTransactionService;
+  final RewardPointMapper rewardPointMapper;
+  final EntityFinderService entityFinderService;
+  final UserRepository userRepository;
+  final RewardPointRepository rewardPointRepository;
+  final RewardPointTransactionService rewardPointTransactionService;
 
   @Transactional
   public RewardPointResponse createRewardPoint(RewardPointRequest rewardPointRequest) {
@@ -84,7 +84,7 @@ public class RewardPointService {
     return rewardPointRepository.findAll().stream().map(rewardPointMapper::toRewardPointResponse).collect(Collectors.toList());
   }
 
-  @Cacheable("reward_points")
+  @Cacheable("reward_points_list")
   public List<RewardPointResponse> getAllRewardPoints(RewardPointFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return rewardPointRepository.filter(request.getUserId(), sort).stream()
@@ -92,7 +92,7 @@ public class RewardPointService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("reward_points")
+  @Cacheable("reward_points_paging")
   public Page<RewardPointResponse> getAllRewardPointsWithPaging(RewardPointFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

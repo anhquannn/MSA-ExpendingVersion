@@ -1,10 +1,12 @@
 package com.market.MSA.responses.user;
 
 import com.market.MSA.models.user.User;
+import com.market.MSA.models.user.UserAddress;
 import com.market.MSA.responses.product.BranchResponse;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,7 +26,6 @@ public class UserResponse {
   String phoneNumber;
   LocalDateTime birthday;
   String password;
-  String address;
   String image;
   String deviceId;
   String googleId;
@@ -32,6 +33,7 @@ public class UserResponse {
   Set<RoleResponse> roles;
 
   List<BranchResponse> branches;
+  List<UserAddressResponse> userAddresses;
 
   public static UserResponse fromUser(User user) {
     return UserResponse.builder()
@@ -40,7 +42,6 @@ public class UserResponse {
         .fullName(user.getFullName())
         .phoneNumber(user.getPhoneNumber())
         .birthday(user.getBirthday())
-        .address(user.getAddress())
         .googleId(user.getGoogleId())
         .build();
   }

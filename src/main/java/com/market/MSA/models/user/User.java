@@ -55,8 +55,9 @@ public class User {
   LocalDateTime birthday;
 
   String password;
-  String address;
   String deviceId;
+
+  @Column(columnDefinition = "TEXT")
   String image;
   String googleId;
 
@@ -115,6 +116,10 @@ public class User {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-reward-transactions")
   List<RewardPointTransaction> rewardPointTransactions = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("user-addresses")
+  List<UserAddress> userAddresses = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-promo-usages")

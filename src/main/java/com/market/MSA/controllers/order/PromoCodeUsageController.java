@@ -69,7 +69,7 @@ public class PromoCodeUsageController {
 
   @PostMapping("/list")
   public ApiResponse<List<PromoCodeUsageResponse>> getAllPromoCodeUsages(
-      @Valid PromoCodeUsageFilterRequest request) {
+          @RequestBody @Valid PromoCodeUsageFilterRequest request) {
     return ApiResponse.<List<PromoCodeUsageResponse>>builder()
         .result(promoCodeUsageService.getAllPromoCodeUsages(request))
         .message(ApiMessage.ALL_PROMO_CODE_USAGES_RETRIEVED.getMessage())
@@ -78,7 +78,7 @@ public class PromoCodeUsageController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<PromoCodeUsageResponse>> getAllPromoCodeUsagesWithPaging(
-      @Valid PromoCodeUsageFilterRequest request) {
+          @RequestBody @Valid PromoCodeUsageFilterRequest request) {
     return ApiResponse.<Page<PromoCodeUsageResponse>>builder()
         .result(promoCodeUsageService.getAllPromoCodeUsagesWithPaging(request))
         .message(ApiMessage.ALL_PROMO_CODE_USAGES_RETRIEVED.getMessage())

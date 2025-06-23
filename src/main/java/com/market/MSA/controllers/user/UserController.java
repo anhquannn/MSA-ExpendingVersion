@@ -45,6 +45,14 @@ public class UserController {
         .build();
   }
 
+  @PutMapping("/device/{deviceId}/{userId}")
+  ApiResponse<UserResponse> updateDeviceId(@PathVariable String deviceId, @PathVariable long userId) {
+    return ApiResponse.<UserResponse>builder()
+            .result(userService.updateDeviceId(deviceId, userId))
+            .message(ApiMessage.USER_UPDATED.getMessage())
+            .build();
+  }
+
   @PostMapping("/login")
   public ApiResponse<UserResponse> login(@RequestBody @Valid AuthenticationRequest request) {
     UserResponse userResponse = userService.validateCredentials(request);
@@ -180,6 +188,15 @@ public class UserController {
         .result(userService.updateUser(userId, request))
         .message(ApiMessage.USER_UPDATED.getMessage())
         .build();
+  }
+
+  @PutMapping("/admin/{userId}")
+  ApiResponse<UserResponse> updateUserWithoutPassword(
+          @PathVariable long userId, @RequestBody UpdateUserRequest request) {
+    return ApiResponse.<UserResponse>builder()
+            .result(userService.updateUserWithoutPassword(userId, request))
+            .message(ApiMessage.USER_UPDATED.getMessage())
+            .build();
   }
 
   @PostMapping("/logout")

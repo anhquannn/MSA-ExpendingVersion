@@ -251,6 +251,13 @@ public enum ApiMessage {
   PROMO_CODE_USAGE_DELETED("Promo code usage deleted successfully"),
   PROMO_CODE_USAGE_RETRIEVED("Promo code usage retrieved successfully"),
   ALL_PROMO_CODE_USAGES_RETRIEVED("All promo code usages retrieved successfully"),
+
+  // Promo Code Usage messages
+  ADDRESS_CREATED("Address created successfully"),
+  ADDRESS_UPDATED("Address updated successfully"),
+  ADDRESS_DELETED("Address deleted successfully"),
+  ADDRESS_RETRIEVED("Address retrieved successfully"),
+  ALL_ADDRESSES_RETRIEVED("All addresses retrieved successfully"),
   ;
 
   private final String message;

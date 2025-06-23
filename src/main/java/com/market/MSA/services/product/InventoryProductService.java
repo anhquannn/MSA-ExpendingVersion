@@ -13,7 +13,6 @@ import com.market.MSA.repositories.product.InventoryRepository;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.requests.filters.InventoryProductFilterRequest;
 import com.market.MSA.requests.product.InventoryProductRequest;
-import com.market.MSA.responses.product.FeedbackResponse;
 import com.market.MSA.responses.product.InventoryProductResponse;
 import com.market.MSA.responses.product.InventoryStatisticsResponse;
 import com.market.MSA.services.others.EntityFinderService;
@@ -295,7 +294,7 @@ public class InventoryProductService {
   }
 
 
-  @Cacheable(value = "inventory_products", key = "#request.hashCode()")
+  @Cacheable("inventory_products_paging")
   public List<InventoryProductResponse> getAllInventoryProducts(
       InventoryProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
@@ -315,7 +314,7 @@ public class InventoryProductService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable(value = "inventory_products", key = "'paged_' + #request.hashCode()")
+  @Cacheable("inventory_products_list")
   public Page<InventoryProductResponse> getAllInventoryProductsWithPaging(
       InventoryProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
@@ -326,7 +325,6 @@ public class InventoryProductService {
             request.getPage() - 1, // Convert to 0-based page
             request.getPageSize(),
             sort);
-
     // Apply filters
     return inventoryProductRepository
         .filterWithPaging(

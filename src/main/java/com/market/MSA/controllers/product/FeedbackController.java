@@ -72,7 +72,7 @@ public class FeedbackController {
   }
 
   @PostMapping("/list")
-  public ApiResponse<List<FeedbackResponse>> getAllFeedbacks(@Valid FeedbackFilterRequest request) {
+  public ApiResponse<List<FeedbackResponse>> getAllFeedbacks(@RequestBody @Valid FeedbackFilterRequest request) {
     return ApiResponse.<List<FeedbackResponse>>builder()
         .result(feedbackService.getAllFeedbacks(request))
         .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())
@@ -81,7 +81,7 @@ public class FeedbackController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<FeedbackResponse>> getAllFeedbacksWithPaging(
-      @Valid FeedbackFilterRequest request) {
+          @RequestBody @Valid FeedbackFilterRequest request) {
     return ApiResponse.<Page<FeedbackResponse>>builder()
         .result(feedbackService.getAllFeedbacksWithPaging(request))
         .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())

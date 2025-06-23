@@ -98,7 +98,7 @@ public class FeedbackService {
     return feedbackRepository.findAll().stream().map(feedbackMapper::toFeedbackResponse).collect(Collectors.toList());
   }
 
-  @Cacheable("feedbacks")
+  @Cacheable("feedbacks_list")
   public List<FeedbackResponse> getAllFeedbacks(FeedbackFilterRequest request) {
     return feedbackRepository
         .filter(
@@ -113,7 +113,7 @@ public class FeedbackService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("feedbacks")
+  @Cacheable("feedbacks_paging")
   public Page<FeedbackResponse> getAllFeedbacksWithPaging(FeedbackFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

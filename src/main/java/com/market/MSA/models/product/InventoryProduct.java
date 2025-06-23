@@ -49,13 +49,13 @@ public class InventoryProduct {
   @PositiveOrZero(message = "Stock number must be positive or zero")
   int stockNumber;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne
   @JoinColumn(name = "inventoryId", nullable = false)
   @JsonBackReference("inventory-products")
   @NotNull(message = "Inventory is required")
   Inventory inventory;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne
   @JoinColumn(
       name = "productId",
       nullable = false,

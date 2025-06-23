@@ -23,7 +23,6 @@ import com.market.MSA.requests.order.PromoCodeUsageRequest;
 import com.market.MSA.responses.order.*;
 import com.market.MSA.services.others.EmailService;
 import com.market.MSA.services.others.NotificationService;
-import com.market.MSA.services.product.BranchService;
 import com.market.MSA.services.product.InventoryProductService;
 import com.market.MSA.services.product.ProductService;
 import com.market.MSA.services.user.RewardPointService;
@@ -65,7 +64,6 @@ public class OrderService {
   final OrderDetailService orderDetailService;
   final OrderMapper orderMapper;
   final InventoryProductService inventoryProductService;
-  final BranchService branchService;
   final NotificationService notificationService;
   final PromoCodeUsageService promoCodeUsageService;
   final RewardPointService rewardPointService;
@@ -278,7 +276,7 @@ public class OrderService {
   }
 
   @Cacheable(
-      value = "orders",
+      value = "orders_paging",
       key =
           "{#request.branchId, #request.userId, #request.status, #request.phoneNumber, "
               + "#request.page, #request.pageSize, #request.sortBy, #request.sortDirection}")

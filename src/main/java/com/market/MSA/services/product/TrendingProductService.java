@@ -88,7 +88,7 @@ public class TrendingProductService {
   }
 
   // Lấy tất cả TrendingProduct (phân trang)
-  @Cacheable("trending_products")
+  @Cacheable("trending_products_list")
   public List<TrendingProductResponse> getAllTrendingProducts(TrendingProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return trendingProductRepository.filter(request.getProductId(), sort).stream()
@@ -96,7 +96,7 @@ public class TrendingProductService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("trending_products")
+  @Cacheable("trending_products_paging")
   public Page<TrendingProductResponse> getAllTrendingProductsWithPaging(TrendingProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);

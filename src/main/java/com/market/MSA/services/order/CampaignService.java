@@ -68,7 +68,7 @@ public class CampaignService {
       return campaignRepository.findAll().stream().map(campaignMapper::toCampaignResponse).collect(Collectors.toList());
   }
 
-  @Cacheable("campaigns")
+  @Cacheable("campaigns_list")
   public List<CampaignResponse> getAllCampaigns(CampaignFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return campaignRepository
@@ -84,7 +84,7 @@ public class CampaignService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("campaigns")
+  @Cacheable("campaigns_paging")
   public Page<CampaignResponse> getAllCampaignsWithPaging(CampaignFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     Pageable pageable =

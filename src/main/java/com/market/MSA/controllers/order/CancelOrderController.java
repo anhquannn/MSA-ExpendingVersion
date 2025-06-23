@@ -74,7 +74,7 @@ public class CancelOrderController {
 
   @PostMapping("/list")
   public ApiResponse<List<CancelOrderResponse>> getAllCancelOrders(
-      @Valid CancelOrderFilterRequest request) {
+          @RequestBody @Valid CancelOrderFilterRequest request) {
     return ApiResponse.<List<CancelOrderResponse>>builder()
         .result(cancelOrderService.getAllCancelOrders(request))
         .message(ApiMessage.ALL_RETURN_ORDERS_RETRIEVED.getMessage())
@@ -83,7 +83,7 @@ public class CancelOrderController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<CancelOrderResponse>> getAllCancelOrdersWithPaging(
-      @Valid CancelOrderFilterRequest request) {
+          @RequestBody @Valid CancelOrderFilterRequest request) {
     return ApiResponse.<Page<CancelOrderResponse>>builder()
         .result(cancelOrderService.getAllCancelOrdersWithPaging(request))
         .message(ApiMessage.ALL_RETURN_ORDERS_RETRIEVED.getMessage())

@@ -23,7 +23,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "branches")
-public class Branch {
+public class  Branch {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long branchId;
@@ -34,6 +34,9 @@ public class Branch {
   String ward;
   String district;
   String city;
+  String cityCode;
+  String districtCode;
+  String wardCode;
 
   @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("order-branches")

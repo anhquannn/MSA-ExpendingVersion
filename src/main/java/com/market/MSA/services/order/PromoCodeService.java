@@ -128,7 +128,7 @@ public class PromoCodeService {
   }
 
   @Transactional(readOnly = true)
-  @Cacheable("promo_codes")
+  @Cacheable("promo_codes_list")
   public List<PromoCodeResponse> getAllPromoCodes(PromoCodeFilterRequest request, Long userId) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
@@ -150,7 +150,7 @@ public class PromoCodeService {
   }
 
   @Transactional(readOnly = true)
-  @Cacheable("promo_codes")
+  @Cacheable("promo_codes_paging")
   public Page<PromoCodeResponse> getAllPromoCodesWithPaging(
       PromoCodeFilterRequest request, Long userId) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

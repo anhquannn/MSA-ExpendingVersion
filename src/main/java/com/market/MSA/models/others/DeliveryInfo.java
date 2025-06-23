@@ -29,6 +29,9 @@ public class DeliveryInfo {
   String ward;
   String district;
   String city;
+  String cityCode;
+  String districtCode;
+  String wardCode;
   String cod;
   String weight;
   String width;

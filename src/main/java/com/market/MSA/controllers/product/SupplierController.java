@@ -72,7 +72,7 @@ public class SupplierController {
   }
 
   @PostMapping("/list")
-  public ApiResponse<List<SupplierResponse>> getAllSuppliers(@Valid SupplierFilterRequest request) {
+  public ApiResponse<List<SupplierResponse>> getAllSuppliers(@RequestBody @Valid SupplierFilterRequest request) {
     return ApiResponse.<List<SupplierResponse>>builder()
         .result(supplierService.getAllSuppliers(request))
         .message(ApiMessage.ALL_SUPPLIERS_RETRIEVED.getMessage())
@@ -81,7 +81,7 @@ public class SupplierController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<SupplierResponse>> getAllSuppliersWithPaging(
-      @Valid SupplierFilterRequest request) {
+          @RequestBody @Valid SupplierFilterRequest request) {
     return ApiResponse.<Page<SupplierResponse>>builder()
         .result(supplierService.getAllSuppliersWithPaging(request))
         .message(ApiMessage.ALL_SUPPLIERS_RETRIEVED.getMessage())

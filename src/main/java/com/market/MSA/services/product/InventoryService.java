@@ -84,21 +84,21 @@ public class InventoryService {
     return inventoryRepository.findAll().stream().map(inventoryMapper::toInventoryResponse).collect(Collectors.toList());
   }
 
-  @Cacheable("inventories")
+  @Cacheable("inventories_list")
   public List<InventoryResponse> getAllInventories(InventoryFilterRequest request) {
-    return inventoryRepository.filter(request.getKeyword(), request.getBranchId()).stream()
+    return inventoryRepository.filter(request.getKeyword(), request.getBranchId(), request.getUserId()).stream()
         .map(inventoryMapper::toInventoryResponse)
         .collect(Collectors.toList());
   }
 
-  @Cacheable("inventories")
+  @Cacheable("inventories_paging")
   public Page<InventoryResponse> getAllInventoriesWithPaging(InventoryFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
     Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
 
     return inventoryRepository
-        .filterWithPaging(request.getKeyword(), request.getBranchId(), pageable)
+        .filterWithPaging(request.getKeyword(), request.getBranchId(), request.getUserId(), pageable)
         .map(inventoryMapper::toInventoryResponse);
   }
 

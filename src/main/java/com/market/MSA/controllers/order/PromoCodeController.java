@@ -89,7 +89,7 @@ public class PromoCodeController {
   // Lấy danh sách tất cả PromoCode (không phân trang)
   @PostMapping("/list/user/{userId}")
   public ApiResponse<List<PromoCodeResponse>> getAllPromoCodes(
-      @Valid PromoCodeFilterRequest request, @PathVariable Long userId) {
+          @RequestBody @Valid PromoCodeFilterRequest request, @PathVariable Long userId) {
     return ApiResponse.<List<PromoCodeResponse>>builder()
         .result(promoCodeService.getAllPromoCodes(request, userId))
         .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
@@ -99,7 +99,7 @@ public class PromoCodeController {
   // Lấy danh sách tất cả PromoCode (có phân trang)
   @PostMapping("/paging/user/{userId}")
   public ApiResponse<Page<PromoCodeResponse>> getAllPromoCodesWithPaging(
-      @Valid PromoCodeFilterRequest request, @PathVariable Long userId) {
+          @RequestBody @Valid PromoCodeFilterRequest request, @PathVariable Long userId) {
     return ApiResponse.<Page<PromoCodeResponse>>builder()
         .result(promoCodeService.getAllPromoCodesWithPaging(request, userId))
         .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())

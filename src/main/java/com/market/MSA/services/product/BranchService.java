@@ -65,6 +65,9 @@ public class BranchService {
             .ward(request.getBranchWard())
             .district(request.getBranchDistrict())
             .city(request.getBranchCity())
+                .cityCode(request.getBranchCityCode())
+                .wardCode(request.getBranchWardCode())
+                .districtCode(request.getBranchDistrictCode())
             .build();
     branch = branchRepository.save(branch);
 
@@ -184,11 +187,11 @@ public class BranchService {
     return branchMapper.toBranchResponse(optionalBranch);
   }
 
-  @Cacheable(value = "branches")
+  @Cacheable(value = "branches_list")
   public List<BranchResponse> getAllBranches(BranchFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
-    return branchRepository.filter(request.getKeyword(), request.getProductId()).stream()
+    return branchRepository.filter(request.getKeyword(), request.getProductId(), request.getUserId()).stream()
         .map(branchMapper::toBranchResponse)
         .collect(Collectors.toList());
   }
@@ -200,14 +203,14 @@ public class BranchService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("branches")
+  @Cacheable("branches_paging")
   public Page<BranchResponse> getAllBranchesWithPaging(BranchFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
     Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
 
     return branchRepository
-        .filterWithPaging(request.getKeyword(), request.getProductId(), pageable)
+        .filterWithPaging(request.getKeyword(), request.getProductId(), request.getUserId(), pageable)
         .map(branchMapper::toBranchResponse);
   }
 }

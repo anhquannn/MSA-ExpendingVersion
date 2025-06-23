@@ -10,9 +10,18 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReportResponse {
+  @JsonProperty("success_percent")
+  double successPercent;
+
+  @JsonProperty("return_percent")
+  double returnPercent;
+
   @JsonProperty("avg_time_delivery")
   int avgTimeDelivery;
 
   @JsonProperty("avg_time_delivery_format")
   int avgTimeDeliveryFormat;
+
+  @JsonProperty("score_percent")
+  double scorePercent;
 }

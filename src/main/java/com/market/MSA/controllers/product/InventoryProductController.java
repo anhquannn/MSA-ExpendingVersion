@@ -95,7 +95,7 @@ public class InventoryProductController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<InventoryProductResponse>> filterInventoryProductsWithPaging(
-      @Valid @RequestBody InventoryProductFilterRequest request) {
+      @RequestBody @Valid InventoryProductFilterRequest request) {
     return ApiResponse.<Page<InventoryProductResponse>>builder()
         .result(inventoryProductService.getAllInventoryProductsWithPaging(request))
         .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())

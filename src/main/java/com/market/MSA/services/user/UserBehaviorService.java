@@ -96,7 +96,7 @@ public class UserBehaviorService {
     return userBehaviorRepository.findAll().stream().map(userBehaviorMapper::toUserBehaviorResponse).collect(Collectors.toList());
   }
 
-  @Cacheable("user_behaviors")
+  @Cacheable("user_behaviors_list")
   public List<UserBehaviorResponse> getAllUserBehaviors(UserBehaviorFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
@@ -105,7 +105,7 @@ public class UserBehaviorService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("user_behaviors")
+  @Cacheable("user_behaviors_paging")
   public Page<UserBehaviorResponse> getAllUserBehaviorsWithPaging(
       UserBehaviorFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

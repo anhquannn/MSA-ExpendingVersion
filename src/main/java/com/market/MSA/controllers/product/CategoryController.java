@@ -74,7 +74,7 @@ public class CategoryController {
 
   @PostMapping("/list")
   public ApiResponse<List<CategoryResponse>> getAllCategories(
-      @Valid CategoryFilterRequest request) {
+      @RequestBody @Valid CategoryFilterRequest request) {
     return ApiResponse.<List<CategoryResponse>>builder()
         .result(categoryService.getAllCategories(request))
         .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())
@@ -83,7 +83,7 @@ public class CategoryController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<CategoryResponse>> getAllCategoriesWithPaging(
-      @Valid CategoryFilterRequest request) {
+          @RequestBody @Valid CategoryFilterRequest request) {
     return ApiResponse.<Page<CategoryResponse>>builder()
         .result(categoryService.getAllCategoriesWithPaging(request))
         .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())

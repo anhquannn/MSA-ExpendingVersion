@@ -47,19 +47,11 @@ public class GoshipController {
         .build();
   }
 
-  @PostMapping("/rates")
-  public ApiResponse<List<RatesResponse>> createRates(@RequestBody @Valid RatesRequest request) {
-    return ApiResponse.<List<RatesResponse>>builder()
-        .result(goshipService.createRates(request))
-        .message(ApiMessage.RATES_CREATED.getMessage())
-        .build();
-  }
-
-  @PostMapping("/{orderId}")
+  @PostMapping("/order/{orderId}/address/{userAddressId}")
   public ApiResponse<ShipmentResponse> createShipment(
-      @PathVariable Long orderId, @RequestBody @Valid ShipmentRequest request) {
+      @PathVariable Long orderId, @PathVariable Long userAddressId) {
     return ApiResponse.<ShipmentResponse>builder()
-        .result(goshipService.createShipment(request, orderId))
+        .result(goshipService.createShipmentWithDefaultRate(orderId, userAddressId))
         .message(ApiMessage.SHIPMENT_CREATED.getMessage())
         .build();
   }

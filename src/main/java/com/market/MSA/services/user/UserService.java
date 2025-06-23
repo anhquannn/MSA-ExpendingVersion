@@ -83,6 +83,16 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
+  public UserResponse updateDeviceId(String deviceId, Long userId) {
+    User user =
+            userRepository
+                    .findById(userId)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    user.setDeviceId(deviceId);
+    userRepository.save(user);
+    return userMapper.toUserResponse(user);
+  }
+
 //  @Cacheable(value = "users", key = "'auth:' + #request.email")
   public UserResponse validateCredentials(AuthenticationRequest request) {
     User user =
@@ -293,6 +303,19 @@ public class UserService {
 
     userMapper.updateUser(user, request);
     user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+    var roles = roleRepository.findAllById(request.getRoles());
+    user.setRoles(new HashSet<>(roles));
+
+    user = userRepository.save(user);
+    return userMapper.toUserResponse(user);
+  }
+
+  @Transactional
+  public UserResponse updateUserWithoutPassword(long userId, UpdateUserRequest request) {
+    User user = getUserEntityByID(userId);
+
+    userMapper.updateUser(user, request);
 
     var roles = roleRepository.findAllById(request.getRoles());
     user.setRoles(new HashSet<>(roles));

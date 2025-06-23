@@ -90,16 +90,8 @@ public class BranchController {
         .build();
   }
 
-  @GetMapping
-  public ApiResponse<List<BranchResponse>> getAll() {
-    return ApiResponse.<List<BranchResponse>>builder()
-            .result(branchService.getAll())
-            .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())
-            .build();
-  }
-
   @PostMapping("/list")
-  public ApiResponse<List<BranchResponse>> getAllBranches(@Valid BranchFilterRequest request) {
+  public ApiResponse<List<BranchResponse>> getAllBranches(@RequestBody @Valid BranchFilterRequest request) {
     return ApiResponse.<List<BranchResponse>>builder()
         .result(branchService.getAllBranches(request))
         .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())
@@ -116,7 +108,7 @@ public class BranchController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<BranchResponse>> getAllBranchesWithPaging(
-      @Valid BranchFilterRequest request) {
+          @RequestBody @Valid BranchFilterRequest request) {
     return ApiResponse.<Page<BranchResponse>>builder()
         .result(branchService.getAllBranchesWithPaging(request))
         .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())

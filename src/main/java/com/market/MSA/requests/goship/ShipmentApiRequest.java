@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ShipmentApiRequest {
   String rate;
+  int payer;
   AddressRequest address_from;
   AddressRequest address_to;
   ParcelRequest parcel;

@@ -91,14 +91,14 @@ public class ProductImageService {
     return productImageRepository.findAll().stream().map(productImageMapper::toProductImageResponse).collect(Collectors.toList());
   }
 
-  @Cacheable("product_images")
+  @Cacheable("product_images_list")
   public List<ProductImageResponse> getAllProductImages(ProductImageFilterRequest request) {
     return productImageRepository.filter(request.getProductId()).stream()
         .map(productImageMapper::toProductImageResponse)
         .collect(Collectors.toList());
   }
 
-  @Cacheable("product_images")
+  @Cacheable("product_images_paging")
   public Page<ProductImageResponse> getAllProductImagesWithPaging(
       ProductImageFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

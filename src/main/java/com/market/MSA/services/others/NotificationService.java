@@ -157,7 +157,7 @@ public class NotificationService {
     return notificationRepository.findAll().stream().map(notificationMapper::toNotificationResponse).collect(Collectors.toList());
   }
 
-  @Cacheable("notifications")
+  @Cacheable("notifications_list")
   @Transactional(readOnly = true)
   public List<NotificationResponse> getAllNotifications(NotificationFilterRequest request) {
     // Handle date range
@@ -200,7 +200,7 @@ public class NotificationService {
     }
   }
 
-  @Cacheable("notifications")
+  @Cacheable("notifications_paging")
   @Transactional(readOnly = true)
   public Page<NotificationResponse> getAllNotificationsWithPaging(
       NotificationFilterRequest request) {

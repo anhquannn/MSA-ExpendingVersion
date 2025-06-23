@@ -74,6 +74,9 @@ public class ApplicationinitConfig {
                             .ward("Default Ward")
                             .district("Default District")
                             .city("Default City")
+                                .cityCode("700000")
+                                .wardCode("9218")
+                                .districtCode("700400")
                             .build();
 
                     // Create inventory
@@ -98,12 +101,27 @@ public class ApplicationinitConfig {
 
                     // Save the branch (will cascade to inventory due to CascadeType.ALL)
                     branch = branchRepository.save(branch);
-                    log.info(
-                        "Created branch with ID: {} and inventory with ID: {}",
-                        branch.getBranchId(),
-                        branch.getInventory().getInventoryId());
                     return branch;
                   });
+
+      // Create CUSTOMER permission if not exists
+      Permission customerPermission = permissionRepository.findByName("CUSTOMER_ACCESS")
+          .orElseGet(() -> permissionRepository.save(
+              Permission.builder()
+                  .name("CUSTOMER_ACCESS")
+                  .description("Truy cập dành cho khách hàng")
+                  .build()));
+
+      // Create CUSTOMER role with permission if not exists
+      Role customerRole = roleRepository.findByName("CUSTOMER")
+          .orElseGet(() -> {
+            Role role = Role.builder()
+                .name("CUSTOMER")
+                .description("Khách hàng")
+                .build();
+            role.setPermissions(Set.of(customerPermission));
+            return roleRepository.save(role);
+          });
 
       // Create admin user if not exists
       if (userRepository.findByEmail("admin@example.com").isEmpty()) {

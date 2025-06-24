@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/config.dart';
+import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
-import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/widget/custom_widget.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
-import '../../../../../widget/custom_item_promocode.dart';
 import '../bloc/product_list_bloc.dart';
 
 class ProductListScreen extends BaseView<ProductListBloc> {
   final bool? isSale;
-  final List<ProductModel>? productList;
+  final ProductFilterResult? productList;
   const ProductListScreen({super.key, this.isSale, this.productList});
 
   @override
@@ -18,6 +17,7 @@ class ProductListScreen extends BaseView<ProductListBloc> {
 
   Widget build(BuildContext context) {
     final bloc = (context as StatefulElement).state as ProductListBloc;
+  
 
     return CustomScaffold(
       appBarGradient: false,
@@ -53,10 +53,13 @@ class ProductListScreen extends BaseView<ProductListBloc> {
                   if (snapshot.hasError) {
                     return Center(child: Text('Lỗi: ${snapshot.error}'));
                   }
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  if (!snapshot.hasData || snapshot == null) {
                     return const Center(child: Text('Không có sản phẩm'));
                   }
-                  final products = snapshot.data!;
+                    final List<ProductModel>? model =
+        isSale == true
+            ? productList?.discountedProductsPage?.content
+            : productList?.productsPage?.content;
                   return GridView.builder(
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
@@ -67,16 +70,16 @@ class ProductListScreen extends BaseView<ProductListBloc> {
                         ),
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
-                    itemCount: products.length,
+                    itemCount: model?.length,
                     itemBuilder: (context, index) {
-                      if (index == products.length) {
+                      if (index == model?.length) {
                         return const SizedBox(
                           // height: 2,
                         ); // SizedBox ở cuối danh sách
                       }
                       return customItemProductCustomer(
                         isDiscount: false,
-                        products[index],
+                        model?[index] ?? ProductModel(),
                         AppSize.w(0.4),
                       );
                     },

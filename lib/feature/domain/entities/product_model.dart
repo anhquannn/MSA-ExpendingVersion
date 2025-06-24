@@ -1,7 +1,11 @@
+import 'package:msa/feature/data/model/response/product_filter_response.dart';
+
+// Add an empty ProductImage factory if not already present
+
 class ProductModel {
   final int? productId;
   final String? name;
-  final String? images;
+  final String? image; // ảnh chính
   final double? price;
   final double? currentPrice;
   final String? unit;
@@ -16,14 +20,13 @@ class ProductModel {
   final int? discountTriggerDays;
   final String? createdAt;
 
-  final ManufacturerModel? manufacturer;
   final SupplierModel? supplier;
   final CategoryModel? category;
+  final List<ProductImage>? productImages;
 
   final dynamic inventoryProductResponses;
   final dynamic orderDetails;
   final dynamic feedbackResponses;
-  final dynamic productImageResponses;
   final dynamic userBehaviorResponses;
   final dynamic notificationResponses;
   final dynamic trendingProductResponses;
@@ -31,7 +34,7 @@ class ProductModel {
   ProductModel({
     this.productId,
     this.name,
-    this.images,
+    this.image,
     this.price,
     this.currentPrice,
     this.unit,
@@ -44,23 +47,31 @@ class ProductModel {
     this.discountPercentage,
     this.discountTriggerDays,
     this.createdAt,
-    this.manufacturer,
     this.supplier,
     this.category,
+    this.productImages,
     this.inventoryProductResponses,
     this.orderDetails,
     this.feedbackResponses,
-    this.productImageResponses,
     this.userBehaviorResponses,
     this.notificationResponses,
     this.trendingProductResponses,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
+    final imagesJson = json['productImageResponses'] as List<dynamic>?;
+    final images = imagesJson?.map((e) => ProductImage.fromJson(e)).toList();
+
+    // Lấy ảnh chính hoặc ảnh đầu tiên
+    final mainImage = images?.firstWhere(
+      (img) => img.isPrimary ?? false,
+      orElse: () => images.isNotEmpty ? images.first : images[0],
+    );
+
     return ProductModel(
       productId: int.tryParse(json['productId'].toString()),
       name: json['name'] ?? '',
-      images: json['images'] ?? '',
+      image: mainImage?.imageUrl,
       price: (json['price'] as num?)?.toDouble(),
       currentPrice: (json['currentPrice'] as num?)?.toDouble(),
       unit: json['unit'] ?? '',
@@ -68,16 +79,14 @@ class ProductModel {
       specification: json['specification'] ?? '',
       description: json['description'] ?? '',
       expiry:
-          json['expiry'] != null ? int.tryParse(json['expiry'].toString()) : 0,
+          json['expiry'] != null
+              ? int.tryParse(json['expiry'].toString())
+              : null,
       totalRevenue: (json['totalRevenue'] as num?)?.toDouble(),
       netWeight: json['netWeight'],
       discountPercentage: (json['discountPercentage'] as num?)?.toDouble(),
       discountTriggerDays: json['discountTriggerDays'],
       createdAt: json['createdAt'],
-      manufacturer:
-          json['manufacturer'] != null
-              ? ManufacturerModel.fromJson(json['manufacturer'])
-              : null,
       supplier:
           json['supplier'] != null
               ? SupplierModel.fromJson(json['supplier'])
@@ -86,10 +95,10 @@ class ProductModel {
           json['category'] != null
               ? CategoryModel.fromJson(json['category'])
               : null,
+      productImages: images,
       inventoryProductResponses: json['inventoryProductResponses'],
       orderDetails: json['orderDetails'],
       feedbackResponses: json['feedbackResponses'],
-      productImageResponses: json['productImageResponses'],
       userBehaviorResponses: json['userBehaviorResponses'],
       notificationResponses: json['notificationResponses'],
       trendingProductResponses: json['trendingProductResponses'],
@@ -100,7 +109,7 @@ class ProductModel {
     return {
       'productId': productId,
       'name': name,
-      'images': images,
+      'image': image,
       'price': price,
       'currentPrice': currentPrice,
       'unit': unit,
@@ -113,13 +122,12 @@ class ProductModel {
       'discountPercentage': discountPercentage,
       'discountTriggerDays': discountTriggerDays,
       'createdAt': createdAt,
-      'manufacturer': manufacturer?.toJson(),
       'supplier': supplier?.toJson(),
       'category': category?.toJson(),
+      'productImageResponses': productImages?.map((e) => e.toJson()).toList(),
       'inventoryProductResponses': inventoryProductResponses,
       'orderDetails': orderDetails,
       'feedbackResponses': feedbackResponses,
-      'productImageResponses': productImageResponses,
       'userBehaviorResponses': userBehaviorResponses,
       'notificationResponses': notificationResponses,
       'trendingProductResponses': trendingProductResponses,
@@ -227,6 +235,13 @@ class CategoryModel {
       'description': description,
       'parentCategory': parentCategory?.toJson(),
     };
+  }
+
+  List<CategoryModel> parseCategoryList(dynamic jsonList) {
+    if (jsonList == null) return [];
+    return List<CategoryModel>.from(
+      jsonList.map((item) => CategoryModel.fromJson(item)),
+    );
   }
 }
 

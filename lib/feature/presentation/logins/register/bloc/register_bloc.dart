@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:msa/core/config/base_bloc.dart';
+import 'package:msa/core/config/constant.dart';
+import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/model/request/user_register_request.dart';
 import 'package:msa/feature/data/repositories/goship_connection.dart';
+import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
+import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/domain/usecase/user_use_case.dart';
 import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
 import 'package:msa/feature/presentation/logins/register/ui/register_screen.dart';
@@ -189,22 +193,41 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
         wardId: ward?.id ?? '0',
         wardName: ward?.name ?? '0',
       );
+
       UserModel? user = await _userUseCases.register(
         UserRegisterRequest(
           fullName: nameController.text,
           email: emailController.text,
           phoneNumber: phoneNumberController.text,
           password: passwordController.text,
-          address: formattedAddress,
+          // address: formattedAddress,
           birthday: birthDayController.text,
+          deviceId: Storage.deviceId,
+          image: avtMen4,
         ),
       );
       if (user != null) {
         Storage.userModelGlobal = user;
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => LoginScreen()),
+        final address = UserAddressRequest(
+          cityCode: city?.id ?? '0',
+          city: city?.name ?? '',
+          districtCode: district?.id ?? '0',
+          district: district?.name ?? '0',
+          wardCode: ward?.id ?? '0',
+          ward: ward?.name ?? '',
+          street: streetController.text,
+          isPrimary: true,
+          createdAt: formatDateTime(DateTime.now()),
+          userId: user.userId ?? 0,
         );
+        final isSuccess = await Repository.onCreateAddress(address);
+
+        if (isSuccess) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => LoginScreen()),
+          );
+        }
       }
     }
   }
@@ -398,7 +421,7 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
     );
     isValid &= validateField(
       controller: birthDayController,
-      errorText: 'Vui lòng ngày sinh',
+      errorText: 'Vui lòng chọn ngày sinh',
       validate: (text) => text.isNotEmpty,
       onError: (error) {
         errorBirthDay = error.isNotEmpty;

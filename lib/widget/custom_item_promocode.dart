@@ -1,6 +1,7 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:msa/core/config/config.dart';
+import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
 
 import '../core/config/constant.dart';
@@ -29,16 +30,12 @@ Widget customItemPromoCode(
         ),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(
-              10,
-            ), // Viền bo tròn cho Container
+            borderRadius: BorderRadius.circular(10),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                toHexToColor(primaryButtonColor),
-                Colors.blueGrey,
-              ], // Các màu của gradient
+              colors:
+                  generatePastelGradientForWhiteText(), // Gọi hàm tạo gradient pastel
             ),
           ),
           child: Column(
@@ -73,7 +70,7 @@ Widget customItemPromoCode(
                 ),
               ),
               Spacer(),
-              buildBottomInfo(model,() {}, () {}, width, isShow),
+              buildBottomInfo(model, () {}, () {}, width, isShow),
             ],
           ),
         ),
@@ -117,18 +114,19 @@ Widget buildBottomInfo(
             isBold: true,
           ),
           SizedBox(width: 10),
-          model.startDate!=''?
-          buildInfoContainer(
-            width: width * 0.4,
-            color: toHexToColor(primaryColorPurple),
-            label: AutoSizeText(
-              '${model.startDate ?? DateTime.now()} - ${model.endDate ?? DateTime.now() }',
-              maxLines: 1,
-              softWrap: true,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: Colors.white),
-            ),
-          ):SizedBox.shrink(),
+          model.startDate != ''
+              ? buildInfoContainer(
+                width: width * 0.4,
+                color: toHexToColor(primaryColorPurple),
+                label: AutoSizeText(
+                  '${model.startDate ?? DateTime.now()} - ${model.endDate ?? DateTime.now()}',
+                  maxLines: 1,
+                  softWrap: true,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: Colors.white),
+                ),
+              )
+              : SizedBox.shrink(),
           if (isShow == false) ...[
             Spacer(),
             buildIconButton(

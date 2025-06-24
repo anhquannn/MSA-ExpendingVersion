@@ -374,7 +374,7 @@ class BranchListScreen extends BaseView<BranchListBloc> {
                     borderRadius: BorderRadius.circular(10),
                     // child: Image.asset(avtWomen6, fit: BoxFit.cover),
                     child: CachedNetworkImage(
-                      imageUrl: model?.product?.images ?? '',
+                      imageUrl: model?.product?.image ?? '',
                       placeholder:
                           (context, url) => CircularProgressIndicator(),
                       errorWidget:

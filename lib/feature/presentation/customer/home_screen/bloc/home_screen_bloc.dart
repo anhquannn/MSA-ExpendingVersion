@@ -6,12 +6,17 @@ import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import 'package:msa/feature/data/model/request/category_filter_request.dart';
+import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/product_get_all_request_model.dart';
+import 'package:msa/feature/data/model/request/promocode_request_model.dart';
+import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/cart_model.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
+import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/domain/usecase/cart_item_use_case.dart';
 import 'package:msa/feature/domain/usecase/cart_use_case.dart';
 import 'package:msa/feature/domain/usecase/category_use_case.dart';
@@ -31,9 +36,6 @@ import '../ui/home_screen.dart';
 
 class HomeScreenBloc extends BaseBloc<HomeScreen> {
   final UserUseCases _userUseCases = GetIt.I<UserUseCases>();
-  final CategoryUseCase _categoryUseCase = GetIt.I<CategoryUseCase>();
-  final ProductUseCase _productUseCase = GetIt.I<ProductUseCase>();
-  final PromoCodeUseCase _promoCodeUseCase = GetIt.I<PromoCodeUseCase>();
   final CartItemUseCase _cartItemUseCase = GetIt.I<CartItemUseCase>();
   final CartUseCase _cartUseCase = GetIt.I<CartUseCase>();
 
@@ -46,7 +48,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   final userModel = BehaviorSubject<UserModel>();
   final categoryModels = BehaviorSubject<List<CategoryModel>>();
-  final productModels = BehaviorSubject<List<ProductModel>>();
+  final productModels = BehaviorSubject<ProductFilterResult>();
   final promoCodeModels = BehaviorSubject<List<PromoCodeModel>>();
   final listCartItemModels = BehaviorSubject<List<CartItemModel>>.seeded([
     mockCartItem,
@@ -82,7 +84,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       userModel.add(UserModel());
       categoryModels.add([]);
-      productModels.add([]);
+      productModels.add(ProductFilterResult());
       if (indexScreen.value == 0) {
         categoryController.addListener(_onCategoryScroll);
       }
@@ -146,20 +148,10 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   onGetPromoCode() async {
     try {
-      List<PromoCodeModel>? promoCode = await _promoCodeUseCase
-          .getAll()
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              showCustomMessageError(viewContext);
-              return [];
-            },
-          );
-      if (promoCode != null) {
-        promoCodeModels.add(promoCode);
-      } else {
-        promoCodeModels.add([]);
-      }
+      List<PromoCodeModel>? promoCode = await Repository.onGetAllPromoCode(
+        PromoCodeRequestModel(userId: Storage.userModelGlobal?.userId ?? 0),
+      );
+      promoCodeModels.add(promoCode ?? []);
     } catch (e) {
       print('Lỗi khi lấy danh sách mã giảm giá: $e');
       promoCodeModels.add([]);
@@ -188,38 +180,65 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       userModel.add(UserModel());
     }
   }
+
+  // onGetProduct() async {
+  //   try {
+  //     ProductFilterRequest filter = ProductFilterRequest(
+  //       page: 1,
+  //       pageSize: 10,
+  //       branchId: Storage.branchModelGlobal?.branchId,
+  //     );
+
+  //     ProductFilterResult product = await Repository.onFilterProducts(filter);
+
+  //     productModels.add(product);
+  //   } catch (e) {
+  //     print('Lỗi khi lấy danh sách sản phẩm: $e');
+  //     productModels.add(ProductFilterResult()); // Fallback nếu có lỗi
+  //   }
+  // }
   onGetProduct() async {
     try {
-      ProductGetAllRequest filter = ProductGetAllRequest(page: 1, pageSize: 10);
-      if (Storage.branchModelGlobal != null) {
-        filter.branchId = Storage.branchModelGlobal?.branchId;
-      }
-      List<ProductModel>? product = await _productUseCase
-          .filterAndSort(filter)
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              showCustomMessageError(viewContext);
-              return [];
-            },
-          );
+      ProductFilterRequest filter = ProductFilterRequest(
+        page: 1,
+        pageSize: 10,
+        branchId: Storage.branchModelGlobal?.branchId,
+      );
+
+      ProductFilterResult product = await Repository.onFilterProducts(filter);
+
+      // In danh sách sản phẩm thường
+      print('📦 Danh sách sản phẩm thường:');
+      product.products?.forEach((p) {
+        print('→ ${p.name} | ID: ${p.productId}');
+      });
+
+      // In danh sách sản phẩm đang giảm giá
+      print('🔥 Danh sách sản phẩm giảm giá:');
+      product.discountedProducts?.forEach((p) {
+        print('→ ${p.name} | ID: ${p.productId}');
+      });
+
+      // In danh sách từ productsPage (nếu có)
+      print('📄 Danh sách productsPage (paginated):');
+      product.productsPage?.content.forEach((p) {
+        print('→ ${p.name} | ID: ${p.productId}');
+      });
+
       productModels.add(product);
     } catch (e) {
-      print('Lỗi khi lấy danh sách sản phẩm: $e');
-      productModels.add([]); // Fallback nếu có lỗi
+      print('❌ Lỗi khi lấy danh sách sản phẩm: $e');
+      productModels.add(ProductFilterResult()); // Fallback nếu có lỗi
     }
   }
 
   onGetCategory() async {
     try {
-      List<CategoryModel>? category = await _categoryUseCase.getAll().timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          showCustomMessageError(viewContext);
-          return [];
-        },
+      final response = await Repository.onGetAllCategory(
+        CategoryFilterRequest(),
       );
-      categoryModels.add(category);
+
+      categoryModels.set(response);
     } catch (e) {
       print('Lỗi khi lấy danh sách danh mục: $e');
       categoryModels.add([]); // Fallback nếu có lỗi

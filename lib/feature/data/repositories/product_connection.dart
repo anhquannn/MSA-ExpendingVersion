@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
@@ -183,6 +184,7 @@ class ProductRepositoryImpl extends IProductRepository {
     int? categoryId,
     String? sortBy,
     String? sortDirection,
+    BuildContext? context,
   }) async {
     final queryParams = {
       if (keyword != null) 'keyword': keyword,
@@ -200,6 +202,7 @@ class ProductRepositoryImpl extends IProductRepository {
       queryParams,
     );
     final response = await HttpConnection.get<List<ProductModel>>(
+      context: context,
       url,
       fromJsonT:
           (json) =>
@@ -210,19 +213,41 @@ class ProductRepositoryImpl extends IProductRepository {
     return _parseSimpleProductList(response);
   }
 
- Future<AllProductsResult?> onFilterProducts(ProductFilterRequest request) async {
-    const String endpoint = '/product/filter';
+  // static Future<ProductFilterResult?> onFilterProducts(
+  //   ProductFilterRequest request, {
+  //   BuildContext? context,
+  // }) async {
+  //   const String endpoint = 'product/filter';
 
-    final response = await HttpConnection.post<AllProductsResult>(
+  //   final response = await HttpConnection.post<ProductFilterResult>(
+  //     context: context,
+  //     endpoint,
+  //     body: request.toJson(),
+  //     isToken: true,
+  //     fromJsonT: (json) => ProductFilterResult.fromJson(json),
+  //   );
+
+  //   if (!response.isSuccess) {
+  //     return response.result;
+  //   }
+  //   return null;
+  // }
+  static Future<ProductFilterResult?> onFilterProducts(
+    ProductFilterRequest request, {
+    BuildContext? context,
+  }) async {
+    const String endpoint = 'product/filter';
+    final response = await HttpConnection.post<ProductFilterResult>(
       endpoint,
+      context: context,
       body: request.toJson(),
       isToken: true,
-      fromJsonT: (json) => AllProductsResult.fromJson(json),
+      fromJsonT: (json) => ProductFilterResult.fromJson(json),
     );
-
-    if (!response.isSuccess) {
-    return response.result;
+    if (response.isSuccess) {
+      return response.result;
     }
-  return null;
+    print('Lỗi khi lọc sản phẩm: ${response.message}');
+    return null;
   }
 }

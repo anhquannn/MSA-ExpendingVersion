@@ -183,13 +183,10 @@ Widget customItemProductCustomer(
                     ),
                     clipBehavior: Clip.hardEdge, // Đảm bảo ảnh bo góc
                     child: Image.network(
-                      model.images ?? imgProductDefault,
+                      model.image ?? imgProductDefault,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        return Image.asset(
-                          imgBranch,
-                          fit: BoxFit.cover,
-                        );
+                        return Image.asset(imgBranch, fit: BoxFit.cover);
                       },
                     ),
                   ),

@@ -148,7 +148,8 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           padding: const EdgeInsets.symmetric(horizontal: 5),
           child: InkWell(
             onTap: () {
-              bloc.onSearch();
+              // bloc.onSearch();
+              bloc.onRefresh();
             },
             child: const Icon(Icons.search, color: Colors.white),
           ),
@@ -472,10 +473,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               if (snapshot.hasError) {
                 return Center(child: Text('Lỗi: ${snapshot.error}'));
               }
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              if (!snapshot.hasData || snapshot.data != null) {
                 return const Center(child: Text('Không có sản phẩm'));
               }
-              final products = snapshot.data!;
+              final products = snapshot.data?.discountedProductsPage?.content;
               return GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
@@ -485,7 +486,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                 ),
                 physics: const NeverScrollableScrollPhysics(),
                 shrinkWrap: true,
-                itemCount: products.length > 10 ? 10 : products.length,
+                itemCount: products!.length > 10 ? 10 : products?.length,
                 itemBuilder: (context, index) {
                   return InkWell(
                     onTap: () {
@@ -496,7 +497,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                       onBuy: bloc.onBuy,
                       onAddToCart: bloc.onAddToCart,
                       isDiscount: true,
-                      products[index],
+                      products![index],
                       width * 0.4,
                     ),
                   );
@@ -526,10 +527,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               if (snapshot.hasError) {
                 return Center(child: Text('Lỗi: ${snapshot.error}'));
               }
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              if (!snapshot.hasData || snapshot.data == null) {
                 return const Center(child: Text('Không có sản phẩm'));
               }
-              final products = snapshot.data!;
+              final products = snapshot.data?.productsPage?.content;
               return GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
@@ -540,9 +541,9 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                 physics: const NeverScrollableScrollPhysics(),
                 shrinkWrap: true,
                 itemCount:
-                    products.length > 10
-                        ? 10
-                        : products.length, // lazy load 10 sản phẩm đầu
+                    products!.length > 20
+                        ? 20
+                        : products.length,
                 itemBuilder: (context, index) {
                   return InkWell(
                     onTap: () {
@@ -1177,7 +1178,7 @@ class CardTab extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     // child: Image.asset(avtWomen6, fit: BoxFit.cover),
                     child: CachedNetworkImage(
-                      imageUrl: model?.product?.images ?? '',
+                      imageUrl: model?.product?.image ?? '',
                       placeholder:
                           (context, url) => CircularProgressIndicator(),
                       errorWidget:

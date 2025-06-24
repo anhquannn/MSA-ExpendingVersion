@@ -115,7 +115,7 @@ class AddressModel {
   final String cityName;
   final String districtId;
   final String districtName;
-  final int wardId;
+  final String wardId;
   final String wardName;
   final String address;
 
@@ -158,7 +158,7 @@ AddressModel parseAddressModelFromString(String addressString) {
     return AddressModel(
       address: address,
       wardName: wardMatch.group(1)!,
-      wardId: int.parse(wardMatch.group(2)!),
+      wardId: wardMatch.group(2)!,
       districtName: districtMatch.group(1)!,
       districtId: districtMatch.group(2)!,
       cityName: cityMatch.group(1)!,
@@ -168,19 +168,3 @@ AddressModel parseAddressModelFromString(String addressString) {
     throw Exception("Lỗi parse địa chỉ: $e");
   }
 }
-
-//final addressStr = parseAddressStringFromModel(
-//   cityId: "700000",
-//   cityName: "TP. Hồ Chí Minh",
-//   districtId: "700400",
-//   districtName: "Quận 10",
-//   wardId: 9220,
-//   wardName: "Phường 10",
-// );
-
-// print(addressStr);
-// // Output: "Phường 10 (9220), Quận 10 (700400), TP. Hồ Chí Minh (700000)"
-
-// final model = parseAddressModelFromString(addressStr);
-// print(model.wardName); // Phường 10
-// print(model.districtId); // 700400

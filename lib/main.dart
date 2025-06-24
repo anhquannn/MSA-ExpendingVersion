@@ -7,6 +7,7 @@ import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
+import 'package:msa/feature/presentation/logins/register/ui/register_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'feature/data/datasources/local/starage.dart';
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: isLoggedIn ? HomeScreen() : LoginScreen(),
+      // home:RegisterScreen()
     );
   }
 }

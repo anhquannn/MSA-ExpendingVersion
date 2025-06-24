@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/core/utils/utility.dart';
+import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
@@ -56,9 +57,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     return CustomScrollView(
       controller: controller,
       slivers: [
-        SliverToBoxAdapter(
-          child: itemImage(stringToList(productModel.images), bloc),
-        ),
+        SliverToBoxAdapter(child: itemImage(productModel.productImages, bloc)),
         const SliverToBoxAdapter(child: SizedBox(height: 5)),
         SliverToBoxAdapter(
           child: itemProductDetail(
@@ -217,7 +216,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     );
   }
 
-  Widget itemImage(List<String> images, ProductDetailBloc bloc) {
+  Widget itemImage(List<ProductImage>? images, ProductDetailBloc bloc) {
     final PageController _pageController = PageController();
     return Center(
       child: Column(
@@ -232,10 +231,10 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                   borderRadius: BorderRadius.circular(10),
                   child: PageView.builder(
                     controller: _pageController,
-                    itemCount: images.length,
+                    itemCount: images?.length,
                     itemBuilder: (context, index) {
                       return CachedNetworkImage(
-                        imageUrl: images[index],
+                        imageUrl: images![index].imageUrl,
                         fit: BoxFit.cover,
                         placeholder:
                             (context, url) => const Center(
@@ -268,7 +267,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
           const SizedBox(height: 8),
           SmoothPageIndicator(
             controller: _pageController,
-            count: images.length,
+            count: images?.length??0,
             effect: WormEffect(
               dotHeight: 8,
               dotWidth: 8,

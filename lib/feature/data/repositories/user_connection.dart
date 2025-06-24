@@ -1,7 +1,10 @@
 // SỬA: user_repository_impl.dart
 
+import 'package:flutter/widgets.dart';
 import 'package:msa/feature/data/model/response/auth_response.dart';
 import 'package:msa/feature/data/model/response/user_login_response.dart';
+import 'package:msa/feature/domain/entities/address_model.dart';
+import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:msa/feature/data/model/request/user_login_request.dart';
 import 'package:msa/feature/data/model/request/user_register_request.dart';
@@ -93,7 +96,7 @@ class UserRepositoryImpl implements IUserRepository {
 
   @override
   Future<UserModel?> onGetUserByEmail() async {
-    final email = Storage.email; 
+    final email = Storage.email;
     if (email.isEmpty) return null;
 
     final response = await HttpConnection.get<UserModel>(
@@ -102,24 +105,35 @@ class UserRepositoryImpl implements IUserRepository {
     );
     if (response.isSuccess && response.result != null) {
       Storage.userModelGlobal = response.result!;
-      Storage.saveUserModel(
-        response.result!,
-      ); 
+      Storage.saveUserModel(response.result!);
     }
     return response.result;
   }
 
-  static Future<bool> onRefreshToken(String refreshToken) async {
+  static Future<bool> onRefreshToken(String refreshToken,{ BuildContext? context}) async {
     final response = await HttpConnection.post<AuthResponseModelRequest>(
       refreshTokenUrl,
-      body: {'token': refreshToken}, 
-      isToken: false, 
+      body: {'token': refreshToken},
+      isToken: false,
       fromJsonT: (json) => AuthResponseModelRequest.fromJson(json),
     );
     if (response.isSuccess && response.result != null) {
       final data = response.result!;
       await Storage.saveToken(data.accessToken);
       await Storage.saveRefreshToken(data.refreshToken);
+      return true;
+    }
+    return false;
+  }
+
+  static Future<bool> onAddAddress(UserAddressRequest model) async {
+    final response = await HttpConnection.post(
+      'address',
+      isToken: true,
+      body: model.toJson(),
+      fromJsonT: (json) => UserModelResponseAddress.fromJson(json),
+    );
+    if (response.isSuccess) {
       return true;
     }
     return false;

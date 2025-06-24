@@ -19,7 +19,7 @@ final String refreshTokenUrl = 'user/refresh';
 //____________________________________PRODUCT___________________________________
 final String getAllProducts = 'product'; //product?page=1&pageSize=10
 final String filterAndSortProducts =
-    'product/filter-products'; //product/filter?minPrice=100&maxPrice=500&color=red&categoryId=2&page=1&pageSize=10
+    'product/filter'; //product/filter?minPrice=100&maxPrice=500&color=red&categoryId=2&page=1&pageSize=10
 final String getAllProductsInBranch =
     'product/branch/'; //product/branch/1?page=1&size=10&sortBy=price&sortDirection=desc
 final String searchProductsInBranch =

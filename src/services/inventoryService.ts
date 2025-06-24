@@ -19,6 +19,7 @@ export interface InventoryCreateParams {
   branchId: number;
 }
 
+
 export type InventoryUpdateParams = InventoryCreateParams;
 export interface InventoryListParams {
   keyword?: string;

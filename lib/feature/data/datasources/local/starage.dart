@@ -1,6 +1,8 @@
+import 'package:msa/core/config/constant.dart';
 import 'package:msa/feature/domain/entities/branch_model.dart';
 import 'package:msa/feature/domain/entities/cart_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
+import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -15,81 +17,70 @@ class Storage {
   static UserModel? userModelGlobal;
   static CartModel? cartModelGlobal;
   static BranchModel? branchModelGlobal;
-  static String email = 'nguyenanhquan20102003@gmail.com';
+  static String email = 'minhquang03082003@gmail.com';
 
   // ===================== ĐỌC DỮ LIỆU =====================
   static Future<void> readFromLocalStorage() async {
     final prefs = await SharedPreferences.getInstance();
 
-    otp = prefs.getString('otp') ?? '';
-    token = prefs.getString('token') ?? '';
-    deviceId = prefs.getString('deviceId') ?? '';
-    email = prefs.getString('email') ?? 'nguyenanhquan20102003@gmail.com';
+    token = prefs.getString(accessTokenKey) ?? '';
+    deviceId = prefs.getString(deviceIdKey) ?? '';
+    email = prefs.getString(emailKey) ?? 'minhquang03082003@gmail.com';
 
-    final userJson = prefs.getString('userModel');
+    final userJson = prefs.getString(userModelKey);
     if (userJson != null) {
       userModelGlobal = UserModel.fromJson(jsonDecode(userJson));
     }
 
-    final cartJson = prefs.getString('cartModel');
+    final cartJson = prefs.getString(cartModelKey);
     if (cartJson != null) {
       cartModelGlobal = CartModel.fromJson(jsonDecode(cartJson));
     }
 
-    final branchJson = prefs.getString('branchModel');
+    final branchJson = prefs.getString(branchModelKey);
     if (branchJson != null) {
       branchModelGlobal = BranchModel.fromJson(jsonDecode(branchJson));
     }
   }
 
-  // ===================== GHI DỮ LIỆU =====================
-
-  static Future<void> saveOtp(String value) async {
-    otp = value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('otp', value);
-  }
-
   static Future<void> saveToken(String value) async {
-    token = value;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', value);
+    await prefs.setString(accessTokenKey, value);
   }
 
-    static Future<void> saveRefreshToken(String value) async {
-    token = value;
+  static Future<void> saveRefreshToken(String value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('refreshToken', value);
+     await prefs.setString(refreshTokenKey, value);
   }
 
   static Future<void> saveDeviceId(String value) async {
     deviceId = value;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('deviceId', value);
+    await prefs.setString(deviceIdKey, value);
   }
 
   static Future<void> saveEmail(String value) async {
     email = value;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('email', value);
+    await prefs.setString(emailKey, value);
   }
 
   static Future<void> saveUserModel(UserModel user) async {
     userModelGlobal = user;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('userModel', jsonEncode(user.toJson()));
+    await prefs.setString(userModelKey, jsonEncode(user.toJson()));
   }
 
   static Future<void> saveCartModel(CartModel cart) async {
     cartModelGlobal = cart;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('cartModel', jsonEncode(cart.toJson()));
+    await prefs.setString(cartModelKey, jsonEncode(cart.toJson()));
   }
 
   static Future<void> saveBranchModel(BranchModel branch) async {
     branchModelGlobal = branch;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('branchModel', jsonEncode(branch.toJson()));
+    await prefs.setString(branchModelKey, jsonEncode(branch.toJson()));
   }
 
   // ===================== ĐĂNG XUẤT =====================
@@ -104,12 +95,23 @@ class Storage {
     branchModelGlobal = null;
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('otp');
-    await prefs.remove('token');
-    await prefs.remove('deviceId');
-    await prefs.remove('email');
-    await prefs.remove('userModel');
-    await prefs.remove('cartModel');
-    await prefs.remove('branchModel');
+    await prefs.remove(accessTokenKey);
+    await prefs.remove(refreshTokenKey);
+    await prefs.remove(deviceIdKey);
+    await prefs.remove(emailKey);
+    await prefs.remove(userModelKey);
+    await prefs.remove(cartModelKey);
+    await prefs.remove(branchModelKey);
+  }
+
+  static Future<bool> checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final tokenKey = refreshTokenKey;
+    final storedRefreshToken = prefs.getString(tokenKey);
+    if (storedRefreshToken == null || storedRefreshToken.isEmpty) {
+      return false;
+    }
+    final isLogin = await Repository.onRefresh(storedRefreshToken);
+    return isLogin;
   }
 }

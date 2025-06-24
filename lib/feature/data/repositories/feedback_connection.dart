@@ -1,49 +1,59 @@
+// SỬA: feedback_repository_impl.dart
+
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/feature/data/model/request/feedback_request_model.dart';
 import 'package:msa/feature/domain/entities/feedback.dart';
 import 'package:msa/feature/domain/repositories/feedback_repository.dart';
-
-import '../datasources/global/http_connection.dart';
+import 'package:msa/feature/data/datasources/global/http_connection.dart';
 
 class FeedbackRepositoryImpl extends IFeedbackRepository {
   @override
   Future<FeedbackModel?> getFeedbackById(int id) async {
-    final data = await HttpConnection.get('$getFeedbackByIdUrl$id');
-    return data.isSuccess ? FeedbackModel.fromJson(data.data) : null;
+    final response = await HttpConnection.get<FeedbackModel>(
+      '$getFeedbackByIdUrl$id',
+      fromJsonT: (json) => FeedbackModel.fromJson(json),
+    );
+    return response.result;
   }
 
   @override
-  Future<List<FeedbackModel>?> getAllFeedbacksByProductId(int productId) async {
-    final data = await HttpConnection.get(
+  Future<List<FeedbackModel>> getAllFeedbacksByProductId(int productId) async {
+    final response = await HttpConnection.get<List<FeedbackModel>>(
       '$getAllFeedbacksByProductIdUrl$productId',
+      fromJsonT: (json) {
+        final List<dynamic> jsonList = json as List<dynamic>;
+        return jsonList.map((e) => FeedbackModel.fromJson(e)).toList();
+      },
     );
-    if (data.isSuccess) {
-      return (data.data as List).map((e) => FeedbackModel.fromJson(e)).toList();
-    }
-    return null;
+    return response.result ?? [];
   }
 
   @override
   Future<FeedbackModel?> createFeedback(FeedbackRequest request) async {
-    final data = await HttpConnection.post(
+    final response = await HttpConnection.post<FeedbackModel>(
       createFeedbackUrl,
       body: request.toJson(),
+      fromJsonT: (json) => FeedbackModel.fromJson(json),
     );
-    return data.isSuccess ? FeedbackModel.fromJson(data.data) : null;
+    return response.result;
   }
 
   @override
   Future<FeedbackModel?> updateFeedback(int id, FeedbackRequest request) async {
-    final data = await HttpConnection.put(
+    final response = await HttpConnection.put<FeedbackModel>(
       '$updateFeedbackUrl$id',
       body: request.toJson(),
+      fromJsonT: (json) => FeedbackModel.fromJson(json),
     );
-    return data.isSuccess ? FeedbackModel.fromJson(data.data) : null;
+    return response.result;
   }
 
   @override
   Future<bool> deleteFeedback(int id) async {
-    final data = await HttpConnection.delete('$deleteFeedbackUrl$id');
-    return data.isSuccess;
+    final response = await HttpConnection.delete<dynamic>(
+      '$deleteFeedbackUrl$id',
+      fromJsonT: (json) => json,
+    );
+    return response.isSuccess;
   }
 }

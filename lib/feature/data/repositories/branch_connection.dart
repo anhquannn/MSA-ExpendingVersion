@@ -11,18 +11,24 @@ class BranchRepositoryImpl extends IBranchRepository {
   }
 
   @override
-  GetAllBranch({
-    int page = 0,
-    int size = 5,
-    String sortDirection = 'desc',
-  }) async {
-    final data = await HttpConnection.get(getAllBranch);
-    if (data.isSuccess) {
-      return BranchResponseModel.fromJson(data.data);
-    } else {
-      return null;
-    }
-  }
+GetAllBranch({
+  int page = 0,
+  int size = 5,
+  String sortDirection = 'desc',
+}) async {
+  final queryParams = {
+    'page': page.toString(),
+    'size': size.toString(),
+    'sort': 'createdDate,$sortDirection', 
+  };
+  final pathWithParams = HttpConnection.buildUrlWithQueryParams(getAllBranch, queryParams);
+
+  final response = await HttpConnection.get<BranchResponseModel>(
+    pathWithParams,
+    fromJsonT: (json) => BranchResponseModel.fromJson(json),
+  );
+  return response;
+}
 
   @override
   GetBeanchByRole(String role) {

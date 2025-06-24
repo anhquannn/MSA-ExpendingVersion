@@ -5,6 +5,7 @@ import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/user_update_request.dart';
+import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -19,20 +20,29 @@ void main() async {
   await Firebase.initializeApp();
   getFcmToken();
   setupLocator();
+  await Storage.readFromLocalStorage();
+  final isLoggedIn = await Storage.checkLoginStatus();
+  print('[main] isLoggedIn = $isLoggedIn');
 
-  runApp(const MyApp());
+  runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 
 final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isLoggedIn;
+
+  const MyApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
     init(context);
     HttpConnection.context = context;
-    return MaterialApp(debugShowCheckedModeBanner: false, home: HomeScreen());
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: isLoggedIn ? HomeScreen() : LoginScreen(),
+    );
   }
 }
 
@@ -40,6 +50,7 @@ Future<void> getFcmToken() async {
   final fcmToken = await FirebaseMessaging.instance.getToken();
   if (fcmToken == null) {
     Storage.deviceId = fcmToken ?? '';
+    Storage.saveDeviceId(fcmToken ?? '');
     print('FCM Token: $fcmToken');
   }
 }

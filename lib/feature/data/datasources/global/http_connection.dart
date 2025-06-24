@@ -11,6 +11,7 @@ import 'package:msa/feature/domain/entities/branch_model.dart';
 import 'package:msa/feature/domain/entities/cart_model.dart';
 import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
+import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:path/path.dart' as path;
 
 import '../../../../core/config/constant.dart';
@@ -22,11 +23,9 @@ class HttpConnection {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtdHF3Z2xubmJnc3J4aGVscHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3MTI1NzIsImV4cCI6MjA2MTI4ODU3Mn0.5D6-g10oFKgB5eJw7jbJPGtOsr2BmrYnm5pTpfjA_J0';
   static BuildContext? context;
 
-
-  static List<City> cityGlobal=[];
-  static List<Ward> wardGlobal=[];
-  static List<District> districtGlobal=[];
-
+  static List<City> cityGlobal = [];
+  static List<Ward> wardGlobal = [];
+  static List<District> districtGlobal = [];
 
   static String buildUrlWithQueryParams(
     String baseUrl,
@@ -47,7 +46,7 @@ class HttpConnection {
 
   static Map<String, String> _configHeader({
     Map<String, String>? extraHeaders,
-    bool isToken = false,
+    bool isToken = true,
   }) {
     final headers = <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
@@ -106,144 +105,124 @@ class HttpConnection {
     }
   }
 
-  static Future<ResponseData> post(
+  static Future<ApiResponse<T>> post<T>(
     String path, {
+    required T Function(dynamic json) fromJsonT, // Bắt buộc cung cấp hàm parse
     Map<String, dynamic>? body,
     Map<String, String>? headers,
-    bool isToken = false,
-  }) => sendRequest(
+    bool isToken = true,
+  }) => sendRequest<T>(
     method: 'POST',
     path: path,
+    fromJsonT: fromJsonT,
     body: body,
     headers: headers,
     isToken: isToken,
   );
 
-  static Future<ResponseData> get(
+  static Future<ApiResponse<T>> get<T>(
     String path, {
+    required T Function(dynamic json) fromJsonT,
     Map<String, String>? headers,
-    bool isToken = false,
-  }) => sendRequest(
+    bool isToken = true,
+  }) => sendRequest<T>(
     method: 'GET',
     path: path,
+    fromJsonT: fromJsonT,
     headers: headers,
     isToken: isToken,
   );
 
-  static Future<ResponseData> put(
+  static Future<ApiResponse<T>> put<T>(
     String path, {
+    required T Function(dynamic json) fromJsonT,
     Map<String, dynamic>? body,
     Map<String, String>? headers,
-    bool isToken = false,
-  }) => sendRequest(
+    bool isToken = true, // Sửa: PUT thường cần token
+  }) => sendRequest<T>(
     method: 'PUT',
     path: path,
+    fromJsonT: fromJsonT,
     body: body,
     headers: headers,
     isToken: isToken,
   );
 
-  static Future<ResponseData> delete(
+  static Future<ApiResponse<T>> delete<T>(
     String path, {
+    required T Function(dynamic json) fromJsonT,
     Map<String, dynamic>? body,
     Map<String, String>? headers,
-    bool isToken = false,
-  }) => sendRequest(
+    bool isToken = true, // Sửa: DELETE thường cần token
+  }) => sendRequest<T>(
     method: 'DELETE',
     path: path,
+    fromJsonT: fromJsonT,
     body: body,
     headers: headers,
     isToken: isToken,
   );
 
-  static Future<ResponseData> sendRequest({
-    required String method,
-    required String path,
-    Map<String, dynamic>? body,
-    Map<String, String>? headers,
-    bool isToken = false,
-  }) async {
-    final url = Uri.parse('$_urlConnection$path');
-    final requestHeaders = _configHeader(
-      extraHeaders: headers,
-      isToken: isToken,
-    );
-    final responseData = ResponseData();
-
-    try {
-      http.Response response;
-
-      switch (method.toUpperCase()) {
-        case 'POST':
-          response = await http.post(
-            url,
-            headers: requestHeaders,
-            body: jsonEncode(body ?? {}),
-          );
-          break;
-        case 'GET':
-          response = await http.get(url, headers: requestHeaders);
-          break;
-        case 'PUT':
-          response = await http.put(
-            url,
-            headers: requestHeaders,
-            body: jsonEncode(body ?? {}),
-          );
-          break;
-        case 'DELETE':
-          response = await http.delete(
-            url,
-            headers: requestHeaders,
-            body: jsonEncode(body ?? {}),
-          );
-          break;
-        default:
-          throw Exception('Unsupported HTTP method: $method');
-      }
-
-      _logRequest(
-        method: method,
-        url: url,
-        headers: requestHeaders,
-        body: body,
-        response: response,
-        statusCode: response.statusCode,
-      );
-
-      // Decode response body bytes tùy theo header Content-Type charset
-      String responseBodyString;
-
-      final contentType = response.headers['content-type'] ?? '';
-
-      if (contentType.toLowerCase().contains('charset=latin1') ||
-          contentType.toLowerCase().contains('charset=iso-8859-1')) {
-        // decode latin1
-        responseBodyString = latin1.decode(response.bodyBytes);
-      } else {
-        // mặc định utf8
-        responseBodyString = utf8.decode(response.bodyBytes);
-      }
-
-      final responseBody = jsonDecode(responseBodyString);
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        responseData
-          ..isSuccess = responseBody['code'] == 200
-          ..data = responseBody['result']
-          ..message = responseBody['message'];
-      } else {
-       responseData
-          ..isSuccess = false
-          ..data = ''
-          ..message = {};
-      }
-
-      return responseData;
-    } catch (e) {
-      throw Exception('Lỗi $method: $e');
+static Future<ApiResponse<T>> sendRequest<T>({
+  required String method,
+  required String path,
+  required T Function(dynamic json) fromJsonT,
+  Map<String, dynamic>? body,
+  Map<String, String>? headers,
+  bool isToken = true,
+}) async {
+  Future<http.Response> doRequest(Uri url, Map<String, String> requestHeaders) async {
+    switch (method.toUpperCase()) {
+      case 'POST':
+        return await http.post(url, headers: requestHeaders, body: jsonEncode(body ?? {}));
+      case 'GET':
+        return await http.get(url, headers: requestHeaders);
+      case 'PUT':
+        return await http.put(url, headers: requestHeaders, body: jsonEncode(body ?? {}));
+      case 'DELETE':
+        return await http.delete(url, headers: requestHeaders, body: jsonEncode(body ?? {}));
+      default:
+        throw Exception('Unsupported HTTP method: $method');
     }
   }
+
+  final url = Uri.parse('$_urlConnection$path');
+  Map<String, String> requestHeaders = _configHeader(extraHeaders: headers, isToken: isToken);
+
+  try {
+    http.Response response = await doRequest(url, requestHeaders);
+
+    // Nếu token hết hạn
+    if (response.statusCode == 401 && isToken) {
+      print('Token hết hạn, đang gọi refreshToken...');
+      final refreshed = await Repository.onRefresh(Storage.refreshToken??'');
+
+      if (refreshed) {
+        requestHeaders = _configHeader(extraHeaders: headers, isToken: isToken);
+        response = await doRequest(url, requestHeaders); // Gọi lại request cũ
+      } else {
+        return ApiResponse<T>(code: 401, message: 'Token expired, refresh failed');
+      }
+    }
+
+    _logRequest(
+      method: method,
+      url: url,
+      headers: requestHeaders,
+      body: body,
+      response: response,
+      statusCode: response.statusCode,
+    );
+
+    final responseBodyString = utf8.decode(response.bodyBytes);
+    final responseBody = jsonDecode(responseBodyString);
+
+    return ApiResponse.fromJson(responseBody, fromJsonT);
+  } catch (e) {
+    print('Lỗi $method tại $path: $e');
+    return ApiResponse<T>(code: 500, message: 'Lỗi client: $e');
+  }
+}
 
   static void _logRequest({
     required String method,
@@ -271,3 +250,272 @@ class ResponseData {
   dynamic data;
   dynamic message;
 }
+// file: api_response.dart
+
+class ApiResponse<T> {
+  final int code;
+  final String message;
+  final T? result; // Sử dụng generic type T cho trường result
+
+  ApiResponse({required this.code, required this.message, this.result});
+
+  bool get isSuccess => code >= 200 && code < 300;
+
+  factory ApiResponse.fromJson(
+    Map<String, dynamic> json,
+    T Function(dynamic json) fromJsonT,
+  ) {
+    return ApiResponse<T>(
+      code: json['code'] ?? 500,
+      message: json['message'] ?? 'Unknown error',
+      // Chỉ parse 'result' nếu nó không null và code thành công
+      result:
+          json['result'] != null && (json['code'] >= 200 && json['code'] < 300)
+              ? fromJsonT(json['result'])
+              : null,
+    );
+  }
+}
+
+// file: paginated_result.dart
+
+class PaginatedResult<T> {
+  final List<T> content;
+  final int totalPages;
+  final int totalElements;
+  final bool last;
+  final bool first;
+
+  PaginatedResult({
+    required this.content,
+    required this.totalPages,
+    required this.totalElements,
+    required this.last,
+    required this.first,
+  });
+
+  factory PaginatedResult.fromJson(
+    Map<String, dynamic> json,
+    T Function(dynamic itemJson) fromJsonT, // Hàm để parse từng item trong list
+  ) {
+    return PaginatedResult<T>(
+      content:
+          (json['content'] as List<dynamic>)
+              .map((item) => fromJsonT(item))
+              .toList(),
+      totalPages: json['totalPages'] ?? 0,
+      totalElements: json['totalElements'] ?? 0,
+      last: json['last'] ?? true,
+      first: json['first'] ?? true,
+    );
+  }
+}
+
+  // static Future<ResponseData> post(
+  //   String path, {
+  //   Map<String, dynamic>? body,
+  //   Map<String, String>? headers,
+  //   bool isToken = true,
+  // }) => sendRequest(
+  //   method: 'POST',
+  //   path: path,
+  //   body: body,
+  //   headers: headers,
+  //   isToken: isToken,
+  // );
+
+  // static Future<ResponseData> get(
+  //   String path, {
+  //   Map<String, String>? headers,
+  //   bool isToken = true,
+  // }) => sendRequest(
+  //   method: 'GET',
+  //   path: path,
+  //   headers: headers,
+  //   isToken: isToken,
+  // );
+
+  // static Future<ResponseData> put(
+  //   String path, {
+  //   Map<String, dynamic>? body,
+  //   Map<String, String>? headers,
+  //   bool isToken = false,
+  // }) => sendRequest(
+  //   method: 'PUT',
+  //   path: path,
+  //   body: body,
+  //   headers: headers,
+  //   isToken: isToken,
+  // );
+
+  // static Future<ResponseData> delete(
+  //   String path, {
+  //   Map<String, dynamic>? body,
+  //   Map<String, String>? headers,
+  //   bool isToken = false,
+  // }) => sendRequest(
+  //   method: 'DELETE',
+  //   path: path,
+  //   body: body,
+  //   headers: headers,
+  //   isToken: isToken,
+  // );
+
+  // static Future<ResponseData> sendRequest({
+  //   required String method,
+  //   required String path,
+  //   Map<String, dynamic>? body,
+  //   Map<String, String>? headers,
+  //   bool isToken = true,
+  // }) async {
+  //   final url = Uri.parse('$_urlConnection$path');
+  //   final requestHeaders = _configHeader(
+  //     extraHeaders: headers,
+  //     isToken: isToken,
+  //   );
+  //   final responseData = ResponseData();
+
+  //   try {
+  //     http.Response response;
+
+  //     switch (method.toUpperCase()) {
+  //       case 'POST':
+  //         response = await http.post(
+  //           url,
+  //           headers: requestHeaders,
+  //           body: jsonEncode(body ?? {}),
+  //         );
+  //         break;
+  //       case 'GET':
+  //         response = await http.get(url, headers: requestHeaders);
+  //         break;
+  //       case 'PUT':
+  //         response = await http.put(
+  //           url,
+  //           headers: requestHeaders,
+  //           body: jsonEncode(body ?? {}),
+  //         );
+  //         break;
+  //       case 'DELETE':
+  //         response = await http.delete(
+  //           url,
+  //           headers: requestHeaders,
+  //           body: jsonEncode(body ?? {}),
+  //         );
+  //         break;
+  //       default:
+  //         throw Exception('Unsupported HTTP method: $method');
+  //     }
+
+  //     _logRequest(
+  //       method: method,
+  //       url: url,
+  //       headers: requestHeaders,
+  //       body: body,
+  //       response: response,
+  //       statusCode: response.statusCode,
+  //     );
+
+  //     // Decode response body bytes tùy theo header Content-Type charset
+  //     String responseBodyString;
+
+  //     final contentType = response.headers['content-type'] ?? '';
+
+  //     if (contentType.toLowerCase().contains('charset=latin1') ||
+  //         contentType.toLowerCase().contains('charset=iso-8859-1')) {
+  //       // decode latin1
+  //       responseBodyString = latin1.decode(response.bodyBytes);
+  //     } else {
+  //       // mặc định utf8
+  //       responseBodyString = utf8.decode(response.bodyBytes);
+  //     }
+
+  //     final responseBody = jsonDecode(responseBodyString);
+
+  //     if (response.statusCode >= 200 && response.statusCode < 300) {
+  //       responseData
+  //         ..isSuccess = responseBody['code'] == 200
+  //         ..data = responseBody['result']??[]
+  //         ..message = responseBody['message']??'';
+  //     } else {
+  //      responseData
+  //         ..isSuccess = false
+  //         ..data = ''
+  //         ..message = {};
+  //     }
+
+  //     return responseData;
+  //   } catch (e) {
+  //     throw Exception('Lỗi $method: $e');
+  //   }
+  // }
+
+  // static Future<ApiResponse<T>> sendRequest<T>({
+  //   required String method,
+  //   required String path,
+  //   required T Function(dynamic json) fromJsonT, // Hàm parse được truyền vào
+  //   Map<String, dynamic>? body,
+  //   Map<String, String>? headers,
+  //   bool isToken = true,
+  // }) async {
+  //   final url = Uri.parse('$_urlConnection$path');
+  //   final requestHeaders = _configHeader(
+  //     extraHeaders: headers,
+  //     isToken: isToken,
+  //   );
+
+  //   try {
+  //     http.Response response;
+
+  //     // ... (switch case cho các method giữ nguyên)
+  //     switch (method.toUpperCase()) {
+  //       case 'POST':
+  //         response = await http.post(
+  //           url,
+  //           headers: requestHeaders,
+  //           body: jsonEncode(body ?? {}),
+  //         );
+  //         break;
+  //       case 'GET':
+  //         response = await http.get(url, headers: requestHeaders);
+  //         break;
+  //       case 'PUT':
+  //         response = await http.put(
+  //           url,
+  //           headers: requestHeaders,
+  //           body: jsonEncode(body ?? {}),
+  //         );
+  //         break;
+  //       case 'DELETE':
+  //         response = await http.delete(
+  //           url,
+  //           headers: requestHeaders,
+  //           body: jsonEncode(body ?? {}),
+  //         );
+  //         break;
+  //       default:
+  //         throw Exception('Unsupported HTTP method: $method');
+  //     }
+
+  //     _logRequest(
+  //       method: method,
+  //       url: url,
+  //       headers: requestHeaders,
+  //       body: body,
+  //       response: response,
+  //       statusCode: response.statusCode,
+  //     );
+
+  //     String responseBodyString = utf8.decode(response.bodyBytes);
+  //     final responseBody = jsonDecode(responseBodyString);
+    
+
+  //     // SỬ DỤNG ApiResponse.fromJson để parse toàn bộ response
+  //     // Đây là mấu chốt của sự thay đổi!
+  //     return ApiResponse.fromJson(responseBody, fromJsonT);
+  //   } catch (e) {
+  //     print('Lỗi $method tại $path: $e');
+  //     // Trả về một ApiResponse lỗi để tầng trên có thể xử lý nhất quán
+  //     return ApiResponse<T>(code: 500, message: 'Lỗi client: $e');
+  //   }
+  // }

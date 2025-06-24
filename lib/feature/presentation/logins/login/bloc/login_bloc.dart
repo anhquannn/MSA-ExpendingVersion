@@ -19,7 +19,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
 
   bool isValidPassword = false;
   bool isValidEmail = false;
-  bool isShowPass = false;
+  bool isShowPass = true;
   String validPassword = '';
   String validEmail = '';
 
@@ -31,7 +31,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
 
   @override
   void onInit() {
-    // Gọi khi khởi tạo bloc
+    isShowPass = true;
   }
 
   @override
@@ -87,7 +87,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
 
   @override
   void onReady() {
-    // Gọi khi màn hình đã sẵn sàng
+    isShowPass = true;
   }
 
   @override
@@ -129,7 +129,6 @@ class LoginBloc extends BaseBloc<LoginScreen> {
 
   void obscurePassword(bool value) {
     isShowPass = value;
-    // Sử dụng viewSetState thay vì setState để cập nhật UI
     viewSetState(() {});
   }
 

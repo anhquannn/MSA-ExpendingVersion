@@ -77,14 +77,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   @override
   void onInit() {
-    // listCartItemModels.add([
-    //   mockCartItem,
-    //   mockCartItem,
-    //   mockCartItem,
-    //   mockCartItem,
-    //   mockCartItem,
-    // ]);
-
+    print("initState called");
     indexScreen.value = 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       userModel.add(UserModel());
@@ -110,7 +103,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
               });
         }
       });
-       onRefresh();
     });
   }
 
@@ -125,6 +117,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   @override
   void onReady() {
+    print("onReady called");
     if (!_hasInitCalled) {
       _hasInitCalled = true;
       onRefresh();
@@ -132,6 +125,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onRefresh() async {
+    print("onRefresh started");
     await onGetProfile().catchError((e) => print('Lỗi profile: $e'));
     final List<Future<void>> futures = [
       onGetPromoCode().catchError((e) => print('Lỗi promo code: $e')),
@@ -194,25 +188,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       userModel.add(UserModel());
     }
   }
-
-  // onGetProduct() async {
-  //   final model = ProductGetAllRequest(page: 1, pageSize: 10);
-  //   try {
-  //     List<ProductModel>? product = await _productUseCase
-  //         .filterAndSort(model)
-  //         .timeout(
-  //           const Duration(seconds: 10),
-  //           onTimeout: () {
-  //             showCustomMessageError(viewContext);
-  //             return [];
-  //           },
-  //         );
-  //     productModels.add(product);
-  //   } catch (e) {
-  //     print('Lỗi khi lấy danh sách sản phẩm: $e');
-  //     productModels.add([]); // Fallback nếu có lỗi
-  //   }
-  // }
   onGetProduct() async {
     try {
       ProductGetAllRequest filter = ProductGetAllRequest(page: 1, pageSize: 10);
@@ -254,13 +229,13 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   onSearch() {}
 
   onLogout() async {
-    Storage.onLogout();
+    // Storage.onLogout();
 
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-      (route) => false,
-    );
+    // Navigator.pushAndRemoveUntil(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => const LoginScreen()),
+    //   (route) => false,
+    // );
   }
 
   onTapListPromoCode() {

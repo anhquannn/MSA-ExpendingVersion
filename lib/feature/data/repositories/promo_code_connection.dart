@@ -7,75 +7,59 @@ import 'package:msa/feature/domain/repositories/promo_code_repository.dart';
 class PromoCodeRepositoryImpl extends IPromoCodeRepository {
   @override
   Future<PromoCodeModel?> addPromoCode(PromoCodeModel promoCode) async {
-    final data = await HttpConnection.post(
-      isToken: true,
+    final response = await HttpConnection.post<PromoCodeModel>(
       createPromoCode,
       body: promoCode.toJson(),
+      isToken: true,
+      fromJsonT: (json) => PromoCodeModel.fromJson(json),
     );
-    if (data.isSuccess) {
-      return PromoCodeModel.fromJson(data.data);
-    }
-    return null;
+    return response.result;
   }
 
   @override
   Future<bool> deletePromoCode(String id) async {
-    final data = await HttpConnection.delete(
-      isToken: true,
+    final response = await HttpConnection.delete<dynamic>(
       '$deletePromoCode$id',
+      isToken: true,
+      fromJsonT: (json) => json,
     );
-    return data.isSuccess;
+    return response.isSuccess;
   }
 
   @override
-  Future<List<PromoCodeModel>> getAllPromoCodes({
-    int page = 1,
-    int pageSize = 10,
-  }) async {
-    final queryParameters = {
-      'page': page.toString(),
-      'pageSize': pageSize.toString(),
-    };
+  Future<List<PromoCodeModel>> getAllPromoCodes({int page = 1, int pageSize = 10}) async {
     final url = HttpConnection.buildUrlWithQueryParams(
       '$getAllPromoCode${userModelGlobal?.userId}',
-      queryParameters,
+      {'page': page, 'pageSize': pageSize},
     );
-    final data = await HttpConnection.get(isToken: true, url);
-    if (data.isSuccess) {
-      final List<PromoCodeModel> promoCodes = [];
-      for (var item in data.data) {
-        promoCodes.add(PromoCodeModel.fromJson(item));
-      }
-      return promoCodes;
-    }
-    return [];
+    final response = await HttpConnection.get<List<PromoCodeModel>>(
+      url,
+      isToken: true,
+      fromJsonT: (json) => (json as List).map((i) => PromoCodeModel.fromJson(i)).toList(),
+    );
+    return response.result ?? [];
   }
 
   @override
   Future<PromoCodeModel?> getPromoCodeById(String id) async {
-    final data = await HttpConnection.get(
-      isToken: true,
+    final response = await HttpConnection.get<PromoCodeModel>(
       '$getPromoCodeById$id',
+      isToken: true,
+      fromJsonT: (json) => PromoCodeModel.fromJson(json),
     );
-    if (data.isSuccess) {
-      return PromoCodeModel.fromJson(data.data);
-    }
-    return null;
+    return response.result;
   }
 
   @override
-  Future<PromoCodeModel> updatePromoCode(
-    PromoCodeModel promoCode,
-    int someInt,
-  ) async {
-    final data = await HttpConnection.put(
-      isToken: true,
+  Future<PromoCodeModel?> updatePromoCode(PromoCodeModel promoCode, int someInt) async {
+    // SỬA: Thay đổi kiểu trả về để an toàn hơn khi request thất bại
+    final response = await HttpConnection.put<PromoCodeModel>(
       '$updatePromoCode$someInt',
       body: promoCode.toJson(),
+      isToken: true,
+      fromJsonT: (json) => PromoCodeModel.fromJson(json),
     );
-    if (data.isSuccess) {
-      return PromoCodeModel.fromJson(data.data);
-    }
-    throw Exception('Failed to update promo code');
+    // Trả về null nếu thất bại, tầng trên sẽ không bị crash bởi exception
+    return response.result;
   }
 }

@@ -1,39 +1,46 @@
+// SỬA: goship_repository.dart
+
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/feature/domain/entities/goship_model.dart';
-
-import '../datasources/global/http_connection.dart';
+import 'package:msa/feature/data/datasources/global/http_connection.dart';
 
 class GoshipRepository {
   static Future<List<City>> onGetCities() async {
-    final data = await HttpConnection.get(getCities);
-    if (data.isSuccess) {
-      final response =
-          (data.data as List).map((e) => City.fromJson(e)).toList();
-      HttpConnection.cityGlobal = response;
-      return response;
+    final response = await HttpConnection.get<List<City>>(
+      getCities,
+      fromJsonT: (json) => (json as List).map((e) => City.fromJson(e)).toList(),
+    );
+    
+    final cities = response.result ?? [];
+    if (response.isSuccess) {
+      HttpConnection.cityGlobal = cities;
     }
-    return [];
+    return cities;
   }
 
   static Future<List<District>> onGetDistrictsApi(String cityId) async {
-    final data = await HttpConnection.get('$getDistricts$cityId');
-    if (data.isSuccess) {
-      final response =
-          (data.data as List).map((e) => District.fromJson(e)).toList();
-      HttpConnection.districtGlobal = response;
-      return response;
+    final response = await HttpConnection.get<List<District>>(
+      '$getDistricts$cityId',
+      fromJsonT: (json) => (json as List).map((e) => District.fromJson(e)).toList(),
+    );
+    
+    final districts = response.result ?? [];
+    if (response.isSuccess) {
+      HttpConnection.districtGlobal = districts;
     }
-    return [];
+    return districts;
   }
 
   static Future<List<Ward>> onGetWardsApi(String districtId) async {
-    final data = await HttpConnection.get('$getWards$districtId');
-    if (data.isSuccess) {
-      final response =
-          (data.data as List).map((e) => Ward.fromJson(e)).toList();
-      HttpConnection.wardGlobal = response;
-      return response;
+    final response = await HttpConnection.get<List<Ward>>(
+      '$getWards$districtId',
+      fromJsonT: (json) => (json as List).map((e) => Ward.fromJson(e)).toList(),
+    );
+    
+    final wards = response.result ?? [];
+    if (response.isSuccess) {
+      HttpConnection.wardGlobal = wards;
     }
-    return [];
+    return wards;
   }
 }

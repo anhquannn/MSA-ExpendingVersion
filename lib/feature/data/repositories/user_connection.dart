@@ -1,27 +1,40 @@
+// SỬA: user_repository_impl.dart
+
+import 'package:msa/feature/data/model/response/auth_response.dart';
 import 'package:msa/feature/data/model/response/user_login_response.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:msa/feature/data/model/request/user_login_request.dart';
 import 'package:msa/feature/data/model/request/user_register_request.dart';
 import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
-import '../../../core/config/constant.dart';
-import '../../domain/repositories/user_repository.dart';
-import '../datasources/local/starage.dart';
+import 'package:msa/core/config/constant.dart';
+import 'package:msa/feature/domain/repositories/user_repository.dart';
+import 'package:msa/feature/data/datasources/local/starage.dart'; // Sửa lại tên file nếu là storage.dart
 
 class UserRepositoryImpl implements IUserRepository {
   @override
   Future<UserModel?> registerUser(UserRegisterRequest request) async {
-    final data = await HttpConnection.post(register, body: request.toJson());
-    return data.isSuccess ? UserModel.fromJson(data.data) : null;
+    final response = await HttpConnection.post<UserModel>(
+      register,
+      body: request.toJson(),
+      fromJsonT: (json) => UserModel.fromJson(json),
+    );
+    return response.result;
   }
 
   @override
   Future<bool> loginUser(UserLoginRequest request) async {
-    final response = await HttpConnection.post(login, body: request.toJson());
-    if (response.isSuccess) {
-      final data = UserModel.fromJson(response.data);
+    final response = await HttpConnection.post<UserModel>(
+      login,
+      body: request.toJson(),
+      isToken: false,
+      fromJsonT: (json) => UserModel.fromJson(json),
+    );
+    if (response.isSuccess && response.result != null) {
+      final data = response.result!;
       Storage.userModelGlobal = data;
       Storage.saveUserModel(data);
+      Storage.saveEmail(data.email ?? '');
       return true;
     }
     return false;
@@ -29,17 +42,16 @@ class UserRepositoryImpl implements IUserRepository {
 
   @override
   Future<bool> verifyOtpUser(String otpRequest) async {
-    final response = await HttpConnection.post(
+    final response = await HttpConnection.post<AccessTokenResponse>(
       verifyOtp,
       body: {'otp': otpRequest},
+      isToken: false,
+      fromJsonT: (json) => AccessTokenResponse.fromJson(json),
     );
-    if (response.isSuccess) {
-      final data = AccessTokenResponse.fromJson(response.data);
-
-      Storage.refreshToken = data.refreshToken;
-      Storage.token = data.accessToken;
-      Storage.saveToken(data.accessToken);
-      Storage.saveRefreshToken(data.refreshToken);
+    if (response.isSuccess && response.result != null) {
+      final data = response.result!;
+      await Storage.saveToken(data.accessToken);
+      await Storage.saveRefreshToken(data.refreshToken);
       return true;
     }
     return false;
@@ -47,12 +59,14 @@ class UserRepositoryImpl implements IUserRepository {
 
   @override
   Future<bool> resetPassword(String email) async {
-    final response = await HttpConnection.post(
+    // Giả sử API trả về 1 object chứa otp
+    final response = await HttpConnection.post<Map<String, dynamic>>(
       resetPass,
       body: {'email': email},
+      fromJsonT: (json) => json,
     );
-    if (response.isSuccess) {
-      Storage.otp = response.data;
+    if (response.isSuccess && response.result != null) {
+      Storage.otp = response.result!['otp'] ?? ''; // Lấy otp từ response
       return true;
     }
     return false;
@@ -60,29 +74,54 @@ class UserRepositoryImpl implements IUserRepository {
 
   @override
   Future<bool> resetPasswordWithoutOtp(String email) async {
-    final response = await HttpConnection.post('$resetPassWithoutOtp$email');
+    final response = await HttpConnection.post<dynamic>(
+      '$resetPassWithoutOtp$email',
+      fromJsonT: (json) => json,
+    );
     return response.isSuccess;
   }
 
   @override
   Future<UserModel?> onupdateUser(UserUpdateRequest request) async {
-    final response = await HttpConnection.put(
+    final response = await HttpConnection.put<UserModel>(
       '$updateUser${request.userId}',
       body: request.toJson(),
+      fromJsonT: (json) => UserModel.fromJson(json),
     );
-    return response.isSuccess ? UserModel.fromJson(response.data) : null;
+    return response.result;
   }
 
   @override
   Future<UserModel?> onGetUserByEmail() async {
-    // final response = await HttpConnection.get('$getUserByEmail${HttpConnection.email}');
-    final response = await HttpConnection.get(
-      'user/email/nguyenanhquan20102003@gmail.com',
+    final email = Storage.email; 
+    if (email.isEmpty) return null;
+
+    final response = await HttpConnection.get<UserModel>(
+      '$getUserByEmail$email',
+      fromJsonT: (json) => UserModel.fromJson(json),
     );
-    if (response.isSuccess) {
-      Storage.userModelGlobal = UserModel.fromJson(response.data);
-      return Storage.userModelGlobal;
+    if (response.isSuccess && response.result != null) {
+      Storage.userModelGlobal = response.result!;
+      Storage.saveUserModel(
+        response.result!,
+      ); 
     }
-    return null;
+    return response.result;
+  }
+
+  static Future<bool> onRefreshToken(String refreshToken) async {
+    final response = await HttpConnection.post<AuthResponseModelRequest>(
+      refreshTokenUrl,
+      body: {'token': refreshToken}, 
+      isToken: false, 
+      fromJsonT: (json) => AuthResponseModelRequest.fromJson(json),
+    );
+    if (response.isSuccess && response.result != null) {
+      final data = response.result!;
+      await Storage.saveToken(data.accessToken);
+      await Storage.saveRefreshToken(data.refreshToken);
+      return true;
+    }
+    return false;
   }
 }

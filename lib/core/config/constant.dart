@@ -1,5 +1,5 @@
 /// API Connection
-final String urlConnection = 'http://192.168.1.9:1081/msa/api/';
+final String urlConnection = 'http://192.168.1.8:1081/msa/api/';
 final String urlSupabase = 'https://lmtqwglnnbgsrxhelpxz.supabase.co';
 final String anonKey =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtdHF3Z2xubmJnc3J4aGVscHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3MTI1NzIsImV4cCI6MjA2MTI4ODU3Mn0.5D6-g10oFKgB5eJw7jbJPGtOsr2BmrYnm5pTpfjA_J0';
@@ -14,6 +14,7 @@ final String resetPassWithoutOtp = 'user/reset-password/';
 final String updateUser = 'user/';
 final String deleteUser = 'user/';
 final String getUserByEmail = 'user/email/'; //user/email/{email}
+final String refreshTokenUrl = 'user/refresh';
 
 //____________________________________PRODUCT___________________________________
 final String getAllProducts = 'product'; //product?page=1&pageSize=10
@@ -29,6 +30,7 @@ final String searchProducts =
 final String createProduct = 'product';
 final String updateProduct = 'product/';
 final String deleteProduct = 'product/';
+final String filterProduct = 'product/filter';
 
 //____________________________________MANUFACTURER____________________________________
 
@@ -97,8 +99,13 @@ final String createFeedbackUrl = 'feedback';
 final String deleteFeedbackUrl = 'feedback/';
 
 /// SECURE STORAGE
-final String accessToken = 'ACCESS_TOKEN';
-final String refreshToken = 'REFRESH_TOKEN';
+final String accessTokenKey = 'ACCESS_TOKEN';
+final String refreshTokenKey = 'REFRESH_TOKEN';
+final String deviceIdKey = 'DEVICEID';
+final String emailKey = 'mwang38203@gmail.com';
+final String userModelKey = 'USERMODEL';
+final String cartModelKey = 'CARTMODEL';
+final String branchModelKey = 'BRANCHMODEL';
 
 ///Colors
 final String appBarColor = '#007A5E';

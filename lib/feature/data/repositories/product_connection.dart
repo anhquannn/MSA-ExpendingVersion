@@ -1,29 +1,47 @@
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/product_get_all_request_model.dart';
+import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/repositories/product_repository.dart';
 
 class ProductRepositoryImpl extends IProductRepository {
-  @override
-Future<List<ProductModel>> onFilterAndSortProducts(ProductGetAllRequest model) async {
-  final data = await HttpConnection.post(filterAndSortProducts, body: model.toJson());
-
-  if (data.isSuccess) {
-    final jsonData = data.data;
-
-    // Đảm bảo 'content' tồn tại và là danh sách
-    if (jsonData != null && jsonData['content'] is List) {
-      final List<dynamic> content = jsonData['content'];
-      return content.map((item) => ProductModel.fromJson(item)).toList();
-    } else {
-      return []; // Trường hợp không có sản phẩm nào
+  // Hàm helper để tránh lặp code
+  Future<List<ProductModel>> _parseProductList(
+    ApiResponse<PaginatedResult<ProductModel>> response,
+  ) async {
+    if (!response.isSuccess) {
+      // Có thể log lỗi hoặc gán messageError ở đây nếu cần
     }
-  } else {
-    throw Exception('Failed to load products');
+    return response.result?.content ?? [];
   }
-}
 
+  // Hàm helper cho các API trả về List<ProductModel> nhưng không phân trang
+  Future<List<ProductModel>> _parseSimpleProductList(
+    ApiResponse<List<ProductModel>> response,
+  ) async {
+    if (!response.isSuccess) {
+      // Có thể log lỗi hoặc gán messageError ở đây nếu cần
+    }
+    return response.result ?? [];
+  }
+
+  @override
+  Future<List<ProductModel>> onFilterAndSortProducts(
+    ProductGetAllRequest model,
+  ) async {
+    final response = await HttpConnection.post<PaginatedResult<ProductModel>>(
+      filterAndSortProducts,
+      body: model.toJson(),
+      fromJsonT:
+          (json) => PaginatedResult.fromJson(
+            json,
+            (item) => ProductModel.fromJson(item),
+          ),
+    );
+    return _parseProductList(response);
+  }
 
   @override
   Future<List<ProductModel>> onGetAllProductsInBranch(
@@ -32,93 +50,89 @@ Future<List<ProductModel>> onFilterAndSortProducts(ProductGetAllRequest model) a
     int pageSize = 10,
     String? sortBy,
     String? sortDirection,
-  }) {
-    final queryParams = {
-      'page': '$page',
-      'pageSize': '$pageSize',
-      if (sortBy != null) 'sortBy': sortBy,
-      if (sortDirection != null) 'sortDirection': sortDirection,
-    };
+  }) async {
+    final url = HttpConnection.buildUrlWithQueryParams(
+      '$getAllProductsInBranch/$branchId',
+      {
+        'page': page,
+        'pageSize': pageSize,
+        'sortBy': sortBy,
+        'sortDirection': sortDirection,
+      },
+    );
 
-    final baseUrl = '$getAllProductsInBranch/$branchId';
-
-    final url = HttpConnection.buildUrlWithQueryParams(baseUrl, queryParams);
-
-    return HttpConnection.get(url).then((data) {
-      if (data.isSuccess) {
-        return (data.data as List)
-            .map((item) => ProductModel.fromJson(item))
-            .toList();
-      } else {
-        throw Exception('Failed to load products');
-      }
-    });
+    // Giả sử API này trả về List trực tiếp, không có vỏ PaginatedResult
+    final response = await HttpConnection.get<List<ProductModel>>(
+      url,
+      fromJsonT:
+          (json) =>
+              (json as List)
+                  .map((item) => ProductModel.fromJson(item))
+                  .toList(),
+    );
+    return _parseSimpleProductList(response);
   }
 
   @override
   Future<ProductModel?> onCreateProduct(ProductModel product) async {
-    final data = await HttpConnection.post(
+    final response = await HttpConnection.post<ProductModel>(
       createProduct,
       body: product.toJson(),
+      fromJsonT: (json) => ProductModel.fromJson(json),
     );
-    if (data.isSuccess) {
-      return ProductModel.fromJson(data.data);
-    } else {
-      throw Exception('Failed to create product');
-    }
+    return response.result;
   }
 
   @override
   Future<bool> onDeleteProduct(String id) async {
-    final data = await HttpConnection.delete('$deleteProduct$id');
-    return data.isSuccess;
+    final response = await HttpConnection.delete<dynamic>(
+      '$deleteProduct$id',
+      fromJsonT: (json) => json,
+    );
+    return response.isSuccess;
   }
 
   @override
   Future<List<ProductModel>> onGetAllProducts({
     int page = 1,
     int pageSize = 10,
-  }) {
-    final queryParams = {'page': '$page', 'pageSize': '$pageSize'};
-    final url = HttpConnection.buildUrlWithQueryParams(
-      getAllProducts,
-      queryParams,
+  }) async {
+    final url = HttpConnection.buildUrlWithQueryParams(getAllProducts, {
+      'page': page,
+      'pageSize': pageSize,
+    });
+    final response = await HttpConnection.get<List<ProductModel>>(
+      url,
+      fromJsonT:
+          (json) =>
+              (json as List)
+                  .map((item) => ProductModel.fromJson(item))
+                  .toList(),
     );
-    return HttpConnection.get(url).then((data) {
-      if (data.isSuccess) {
-        return (data.data as List)
-            .map((item) => ProductModel.fromJson(item))
-            .toList();
-      } else {
-        throw Exception('Failed to load products');
-      }
-    });
+    return _parseSimpleProductList(response);
   }
 
   @override
-  Future<ProductModel?> onGetProductById(String id) {
-    final url = '$getProductById$id';
-    return HttpConnection.get(url).then((data) {
-      if (data.isSuccess) {
-        return ProductModel.fromJson(data.data);
-      } else {
-        throw Exception('Failed to load product');
-      }
-    });
+  Future<ProductModel?> onGetProductById(String id) async {
+    final response = await HttpConnection.get<ProductModel>(
+      '$getProductById$id',
+      fromJsonT: (json) => ProductModel.fromJson(json),
+    );
+    return response.result;
   }
 
   @override
-  Future<ProductModel?> onUpdateProduct(ProductModel product, String id) {
-    final url = '$updateProduct$id';
-    return HttpConnection.put(url, body: product.toJson()).then((data) {
-      if (data.isSuccess) {
-        return ProductModel.fromJson(data.data);
-      } else {
-        throw Exception('Failed to update product');
-      }
-    });
+  Future<ProductModel?> onUpdateProduct(ProductModel product, String id) async {
+    final response = await HttpConnection.put<ProductModel>(
+      '$updateProduct$id',
+      body: product.toJson(),
+      fromJsonT: (json) => ProductModel.fromJson(json),
+    );
+    return response.result;
   }
 
+  // Hai hàm search này gần như giống hệt nhau, có thể gộp lại nếu path giống nhau.
+  // Tạm thời sửa cả hai.
   @override
   Future<List<ProductModel>> onSearchProducts({
     int page = 1,
@@ -131,14 +145,13 @@ Future<List<ProductModel>> onFilterAndSortProducts(ProductGetAllRequest model) a
     int? manufacturerId,
     String? sortBy,
     String? sortDirection,
-  }) {
+  }) async {
     final queryParams = {
       if (keyword != null) 'keyword': keyword,
       if (minPrice != null) 'minPrice': '$minPrice',
       if (maxPrice != null) 'maxPrice': '$maxPrice',
       if (color != null) 'color': color,
       if (categoryId != null) 'categoryId': '$categoryId',
-      if (manufacturerId != null) 'manufacturerId': '$manufacturerId',
       'page': '$page',
       'pageSize': '$pageSize',
       if (sortBy != null) 'sortBy': sortBy,
@@ -148,15 +161,15 @@ Future<List<ProductModel>> onFilterAndSortProducts(ProductGetAllRequest model) a
       searchProducts,
       queryParams,
     );
-    return HttpConnection.get(url).then((data) {
-      if (data.isSuccess) {
-        return (data.data as List)
-            .map((item) => ProductModel.fromJson(item))
-            .toList();
-      } else {
-        throw Exception('Failed to load products');
-      }
-    });
+    final response = await HttpConnection.get<List<ProductModel>>(
+      url,
+      fromJsonT:
+          (json) =>
+              (json as List)
+                  .map((item) => ProductModel.fromJson(item))
+                  .toList(),
+    );
+    return _parseSimpleProductList(response);
   }
 
   @override
@@ -170,7 +183,7 @@ Future<List<ProductModel>> onFilterAndSortProducts(ProductGetAllRequest model) a
     int? categoryId,
     String? sortBy,
     String? sortDirection,
-  }) {
+  }) async {
     final queryParams = {
       if (keyword != null) 'keyword': keyword,
       if (minPrice != null) 'minPrice': '$minPrice',
@@ -186,14 +199,30 @@ Future<List<ProductModel>> onFilterAndSortProducts(ProductGetAllRequest model) a
       searchProductsInBranch,
       queryParams,
     );
-    return HttpConnection.get(url).then((data) {
-      if (data.isSuccess) {
-        return (data.data as List)
-            .map((item) => ProductModel.fromJson(item))
-            .toList();
-      } else {
-        throw Exception('Failed to load products');
-      }
-    });
+    final response = await HttpConnection.get<List<ProductModel>>(
+      url,
+      fromJsonT:
+          (json) =>
+              (json as List)
+                  .map((item) => ProductModel.fromJson(item))
+                  .toList(),
+    );
+    return _parseSimpleProductList(response);
+  }
+
+ Future<AllProductsResult?> onFilterProducts(ProductFilterRequest request) async {
+    const String endpoint = '/product/filter';
+
+    final response = await HttpConnection.post<AllProductsResult>(
+      endpoint,
+      body: request.toJson(),
+      isToken: true,
+      fromJsonT: (json) => AllProductsResult.fromJson(json),
+    );
+
+    if (!response.isSuccess) {
+    return response.result;
+    }
+  return null;
   }
 }

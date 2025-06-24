@@ -538,6 +538,7 @@ class LoginScreen extends BaseView<LoginBloc> {
                     bloc.isValidPassword == true ? bloc.validPassword : null,
                 node: bloc.passwordNode,
                 textSize: 16,
+                
                 bloc.passwordController,
                 hintText: '******',
                 labelText: Text('Password'),

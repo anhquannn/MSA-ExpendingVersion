@@ -1,3 +1,5 @@
+// SỬA: cart_item_repository_impl.dart
+
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
@@ -12,66 +14,96 @@ class CartItemRepositoryImpl extends ICartItemRepository {
       addToCart,
       request.toJson(),
     );
-    final response = await HttpConnection.post(path);
+
+    // SỬA: Đối với các hàm chỉ cần biết thành công hay thất bại,
+    // ta có thể dùng <dynamic> và không cần parse chi tiết.
+    final response = await HttpConnection.post<dynamic>(
+      path,
+      fromJsonT: (json) => json, // Không cần parse cụ thể
+    );
     return response.isSuccess;
   }
 
   @override
   Future<String> onCalculateCartTotal(int cartId) async {
     final String path = '$calculateCartTotal$cartId';
-    final response = await HttpConnection.get(path);
-    return response.data.toString();
+
+    // SỬA: Giả sử API trả về một con số (double hoặc int).
+    final response = await HttpConnection.get<double>(
+      path,
+      fromJsonT: (json) => (json as num).toDouble(),
+    );
+
+    // Trả về giá trị đã parse hoặc "0" nếu thất bại.
+    return response.result?.toString() ?? "0";
   }
 
   @override
   Future<bool> onClearCart(int cartId) async {
     final String path = "$clearCart$cartId";
-    final response = await HttpConnection.delete(path);
+    final response = await HttpConnection.delete<dynamic>(
+      path,
+      fromJsonT: (json) => json,
+    );
     return response.isSuccess;
   }
 
   @override
   Future<CartItemModel?> onCreateCartItem(CartItemModel item) async {
-    final response = await HttpConnection.post(
+    final response = await HttpConnection.post<CartItemModel>(
       createCartItem,
       body: item.toJson(),
+      fromJsonT: (json) => CartItemModel.fromJson(json),
     );
-    if (response.isSuccess) return CartItemModel.fromJson(response.data);
-    return null;
+    return response.result;
   }
 
   @override
   Future<bool> onDeleteCartItem(int cartItemId) async {
     final String path = '$deleteCartItem$cartItemId';
-    final response = await HttpConnection.delete(path);
+    final response = await HttpConnection.delete<dynamic>(
+      path,
+      fromJsonT: (json) => json,
+    );
     return response.isSuccess;
   }
 
   @override
   Future<CartItemModel?> onGetCartItem(int cartId, int productId) async {
     final String path = '$getCartItem$cartId/$productId';
-    final response = await HttpConnection.get(path);
-    if (response.isSuccess) return CartItemModel.fromJson(response.data);
-    return null;
+    final response = await HttpConnection.get<CartItemModel>(
+      path,
+      fromJsonT: (json) => CartItemModel.fromJson(json),
+    );
+    return response.result;
   }
 
   @override
   Future<CartItemModel?> onGetCartItemById(int cartItemId) async {
     final String path = '$getCartItemById$cartItemId';
-    final response = await HttpConnection.get(path);
-    if (response.isSuccess) return CartItemModel.fromJson(response.data);
-    return null;
+    final response = await HttpConnection.get<CartItemModel>(
+      path,
+      fromJsonT: (json) => CartItemModel.fromJson(json),
+    );
+    return response.result;
   }
 
   @override
   Future<List<CartItemModel>> onGetCartItemsByCartId(int cartId) async {
     final String path = '$getCartItemsByCartId$cartId';
-    final response = await HttpConnection.get(path);
-    if (response.isSuccess) {
-      final List<dynamic> jsonList = response.data;
-      return jsonList.map((json) => CartItemModel.fromJson(json)).toList();
-    }
-    return [];
+
+    // SỬA: Xử lý cho kiểu trả về là một List.
+    final response = await HttpConnection.get<List<CartItemModel>>(
+      path,
+      // `fromJsonT` sẽ nhận vào mảng JSON và map nó thành List<CartItemModel>
+      fromJsonT: (json) {
+        final List<dynamic> jsonList = json as List<dynamic>;
+        return jsonList.map((itemJson) => CartItemModel.fromJson(itemJson)).toList();
+      },
+    );
+
+    // Trả về danh sách, hoặc một danh sách rỗng nếu có lỗi.
+    return response.result ?? [];
   }
 
   @override
@@ -79,11 +111,13 @@ class CartItemRepositoryImpl extends ICartItemRepository {
     List<int> cartItemIds,
     bool isSelected,
   ) async {
-    final String path =
-        '$updateCartItemsSelection${isSelected == true ? 'true' : 'false'}';
-    final response = await HttpConnection.put(
+    // SỬA: Sửa lại cách build path để đúng chuẩn hơn
+    final String path = '$updateCartItemsSelection?isSelected=${isSelected.toString()}';
+
+    final response = await HttpConnection.put<dynamic>(
       path,
       body: {"cartItemIds": cartItemIds},
+      fromJsonT: (json) => json,
     );
     return response.isSuccess;
   }

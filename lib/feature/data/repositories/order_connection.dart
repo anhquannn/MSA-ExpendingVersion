@@ -1,3 +1,5 @@
+// SỬA: order_repository_impl.dart
+
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
@@ -10,163 +12,120 @@ import 'package:msa/feature/domain/repositories/order_repository.dart';
 class OrderRepositoryImpl extends IOrderRepository {
   @override
   Future<OrderModel?> onCreateOrder(CreateOrderRequestModel orderData) async {
-    final data = await HttpConnection.post(
+    final response = await HttpConnection.post<OrderModel>(
       createOrder,
       body: orderData.toJson(),
+      fromJsonT: (json) => OrderModel.fromJson(json),
     );
-    if (data.isSuccess) {
-      return OrderModel.fromJson(data.data);
-    }
-    messageError = data.message;
-    return null;
+    if (!response.isSuccess) messageError = response.message;
+    return response.result;
   }
 
   @override
   Future<OrderModel?> onGetOrderById(int orderId) async {
-    final data = await HttpConnection.get('$getOrderById$orderId');
-    if (data.isSuccess) {
-      return OrderModel.fromJson(data.data);
-    }
-    messageError = data.message;
-    return null;
+    final response = await HttpConnection.get<OrderModel>(
+      '$getOrderById$orderId',
+      fromJsonT: (json) => OrderModel.fromJson(json),
+    );
+    if (!response.isSuccess) messageError = response.message;
+    return response.result;
+  }
+  
+  // Sửa lại hàm này để dùng PaginatedResult nếu API trả về cấu trúc phân trang
+  // Tạm thời vẫn giữ logic cũ nhưng dùng cấu trúc mới
+  Future<List<OrderModel>> _parseOrderList(String url) async {
+      final response = await HttpConnection.get<List<OrderModel>>(
+      url,
+      fromJsonT: (json) => (json as List).map((i) => OrderModel.fromJson(i)).toList(),
+    );
+    if (!response.isSuccess) messageError = response.message;
+    return response.result ?? [];
   }
 
   @override
-  Future<List<OrderModel>?> onSearchOrdersByPhoneNumber(
-    String phoneNumber,
-    int page,
-    int pageSize,
-  ) async {
-    final String url =
-        '$searchOrdersByPhoneNumber=$phoneNumber&page=$page&pageSize=$pageSize';
-    final data = await HttpConnection.get(url);
-    if (data.isSuccess) {
-      return List<OrderModel>.from(
-        data.data.map((json) => OrderModel.fromJson(json)),
+  Future<List<OrderModel>> onSearchOrdersByPhoneNumber(String phoneNumber, int page, int pageSize) async {
+    final url = HttpConnection.buildUrlWithQueryParams(
+      '$searchOrdersByPhoneNumber$phoneNumber', 
+      {'page': page, 'pageSize': pageSize}
+    );
+    return _parseOrderList(url);
+  }
+
+  @override
+  Future<List<OrderModel>> onGetOrdersByUserIdAndStatus(int userId, String status, int page, int pageSize) async {
+    final url = HttpConnection.buildUrlWithQueryParams(
+      '$getOrdersByUserIdAndStatus$userId/status/$status',
+      {'page': page, 'pageSize': pageSize}
+    );
+    return _parseOrderList(url);
+  }
+
+  @override
+  Future<PreviewOrderResponse?> onPreviewOrder(int userId, int cartId, List<String>? promoCodes) async {
+    final promoCodeParam = promoCodes != null && promoCodes.isNotEmpty ? promoCodes.join(",") : null;
+    final url = HttpConnection.buildUrlWithQueryParams(
+      previewOrder,
+      {'userId': userId, 'cartId': cartId, 'promoCodes': promoCodeParam},
+    );
+
+    final response = await HttpConnection.get<PreviewOrderResponse>(
+      url,
+      fromJsonT: (json) => PreviewOrderResponse.fromJson(json),
+    );
+    if (!response.isSuccess) messageError = response.message;
+    return response.result;
+  }
+
+  @override
+  Future<List<OrderModel>> onGetAllOrders({int page = 0, int size = 10, String sortBy = 'orderDate', String sortDirection = 'desc'}) async {
+     final url = HttpConnection.buildUrlWithQueryParams(
+        getAllOrders, 
+        {'page': page, 'size': size, 'sortBy': sortBy, 'sortDirection': sortDirection}
       );
-    }
-    messageError = data.message;
-    return [];
+    return _parseOrderList(url);
   }
 
   @override
-  Future<List<OrderModel>?> onGetOrdersByUserIdAndStatus(
-    int userId,
-    String status,
-    int page,
-    int pageSize,
-  ) async {
-    final String url =
-        '$getOrdersByUserIdAndStatus$userId/status/$status?page=$page&pageSize=$pageSize';
-    final data = await HttpConnection.get(url);
-    if (data.isSuccess) {
-      return List<OrderModel>.from(
-        data.data.map((json) => OrderModel.fromJson(json)),
-      );
-    }
-    messageError = data.message;
-    return [];
+  Future<RevenueOrderResponse?> onGetRevenueStatistics(int year, int month, {int? branchId, int? userId}) async {
+    final url = HttpConnection.buildUrlWithQueryParams(
+      getRevenueStatistics,
+      {'year': year, 'month': month, 'branchId': branchId, 'userId': userId},
+    );
+    final response = await HttpConnection.get<RevenueOrderResponse>(
+      url,
+      fromJsonT: (json) => RevenueOrderResponse.fromJson(json),
+    );
+    if (!response.isSuccess) messageError = response.message;
+    return response.result;
   }
 
   @override
-  Future<PreviewOrderResponse?> onPreviewOrder(
-    int userId,
-    int cartId,
-    List<String>? promoCodes,
-  ) async {
-    final String promoCodeParam =
-        promoCodes != null && promoCodes.isNotEmpty
-            ? '&promoCodes=${promoCodes.join(",")}'
-            : '';
-    final String url =
-        '$previewOrder=$userId&cartId=$cartId$promoCodeParam';
-    final data = await HttpConnection.get(url);
-    if (data.isSuccess) {
-      return PreviewOrderResponse.fromJson(data.data);
-    }
-    messageError = data.message;
-    return null;
+  Future<List<OrderModel>> onGetOrdersByBranchId(int branchId, {int page = 0, int size = 10, String sortBy = 'orderDate', String sortDirection = 'desc'}) async {
+    final url = HttpConnection.buildUrlWithQueryParams(
+      '$getOrdersByBranchId$branchId',
+      {'page': page, 'size': size, 'sortBy': sortBy, 'sortDirection': sortDirection}
+    );
+    return _parseOrderList(url);
   }
 
   @override
-  Future<List<OrderModel>> onGetAllOrders({
-    int page = 0,
-    int size = 10,
-    String sortBy = 'orderDate',
-    String sortDirection = 'desc',
-  }) async {
-    final String url =
-        '$getAllOrders=$page&size=$size&sortBy=$sortBy&sortDirection=$sortDirection';
-    final data = await HttpConnection.get(url);
-    if (data.isSuccess) {
-      return List<OrderModel>.from(
-        data.data.map((json) => OrderModel.fromJson(json)),
-      );
-    }
-    messageError = data.message;
-    return [];
-  }
-
-  @override
-  Future<RevenueOrderResponse?> onGetRevenueStatistics(
-    int year,
-    int month, {
-    int? branchId,
-    int? userId,
-  }) async {
-    String url = '$getRevenueStatistics=$year&month=$month';
-    if (branchId != null) url += '&branchId=$branchId';
-    if (userId != null) url += '&userId=$userId';
-
-    final data = await HttpConnection.get(url);
-    if (data.isSuccess) {
-      return RevenueOrderResponse.fromJson(data.data);
-    }
-    messageError = data.message;
-    return null;
-  }
-
-  @override
-  Future<List<OrderModel>> onGetOrdersByBranchId(
-    int branchId, {
-    int page = 0,
-    int size = 10,
-    String sortBy = 'orderDate',
-    String sortDirection = 'desc',
-  }) async {
-    final String url =
-        '$getOrdersByBranchId$branchId?page=$page&size=$size&sortBy=$sortBy&sortDirection=$sortDirection';
-    final data = await HttpConnection.get(url);
-    if (data.isSuccess) {
-      return List<OrderModel>.from(
-        data.data.map((json) => OrderModel.fromJson(json)),
-      );
-    }
-    messageError = data.message;
-    return [];
-  }
-
-  @override
-  Future<OrderModel?> onUpdateOrder(
-    int orderId,
-    Map<String, dynamic> updatedData,
-  ) async {
-    final data = await HttpConnection.put(
+  Future<OrderModel?> onUpdateOrder(int orderId, Map<String, dynamic> updatedData) async {
+    final response = await HttpConnection.put<OrderModel>(
       '$updateOrder$orderId',
       body: updatedData,
+      fromJsonT: (json) => OrderModel.fromJson(json),
     );
-    if (data.isSuccess) {
-      return OrderModel.fromJson(data.data);
-    }
-    messageError = data.message;
-    return null;
+    if (!response.isSuccess) messageError = response.message;
+    return response.result;
   }
 
   @override
   Future<bool> onDeleteOrder(int orderId) async {
-    final data = await HttpConnection.delete('$deleteOrder$orderId');
-    if (data.isSuccess) return true;
-    messageError = data.message;
-    return false;
+    final response = await HttpConnection.delete<dynamic>(
+      '$deleteOrder$orderId',
+      fromJsonT: (json) => json,
+    );
+    if (!response.isSuccess) messageError = response.message;
+    return response.isSuccess;
   }
 }

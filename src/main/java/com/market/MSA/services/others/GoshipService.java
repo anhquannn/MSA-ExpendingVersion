@@ -39,11 +39,12 @@ public class GoshipService {
   private final ObjectMapper objectMapper;
 
   public GoshipService(
-          RestTemplate restTemplate,
-          ObjectMapper objectMapper,
-          DeliveryInfoRepository deliveryInfoRepository,
-          EntityFinderService entityFinderService,
-          OrderRepository orderRepository, UserAddressRepository userAddressRepository) {
+      RestTemplate restTemplate,
+      ObjectMapper objectMapper,
+      DeliveryInfoRepository deliveryInfoRepository,
+      EntityFinderService entityFinderService,
+      OrderRepository orderRepository,
+      UserAddressRepository userAddressRepository) {
     this.restTemplate = restTemplate;
     this.objectMapper = objectMapper;
     this.entityFinderService = entityFinderService;
@@ -100,34 +101,39 @@ public class GoshipService {
   }
 
   public List<RatesResponse> createRates(Long orderId, Long userAddressId) {
-    Order order = entityFinderService.findByIdOrThrow(orderRepository, orderId, ErrorCode.ORDER_NOT_FOUND);
-    UserAddress userAddress = entityFinderService.findByIdOrThrow(userAddressRepository, userAddressId, ErrorCode.ADDRESS_NOT_FOUND);
-    RatesAddressRequest addressFrom = RatesAddressRequest.builder()
+    Order order =
+        entityFinderService.findByIdOrThrow(orderRepository, orderId, ErrorCode.ORDER_NOT_FOUND);
+    UserAddress userAddress =
+        entityFinderService.findByIdOrThrow(
+            userAddressRepository, userAddressId, ErrorCode.ADDRESS_NOT_FOUND);
+    RatesAddressRequest addressFrom =
+        RatesAddressRequest.builder()
             .city(order.getBranch().getCityCode())
             .district(order.getBranch().getDistrictCode())
             .ward(order.getBranch().getWardCode())
             .build();
-    RatesAddressRequest addressTo = RatesAddressRequest.builder()
+    RatesAddressRequest addressTo =
+        RatesAddressRequest.builder()
             .city(userAddress.getCityCode())
             .district(userAddress.getDistrictCode())
             .ward(userAddress.getWardCode())
             .build();
-    RatesParcelRequest parcelRequest = RatesParcelRequest.builder()
+    RatesParcelRequest parcelRequest =
+        RatesParcelRequest.builder()
             .cod(order.getGrandTotal() + "")
             .height("15")
             .length("15")
             .width("15")
             .weight("10")
             .build();
-    RatesApiRequest apiRequest = RatesApiRequest.builder()
+    RatesApiRequest apiRequest =
+        RatesApiRequest.builder()
             .address_from(addressFrom)
             .address_to(addressTo)
             .parcel(parcelRequest)
             .build();
-    RatesRequest request = RatesRequest.builder()
-            .shipment(apiRequest)
-            .build();
-    
+    RatesRequest request = RatesRequest.builder().shipment(apiRequest).build();
+
     RatesApiResponse response =
         callApi(API_URL + "/rates", HttpMethod.POST, request, RatesApiResponse.class);
     return response.getData();
@@ -192,57 +198,62 @@ public class GoshipService {
     if (rates == null || rates.isEmpty()) {
       throw new AppException(ErrorCode.RATES_NOT_FOUND);
     }
-    
+
     // Get the first rate
     RatesResponse firstRate = rates.getFirst();
-    
+
     // Get order and user address
-    Order order = entityFinderService.findByIdOrThrow(orderRepository, orderId, ErrorCode.ORDER_NOT_FOUND);
-    UserAddress userAddress = entityFinderService.findByIdOrThrow(userAddressRepository, userAddressId, ErrorCode.ADDRESS_NOT_FOUND);
+    Order order =
+        entityFinderService.findByIdOrThrow(orderRepository, orderId, ErrorCode.ORDER_NOT_FOUND);
+    UserAddress userAddress =
+        entityFinderService.findByIdOrThrow(
+            userAddressRepository, userAddressId, ErrorCode.ADDRESS_NOT_FOUND);
 
     // Create address from (branch address)
-    AddressRequest addressFrom = AddressRequest.builder()
-        .name(order.getBranch().getName())
-        .phone(order.getBranch().getPhone())
-        .street(order.getBranch().getStreet())
-        .ward(order.getBranch().getWardCode())
-        .district(order.getBranch().getDistrictCode())
-        .city(order.getBranch().getCityCode())
-        .build();
-    
+    AddressRequest addressFrom =
+        AddressRequest.builder()
+            .name(order.getBranch().getName())
+            .phone(order.getBranch().getPhone())
+            .street(order.getBranch().getStreet())
+            .ward(order.getBranch().getWardCode())
+            .district(order.getBranch().getDistrictCode())
+            .city(order.getBranch().getCityCode())
+            .build();
+
     // Create address to (user address)
-    AddressRequest addressTo = AddressRequest.builder()
-        .name(userAddress.getUser().getFullName())
-        .phone(userAddress.getUser().getPhoneNumber())
-        .street(userAddress.getStreet())
-        .ward(userAddress.getWardCode())
-        .district(userAddress.getDistrictCode())
-        .city(userAddress.getCityCode())
-        .build();
-    
+    AddressRequest addressTo =
+        AddressRequest.builder()
+            .name(userAddress.getUser().getFullName())
+            .phone(userAddress.getUser().getPhoneNumber())
+            .street(userAddress.getStreet())
+            .ward(userAddress.getWardCode())
+            .district(userAddress.getDistrictCode())
+            .city(userAddress.getCityCode())
+            .build();
+
     // Create parcel
-    ParcelRequest parcel = ParcelRequest.builder()
-        .cod(order.getGrandTotal() + "")
-        .height("15")
-        .length("15")
-        .width("15")
-        .weight("10")
-        .metadata("Hàng dễ vỡ, xin nhẹ tay")
-        .build();
-    
+    ParcelRequest parcel =
+        ParcelRequest.builder()
+            .cod(order.getGrandTotal() + "")
+            .height("15")
+            .length("15")
+            .width("15")
+            .weight("10")
+            .metadata("Hàng dễ vỡ, xin nhẹ tay")
+            .build();
+
     // Create shipment request
-    ShipmentApiRequest shipmentRequest = ShipmentApiRequest.builder()
-        .rate(firstRate.getId())
-        .payer(0)
-        .address_from(addressFrom)
-        .address_to(addressTo)
-        .parcel(parcel)
-        .build();
-    
-    ShipmentRequest request = ShipmentRequest.builder()
-        .shipment(shipmentRequest)
-        .build();
-    
+    ShipmentApiRequest shipmentRequest =
+        ShipmentApiRequest.builder()
+            .rate(firstRate.getId())
+            .payer(0)
+            .address_from(addressFrom)
+            .address_to(addressTo)
+            .parcel(parcel)
+            .build();
+
+    ShipmentRequest request = ShipmentRequest.builder().shipment(shipmentRequest).build();
+
     // Create and return the shipment
     return createShipment(request, orderId);
   }

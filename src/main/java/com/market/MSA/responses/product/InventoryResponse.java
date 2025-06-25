@@ -17,6 +17,6 @@ public class InventoryResponse {
   String contact;
   double totalRevenue;
 
-//  BranchResponse branch;
+  //  BranchResponse branch;
   List<InventoryProductResponse> inventoryProductResponses;
 }

@@ -4,7 +4,6 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.CategoryFilterRequest;
 import com.market.MSA.requests.product.CategoryRequest;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.product.BranchResponse;
 import com.market.MSA.responses.product.CategoryResponse;
 import com.market.MSA.services.product.CategoryService;
 import jakarta.validation.Valid;
@@ -67,9 +66,9 @@ public class CategoryController {
   @GetMapping
   public ApiResponse<List<CategoryResponse>> getAll() {
     return ApiResponse.<List<CategoryResponse>>builder()
-            .result(categoryService.getAll())
-            .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())
-            .build();
+        .result(categoryService.getAll())
+        .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
@@ -83,7 +82,7 @@ public class CategoryController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<CategoryResponse>> getAllCategoriesWithPaging(
-          @RequestBody @Valid CategoryFilterRequest request) {
+      @RequestBody @Valid CategoryFilterRequest request) {
     return ApiResponse.<Page<CategoryResponse>>builder()
         .result(categoryService.getAllCategoriesWithPaging(request))
         .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())

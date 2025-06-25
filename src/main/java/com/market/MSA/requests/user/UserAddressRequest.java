@@ -1,9 +1,8 @@
 package com.market.MSA.requests.user;
 
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -12,16 +11,16 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserAddressRequest {
 
-    String city;
-    String district;
-    String street;
-    String ward;
-    String cityCode;
-    String districtCode;
-    String wardCode;
-    boolean isPrimary;
+  String city;
+  String district;
+  String street;
+  String ward;
+  String cityCode;
+  String districtCode;
+  String wardCode;
+  boolean isPrimary;
 
-    LocalDateTime createdAt;
+  LocalDateTime createdAt;
 
-    Long userId;
+  Long userId;
 }

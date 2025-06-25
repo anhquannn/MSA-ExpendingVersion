@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TransferResponseItem {
-  Long transferResponseItemId;
+  Long transferRequestItemId;
 
   int quantityRequested;
   int quantityTransferred;

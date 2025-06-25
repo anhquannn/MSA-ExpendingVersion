@@ -9,7 +9,6 @@ import com.market.MSA.repositories.product.TransferRequestItemRepository;
 import com.market.MSA.repositories.product.TransferRequestRepository;
 import com.market.MSA.requests.filters.TransferRequestItemFilterRequest;
 import com.market.MSA.requests.product.TransferRequestItem;
-import com.market.MSA.responses.product.SupplierResponse;
 import com.market.MSA.responses.product.TransferResponseItem;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -18,11 +17,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,12 +88,14 @@ public class TransferRequestItemService {
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_ITEM_NOT_FOUND)));
   }
 
-  @Cacheable("all_transfer_request_items")
+  // @Cacheable("all_transfer_request_items")
   public List<TransferResponseItem> getAll() {
-    return transferRequestItemRepository.findAll().stream().map(transferRequestItemMapper::toTransferResponseItem).collect(Collectors.toList());
+    return transferRequestItemRepository.findAll().stream()
+        .map(transferRequestItemMapper::toTransferResponseItem)
+        .collect(Collectors.toList());
   }
 
-  @Cacheable("transfer_request_items_list")
+  // @Cacheable("transfer_request_items_list")
   public List<TransferResponseItem> getAllTransferRequestItems(
       TransferRequestItemFilterRequest request) {
     return transferRequestItemRepository
@@ -106,12 +105,11 @@ public class TransferRequestItemService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("transfer_request_items_paging")
+  // @Cacheable("transfer_request_items_paging")
   public Page<TransferResponseItem> getAllTransferRequestItemsWithPaging(
       TransferRequestItemFilterRequest request) {
-    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
-    Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+    Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize());
 
     return transferRequestItemRepository
         .filterWithPaging(request.getTransferRequestId(), request.getProductId(), pageable)

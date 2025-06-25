@@ -7,7 +7,6 @@ import com.market.MSA.models.product.Category;
 import com.market.MSA.repositories.product.CategoryRepository;
 import com.market.MSA.requests.filters.CategoryFilterRequest;
 import com.market.MSA.requests.product.CategoryRequest;
-import com.market.MSA.responses.others.PaymentResponse;
 import com.market.MSA.responses.product.CategoryResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -16,9 +15,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -93,7 +90,9 @@ public class CategoryService {
 
   @Cacheable("all_categories")
   public List<CategoryResponse> getAll() {
-    return categoryRepository.findAll().stream().map(categoryMapper::toCategoryResponse).collect(Collectors.toList());
+    return categoryRepository.findAll().stream()
+        .map(categoryMapper::toCategoryResponse)
+        .collect(Collectors.toList());
   }
 
   @Cacheable("categories_list")

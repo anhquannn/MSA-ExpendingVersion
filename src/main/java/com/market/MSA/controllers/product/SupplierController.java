@@ -4,7 +4,6 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.SupplierFilterRequest;
 import com.market.MSA.requests.product.SupplierRequest;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.product.ProductImageResponse;
 import com.market.MSA.responses.product.SupplierResponse;
 import com.market.MSA.services.product.SupplierService;
 import jakarta.validation.Valid;
@@ -66,13 +65,14 @@ public class SupplierController {
   @GetMapping
   public ApiResponse<List<SupplierResponse>> getAll() {
     return ApiResponse.<List<SupplierResponse>>builder()
-            .result(supplierService.getAll())
-            .message(ApiMessage.ALL_SUPPLIERS_RETRIEVED.getMessage())
-            .build();
+        .result(supplierService.getAll())
+        .message(ApiMessage.ALL_SUPPLIERS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
-  public ApiResponse<List<SupplierResponse>> getAllSuppliers(@RequestBody @Valid SupplierFilterRequest request) {
+  public ApiResponse<List<SupplierResponse>> getAllSuppliers(
+      @RequestBody @Valid SupplierFilterRequest request) {
     return ApiResponse.<List<SupplierResponse>>builder()
         .result(supplierService.getAllSuppliers(request))
         .message(ApiMessage.ALL_SUPPLIERS_RETRIEVED.getMessage())
@@ -81,7 +81,7 @@ public class SupplierController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<SupplierResponse>> getAllSuppliersWithPaging(
-          @RequestBody @Valid SupplierFilterRequest request) {
+      @RequestBody @Valid SupplierFilterRequest request) {
     return ApiResponse.<Page<SupplierResponse>>builder()
         .result(supplierService.getAllSuppliersWithPaging(request))
         .message(ApiMessage.ALL_SUPPLIERS_RETRIEVED.getMessage())

@@ -17,7 +17,6 @@ import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.NotificationFilterRequest;
 import com.market.MSA.requests.others.NotificationRequest;
-import com.market.MSA.responses.order.PromoCodeUsageResponse;
 import com.market.MSA.responses.others.NotificationResponse;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -154,7 +153,9 @@ public class NotificationService {
 
   @Cacheable("all_notifications")
   public List<NotificationResponse> getAll() {
-    return notificationRepository.findAll().stream().map(notificationMapper::toNotificationResponse).collect(Collectors.toList());
+    return notificationRepository.findAll().stream()
+        .map(notificationMapper::toNotificationResponse)
+        .collect(Collectors.toList());
   }
 
   @Cacheable("notifications_list")

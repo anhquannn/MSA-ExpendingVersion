@@ -58,4 +58,12 @@ public class Transfer {
   @OneToMany(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("transfer-details")
   List<TransferItem> transferItems = new ArrayList<>();
+
+  @OneToMany(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("transfer-inbounds")
+  List<InboundTransfer> inboundTransfers = new ArrayList<>();
+
+  @OneToMany(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("transfer-details")
+  List<OutboundTransfer> outboundTransfers = new ArrayList<>();
 }

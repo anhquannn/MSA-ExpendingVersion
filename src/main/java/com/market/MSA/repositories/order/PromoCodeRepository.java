@@ -18,16 +18,16 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
 
   @Query(
       "SELECT p FROM PromoCode p WHERE "
-          + "(:name IS NULL OR :name = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND "
+          + "(:keyword IS NULL OR :keyword = '' OR "
+          + "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
           + "(:status IS NULL OR p.status = :status) AND "
-          + "(:code IS NULL OR :code = '' OR LOWER(p.code) LIKE LOWER(CONCAT('%', :code, '%'))) AND "
           + "(:campaignId IS NULL OR p.campaign.campaignId = :campaignId) AND "
           + "(:fromDate IS NULL OR p.startDate >= :fromDate) AND "
           + "(:toDate IS NULL OR p.endDate <= :toDate)")
   Page<PromoCode> filterWithPaging(
-      @Param("name") String name,
+      @Param("keyword") String keyword,
       @Param("status") String status,
-      @Param("code") String code,
       @Param("campaignId") Long campaignId,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
@@ -35,16 +35,16 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
 
   @Query(
       "SELECT p FROM PromoCode p WHERE "
-          + "(:name IS NULL OR :name = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND "
+          + "(:keyword IS NULL OR :keyword = '' OR "
+          + "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
           + "(:status IS NULL OR p.status = :status) AND "
-          + "(:code IS NULL OR :code = '' OR LOWER(p.code) LIKE LOWER(CONCAT('%', :code, '%'))) AND "
           + "(:campaignId IS NULL OR p.campaign.campaignId = :campaignId) AND "
           + "(:fromDate IS NULL OR p.startDate >= :fromDate) AND "
           + "(:toDate IS NULL OR p.endDate <= :toDate)")
   List<PromoCode> filter(
-      @Param("name") String name,
+      @Param("keyword") String keyword,
       @Param("status") String status,
-      @Param("code") String code,
       @Param("campaignId") Long campaignId,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,

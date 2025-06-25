@@ -1,9 +1,6 @@
 package com.market.MSA.responses.product;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.market.MSA.responses.order.OrderDetailResponse;
-import com.market.MSA.responses.others.NotificationResponse;
-import com.market.MSA.responses.user.UserBehaviorResponse;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;

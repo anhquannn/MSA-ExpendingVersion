@@ -21,9 +21,9 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
           + "LOWER(i.address) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
           + "LOWER(i.contact) LIKE LOWER(CONCAT('%', :keyword, '%')))")
   Page<Inventory> filterWithPaging(
-      @Param("keyword") String keyword, 
-      @Param("branchId") Long branchId, 
-      @Param("userId") Long userId, 
+      @Param("keyword") String keyword,
+      @Param("branchId") Long branchId,
+      @Param("userId") Long userId,
       Pageable pageable);
 
   @Query(
@@ -37,8 +37,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
           + "LOWER(i.address) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
           + "LOWER(i.contact) LIKE LOWER(CONCAT('%', :keyword, '%')))")
   List<Inventory> filter(
-      @Param("keyword") String keyword, 
-      @Param("branchId") Long branchId, 
+      @Param("keyword") String keyword,
+      @Param("branchId") Long branchId,
       @Param("userId") Long userId);
 
   @Query("SELECT i FROM Inventory i WHERE i.branch.branchId = :branchId")

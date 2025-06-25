@@ -47,4 +47,12 @@ public class Inventory {
   @OneToMany(mappedBy = "toInventory", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("inventory-to-transfers")
   List<Transfer> toTransfers = new ArrayList<>();
+
+  @OneToMany(mappedBy = "Inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("inventory-inbounds")
+  List<InboundTransfer> inboundTransfers = new ArrayList<>();
+
+  @OneToMany(mappedBy = "Inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("inventory-outbounds")
+  List<OutboundTransfer> outboundTransfers = new ArrayList<>();
 }

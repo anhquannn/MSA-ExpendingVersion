@@ -17,8 +17,8 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long> {
   // Có phân trang
   @Query(
       "SELECT c FROM Campaign c WHERE "
-          + "(:status IS NULL OR c.status = :status) AND "
           + "(:name IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND "
+          + "(:status IS NULL OR c.status = :status) AND "
           + "(:fromDate IS NULL OR c.startDate >= :fromDate) AND "
           + "(:toDate IS NULL OR c.endDate <= :toDate) AND "
           + "(:keyword IS NULL OR "

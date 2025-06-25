@@ -5,7 +5,6 @@ import com.market.MSA.requests.filters.InventoryProductFilterRequest;
 import com.market.MSA.requests.product.InventoryProductRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.InventoryProductResponse;
-import com.market.MSA.responses.product.InventoryResponse;
 import com.market.MSA.responses.product.InventoryStatisticsResponse;
 import com.market.MSA.services.product.InventoryProductService;
 import jakarta.validation.Valid;
@@ -79,9 +78,9 @@ public class InventoryProductController {
   @GetMapping
   public ApiResponse<List<InventoryProductResponse>> getAll() {
     return ApiResponse.<List<InventoryProductResponse>>builder()
-            .result(inventoryProductService.getAll())
-            .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())
-            .build();
+        .result(inventoryProductService.getAll())
+        .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")

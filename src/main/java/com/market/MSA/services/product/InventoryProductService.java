@@ -141,7 +141,7 @@ public class InventoryProductService {
     return inventoryProductMapper.toInventoryProductResponse(inventoryProduct);
   }
 
-//  @Cacheable(value = "inventory_products", key = "'stock_' + #branchId + '_' + #productId")
+  //  @Cacheable(value = "inventory_products", key = "'stock_' + #branchId + '_' + #productId")
   public int getTotalStockInBranch(Long branchId, Long productId) {
     Inventory inventory =
         inventoryRepository
@@ -290,9 +290,10 @@ public class InventoryProductService {
 
   @Cacheable("all_inventory_products")
   public List<InventoryProductResponse> getAll() {
-    return inventoryProductRepository.findAll().stream().map(inventoryProductMapper::toInventoryProductResponse).collect(Collectors.toList());
+    return inventoryProductRepository.findAll().stream()
+        .map(inventoryProductMapper::toInventoryProductResponse)
+        .collect(Collectors.toList());
   }
-
 
   @Cacheable("inventory_products_paging")
   public List<InventoryProductResponse> getAllInventoryProducts(

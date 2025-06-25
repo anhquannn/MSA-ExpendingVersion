@@ -21,6 +21,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,6 +43,9 @@ public class CancelOrderService {
   final NotificationService notificationService;
 
   @Transactional
+  @CacheEvict(
+      value = {"all_campaigns", "campaigns_list", "campaigns_paging"},
+      allEntries = true)
   public CancelOrderResponse createCancelOrder(CancelOrderRequest request) {
     Order order =
         orderRepository

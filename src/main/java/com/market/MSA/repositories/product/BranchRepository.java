@@ -25,7 +25,7 @@ public interface BranchRepository extends JpaRepository<Branch, Long> {
           + "(:productId IS NULL OR ip.product.productId = :productId) AND "
           + "(:userId IS NULL OR u.userId = :userId)")
   List<Branch> filter(
-      @Param("keyword") String keyword, 
+      @Param("keyword") String keyword,
       @Param("productId") Long productId,
       @Param("userId") Long userId);
 
@@ -44,8 +44,8 @@ public interface BranchRepository extends JpaRepository<Branch, Long> {
           + "(:productId IS NULL OR ip.product.productId = :productId) AND "
           + "(:userId IS NULL OR u.userId = :userId)")
   Page<Branch> filterWithPaging(
-      @Param("keyword") String keyword, 
-      @Param("productId") Long productId, 
+      @Param("keyword") String keyword,
+      @Param("productId") Long productId,
       @Param("userId") Long userId,
       Pageable pageable);
 

@@ -3,7 +3,6 @@ package com.market.MSA.controllers.others;
 import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.NotificationFilterRequest;
 import com.market.MSA.requests.others.NotificationRequest;
-import com.market.MSA.responses.order.PromoCodeUsageResponse;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.others.NotificationResponse;
 import com.market.MSA.services.others.NotificationService;
@@ -62,9 +61,9 @@ public class NotificationController {
   @GetMapping
   public ApiResponse<List<NotificationResponse>> getAll() {
     return ApiResponse.<List<NotificationResponse>>builder()
-            .result(notificationService.getAll())
-            .message(ApiMessage.ALL_NOTIFICATIONS_RETRIEVED.getMessage())
-            .build();
+        .result(notificationService.getAll())
+        .message(ApiMessage.ALL_NOTIFICATIONS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")

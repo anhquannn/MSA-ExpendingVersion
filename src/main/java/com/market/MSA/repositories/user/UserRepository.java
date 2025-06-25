@@ -15,10 +15,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   Optional<User> findByGoogleId(String googleId);
 
-  @Query("SELECT u FROM User u JOIN u.roles r " + "WHERE (:role IS NULL OR LOWER(r.name) LIKE LOWER(CONCAT('%', :role, '%')))")
+  @Query(
+      "SELECT u FROM User u JOIN u.roles r "
+          + "WHERE (:role IS NULL OR LOWER(r.name) LIKE LOWER(CONCAT('%', :role, '%')))")
   Page<User> findByRoleWithPagination(@Param("role") String role, Pageable pageable);
 
-  @Query("SELECT u FROM User u JOIN u.roles r " + "WHERE (:role IS NULL OR LOWER(r.name) LIKE LOWER(CONCAT('%', :role, '%')))")
+  @Query(
+      "SELECT u FROM User u JOIN u.roles r "
+          + "WHERE (:role IS NULL OR LOWER(r.name) LIKE LOWER(CONCAT('%', :role, '%')))")
   List<User> findAllByRole(@Param("role") String role);
 
   @Query(

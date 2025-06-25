@@ -1,7 +1,6 @@
 package com.market.MSA.responses.order;
 
 import com.market.MSA.responses.others.DeliveryInfoResponse;
-import com.market.MSA.responses.others.NotificationResponse;
 import com.market.MSA.responses.others.PaymentResponse;
 import com.market.MSA.responses.product.BranchResponse;
 import com.market.MSA.responses.user.RewardPointTransactionResponse;
@@ -34,7 +33,7 @@ public class OrderResponse {
   UserResponse user;
 
   DeliveryInfoResponse deliveryInfo;
-  //List<CancelOrderResponse> cancelOrders;
+  // List<CancelOrderResponse> cancelOrders;
   List<PaymentResponse> payments;
   List<PromoCodeResponse> promoCodes;
   List<RewardPointTransactionResponse> rewardPointTransactions;

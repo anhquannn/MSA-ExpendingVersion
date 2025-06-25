@@ -10,20 +10,20 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PromoCodeFilterRequest {
-  String keyword;
+public class OutboundFilterRequest {
+  Long userId;
+  Long inventoryId;
+  Long transferId;
   String status;
   LocalDateTime fromDate;
   LocalDateTime toDate;
-  Long campaignId;
-  Long userId;
 
-  // Sorting
-  @Builder.Default String sortBy = "startDate";
+  // Sắp xếp
+  @Builder.Default String sortBy = "outboundTransferDate";
 
   @Builder.Default String sortDirection = "DESC";
 
-  // Pagination
+  // Phân trang
   @Min(value = 1, message = "Page number must be greater than 0")
   @Builder.Default
   int page = 1;

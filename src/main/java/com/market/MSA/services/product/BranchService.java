@@ -23,9 +23,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -65,9 +63,9 @@ public class BranchService {
             .ward(request.getBranchWard())
             .district(request.getBranchDistrict())
             .city(request.getBranchCity())
-                .cityCode(request.getBranchCityCode())
-                .wardCode(request.getBranchWardCode())
-                .districtCode(request.getBranchDistrictCode())
+            .cityCode(request.getBranchCityCode())
+            .wardCode(request.getBranchWardCode())
+            .districtCode(request.getBranchDistrictCode())
             .build();
     branch = branchRepository.save(branch);
 
@@ -191,7 +189,9 @@ public class BranchService {
   public List<BranchResponse> getAllBranches(BranchFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
-    return branchRepository.filter(request.getKeyword(), request.getProductId(), request.getUserId()).stream()
+    return branchRepository
+        .filter(request.getKeyword(), request.getProductId(), request.getUserId())
+        .stream()
         .map(branchMapper::toBranchResponse)
         .collect(Collectors.toList());
   }
@@ -210,7 +210,8 @@ public class BranchService {
     Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
 
     return branchRepository
-        .filterWithPaging(request.getKeyword(), request.getProductId(), request.getUserId(), pageable)
+        .filterWithPaging(
+            request.getKeyword(), request.getProductId(), request.getUserId(), pageable)
         .map(branchMapper::toBranchResponse);
   }
 }

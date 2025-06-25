@@ -15,7 +15,6 @@ import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.TransferRequestFilterRequest;
 import com.market.MSA.requests.product.TransferRequest;
 import com.market.MSA.responses.product.TransferResponse;
-import com.market.MSA.responses.product.TransferResponseItem;
 import com.market.MSA.services.others.EntityFinderService;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,7 +24,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -112,12 +110,14 @@ public class TransferRequestService {
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_NOT_FOUND)));
   }
 
-  @Cacheable("all_transfer_requests")
+  // @Cacheable("all_transfer_requests")
   public List<TransferResponse> getAll() {
-    return transferRequestRepository.findAll().stream().map(transferRequestMapper::toTransferResponse).collect(Collectors.toList());
+    return transferRequestRepository.findAll().stream()
+        .map(transferRequestMapper::toTransferResponse)
+        .collect(Collectors.toList());
   }
 
-  @Cacheable("transfer_requests_list")
+  // @Cacheable("transfer_requests_list")
   public List<TransferResponse> getAllTransferRequests(TransferRequestFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
@@ -136,7 +136,7 @@ public class TransferRequestService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("transfer_requests_paging")
+  // @Cacheable("transfer_requests_paging")
   public Page<TransferResponse> getAllTransferRequestsWithPaging(
       TransferRequestFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

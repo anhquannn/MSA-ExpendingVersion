@@ -6,9 +6,7 @@ import com.market.MSA.models.order.Order;
 import com.market.MSA.models.order.PromoCodeUsage;
 import com.market.MSA.models.others.Notification;
 import com.market.MSA.models.others.Payment;
-import com.market.MSA.models.product.Branch;
-import com.market.MSA.models.product.Feedback;
-import com.market.MSA.models.product.Transfer;
+import com.market.MSA.models.product.*;
 import com.market.MSA.validators.PhoneNumberConstraint;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -59,6 +57,7 @@ public class User {
 
   @Column(columnDefinition = "TEXT")
   String image;
+
   String googleId;
 
   @ManyToMany
@@ -80,6 +79,14 @@ public class User {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-feedbacks")
   List<Feedback> feedbacks = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("user-requested-inbounds")
+  List<InboundTransfer> inboundTransfers = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("user-approved-outbounds")
+  List<OutboundTransfer> outTransfers = new ArrayList<>();
 
   @OneToMany(mappedBy = "requester", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-requested-transfers")

@@ -11,7 +11,6 @@ import com.market.MSA.repositories.others.PaymentRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.PaymentFilterRequest;
 import com.market.MSA.requests.others.PaymentRequest;
-import com.market.MSA.responses.others.NotificationResponse;
 import com.market.MSA.responses.others.PaymentResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URLEncoder;
@@ -115,7 +114,9 @@ public class PaymentService {
 
   @Cacheable("all_payments")
   public List<PaymentResponse> getAll() {
-    return paymentRepository.findAll().stream().map(paymentMapper::toPaymentResponse).collect(Collectors.toList());
+    return paymentRepository.findAll().stream()
+        .map(paymentMapper::toPaymentResponse)
+        .collect(Collectors.toList());
   }
 
   @Cacheable("payments")

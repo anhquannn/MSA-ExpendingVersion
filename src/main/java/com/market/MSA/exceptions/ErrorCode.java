@@ -82,8 +82,9 @@ public enum ErrorCode {
       157, "Inventory product with stock already exists!", HttpStatus.BAD_REQUEST),
   INVALID_REFRESH_TOKEN(158, "Invalid refresh token!", HttpStatus.BAD_REQUEST),
   PROMO_CODE_ALREADY_USED(159, "Promo code already used!", HttpStatus.BAD_REQUEST),
-  ADDRESS_NOT_FOUND(160, "Address not found!", HttpStatus.NOT_FOUND ),
-  RATES_NOT_FOUND(161,"Cannot find rates!" , HttpStatus.NOT_FOUND ),;
+  ADDRESS_NOT_FOUND(160, "Address not found!", HttpStatus.NOT_FOUND),
+  RATES_NOT_FOUND(161, "Cannot find rates!", HttpStatus.NOT_FOUND),
+  ;
 
   private final int code;
   private final String message;

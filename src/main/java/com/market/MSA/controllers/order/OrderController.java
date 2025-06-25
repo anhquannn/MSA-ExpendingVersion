@@ -6,7 +6,6 @@ import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.requests.filters.OrderFilterRequest;
 import com.market.MSA.requests.order.OrderRequest;
-import com.market.MSA.responses.order.CancelOrderResponse;
 import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.OrderSummaryResponse;
 import com.market.MSA.responses.order.RevenueStatisticsResponse;
@@ -103,13 +102,14 @@ public class OrderController {
   @GetMapping
   public ApiResponse<List<OrderResponse>> getAll() {
     return ApiResponse.<List<OrderResponse>>builder()
-            .result(orderService.getAll())
-            .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
-            .build();
+        .result(orderService.getAll())
+        .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
-  public ApiResponse<List<OrderResponse>> getAllOrders(@RequestBody @Valid OrderFilterRequest request) {
+  public ApiResponse<List<OrderResponse>> getAllOrders(
+      @RequestBody @Valid OrderFilterRequest request) {
     return ApiResponse.<List<OrderResponse>>builder()
         .result(orderService.getAllOrders(request))
         .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())

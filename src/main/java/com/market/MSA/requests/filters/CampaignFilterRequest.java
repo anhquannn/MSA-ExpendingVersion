@@ -18,7 +18,7 @@ public class CampaignFilterRequest {
   String keyword;
 
   // Sorting
-  @Builder.Default String sortBy = "endDate";
+  @Builder.Default String sortBy = "startDate";
 
   @Builder.Default String sortDirection = "DESC";
 

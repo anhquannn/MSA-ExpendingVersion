@@ -4,7 +4,6 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.PaymentFilterRequest;
 import com.market.MSA.requests.others.PaymentRequest;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.others.NotificationResponse;
 import com.market.MSA.responses.others.PaymentResponse;
 import com.market.MSA.services.others.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -69,9 +68,9 @@ public class PaymentController {
   @GetMapping
   public ApiResponse<List<PaymentResponse>> getAll() {
     return ApiResponse.<List<PaymentResponse>>builder()
-            .result(paymentService.getAll())
-            .message(ApiMessage.ALL_PAYMENTS_RETRIEVED.getMessage())
-            .build();
+        .result(paymentService.getAll())
+        .message(ApiMessage.ALL_PAYMENTS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")

@@ -7,7 +7,6 @@ import com.market.MSA.models.product.Supplier;
 import com.market.MSA.repositories.product.SupplierRepository;
 import com.market.MSA.requests.filters.SupplierFilterRequest;
 import com.market.MSA.requests.product.SupplierRequest;
-import com.market.MSA.responses.product.ProductImageResponse;
 import com.market.MSA.responses.product.SupplierResponse;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -69,7 +68,9 @@ public class SupplierService {
 
   @Cacheable("all_suppliers")
   public List<SupplierResponse> getAll() {
-    return supplierRepository.findAll().stream().map(supplierMapper::toSupplierResponse).collect(Collectors.toList());
+    return supplierRepository.findAll().stream()
+        .map(supplierMapper::toSupplierResponse)
+        .collect(Collectors.toList());
   }
 
   @Cacheable("suppliers_list")

@@ -3,7 +3,6 @@ package com.market.MSA.controllers.order;
 import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.PromoCodeFilterRequest;
 import com.market.MSA.requests.order.PromoCodeRequest;
-import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.PromoCodeResponse;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.services.order.PromoCodeService;
@@ -81,27 +80,27 @@ public class PromoCodeController {
   @GetMapping
   public ApiResponse<List<PromoCodeResponse>> getAll() {
     return ApiResponse.<List<PromoCodeResponse>>builder()
-            .result(promoCodeService.getAll())
-            .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
-            .build();
+        .result(promoCodeService.getAll())
+        .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
+        .build();
   }
 
   // Lấy danh sách tất cả PromoCode (không phân trang)
-  @PostMapping("/list/user/{userId}")
+  @PostMapping("/list")
   public ApiResponse<List<PromoCodeResponse>> getAllPromoCodes(
-          @RequestBody @Valid PromoCodeFilterRequest request, @PathVariable Long userId) {
+      @RequestBody @Valid PromoCodeFilterRequest request) {
     return ApiResponse.<List<PromoCodeResponse>>builder()
-        .result(promoCodeService.getAllPromoCodes(request, userId))
+        .result(promoCodeService.getAllPromoCodes(request))
         .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
         .build();
   }
 
   // Lấy danh sách tất cả PromoCode (có phân trang)
-  @PostMapping("/paging/user/{userId}")
+  @PostMapping("/paging")
   public ApiResponse<Page<PromoCodeResponse>> getAllPromoCodesWithPaging(
-          @RequestBody @Valid PromoCodeFilterRequest request, @PathVariable Long userId) {
+      @RequestBody @Valid PromoCodeFilterRequest request) {
     return ApiResponse.<Page<PromoCodeResponse>>builder()
-        .result(promoCodeService.getAllPromoCodesWithPaging(request, userId))
+        .result(promoCodeService.getAllPromoCodesWithPaging(request))
         .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
         .build();
   }

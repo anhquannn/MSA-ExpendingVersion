@@ -46,11 +46,12 @@ public class UserController {
   }
 
   @PutMapping("/device/{deviceId}/{userId}")
-  ApiResponse<UserResponse> updateDeviceId(@PathVariable String deviceId, @PathVariable long userId) {
+  ApiResponse<UserResponse> updateDeviceId(
+      @PathVariable String deviceId, @PathVariable long userId) {
     return ApiResponse.<UserResponse>builder()
-            .result(userService.updateDeviceId(deviceId, userId))
-            .message(ApiMessage.USER_UPDATED.getMessage())
-            .build();
+        .result(userService.updateDeviceId(deviceId, userId))
+        .message(ApiMessage.USER_UPDATED.getMessage())
+        .build();
   }
 
   @PostMapping("/login")
@@ -192,11 +193,11 @@ public class UserController {
 
   @PutMapping("/admin/{userId}")
   ApiResponse<UserResponse> updateUserWithoutPassword(
-          @PathVariable long userId, @RequestBody UpdateUserRequest request) {
+      @PathVariable long userId, @RequestBody UpdateUserRequest request) {
     return ApiResponse.<UserResponse>builder()
-            .result(userService.updateUserWithoutPassword(userId, request))
-            .message(ApiMessage.USER_UPDATED.getMessage())
-            .build();
+        .result(userService.updateUserWithoutPassword(userId, request))
+        .message(ApiMessage.USER_UPDATED.getMessage())
+        .build();
   }
 
   @PostMapping("/logout")

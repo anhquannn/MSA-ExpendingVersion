@@ -5,7 +5,6 @@ import com.market.MSA.requests.branch.CreateBranchWithManagerRequest;
 import com.market.MSA.requests.filters.BranchFilterRequest;
 import com.market.MSA.requests.product.BranchRequest;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.others.PaymentResponse;
 import com.market.MSA.responses.product.BranchResponse;
 import com.market.MSA.services.product.BranchService;
 import jakarta.validation.Valid;
@@ -91,7 +90,8 @@ public class BranchController {
   }
 
   @PostMapping("/list")
-  public ApiResponse<List<BranchResponse>> getAllBranches(@RequestBody @Valid BranchFilterRequest request) {
+  public ApiResponse<List<BranchResponse>> getAllBranches(
+      @RequestBody @Valid BranchFilterRequest request) {
     return ApiResponse.<List<BranchResponse>>builder()
         .result(branchService.getAllBranches(request))
         .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())
@@ -108,7 +108,7 @@ public class BranchController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<BranchResponse>> getAllBranchesWithPaging(
-          @RequestBody @Valid BranchFilterRequest request) {
+      @RequestBody @Valid BranchFilterRequest request) {
     return ApiResponse.<Page<BranchResponse>>builder()
         .result(branchService.getAllBranchesWithPaging(request))
         .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())

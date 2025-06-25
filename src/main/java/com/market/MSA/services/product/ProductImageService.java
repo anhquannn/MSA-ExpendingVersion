@@ -9,7 +9,6 @@ import com.market.MSA.repositories.product.ProductImageRepository;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.requests.filters.ProductImageFilterRequest;
 import com.market.MSA.requests.product.ProductImageRequest;
-import com.market.MSA.responses.product.InventoryResponse;
 import com.market.MSA.responses.product.ProductImageResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -88,7 +87,9 @@ public class ProductImageService {
 
   @Cacheable("all_product_images")
   public List<ProductImageResponse> getAll() {
-    return productImageRepository.findAll().stream().map(productImageMapper::toProductImageResponse).collect(Collectors.toList());
+    return productImageRepository.findAll().stream()
+        .map(productImageMapper::toProductImageResponse)
+        .collect(Collectors.toList());
   }
 
   @Cacheable("product_images_list")

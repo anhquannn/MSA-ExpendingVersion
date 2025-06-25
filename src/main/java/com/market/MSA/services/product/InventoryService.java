@@ -8,7 +8,6 @@ import com.market.MSA.repositories.product.BranchRepository;
 import com.market.MSA.repositories.product.InventoryRepository;
 import com.market.MSA.requests.filters.InventoryFilterRequest;
 import com.market.MSA.requests.product.InventoryRequest;
-import com.market.MSA.responses.product.InventoryProductResponse;
 import com.market.MSA.responses.product.InventoryResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -81,12 +80,16 @@ public class InventoryService {
 
   @Cacheable("all_inventories")
   public List<InventoryResponse> getAll() {
-    return inventoryRepository.findAll().stream().map(inventoryMapper::toInventoryResponse).collect(Collectors.toList());
+    return inventoryRepository.findAll().stream()
+        .map(inventoryMapper::toInventoryResponse)
+        .collect(Collectors.toList());
   }
 
   @Cacheable("inventories_list")
   public List<InventoryResponse> getAllInventories(InventoryFilterRequest request) {
-    return inventoryRepository.filter(request.getKeyword(), request.getBranchId(), request.getUserId()).stream()
+    return inventoryRepository
+        .filter(request.getKeyword(), request.getBranchId(), request.getUserId())
+        .stream()
         .map(inventoryMapper::toInventoryResponse)
         .collect(Collectors.toList());
   }
@@ -98,7 +101,8 @@ public class InventoryService {
     Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
 
     return inventoryRepository
-        .filterWithPaging(request.getKeyword(), request.getBranchId(), request.getUserId(), pageable)
+        .filterWithPaging(
+            request.getKeyword(), request.getBranchId(), request.getUserId(), pageable)
         .map(inventoryMapper::toInventoryResponse);
   }
 

@@ -6,12 +6,13 @@ import com.market.MSA.mappers.user.UserAddressMappper;
 import com.market.MSA.models.user.UserAddress;
 import com.market.MSA.repositories.user.UserAddressRepository;
 import com.market.MSA.repositories.user.UserRepository;
-import com.market.MSA.requests.filters.RewardPointFilterRequest;
 import com.market.MSA.requests.filters.UserAddressFilterRequest;
 import com.market.MSA.requests.user.UserAddressRequest;
-import com.market.MSA.responses.user.RewardPointResponse;
 import com.market.MSA.responses.user.UserAddressResponse;
 import com.market.MSA.services.others.EntityFinderService;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,74 +24,81 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class UserAddressService {
-    final UserAddressRepository userAddressRepository;
-    final UserAddressMappper userAddressMappper;
-    private final EntityFinderService entityFinderService;
-    private final UserRepository userRepository;
+  final UserAddressRepository userAddressRepository;
+  final UserAddressMappper userAddressMappper;
+  private final EntityFinderService entityFinderService;
+  private final UserRepository userRepository;
 
-    @Transactional
-    public UserAddressResponse createUserAddress(UserAddressRequest request) {
-        UserAddress address = userAddressMappper.toUserAddress(request);
-        address.setUser(entityFinderService.findByIdOrThrow(userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
-        address.setCreatedAt(LocalDateTime.now());
-        address = userAddressRepository.save(address);
-        return userAddressMappper.toUserAddressResponse(address);
+  @Transactional
+  public UserAddressResponse createUserAddress(UserAddressRequest request) {
+    UserAddress address = userAddressMappper.toUserAddress(request);
+    address.setUser(
+        entityFinderService.findByIdOrThrow(
+            userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
+    address.setCreatedAt(LocalDateTime.now());
+    address = userAddressRepository.save(address);
+    return userAddressMappper.toUserAddressResponse(address);
+  }
+
+  @Transactional
+  public UserAddressResponse updateUserAddress(Long addressId, UserAddressRequest request) {
+    UserAddress address =
+        userAddressRepository
+            .findById(addressId)
+            .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
+    address.setUser(
+        entityFinderService.findByIdOrThrow(userRepository, addressId, ErrorCode.USER_NOT_EXISTED));
+    userAddressMappper.updateUserAddressFromRequest(request, address);
+
+    UserAddress updatedAddress = userAddressRepository.save(address);
+    return userAddressMappper.toUserAddressResponse(updatedAddress);
+  }
+
+  @Transactional
+  public Boolean deleteUserAddress(Long addressId) {
+    if (!userAddressRepository.existsById(addressId)) {
+      throw new AppException(ErrorCode.ADDRESS_NOT_FOUND);
     }
+    userAddressRepository.deleteById(addressId);
+    return true;
+  }
 
-    @Transactional
-    public UserAddressResponse updateUserAddress(Long addressId, UserAddressRequest request) {
-        UserAddress address = userAddressRepository.findById(addressId).orElseThrow(()-> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
-        address.setUser(entityFinderService.findByIdOrThrow(userRepository, addressId, ErrorCode.USER_NOT_EXISTED));
-        userAddressMappper.updateUserAddressFromRequest(request, address);
+  @Transactional
+  public UserAddressResponse getUserAddressById(Long addressId) {
+    UserAddress userAddress =
+        userAddressRepository
+            .findById(addressId)
+            .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
+    return userAddressMappper.toUserAddressResponse(userAddress);
+  }
 
-        UserAddress updatedAddress = userAddressRepository.save(address);
-        return userAddressMappper.toUserAddressResponse(updatedAddress);
-    }
+  @Cacheable("all_user_addresses")
+  public List<UserAddressResponse> getAll() {
+    return userAddressRepository.findAll().stream()
+        .map(userAddressMappper::toUserAddressResponse)
+        .collect(Collectors.toList());
+  }
 
-    @Transactional
-    public Boolean deleteUserAddress(Long addressId) {
-        if(!userAddressRepository.existsById(addressId)) {
-            throw new AppException(ErrorCode.ADDRESS_NOT_FOUND);
-        }
-        userAddressRepository.deleteById(addressId);
-        return true;
-    }
+  @Cacheable("user_addresses_list")
+  public List<UserAddressResponse> getAllUserAddresses(UserAddressFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+    return userAddressRepository.filter(request.getUserId(), sort).stream()
+        .map(userAddressMappper::toUserAddressResponse)
+        .collect(Collectors.toList());
+  }
 
-    @Transactional
-    public UserAddressResponse getUserAddressById(Long addressId) {
-        UserAddress userAddress = userAddressRepository.findById(addressId).orElseThrow(()-> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
-        return userAddressMappper.toUserAddressResponse(userAddress);
-    }
+  @Cacheable("user_addresses_paging")
+  public Page<UserAddressResponse> getAllUserAddressesWithPaging(UserAddressFilterRequest request) {
+    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
-    @Cacheable("all_user_addresses")
-    public List<UserAddressResponse> getAll() {
-        return userAddressRepository.findAll().stream().map(userAddressMappper::toUserAddressResponse).collect(Collectors.toList());
-    }
-
-    @Cacheable("user_addresses_list")
-    public List<UserAddressResponse> getAllUserAddresses(UserAddressFilterRequest request) {
-        Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
-        return userAddressRepository.filter(request.getUserId(), sort).stream()
-                .map(userAddressMappper::toUserAddressResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Cacheable("user_addresses_paging")
-    public Page<UserAddressResponse> getAllUserAddressesWithPaging(UserAddressFilterRequest request) {
-        Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
-
-        PageRequest pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
-        return userAddressRepository
-                .filterWithPaging(request.getUserId(), pageable)
-                .map(userAddressMappper::toUserAddressResponse);
-    }
+    PageRequest pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
+    return userAddressRepository
+        .filterWithPaging(request.getUserId(), pageable)
+        .map(userAddressMappper::toUserAddressResponse);
+  }
 }

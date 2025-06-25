@@ -11,7 +11,6 @@ import com.market.MSA.repositories.order.PromoCodeRepository;
 import com.market.MSA.repositories.order.PromoCodeUsageRepository;
 import com.market.MSA.requests.filters.PromoCodeUsageFilterRequest;
 import com.market.MSA.requests.order.PromoCodeUsageRequest;
-import com.market.MSA.responses.order.PromoCodeResponse;
 import com.market.MSA.responses.order.PromoCodeUsageResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -106,7 +105,9 @@ public class PromoCodeUsageService {
 
   @Cacheable("all_promo_code_usages")
   public List<PromoCodeUsageResponse> getAll() {
-    return promoCodeUsageRepository.findAll().stream().map(promoCodeUsageMapper::toResponse).collect(Collectors.toList());
+    return promoCodeUsageRepository.findAll().stream()
+        .map(promoCodeUsageMapper::toResponse)
+        .collect(Collectors.toList());
   }
 
   @Transactional(readOnly = true)

@@ -23,7 +23,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "branches")
-public class  Branch {
+public class Branch {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long branchId;

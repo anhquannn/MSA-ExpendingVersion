@@ -234,7 +234,9 @@ public class OrderService {
 
   @Cacheable("orders")
   public List<OrderResponse> getAll() {
-    return orderRepository.findAll().stream().map(orderMapper::toOrderResponse).collect(Collectors.toList());
+    return orderRepository.findAll().stream()
+        .map(orderMapper::toOrderResponse)
+        .collect(Collectors.toList());
   }
 
   @Cacheable(

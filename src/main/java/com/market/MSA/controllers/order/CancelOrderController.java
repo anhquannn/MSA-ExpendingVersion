@@ -3,7 +3,6 @@ package com.market.MSA.controllers.order;
 import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.CancelOrderFilterRequest;
 import com.market.MSA.requests.order.CancelOrderRequest;
-import com.market.MSA.responses.order.CampaignResponse;
 import com.market.MSA.responses.order.CancelOrderResponse;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.services.order.CancelOrderService;
@@ -67,14 +66,14 @@ public class CancelOrderController {
   @GetMapping
   public ApiResponse<List<CancelOrderResponse>> getAll() {
     return ApiResponse.<List<CancelOrderResponse>>builder()
-            .result(cancelOrderService.getAll())
-            .message(ApiMessage.ALL_RETURN_ORDERS_RETRIEVED.getMessage())
-            .build();
+        .result(cancelOrderService.getAll())
+        .message(ApiMessage.ALL_RETURN_ORDERS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
   public ApiResponse<List<CancelOrderResponse>> getAllCancelOrders(
-          @RequestBody @Valid CancelOrderFilterRequest request) {
+      @RequestBody @Valid CancelOrderFilterRequest request) {
     return ApiResponse.<List<CancelOrderResponse>>builder()
         .result(cancelOrderService.getAllCancelOrders(request))
         .message(ApiMessage.ALL_RETURN_ORDERS_RETRIEVED.getMessage())
@@ -83,7 +82,7 @@ public class CancelOrderController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<CancelOrderResponse>> getAllCancelOrdersWithPaging(
-          @RequestBody @Valid CancelOrderFilterRequest request) {
+      @RequestBody @Valid CancelOrderFilterRequest request) {
     return ApiResponse.<Page<CancelOrderResponse>>builder()
         .result(cancelOrderService.getAllCancelOrdersWithPaging(request))
         .message(ApiMessage.ALL_RETURN_ORDERS_RETRIEVED.getMessage())

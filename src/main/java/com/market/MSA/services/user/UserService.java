@@ -27,10 +27,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -74,7 +70,7 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
-//  @Cacheable(value = "users", key = "'email:' + #email")
+  //  @Cacheable(value = "users", key = "'email:' + #email")
   public UserResponse existsByEmail(String email) {
     User user =
         userRepository
@@ -85,15 +81,15 @@ public class UserService {
 
   public UserResponse updateDeviceId(String deviceId, Long userId) {
     User user =
-            userRepository
-                    .findById(userId)
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
     user.setDeviceId(deviceId);
     userRepository.save(user);
     return userMapper.toUserResponse(user);
   }
 
-//  @Cacheable(value = "users", key = "'auth:' + #request.email")
+  //  @Cacheable(value = "users", key = "'auth:' + #request.email")
   public UserResponse validateCredentials(AuthenticationRequest request) {
     User user =
         userRepository

@@ -4,7 +4,6 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.FeedbackFilterRequest;
 import com.market.MSA.requests.product.FeedbackRequest;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.product.CategoryResponse;
 import com.market.MSA.responses.product.FeedbackResponse;
 import com.market.MSA.services.product.FeedbackService;
 import jakarta.validation.Valid;
@@ -66,13 +65,14 @@ public class FeedbackController {
   @GetMapping
   public ApiResponse<List<FeedbackResponse>> getAll() {
     return ApiResponse.<List<FeedbackResponse>>builder()
-            .result(feedbackService.getAll())
-            .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())
-            .build();
+        .result(feedbackService.getAll())
+        .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
-  public ApiResponse<List<FeedbackResponse>> getAllFeedbacks(@RequestBody @Valid FeedbackFilterRequest request) {
+  public ApiResponse<List<FeedbackResponse>> getAllFeedbacks(
+      @RequestBody @Valid FeedbackFilterRequest request) {
     return ApiResponse.<List<FeedbackResponse>>builder()
         .result(feedbackService.getAllFeedbacks(request))
         .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())
@@ -81,7 +81,7 @@ public class FeedbackController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<FeedbackResponse>> getAllFeedbacksWithPaging(
-          @RequestBody @Valid FeedbackFilterRequest request) {
+      @RequestBody @Valid FeedbackFilterRequest request) {
     return ApiResponse.<Page<FeedbackResponse>>builder()
         .result(feedbackService.getAllFeedbacksWithPaging(request))
         .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())

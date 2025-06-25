@@ -1,12 +1,10 @@
 package com.market.MSA.responses.user;
 
 import com.market.MSA.models.user.User;
-import com.market.MSA.models.user.UserAddress;
 import com.market.MSA.responses.product.BranchResponse;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

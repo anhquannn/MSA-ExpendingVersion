@@ -1,5 +1,7 @@
 package com.market.MSA.mappers.order;
 
+import com.market.MSA.mappers.user.RoleMapper;
+import com.market.MSA.mappers.user.UserAddressMappper;
 import com.market.MSA.models.order.OrderDetail;
 import com.market.MSA.requests.order.OrderDetailRequest;
 import com.market.MSA.responses.order.OrderDetailResponse;
@@ -8,12 +10,15 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    uses = {UserAddressMappper.class, RoleMapper.class})
 @Component
 public interface OrderDetailMapper {
   OrderDetail toOrderDetail(OrderDetailRequest request);
 
   @Mapping(target = "product", ignore = true)
+  @Mapping(target = "order.user.userAddresses", ignore = true)
   OrderDetailResponse toOrderDetailResponse(OrderDetail orderDetail);
 
   @Mapping(target = "orderDetailId", ignore = true)

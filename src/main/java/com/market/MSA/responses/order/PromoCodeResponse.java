@@ -23,7 +23,6 @@ public class PromoCodeResponse {
   LocalDateTime startDate;
   LocalDateTime endDate;
   String status;
-  String discountType;
   double discountPercentage;
   double minimumOrderValue;
 

@@ -10,7 +10,6 @@ import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.RewardPointFilterRequest;
 import com.market.MSA.requests.user.RewardPointRequest;
 import com.market.MSA.requests.user.RewardPointTransactionRequest;
-import com.market.MSA.responses.product.TrendingProductResponse;
 import com.market.MSA.responses.user.RewardPointResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.time.LocalDateTime;
@@ -81,7 +80,9 @@ public class RewardPointService {
 
   @Cacheable("all_reward_points")
   public List<RewardPointResponse> getAll() {
-    return rewardPointRepository.findAll().stream().map(rewardPointMapper::toRewardPointResponse).collect(Collectors.toList());
+    return rewardPointRepository.findAll().stream()
+        .map(rewardPointMapper::toRewardPointResponse)
+        .collect(Collectors.toList());
   }
 
   @Cacheable("reward_points_list")

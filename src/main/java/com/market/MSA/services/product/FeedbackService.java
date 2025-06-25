@@ -9,7 +9,6 @@ import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.FeedbackFilterRequest;
 import com.market.MSA.requests.product.FeedbackRequest;
-import com.market.MSA.responses.product.CategoryResponse;
 import com.market.MSA.responses.product.FeedbackResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -95,7 +94,9 @@ public class FeedbackService {
 
   @Cacheable("all_feedbacks")
   public List<FeedbackResponse> getAll() {
-    return feedbackRepository.findAll().stream().map(feedbackMapper::toFeedbackResponse).collect(Collectors.toList());
+    return feedbackRepository.findAll().stream()
+        .map(feedbackMapper::toFeedbackResponse)
+        .collect(Collectors.toList());
   }
 
   @Cacheable("feedbacks_list")

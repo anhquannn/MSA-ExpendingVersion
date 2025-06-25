@@ -8,7 +8,6 @@ import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.product.TrendingProductRepository;
 import com.market.MSA.requests.filters.TrendingProductFilterRequest;
 import com.market.MSA.requests.product.TrendingProductRequest;
-import com.market.MSA.responses.product.TransferResponse;
 import com.market.MSA.responses.product.TrendingProductResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -84,12 +83,15 @@ public class TrendingProductService {
 
   @Cacheable("all_trending_products")
   public List<TrendingProductResponse> getAll() {
-    return trendingProductRepository.findAll().stream().map(trendingProductMapper::toTrendingProductResponse).collect(Collectors.toList());
+    return trendingProductRepository.findAll().stream()
+        .map(trendingProductMapper::toTrendingProductResponse)
+        .collect(Collectors.toList());
   }
 
   // Lấy tất cả TrendingProduct (phân trang)
   @Cacheable("trending_products_list")
-  public List<TrendingProductResponse> getAllTrendingProducts(TrendingProductFilterRequest request) {
+  public List<TrendingProductResponse> getAllTrendingProducts(
+      TrendingProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return trendingProductRepository.filter(request.getProductId(), sort).stream()
         .map(trendingProductMapper::toTrendingProductResponse)
@@ -97,10 +99,12 @@ public class TrendingProductService {
   }
 
   @Cacheable("trending_products_paging")
-  public Page<TrendingProductResponse> getAllTrendingProductsWithPaging(TrendingProductFilterRequest request) {
+  public Page<TrendingProductResponse> getAllTrendingProductsWithPaging(
+      TrendingProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
-    return trendingProductRepository.filterWithPaging(request.getProductId(), pageable)
-            .map(trendingProductMapper::toTrendingProductResponse);
+    return trendingProductRepository
+        .filterWithPaging(request.getProductId(), pageable)
+        .map(trendingProductMapper::toTrendingProductResponse);
   }
 }

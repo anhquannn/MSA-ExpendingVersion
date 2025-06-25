@@ -5,7 +5,6 @@ import com.market.MSA.requests.filters.CampaignFilterRequest;
 import com.market.MSA.requests.order.CampaignRequest;
 import com.market.MSA.responses.order.CampaignResponse;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.product.TrendingProductResponse;
 import com.market.MSA.services.order.CampaignService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -58,13 +57,14 @@ public class CampaignController {
   @GetMapping
   public ApiResponse<List<CampaignResponse>> getAll() {
     return ApiResponse.<List<CampaignResponse>>builder()
-            .result(campaignService.getAll())
-            .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())
-            .build();
+        .result(campaignService.getAll())
+        .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
-  ApiResponse<List<CampaignResponse>> getAllCampaigns(@RequestBody @Valid CampaignFilterRequest request) {
+  ApiResponse<List<CampaignResponse>> getAllCampaigns(
+      @RequestBody @Valid CampaignFilterRequest request) {
     return ApiResponse.<List<CampaignResponse>>builder()
         .result(campaignService.getAllCampaigns(request))
         .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())
@@ -73,7 +73,7 @@ public class CampaignController {
 
   @PostMapping("/paging")
   ApiResponse<Page<CampaignResponse>> getAllCampaignsWithPaging(
-          @RequestBody @Valid CampaignFilterRequest request) {
+      @RequestBody @Valid CampaignFilterRequest request) {
     return ApiResponse.<Page<CampaignResponse>>builder()
         .result(campaignService.getAllCampaignsWithPaging(request))
         .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())

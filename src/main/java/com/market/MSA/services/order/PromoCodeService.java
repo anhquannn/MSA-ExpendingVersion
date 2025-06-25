@@ -10,7 +10,6 @@ import com.market.MSA.repositories.order.PromoCodeRepository;
 import com.market.MSA.repositories.order.PromoCodeUsageRepository;
 import com.market.MSA.requests.filters.PromoCodeFilterRequest;
 import com.market.MSA.requests.order.PromoCodeRequest;
-import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.PromoCodeResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.time.LocalDateTime;
@@ -35,9 +34,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class PromoCodeService {
   final PromoCodeRepository promoCodeRepository;
   final PromoCodeMapper promoCodeMapper;
-  private final EntityFinderService entityFinderService;
-  private final CampaignRepository campaignRepository;
-  private final PromoCodeUsageRepository promoCodeUsageRepository;
+  final EntityFinderService entityFinderService;
+  final CampaignRepository campaignRepository;
+  final PromoCodeUsageRepository promoCodeUsageRepository;
 
   // Tạo PromoCode
   @Transactional
@@ -124,20 +123,21 @@ public class PromoCodeService {
 
   @Cacheable("all_promo_codes")
   public List<PromoCodeResponse> getAll() {
-    return promoCodeRepository.findAll().stream().map(promoCodeMapper::toPromoCodeResponse).collect(Collectors.toList());
+    return promoCodeRepository.findAll().stream()
+        .map(promoCodeMapper::toPromoCodeResponse)
+        .collect(Collectors.toList());
   }
 
   @Transactional(readOnly = true)
   @Cacheable("promo_codes_list")
-  public List<PromoCodeResponse> getAllPromoCodes(PromoCodeFilterRequest request, Long userId) {
+  public List<PromoCodeResponse> getAllPromoCodes(PromoCodeFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
     List<PromoCodeResponse> promoCodes =
         promoCodeRepository
             .filter(
-                request.getName(),
+                request.getKeyword(),
                 request.getStatus(),
-                request.getCode(),
                 request.getCampaignId(),
                 request.getFromDate(),
                 request.getToDate(),
@@ -146,13 +146,12 @@ public class PromoCodeService {
             .map(promoCodeMapper::toPromoCodeResponse)
             .collect(Collectors.toList());
 
-    return filterUsedPromoCodes(promoCodes, userId);
+    return filterUsedPromoCodes(promoCodes, request.getUserId());
   }
 
   @Transactional(readOnly = true)
   @Cacheable("promo_codes_paging")
-  public Page<PromoCodeResponse> getAllPromoCodesWithPaging(
-      PromoCodeFilterRequest request, Long userId) {
+  public Page<PromoCodeResponse> getAllPromoCodesWithPaging(PromoCodeFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
     Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
@@ -160,9 +159,8 @@ public class PromoCodeService {
     Page<PromoCodeResponse> promoCodePage =
         promoCodeRepository
             .filterWithPaging(
-                request.getName(),
+                request.getKeyword(),
                 request.getStatus(),
-                request.getCode(),
                 request.getCampaignId(),
                 request.getFromDate(),
                 request.getToDate(),
@@ -170,9 +168,9 @@ public class PromoCodeService {
             .map(promoCodeMapper::toPromoCodeResponse);
 
     // Apply user-specific filtering
-    if (userId != null) {
+    if (request.getUserId() != null) {
       List<PromoCodeResponse> filteredContent =
-          filterUsedPromoCodes(promoCodePage.getContent(), userId);
+          filterUsedPromoCodes(promoCodePage.getContent(), request.getUserId());
       return new org.springframework.data.domain.PageImpl<>(
           filteredContent, pageable, promoCodePage.getTotalElements());
     }

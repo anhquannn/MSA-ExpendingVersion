@@ -19,6 +19,7 @@ public class SecurityConfig {
   private final String[] PUBLIC_ENDPOINTS = {
     "/user/register",
     "/user/login",
+    "/user/admin/login",
     "/user/verify-otp",
     "/user/login/google",
     "/user/refresh",
@@ -30,11 +31,10 @@ public class SecurityConfig {
 
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-            .cors(Customizer.withDefaults())
-            .authorizeHttpRequests(
-        request ->
-            request.requestMatchers(PUBLIC_ENDPOINTS).permitAll().anyRequest().authenticated());
+    http.cors(Customizer.withDefaults())
+        .authorizeHttpRequests(
+            request ->
+                request.requestMatchers(PUBLIC_ENDPOINTS).permitAll().anyRequest().authenticated());
 
     http.oauth2ResourceServer(
         oauth2 ->

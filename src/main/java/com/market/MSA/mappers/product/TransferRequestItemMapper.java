@@ -17,6 +17,7 @@ public interface TransferRequestItemMapper {
 
   @Mapping(target = "productResponse", source = "product")
   @Mapping(target = "transferResponse", source = "transfer")
+  @Mapping(target = "transferRequestItemId", source = "transferRequestItemId")
   TransferResponseItem toTransferResponseItem(TransferItem transferItem);
 
   @Mapping(target = "transferRequestItemId", ignore = true)

@@ -41,6 +41,7 @@ class MyApp extends StatelessWidget {
     HttpConnection.context = context;
 
     return MaterialApp(
+      color: Colors.white,
       debugShowCheckedModeBanner: false,
       home: isLoggedIn ? HomeScreen() : LoginScreen(),
       // home:RegisterScreen()

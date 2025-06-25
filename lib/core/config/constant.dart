@@ -110,7 +110,8 @@ final String branchModelKey = 'BRANCHMODEL';
 ///Colors
 final String appBarColor = '#007A5E';
 final String appBarGradientColor = '#00B894';
-final String backgroundColor = '#E0F7F1';
+// final String backgroundColor = '#E0F7F1';
+final String backgroundColor = '#FFFFFF';
 
 final String iconColor = '#50C878';
 

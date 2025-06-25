@@ -105,9 +105,10 @@ class _CustomScaffoldState extends State<CustomScaffold> {
     return Scaffold(
       extendBodyBehindAppBar: widget.isHide ?? false,
       extendBody: true,
-      backgroundColor: toHexToColor('#FFFFFF'),
+      backgroundColor: Colors.white,
       body: Container(
-        decoration: BoxDecoration(color: toHexToColor(backgroundColor)),
+        // decoration: BoxDecoration(color: toHexToColor(backgroundColor)),
+        decoration: BoxDecoration(color: Colors.green.withOpacity(0.1)),
         child: Stack(
           children: [
             // Main body content (dưới AppBar)
@@ -352,6 +353,13 @@ class BottomBarItem {
   final String label;
   final Function(int index) onTap;
   final bool isSelected;
+  final GlobalKey? key;
 
-  BottomBarItem({this.icon, required this.label, required this.onTap, this.isSelected = false});
+  BottomBarItem({
+    this.icon,
+    required this.label,
+    required this.onTap,
+    this.isSelected = false,
+    this.key
+  });
 }

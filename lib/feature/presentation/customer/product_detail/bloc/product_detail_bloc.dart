@@ -5,7 +5,10 @@ import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/add_to_cart_request_model.dart';
+import 'package:msa/feature/data/model/request/product_filter_request.dart';
+import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
+import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/domain/usecase/cart_item_use_case.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:msa/widget/custom_dropdown.dart';
@@ -16,7 +19,7 @@ import '../ui/product_detail_screen.dart';
 class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   final CartItemUseCase _cartItemUseCase = GetIt.I<CartItemUseCase>();
   bool isExpanded = false;
-  final productModels = BehaviorSubject<List<ProductModel>>();
+  final productModels = BehaviorSubject<ProductFilterResult>();
 
   @override
   String get contextKey => 'ProductDetailScreen';
@@ -37,7 +40,9 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   void onDispose() {}
 
   @override
-  void onReady() {}
+  void onReady() {
+    onGetProduct();
+  }
 
   @override
   void onResumed() {}
@@ -45,7 +50,6 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   @override
   Widget build(BuildContext context) => widget.build(context);
 
-  onTapProductDetail() {}
   onTapBack() {}
 
   onBuy(int productId) {
@@ -69,5 +73,22 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
       return;
     }
     showCustomMessageError(viewContext);
+  }
+
+  onGetProduct() async {
+    try {
+      ProductFilterRequest filter = ProductFilterRequest(
+        page: 1,
+        pageSize: 10,
+        branchId: Storage.branchModelGlobal?.branchId,
+      );
+
+      ProductFilterResult product = await Repository.onFilterProducts(filter);
+
+      productModels.add(product);
+    } catch (e) {
+      print('Lỗi khi lấy danh sách sản phẩm: $e');
+      productModels.add(ProductFilterResult()); // Fallback nếu có lỗi
+    }
   }
 }

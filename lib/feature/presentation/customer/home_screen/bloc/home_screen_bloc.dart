@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/config.dart';
-import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/config/global.dart';
-import 'package:msa/core/utils/prarse_color.dart';
-import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import 'package:msa/feature/data/model/request/add_to_cart_request_model.dart';
 import 'package:msa/feature/data/model/request/category_filter_request.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
-import 'package:msa/feature/data/model/request/product_get_all_request_model.dart';
 import 'package:msa/feature/data/model/request/promocode_request_model.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
@@ -19,16 +16,13 @@ import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/domain/usecase/cart_item_use_case.dart';
 import 'package:msa/feature/domain/usecase/cart_use_case.dart';
-import 'package:msa/feature/domain/usecase/category_use_case.dart';
-import 'package:msa/feature/domain/usecase/product_use_case.dart';
-import 'package:msa/feature/domain/usecase/promo_code_use_case.dart';
 import 'package:msa/feature/domain/usecase/user_use_case.dart';
-import 'package:msa/feature/presentation/customer/branch_list/ui/branch_list_screen.dart';
 import 'package:msa/feature/presentation/customer/category_list/ui/category_list_screen.dart';
+import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:msa/feature/presentation/customer/product_detail/ui/product_detail_screen.dart';
 import 'package:msa/feature/presentation/customer/product_list/ui/product_list_screen.dart';
 import 'package:msa/feature/presentation/customer/promo_code_list/ui/promo_code_list_screen.dart';
-import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
+import 'package:msa/widget/animate_add_to_cart.dart';
 import 'package:msa/widget/custom_dropdown.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../../../data/datasources/local/starage.dart';
@@ -38,6 +32,9 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   final UserUseCases _userUseCases = GetIt.I<UserUseCases>();
   final CartItemUseCase _cartItemUseCase = GetIt.I<CartItemUseCase>();
   final CartUseCase _cartUseCase = GetIt.I<CartUseCase>();
+  final GlobalKey cartIconKey = GlobalKey();
+  final GlobalKey cartIconKey1 = GlobalKey();
+  Map<int, GlobalKey> imageKeys = {};
 
   final PageController categoryController = PageController(initialPage: 0);
   final ValueNotifier<int> indexScreen = ValueNotifier(0);
@@ -319,12 +316,11 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   // onTapProductDetail(ProductModel model) {
-  onTapProductDetail() {
+  onTapProductDetail(ProductModel model) {
     Navigator.push(
       viewContext,
       MaterialPageRoute(
-        builder:
-            (context) => ProductDetailCustomerScreen(productModel: mockProduct),
+        builder: (context) => ProductDetailCustomerScreen(productModel: model),
       ),
     );
   }
@@ -366,14 +362,85 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   onPlus(int id) {}
 
-  onBuy() async {
-    if (Storage.branchModelGlobal == null) {
-      final id = await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => BranchListScreen()),
-      );
-    }
+  onBuy(ProductModel model, BuildContext? bContext) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (bContext) => CreateOrderScreen()),
+    );
   }
 
-  onAddToCart() {}
+  onAddToCart(ProductModel model, BuildContext bcontext, GlobalKey key) async {
+    final data = await _cartItemUseCase.addToCart(
+      AddToCartRequest(
+        userId: Storage.userModelGlobal?.userId ?? 0,
+        productId: model.productId ?? 0,
+        branchId: mockBranch.branchId ?? 0,
+        quantity: 1,
+      ),
+    );
+    if (data) {
+      runAddToCartAnimation(
+        imageKey: key,
+        cartKey: cartIconKey,
+        context: bcontext,
+        urlImage: model.image,
+      );
+      return;
+    }
+    showCustomMessageError(bcontext);
+  }
+
+  void runAddToCartAnimation({
+    required BuildContext context,
+    required GlobalKey cartKey,
+    required GlobalKey imageKey,
+    String? urlImage,
+  }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    const totalItems = 4;
+    const cartIndex = 2;
+    final bottomBarHeight = 60.0;
+    final RenderBox? cartBox =
+        cartKey.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? imageBox =
+        imageKey.currentContext?.findRenderObject() as RenderBox?;
+
+    if (cartBox == null || imageBox == null) return;
+
+    final cartPosition = Offset(
+      screenWidth / totalItems * (cartIndex + 0.5) - 15,
+      screenHeight - bottomBarHeight / 2 - 30,
+    );
+
+    final imagePosition =
+        imageBox.localToGlobal(Offset.zero) +
+        Offset(imageBox.size.width / 2, imageBox.size.height / 2);
+
+    final imageSize = imageBox.size;
+
+    final overlay = Overlay.of(context);
+    late OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder:
+          (context) => Positioned.fill(
+            child: Stack(
+              children: [
+                AnimatedAddToCart(
+                  start: imagePosition,
+                  end: cartPosition,
+                  imageSize: imageSize,
+                  onComplete: () {
+                    overlayEntry.remove(); 
+                  },
+                  urlImage: urlImage,
+                ),
+              ],
+            ),
+          ),
+    );
+
+    overlay.insert(overlayEntry);
+  }
 }

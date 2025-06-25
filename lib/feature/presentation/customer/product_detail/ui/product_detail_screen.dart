@@ -59,26 +59,23 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
       slivers: [
         SliverToBoxAdapter(child: itemImage(productModel.productImages, bloc)),
         const SliverToBoxAdapter(child: SizedBox(height: 5)),
-        SliverToBoxAdapter(
-          child: itemProductDetail(
-            productModel.name ?? '',
-            productModel.currentPrice ?? 0,
-            priceDiscount: productModel.price ?? 0,
-          ),
-        ),
+        SliverToBoxAdapter(child: itemProductDetail(productModel)),
         const SliverToBoxAdapter(child: SizedBox(height: 5)),
         SliverToBoxAdapter(
           child: itemDelivery(
             'Nhận hàng 12/12/2024 - 13/12/2024',
-            'Tặng voucher 20.000 đ nếu giao sau thời gian trên',
+            '',
+            // 'Tặng voucher 20.000 đ nếu giao sau thời gian trên',
           ),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 5)),
+        //_________________mock
         SliverToBoxAdapter(child: itemFeedBack('4.9', 100, () {}, bloc)),
         const SliverToBoxAdapter(child: SizedBox(height: 5)),
         SliverToBoxAdapter(
           child: itemDec(bloc, 'Dưa lưới là loại trái cây cao cấp...'),
         ),
+        //______________________
         SliverToBoxAdapter(
           child: customDivider(
             color: toHexToColor(primaryTextColor),
@@ -100,55 +97,56 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
             StreamBuilder(
               stream: bloc.productModels,
               builder: (context, snapshot) {
-                // if (snapshot.connectionState == ConnectionState.waiting) {
-                //   return const Center(child: CircularProgressIndicator());
-                // }
-                // if (snapshot.hasError) {
-                //   return Center(child: Text('Lỗi: ${snapshot.error}'));
-                // }
-                // if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                //   return const Center(child: Text('Không có sản phẩm'));
-                // }
-                // final products = snapshot.data!;
-                return GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 3,
-                    mainAxisSpacing: 3,
-                    mainAxisExtent: 300,
-                  ),
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: 10, //products.length > 10 ? 10 : products.length,
-                  itemBuilder: (context, index) {
-                    return InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => ProductDetailCustomerScreen(
-                                  productModel: mockProduct,
-                                ),
-                          ),
-                        );
-                        // bloc.onTapProductDetail(products[index]);
-                      },
-                      child: customItemProductCustomer(
-                        isDiscount: true,
-                        // products[index],
-                        mockProduct,
-                        AppSize.width() * 0.4,
-                        onBuy: () {
-                          bloc.onBuy(mockProduct.productId ?? 0);
+                if (snapshot.hasData && snapshot.data != null) {
+                  final product = snapshot.data?.products;
+                  return GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 3,
+                          mainAxisSpacing: 3,
+                          mainAxisExtent: 300,
+                        ),
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: product?.length,
+                    itemBuilder: (context, index) {
+                      return InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => ProductDetailCustomerScreen(
+                                    productModel: product![index],
+                                  ),
+                            ),
+                          );
                         },
-                        onAddToCart: () {
-                          bloc.onAddToCart(mockProduct.productId ?? 0);
-                        },
-                      ),
-                    );
-                  },
-                );
+                        child: customItemProductCustomer(
+                          isDiscount:
+                              (product![index].discountPercentage ?? 0) > 0,
+                          product[index],
+                          AppSize.width() * 0.4,
+                          onBuy: () {
+                            bloc.onBuy(product[index].productId ?? 0);
+                          },
+                          onAddToCart: () {
+                            bloc.onAddToCart(product[index].productId ?? 0);
+                          },
+                        ),
+                      );
+                    },
+                  );
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Lỗi dữ liệu'));
+                } else {
+                  return Center(
+                    child: CircularProgressIndicator(
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
               },
             ),
           ],
@@ -233,17 +231,19 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                     controller: _pageController,
                     itemCount: images?.length,
                     itemBuilder: (context, index) {
-                      return CachedNetworkImage(
-                        imageUrl: images![index].imageUrl,
-                        fit: BoxFit.cover,
-                        placeholder:
-                            (context, url) => const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                        errorWidget:
-                            (context, url, error) =>
-                                Image.asset(imgBranch, fit: BoxFit.cover),
-                      );
+                      return images?[index] != null
+                          ? CachedNetworkImage(
+                            imageUrl: images![index].imageUrl,
+                            fit: BoxFit.cover,
+                            placeholder:
+                                (context, url) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                            errorWidget:
+                                (context, url, error) =>
+                                    Image.asset(imgBranch, fit: BoxFit.cover),
+                          )
+                          : Image.asset(imgBranch);
                     },
                   ),
                 ),
@@ -267,7 +267,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
           const SizedBox(height: 8),
           SmoothPageIndicator(
             controller: _pageController,
-            count: images?.length??0,
+            count: images?.length ?? 0,
             effect: WormEffect(
               dotHeight: 8,
               dotWidth: 8,
@@ -280,13 +280,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     );
   }
 
-  Widget itemProductDetail(String name, double price, {double? priceDiscount}) {
-    String discount = '0';
-
-    if (price > 0 && priceDiscount != null && priceDiscount > 0) {
-      double discountPercent = 100 - ((priceDiscount / price) * 100);
-      discount = discountPercent.toStringAsFixed(0);
-    }
+  Widget itemProductDetail(ProductModel model) {
     return Card(
       child: Container(
         padding: EdgeInsets.all(10),
@@ -299,20 +293,20 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              name,
+              model.name ?? '',
               style: TextStyle(
                 color: toHexToColor(primaryTextColor),
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               softWrap: true,
             ),
             Row(
               children: [
                 Text(
-                  formatCurrency(price),
+                  formatCurrency(model.price ?? 0),
                   style: TextStyle(
                     color: toHexToColor(appBarColor),
                     fontWeight: FontWeight.bold,
@@ -320,9 +314,11 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                   ),
                 ),
                 SizedBox(width: 10),
-                if (price != priceDiscount) ...[
+                if ((model.discountPercentage ?? 0) > 0) ...[
                   Text(
-                    formatCurrency(priceDiscount ?? 0),
+                    formatCurrency(
+                      (model.discountPercentage ?? 0) * (model.price ?? 0),
+                    ),
                     style: TextStyle(
                       color: toHexToColor(appBarColor),
                       fontStyle: FontStyle.italic,
@@ -330,6 +326,16 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                       decoration: TextDecoration.lineThrough,
                     ),
                   ),
+                ],
+                Text(
+                  '/${model.unit}',
+                  style: TextStyle(
+                    color: toHexToColor(appBarColor),
+                    // fontStyle: FontStyle.italic,
+                    fontSize: 16,
+                  ),
+                ),
+                if ((model.discountPercentage ?? 0) > 0) ...[
                   Spacer(),
                   Container(
                     decoration: BoxDecoration(
@@ -342,7 +348,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                         horizontal: 8,
                       ),
                       child: Text(
-                        '$discount%',
+                        '${model.discountPercentage ?? 0}%',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -350,8 +356,45 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                 ],
               ],
             ),
+            SizedBox(width: 10),
+            buildTextSpan(defaultText: 'Trọng lượng', text: model.netWeight),
+            buildTextSpan(
+              defaultText: 'Thông số sản phẩm',
+              text: model.specification,
+            ),
+            buildTextSpan(
+              defaultText: 'Sản phẩm thuộc loại',
+              text: model.category?.name,
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget buildTextSpan({String? defaultText, String? text}) {
+    if (text == null) return const SizedBox.shrink();
+
+    return RichText(
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: '$defaultText: ',
+            style: TextStyle(
+              fontWeight: FontWeight.w400,
+              color: toHexToColor(secondaryTextColor),
+              fontSize: 14,
+            ),
+          ),
+          TextSpan(
+            text: text,
+            style: TextStyle(
+              color: toHexToColor(primaryTextColor),
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+            ),
+          ),
+        ],
       ),
     );
   }

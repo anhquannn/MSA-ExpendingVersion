@@ -30,7 +30,9 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
 
   Widget build(BuildContext context) {
     final bloc = (context as StatefulElement).state as HomeScreenBloc;
+
     return CustomScaffold(
+      key: bloc.cartIconKey,
       appBarLeading: Container(
         width: 45,
         height: 45,
@@ -221,6 +223,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
         isSelected: selectedIndex == 1,
       ),
       BottomBarItem(
+        key: bloc.cartIconKey1,
         icon: const Icon(Icons.shopping_cart, color: Colors.white),
         label: 'Giỏ hàng',
         isSelected: selectedIndex == 2,
@@ -486,18 +489,27 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                 ),
                 physics: const NeverScrollableScrollPhysics(),
                 shrinkWrap: true,
-                itemCount: products!.length > 10 ? 10 : products?.length,
+                itemCount: products!.length > 10 ? 10 : products.length,
                 itemBuilder: (context, index) {
+                  final key = bloc.imageKeys.putIfAbsent(
+                    products[index].productId!,
+                    () => GlobalKey(),
+                  );
                   return InkWell(
+                    key: key,
                     onTap: () {
-                      bloc.onTapProductDetail();
-                      // bloc.onTapProductDetail(products[index]);
+                      // bloc.onTapProductDetail();
+                      bloc.onTapProductDetail(products[index]);
                     },
                     child: customItemProductCustomer(
-                      onBuy: bloc.onBuy,
-                      onAddToCart: bloc.onAddToCart,
+                      onBuy: () {
+                        bloc.onBuy(products[index],context);
+                      },
+                      onAddToCart: () {
+                        bloc.onAddToCart(products[index], context, key);
+                      },
                       isDiscount: true,
-                      products![index],
+                      products[index],
                       width * 0.4,
                     ),
                   );
@@ -540,17 +552,25 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                 ),
                 physics: const NeverScrollableScrollPhysics(),
                 shrinkWrap: true,
-                itemCount:
-                    products!.length > 20
-                        ? 20
-                        : products.length,
+                itemCount: products!.length > 20 ? 20 : products.length,
                 itemBuilder: (context, index) {
+                  final key = bloc.imageKeys.putIfAbsent(
+                    products[index].productId!,
+                    () => GlobalKey(),
+                  );
                   return InkWell(
+                    key: key,
                     onTap: () {
-                      bloc.onTapProductDetail();
-                      // bloc.onTapProductDetail(products[index]);
+                      // bloc.onTapProductDetail();
+                      bloc.onTapProductDetail(products[index]);
                     },
                     child: customItemProductCustomer(
+                      onBuy: () {
+                        bloc.onBuy(products[index],context);
+                      },
+                      onAddToCart: () {
+                        bloc.onAddToCart(products[index], context, key);
+                      },
                       isDiscount: false,
                       products[index],
                       width * 0.4,

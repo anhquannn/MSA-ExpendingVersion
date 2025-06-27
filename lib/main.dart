@@ -8,6 +8,7 @@ import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
 import 'package:msa/feature/presentation/logins/register/ui/register_screen.dart';
+import 'package:msa/feature/presentation/logins/verify_otp/ui/verify_otp_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'feature/data/datasources/local/starage.dart';
@@ -44,7 +45,7 @@ class MyApp extends StatelessWidget {
       color: Colors.white,
       debugShowCheckedModeBanner: false,
       home: isLoggedIn ? HomeScreen() : LoginScreen(),
-      // home:RegisterScreen()
+      // home:LoginScreen()
     );
   }
 }
@@ -89,7 +90,7 @@ class TestScreen extends StatelessWidget {
                 roles: [],
                 fullName: 'fullName',
                 email: 'minhquang03082003@gmail.com',
-                userId: '4',
+                userId: 4,
               ),
             );
           },
@@ -125,7 +126,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
     try {
       final response = await userUseCases.update(
         UserUpdateRequest(
-          userId: '4',
+          userId: 4,
           fullName: 'Nguyen Van A',
           email: 'minhquang03082003@gmail.com',
           phoneNumber: '0909090909',

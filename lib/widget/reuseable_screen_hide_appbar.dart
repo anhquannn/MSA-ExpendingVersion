@@ -108,7 +108,8 @@ class _CustomScaffoldState extends State<CustomScaffold> {
       backgroundColor: Colors.white,
       body: Container(
         // decoration: BoxDecoration(color: toHexToColor(backgroundColor)),
-        decoration: BoxDecoration(color: Colors.green.withOpacity(0.1)),
+        // decoration: BoxDecoration(color: Colors.green.withOpacity(0.1)),
+        decoration: BoxDecoration(color: Colors.white),
         child: Stack(
           children: [
             // Main body content (dưới AppBar)
@@ -360,6 +361,6 @@ class BottomBarItem {
     required this.label,
     required this.onTap,
     this.isSelected = false,
-    this.key
+    this.key,
   });
 }

@@ -232,22 +232,35 @@ class ProductRepositoryImpl extends IProductRepository {
   //   }
   //   return null;
   // }
-  static Future<ProductFilterResult?> onFilterProducts(
-    ProductFilterRequest request, {
-    BuildContext? context,
-  }) async {
-    const String endpoint = 'product/filter';
-    final response = await HttpConnection.post<ProductFilterResult>(
-      endpoint,
-      context: context,
-      body: request.toJson(),
-      isToken: true,
-      fromJsonT: (json) => ProductFilterResult.fromJson(json),
-    );
-    if (response.isSuccess) {
-      return response.result;
-    }
-    print('Lỗi khi lọc sản phẩm: ${response.message}');
-    return null;
+static Future<ProductFilterResult?> onFilterProducts(
+  ProductFilterRequest request, {
+  BuildContext? context,
+}) async {
+  const String endpoint = 'product/filter';
+
+  print('📤 [onFilterProducts] Gửi yêu cầu lọc sản phẩm đến endpoint: $endpoint');
+  print('📦 Request body: ${request.toJson()}');
+
+  final stopwatch = Stopwatch()..start();
+
+  final response = await HttpConnection.post<ProductFilterResult>(
+    endpoint,
+    context: context,
+    body: request.toJson(),
+    isToken: true,
+    fromJsonT: (json) => ProductFilterResult.fromJson(json),
+  );
+
+  stopwatch.stop();
+  print('⏱️ Thời gian phản hồi: ${stopwatch.elapsedMilliseconds}ms');
+
+  if (response.isSuccess) {
+    print('✅ [onFilterProducts] Lọc sản phẩm thành công. Tổng số kết quả: ${response.result}');
+    return response.result;
   }
+
+  print('❌ [onFilterProducts] Lỗi khi lọc sản phẩm: ${response.message}');
+  return null;
+}
+
 }

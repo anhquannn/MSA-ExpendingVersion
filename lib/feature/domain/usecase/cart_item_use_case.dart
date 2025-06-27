@@ -4,7 +4,6 @@ import 'package:msa/feature/domain/repositories/cart_item_repository.dart';
 
 class CartItemUseCase {
   final GetCartItemUseCase getCartItem;
-  final CalculateCartTotalUseCase calculateCartTotal;
   final GetCartItemByIdUseCase getCartItemById;
   final GetCartItemsByCartIdUseCase getCartItemsByCartId;
   final AddToCartUseCase addToCart;
@@ -15,7 +14,6 @@ class CartItemUseCase {
 
   CartItemUseCase({
     required this.getCartItem,
-    required this.calculateCartTotal,
     required this.getCartItemById,
     required this.getCartItemsByCartId,
     required this.addToCart,
@@ -33,16 +31,6 @@ class GetCartItemUseCase {
 
   Future<CartItemModel?> call(int cartId, int productId) {
     return repository.onGetCartItem(cartId, productId);
-  }
-}
-
-// Calculate Cart Total
-class CalculateCartTotalUseCase {
-  final ICartItemRepository repository;
-  CalculateCartTotalUseCase(this.repository);
-
-  Future<String> call(int cartId) {
-    return repository.onCalculateCartTotal(cartId);
   }
 }
 

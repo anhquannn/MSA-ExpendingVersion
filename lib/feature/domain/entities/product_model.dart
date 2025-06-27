@@ -72,7 +72,8 @@ class ProductModel {
       productId: int.tryParse(json['productId'].toString()),
       name: json['name'] ?? '',
       image: mainImage?.imageUrl,
-      price: (json['price'] as num?)?.toDouble(),
+      price:
+          json['price'] is num ? double.tryParse(json['price'].toString()) : 0,
       currentPrice: (json['currentPrice'] as num?)?.toDouble(),
       unit: json['unit'] ?? '',
       color: json['color'] ?? '',

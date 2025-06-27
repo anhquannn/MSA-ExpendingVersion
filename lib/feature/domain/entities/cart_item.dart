@@ -15,7 +15,7 @@ class CartItemModel {
     this.quantity,
     this.product,
     this.cart,
-    this.selected,
+    this.selected
   });
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
@@ -24,7 +24,10 @@ class CartItemModel {
       price: (json['price'] as num?)?.toDouble(),
       quantity: json['quantity'],
       selected: json['selected'],
-      product: json['product'] != null ? ProductModel.fromJson(json['product']) : null,
+      product:
+          json['product'] != null
+              ? ProductModel.fromJson(json['product'])
+              : null,
       cart: json['cart'] != null ? CartModel.fromJson(json['cart']) : null,
     );
   }

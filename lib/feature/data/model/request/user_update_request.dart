@@ -9,24 +9,24 @@ String userUpdateRequestToJson(UserUpdateRequest data) => json.encode(data.toJso
 
 class UserUpdateRequest {
     UserUpdateRequest({
-        required this.birthday,
-        required this.password,
-        required this.phoneNumber,
-        required this.address,
-        required this.roles,
-        required this.fullName,
-        required this.email,
+         this.birthday,
+         this.password,
+         this.phoneNumber,
+         this.address,
+         this.roles,
+         this.fullName,
+         this.email,
        this.userId
     });
 
-    String? userId;
-    String birthday;
-    String password;
-    String phoneNumber;
-    String address;
-    List<dynamic> roles;
-    String fullName;
-    String email;
+    int? userId;
+    String? birthday;
+    String? password;
+    String? phoneNumber;
+    String? address;
+    List<dynamic>? roles;
+    String? fullName;
+    String? email;
 
     factory UserUpdateRequest.fromJson(Map<dynamic, dynamic> json) => UserUpdateRequest(
         birthday:json["birthday"],
@@ -43,7 +43,6 @@ class UserUpdateRequest {
         "password": password,
         "phoneNumber": phoneNumber,
         "address": address,
-        "roles": List<dynamic>.from(roles.map((x) => x)),
         "fullName": fullName,
         "email": email,
     };

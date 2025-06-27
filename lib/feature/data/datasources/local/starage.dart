@@ -1,6 +1,8 @@
 import 'package:msa/core/config/constant.dart';
+import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/domain/entities/branch_model.dart';
 import 'package:msa/feature/domain/entities/cart_model.dart';
+import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:path/path.dart' as path;
@@ -14,6 +16,7 @@ class Storage {
   static String? messageError;
   static String? refreshToken = '';
 
+  static UserAddressModel? addressModel;
   static UserModel? userModelGlobal;
   static CartModel? cartModelGlobal;
   static BranchModel? branchModelGlobal;
@@ -41,6 +44,11 @@ class Storage {
     if (branchJson != null) {
       branchModelGlobal = BranchModel.fromJson(jsonDecode(branchJson));
     }
+
+     final addressJson = prefs.getString(addressKey);
+    if (addressJson != null) {
+      addressModel = UserAddressModel.fromJson(jsonDecode(addressJson));
+    }
   }
 
   static Future<void> saveToken(String value) async {
@@ -50,7 +58,7 @@ class Storage {
 
   static Future<void> saveRefreshToken(String value) async {
     final prefs = await SharedPreferences.getInstance();
-     await prefs.setString(refreshTokenKey, value);
+    await prefs.setString(refreshTokenKey, value);
   }
 
   static Future<void> saveDeviceId(String value) async {
@@ -63,6 +71,12 @@ class Storage {
     email = value;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(emailKey, value);
+  }
+
+  static Future<void> saveAddress(UserAddressModel model) async {
+    addressModel = model;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(addressKey, jsonEncode(model.toJson()));
   }
 
   static Future<void> saveUserModel(UserModel user) async {
@@ -102,6 +116,7 @@ class Storage {
     await prefs.remove(userModelKey);
     await prefs.remove(cartModelKey);
     await prefs.remove(branchModelKey);
+    await prefs.remove(addressKey);
   }
 
   static Future<bool> checkLoginStatus() async {

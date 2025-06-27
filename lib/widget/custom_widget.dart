@@ -1,5 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import '../core/config/config.dart' as Config;
 import '../core/config/constant.dart';
@@ -139,15 +140,10 @@ Widget customItemProductCustomer(
   VoidCallback? onBuy,
   VoidCallback? onAddToCart,
 }) {
-  String discount = '0';
-
   if (model.price != null &&
       model.price! > 0 &&
       model.currentPrice != null &&
-      model.currentPrice! > 0) {
-    double discountPercent = 100 - ((model.currentPrice! / model.price!) * 100);
-    discount = discountPercent.toStringAsFixed(0);
-  }
+      model.currentPrice! > 0) {}
   return Card(
     color: Colors.white,
     child: Container(
@@ -193,7 +189,7 @@ Widget customItemProductCustomer(
                 ),
 
                 // Thẻ giảm giá
-                discount != '0'
+                model.discountPercentage != 0
                     ? Positioned(
                       top: 3,
                       right: 3,
@@ -207,17 +203,18 @@ Widget customItemProductCustomer(
                             color: toHexToColor(primaryErrorColor),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: Text(
-                            model.currentPrice != null
-                                // ? '${((model.price! - model.currentPrice!) / model.price! * 100).toStringAsFixed(0)}%'
-                                ? '$discount%'
-                                : 'Giảm giá',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
+                          child:
+                              model.discountPercentage == 0
+                                  ? Text(
+                                    '${model.discountPercentage}%',
+
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  )
+                                  : SizedBox(),
                         ),
                       ),
                     )
@@ -240,11 +237,12 @@ Widget customItemProductCustomer(
                   maxFontSize: 18,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                discount != '0'
+                model.discountPercentage != 0.0
+                    // ? model.price != 0
                     ? AutoSizeText(
-                      model.price != null
-                          ? '${model.price}đ'
-                          : 'Giá chưa cập nhật',
+                      formatCurrencyVN(
+                        (model.price ?? 0) * (model.discountPercentage ?? 0),
+                      ),
                       minFontSize: 10,
                       maxFontSize: 14,
                       style: TextStyle(
@@ -252,11 +250,10 @@ Widget customItemProductCustomer(
                         decoration: TextDecoration.lineThrough,
                       ),
                     )
+                    // : SizedBox()
                     : Container(),
                 AutoSizeText(
-                  model.currentPrice != null
-                      ? '${model.currentPrice}đ'
-                      : 'Giá chưa cập nhật',
+                  formatCurrencyVN(model.price ?? 0),
                   minFontSize: 12,
                   maxFontSize: 16,
                   style: TextStyle(

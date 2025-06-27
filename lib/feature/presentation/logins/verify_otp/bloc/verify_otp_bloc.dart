@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -5,7 +7,10 @@ import 'package:go_router/go_router.dart';
 import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import 'package:msa/feature/data/model/request/user_login_request.dart';
+import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
+import 'package:rxdart/rxdart.dart';
 import '../../../../data/datasources/local/starage.dart';
 import '../../../../domain/usecase/user_use_case.dart';
 import '../ui/verify_otp_screen.dart';
@@ -17,7 +22,9 @@ class VerifyOtpBloc extends BaseBloc<VerifyOtpScreen> {
   );
   final List<FocusNode> focusNodes = List.generate(6, (_) => FocusNode());
   bool isKeyboardVisible = false;
-
+  int secondsRemaining = 0;
+  final streamSecondsRemaining = BehaviorSubject<int>();
+  Timer? timer;
   bool isValid = false;
   final UserUseCases _userUseCases = GetIt.I<UserUseCases>();
 
@@ -31,10 +38,31 @@ class VerifyOtpBloc extends BaseBloc<VerifyOtpScreen> {
   void onDispose() {}
 
   @override
-  void onReady() {}
+  void onReady() {
+    startCountdown();
+  }
 
   @override
   void onResumed() {}
+
+  void startCountdown() {
+    setState(() {
+      secondsRemaining = 1;
+    });
+
+    timer?.cancel();
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (secondsRemaining <= 1) {
+        setState(() {
+          secondsRemaining = 0;
+        });
+      } else {
+        setState(() {
+          secondsRemaining--;
+        });
+      }
+    });
+  }
 
   void addToOtp(String value) {
     for (int i = 0; i < 6; i++) {
@@ -53,6 +81,12 @@ class VerifyOtpBloc extends BaseBloc<VerifyOtpScreen> {
       isKeyboardVisible = true;
     });
     FocusScope.of(context).requestFocus(focusNodes[index]);
+  }
+
+  onResend() async {
+    await Repository.onResendOtp(
+      widget.request ?? UserLoginRequest(password: '', email: ''),
+    );
   }
 
   Future<bool> onOtpSubmit(BuildContext context) async {
@@ -80,8 +114,6 @@ class VerifyOtpBloc extends BaseBloc<VerifyOtpScreen> {
     }
     return isSuccess;
   }
-
-
 
   void onHide() {
     setState(() {

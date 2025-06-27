@@ -16,6 +16,11 @@ final String deleteUser = 'user/';
 final String getUserByEmail = 'user/email/'; //user/email/{email}
 final String refreshTokenUrl = 'user/refresh';
 
+///user/device/deviceId/2
+final String updateDeviceId = 'user/device/';
+final String updateInfo = 'user/admin/';
+final String resentOtp = 'user/resend';
+
 //____________________________________PRODUCT___________________________________
 final String getAllProducts = 'product'; //product?page=1&pageSize=10
 final String filterAndSortProducts =
@@ -31,6 +36,7 @@ final String createProduct = 'product';
 final String updateProduct = 'product/';
 final String deleteProduct = 'product/';
 final String filterProduct = 'product/filter';
+final String getBranch = 'branch/paging';
 
 //____________________________________MANUFACTURER____________________________________
 
@@ -56,7 +62,7 @@ final String getOrCreateCart = 'cart/user/';
 final String getCartItem = 'cart-item/'; //cart-item/1/3{cartId}/{productId}
 final String calculateCartTotal = 'cart-item/calculate-total/'; //{cartId}
 final String getCartItemById = 'cart-item/by-id/';
-final String getCartItemsByCartId = 'cart-item/by-cart/';
+final String getCartItemsByCartId = 'cart-item/all-by-cart/';
 final String getAllCartItem = 'cart-item/all-by-cart/';
 final String addToCart =
     'cart-item/add'; //cart-item/add?userId=1&productId=7&branchId=3&quantity=1
@@ -103,6 +109,7 @@ final String accessTokenKey = 'ACCESS_TOKEN';
 final String refreshTokenKey = 'REFRESH_TOKEN';
 final String deviceIdKey = 'DEVICEID';
 final String emailKey = 'mwang38203@gmail.com';
+final String addressKey = 'ADDRESS';
 final String userModelKey = 'USERMODEL';
 final String cartModelKey = 'CARTMODEL';
 final String branchModelKey = 'BRANCHMODEL';
@@ -110,7 +117,7 @@ final String branchModelKey = 'BRANCHMODEL';
 ///Colors
 final String appBarColor = '#007A5E';
 final String appBarGradientColor = '#00B894';
-// final String backgroundColor = '#E0F7F1';
+final String backgroundColor1 = '#E0FFF1';
 final String backgroundColor = '#FFFFFF';
 
 final String iconColor = '#50C878';

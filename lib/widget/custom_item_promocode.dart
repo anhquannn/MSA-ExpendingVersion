@@ -116,10 +116,10 @@ Widget buildBottomInfo(
           SizedBox(width: 10),
           model.startDate != ''
               ? buildInfoContainer(
-                width: width * 0.4,
+                width: width * 0.45,
                 color: toHexToColor(primaryColorPurple),
                 label: AutoSizeText(
-                  '${model.startDate ?? DateTime.now()} - ${model.endDate ?? DateTime.now()}',
+                  '${formatDateString(model.startDate ?? '')} - ${formatDateString(model.endDate ?? '')}',
                   maxLines: 1,
                   softWrap: true,
                   overflow: TextOverflow.ellipsis,
@@ -127,20 +127,20 @@ Widget buildBottomInfo(
                 ),
               )
               : SizedBox.shrink(),
-          if (isShow == false) ...[
-            Spacer(),
-            buildIconButton(
-              onTap: onDelete,
-              icon: Icons.delete_outline,
-              color: toHexToColor(primaryErrorColor),
-            ),
-            SizedBox(width: 10),
-            buildIconButton(
-              onTap: onDelete,
-              icon: Icons.edit,
-              color: toHexToColor(primaryColorPurple),
-            ),
-          ],
+          // if (isShow == false) ...[
+          //   Spacer(),
+          //   buildIconButton(
+          //     onTap: onDelete,
+          //     icon: Icons.delete_outline,
+          //     color: toHexToColor(primaryErrorColor),
+          //   ),
+          //   SizedBox(width: 10),
+          //   buildIconButton(
+          //     onTap: onDelete,
+          //     icon: Icons.edit,
+          //     color: toHexToColor(primaryColorPurple),
+          //   ),
+          // ],
         ],
       ),
     ),

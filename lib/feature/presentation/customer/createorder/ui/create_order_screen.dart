@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/core/utils/utility.dart';
+import 'package:msa/feature/data/datasources/local/starage.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
@@ -31,7 +32,10 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
       title: Text('Tạo đơn hàng', style: TextStyle(color: Colors.white)),
       appBarLeading: iconBack(bloc.viewContext, color: Colors.white),
       bodyBuilder: (controller) {
-        return buildBodyContent(bloc: bloc, controller: controller);
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          child: buildBodyContent(bloc: bloc, controller: controller),
+        );
       },
 
       bottomBarItems: [
@@ -146,15 +150,17 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
   Widget itemInfomation(CreateOrderBloc bloc) {
     return Card(
       color: Colors.white,
-      child: Container(
-        width: AppSize.w(0.95),
-        height: 100,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
-        child: Row(
-          children: [
-            Flexible(
-              flex: 2,
-              child: Container(
+      child: Center(
+        child: Container(
+          width: AppSize.w(1),
+          height: 100,
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
@@ -188,15 +194,15 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
                           ),
                 ),
               ),
-            ),
-            Flexible(
-              flex: 7,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
+              SizedBox(width: 8),
+              SizedBox(
+                // padding: const EdgeInsets.all(8.0),
+                width: AppSize.w(0.65),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    SizedBox(height: 15),
                     Text(
                       userModelGlobal?.fullName ?? '',
                       overflow: TextOverflow.ellipsis,
@@ -207,7 +213,7 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
                       ),
                     ),
                     Text(
-                      userModelGlobal?.address ?? '',
+                      '${Storage.addressModel?.street} ${Storage.addressModel?.ward} ${Storage.addressModel?.district} ${Storage.addressModel?.city}',
                       overflow: TextOverflow.ellipsis,
                       maxLines: 2,
                       style: TextStyle(
@@ -218,31 +224,22 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
                   ],
                 ),
               ),
-            ),
-            Spacer(),
-            Flexible(
-              flex: 1,
-              child: InkWell(
+              Spacer(),
+              InkWell(
                 child: Icon(Icons.arrow_forward_ios, color: Colors.black),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget listItemOrder(CreateOrderBloc bloc) {
-    return SizedBox(
-      width: AppSize.w(0.9),
-      child: ListView.builder(
-        itemCount: 10,
-        shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-        itemBuilder: (context, index) {
-          return _itemCard(model: mockCartItem, bloc: bloc);
-        },
-      ),
+    return Column(
+      children: List.generate(10, (index) {
+        return _itemCard(model: mockCartItem, bloc: bloc);
+      }),
     );
   }
 

@@ -27,7 +27,10 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     final bloc = (context as StatefulElement).state as ProductDetailBloc;
     return CustomScaffold(
       isHide: true,
-      appBarLeading: iconBack(bloc.viewContext, color: Colors.black),
+      appBarLeading: Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: iconBack(bloc.viewContext, color: Colors.black),
+      ),
       bodyBuilder: (controller) {
         return buildBodyContent(bloc: bloc, controller: controller);
       },
@@ -42,7 +45,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
         BottomBarItem(
           label: 'Thêm vào\n giỏ hàng',
           onTap: (index) {
-            bloc.onAddToCart(mockProduct.productId ?? 0);
+            bloc.onAddToCart(productModel, context);
           },
         ),
       ],
@@ -73,7 +76,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
         SliverToBoxAdapter(child: itemFeedBack('4.9', 100, () {}, bloc)),
         const SliverToBoxAdapter(child: SizedBox(height: 5)),
         SliverToBoxAdapter(
-          child: itemDec(bloc, 'Dưa lưới là loại trái cây cao cấp...'),
+          child: itemDec(bloc, productModel.description ?? ''),
         ),
         //______________________
         SliverToBoxAdapter(
@@ -82,8 +85,13 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
             text: Text('Sản phẩm liên quan'),
           ),
         ),
-        SliverToBoxAdapter(child: _buildGridItems(bloc)),
-        const SliverToBoxAdapter(child: SizedBox(height: 1000)),
+        SliverToBoxAdapter(
+          child: MediaQuery.removePadding(
+            context: context,
+            child: _buildGridItems(bloc),
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 10)),
       ],
     );
   }
@@ -91,65 +99,71 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
   Widget _buildGridItems(ProductDetailBloc bloc) {
     return SizedBox(
       width: AppSize.width(),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            StreamBuilder(
-              stream: bloc.productModels,
-              builder: (context, snapshot) {
-                if (snapshot.hasData && snapshot.data != null) {
-                  final product = snapshot.data?.products;
-                  return GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 3,
-                          mainAxisSpacing: 3,
-                          mainAxisExtent: 300,
-                        ),
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: product?.length,
-                    itemBuilder: (context, index) {
-                      return InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => ProductDetailCustomerScreen(
-                                    productModel: product![index],
-                                  ),
+      child: MediaQuery.removePadding(
+        context: context,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              StreamBuilder(
+                stream: bloc.productModels,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data != null) {
+                    final product = snapshot.data?.products;
+                    return MediaQuery.removePadding(
+                      context: context,
+                      child: GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 3,
+                              mainAxisSpacing: 3,
+                              mainAxisExtent: 300,
+                            ),
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: product?.length,
+                        itemBuilder: (context, index) {
+                          return InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => ProductDetailCustomerScreen(
+                                        productModel: product![index],
+                                      ),
+                                ),
+                              );
+                            },
+                            child: customItemProductCustomer(
+                              isDiscount:
+                                  (product![index].discountPercentage ?? 0) > 0,
+                              product[index],
+                              AppSize.width() * 0.4,
+                              onBuy: () {
+                                bloc.onBuy(product[index].productId ?? 0);
+                              },
+                              onAddToCart: () {
+                                bloc.onAddToCart(productModel, context);
+                              },
                             ),
                           );
                         },
-                        child: customItemProductCustomer(
-                          isDiscount:
-                              (product![index].discountPercentage ?? 0) > 0,
-                          product[index],
-                          AppSize.width() * 0.4,
-                          onBuy: () {
-                            bloc.onBuy(product[index].productId ?? 0);
-                          },
-                          onAddToCart: () {
-                            bloc.onAddToCart(product[index].productId ?? 0);
-                          },
-                        ),
-                      );
-                    },
-                  );
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Lỗi dữ liệu'));
-                } else {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
+                      ),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Lỗi dữ liệu'));
+                  } else {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

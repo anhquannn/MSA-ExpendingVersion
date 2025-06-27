@@ -4,8 +4,6 @@ import 'package:msa/feature/domain/entities/cart_item.dart';
 abstract class ICartItemRepository {
   Future<CartItemModel?> onGetCartItem(int cartId, int productId);
 
-  Future<String> onCalculateCartTotal(int cartId);
-
   Future<CartItemModel?> onGetCartItemById(int cartItemId);
 
   Future<List<CartItemModel>?> onGetCartItemsByCartId(int cartId);

@@ -6,8 +6,11 @@ class BranchModel {
   String? ward;
   String? district;
   String? city;
-  bool? isSelect;
+  String? cityCode;
+  String? districtCode;
+  String? wardCode;
   InventoryModel? inventory;
+  bool? isSelect;
 
   BranchModel({
     this.branchId,
@@ -17,7 +20,11 @@ class BranchModel {
     this.ward,
     this.district,
     this.city,
+    this.cityCode,
+    this.districtCode,
+    this.wardCode,
     this.inventory,
+    this.isSelect,
   });
 
   factory BranchModel.fromJson(Map<String, dynamic> json) {
@@ -29,10 +36,12 @@ class BranchModel {
       ward: json['ward'] as String?,
       district: json['district'] as String?,
       city: json['city'] as String?,
-      inventory:
-          json['inventory'] != null
-              ? InventoryModel.fromJson(json['inventory'])
-              : null,
+      cityCode: json['cityCode'] as String?,
+      districtCode: json['districtCode'] as String?,
+      wardCode: json['wardCode'] as String?,
+      inventory: json['inventory'] != null
+          ? InventoryModel.fromJson(json['inventory'])
+          : null,
     );
   }
 
@@ -45,10 +54,21 @@ class BranchModel {
       'ward': ward,
       'district': district,
       'city': city,
+      'cityCode': cityCode,
+      'districtCode': districtCode,
+      'wardCode': wardCode,
       'inventory': inventory?.toJson(),
     };
   }
+   @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BranchModel && runtimeType == other.runtimeType && branchId == other.branchId;
+
+  @override
+  int get hashCode => branchId.hashCode;
 }
+
 
 class InventoryModel {
   String? name;

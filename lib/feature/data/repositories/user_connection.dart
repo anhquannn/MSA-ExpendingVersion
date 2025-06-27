@@ -12,7 +12,8 @@ import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/feature/domain/repositories/user_repository.dart';
-import 'package:msa/feature/data/datasources/local/starage.dart'; // Sửa lại tên file nếu là storage.dart
+import 'package:msa/feature/data/datasources/local/starage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Sửa lại tên file nếu là storage.dart
 
 class UserRepositoryImpl implements IUserRepository {
   @override
@@ -110,7 +111,10 @@ class UserRepositoryImpl implements IUserRepository {
     return response.result;
   }
 
-  static Future<bool> onRefreshToken(String refreshToken,{ BuildContext? context}) async {
+  static Future<bool> onRefreshToken(
+    String refreshToken, {
+    BuildContext? context,
+  }) async {
     final response = await HttpConnection.post<AuthResponseModelRequest>(
       refreshTokenUrl,
       body: {'token': refreshToken},
@@ -138,4 +142,66 @@ class UserRepositoryImpl implements IUserRepository {
     }
     return false;
   }
+
+  static Future<bool> onUpdateDeviceId() async {
+    String path =
+        '$updateDeviceId${Storage.deviceId}${Storage.userModelGlobal?.userId}';
+    final response = await HttpConnection.put(
+      path,
+      fromJsonT: (json) => UserModel.fromJson(json),
+    );
+    return response.isSuccess;
+  }
+
+  static onUpdateInfo(UserUpdateRequest request) async {
+    String path = '$updateInfo${Storage.userModelGlobal?.userId}';
+    final response = await HttpConnection.put(
+      path,
+      body: request.toJson(),
+      fromJsonT: (json) => UserModel.fromJson(json),
+    );
+    return response.isSuccess;
+  }
+
+  static onResendOtp(UserLoginRequest request)async{
+    final response = await HttpConnection.post(
+      resentOtp,
+      body: request.toJson(),
+      fromJsonT: (json) => UserModel.fromJson(json),
+    );
+    return response.isSuccess;
+  }
+
+static Future<List<UserAddressModel>> getUserAddresses() async {
+  final requestBody = {
+    'userId': Storage.userModelGlobal?.userId,
+    'page': 1,
+    'pageSize': 10,
+  };
+
+  print('📤 Gửi yêu cầu lấy danh sách địa chỉ với body: $requestBody');
+
+  final response = await HttpConnection.post<UserAddressPaginatedResult>(
+    'address/paging',
+    body: requestBody,
+    isToken: true,
+    fromJsonT: (json) => UserAddressPaginatedResult.fromJson(json),
+  );
+
+  if (response.result != null) {
+    final addresses = response.result!.content;
+    print('✅ Đã nhận ${addresses.length} địa chỉ:');
+
+    for (final addr in addresses) {
+      print(
+          '📍 ID: ${addr.userAddressId}, ${addr.street}, ${addr.ward}, ${addr.district}, ${addr.city} - Primary: ${addr.primary}');
+    }
+
+    return addresses;
+  } else {
+    print('❌ Lỗi khi lấy danh sách địa chỉ: ${response.message}');
+    throw Exception('Lỗi khi lấy danh sách địa chỉ: ${response.message}');
+  }
+}
+
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
@@ -71,4 +72,34 @@ List<Color> generatePastelGradientForWhiteText() {
   }
 
   return [pastelWithGoodContrast(), pastelWithGoodContrast()];
+}
+
+String formatCurrencyVN(double amount) {
+  final formatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
+  return formatter.format(amount);
+}
+class Debouncer {
+  final int milliseconds;
+  Timer? _timer;
+
+  Debouncer({this.milliseconds = 500});
+
+  void run(VoidCallback action) {
+    _timer?.cancel();
+    _timer = Timer(Duration(milliseconds: milliseconds), action);
+  }
+
+  void dispose() {
+    _timer?.cancel();
+  }
+}
+
+String formatDateString(String dateString) {
+  try {
+    final dateTime = DateTime.parse(dateString);
+    return DateFormat('dd/MM/yyyy').format(dateTime);
+  } catch (e) {
+    print('❌ Lỗi định dạng ngày: $e');
+    return '';
+  }
 }

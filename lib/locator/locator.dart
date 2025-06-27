@@ -106,9 +106,7 @@ void setupLocator() {
   locator.registerLazySingleton(
     () => CartItemUseCase(
       getCartItem: GetCartItemUseCase(locator<ICartItemRepository>()),
-      calculateCartTotal: CalculateCartTotalUseCase(
-        locator<ICartItemRepository>(),
-      ),
+
       getCartItemById: GetCartItemByIdUseCase(locator<ICartItemRepository>()),
       getCartItemsByCartId: GetCartItemsByCartIdUseCase(
         locator<ICartItemRepository>(),

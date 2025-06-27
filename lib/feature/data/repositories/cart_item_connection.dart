@@ -14,27 +14,21 @@ class CartItemRepositoryImpl extends ICartItemRepository {
       addToCart,
       request.toJson(),
     );
-
-    // SỬA: Đối với các hàm chỉ cần biết thành công hay thất bại,
-    // ta có thể dùng <dynamic> và không cần parse chi tiết.
     final response = await HttpConnection.post<dynamic>(
       path,
-      fromJsonT: (json) => json, // Không cần parse cụ thể
+      fromJsonT: (json) => json,
     );
     return response.isSuccess;
   }
 
-  @override
-  Future<String> onCalculateCartTotal(int cartId) async {
+  static Future<String> onCalculateCartTotal(int cartId) async {
     final String path = '$calculateCartTotal$cartId';
 
-    // SỬA: Giả sử API trả về một con số (double hoặc int).
     final response = await HttpConnection.get<double>(
       path,
       fromJsonT: (json) => (json as num).toDouble(),
     );
 
-    // Trả về giá trị đã parse hoặc "0" nếu thất bại.
     return response.result?.toString() ?? "0";
   }
 
@@ -92,17 +86,16 @@ class CartItemRepositoryImpl extends ICartItemRepository {
   Future<List<CartItemModel>> onGetCartItemsByCartId(int cartId) async {
     final String path = '$getCartItemsByCartId$cartId';
 
-    // SỬA: Xử lý cho kiểu trả về là một List.
     final response = await HttpConnection.get<List<CartItemModel>>(
       path,
-      // `fromJsonT` sẽ nhận vào mảng JSON và map nó thành List<CartItemModel>
       fromJsonT: (json) {
         final List<dynamic> jsonList = json as List<dynamic>;
-        return jsonList.map((itemJson) => CartItemModel.fromJson(itemJson)).toList();
+        return jsonList
+            .map((itemJson) => CartItemModel.fromJson(itemJson))
+            .toList();
       },
     );
 
-    // Trả về danh sách, hoặc một danh sách rỗng nếu có lỗi.
     return response.result ?? [];
   }
 
@@ -111,13 +104,28 @@ class CartItemRepositoryImpl extends ICartItemRepository {
     List<int> cartItemIds,
     bool isSelected,
   ) async {
-    // SỬA: Sửa lại cách build path để đúng chuẩn hơn
-    final String path = '$updateCartItemsSelection?isSelected=${isSelected.toString()}';
+    final String path =
+        '$updateCartItemsSelection?isSelected=${isSelected.toString()}';
 
     final response = await HttpConnection.put<dynamic>(
       path,
       body: {"cartItemIds": cartItemIds},
       fromJsonT: (json) => json,
+    );
+    return response.isSuccess;
+  }
+
+  static Future<bool> onUpdateQuantity({
+    int? cartItemId,
+    int? branchId,
+    int? quantity,
+    bool select = false,
+  }) async {
+    final String path =
+        'cart-item/$cartItemId?branchId=$branchId&quantity=$quantity&isSelected=$select';
+    final response = await HttpConnection.put(
+      path,
+      fromJsonT: (json) => CartItemModel.fromJson(json),
     );
     return response.isSuccess;
   }

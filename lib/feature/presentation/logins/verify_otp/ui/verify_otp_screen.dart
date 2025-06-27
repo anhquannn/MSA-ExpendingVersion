@@ -2,13 +2,15 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:msa/core/config/base_bloc.dart';
+import 'package:msa/feature/data/model/request/user_login_request.dart';
 import '../../../../../core/config/config.dart';
 import '../../../../../core/config/constant.dart';
 import '../../../../../core/utils/prarse_color.dart';
 import '../bloc/verify_otp_bloc.dart';
 
 class VerifyOtpScreen extends BaseView<VerifyOtpBloc> {
-  const VerifyOtpScreen({super.key});
+  final UserLoginRequest? request;
+  const VerifyOtpScreen({super.key, this.request});
 
   @override
   VerifyOtpBloc createState() => VerifyOtpBloc();
@@ -18,11 +20,13 @@ class VerifyOtpScreen extends BaseView<VerifyOtpBloc> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        leading: InkWell( onTap: () {
-          Navigator.pop(context);
-        },
-      child: Icon(Icons.arrow_back_ios_new,color: Colors.white,),
-      ),),
+        leading: InkWell(
+          onTap: () {
+            Navigator.pop(context);
+          },
+          child: Icon(Icons.arrow_back_ios_new, color: Colors.white),
+        ),
+      ),
       backgroundColor: toHexToColor(actionColor),
       body: Center(
         child: SingleChildScrollView(
@@ -55,6 +59,27 @@ class VerifyOtpScreen extends BaseView<VerifyOtpBloc> {
                   maxLines: 24,
                   'Xác thực OTP',
                   style: TextStyle(color: Colors.white),
+                ),
+              ),
+              InkWell(
+                onTap:
+                    bloc.secondsRemaining > 0
+                        ? null
+                        : () {
+                          bloc.onResend(); // gọi callback
+                          bloc.startCountdown(); // bắt đầu đếm ngược
+                        },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    bloc.secondsRemaining > 0
+                        ? 'Gửi lại OTP (${bloc.secondsRemaining}s)'
+                        : 'Gửi lại OTP',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
                 ),
               ),
               Row(
@@ -318,56 +343,57 @@ class VerifyOtpScreen extends BaseView<VerifyOtpBloc> {
                             ),
                           ),
 
-                          Builder(builder: (ctx) {
-                            return Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: InkWell(
-                                onTap: () async{
-                                  await bloc.onOtpSubmit(ctx);
-//                                   bool isSuccess=false;
-//                                   bloc.onHide();
-//                                   await showLoadingDialog(context: context,action: () async {
-//                                     isSuccess=await bloc.onOtpSubmit();
-//                                   },);
-// //minhquang03082003@gmail.com
-//                                   if(isSuccess){
-//                                     Navigator.pop(ctx);
-//                                     context.go('/login');
-//                                   }else{
-//                                     showDialog(
-//                                       context: ctx,
-//                                       builder: (_) => AlertDialog(
-//                                         title: const Text('Đăng nhập thất bại'),
-//                                         content: const Text('Email hoặc mật khẩu không đúng.'),
-//                                         actions: [
-//                                           TextButton(
-//                                             onPressed: () => Navigator.of(ctx).pop(),
-//                                             child: const Text('OK'),
-//                                           ),
-//                                         ],
-//                                       ),
-//                                     );
-//                                   }
-                                },
-                                child: Container(
-                                  width: AppSize.w(0.22),
-                                  height: AppSize.w(0.15),
-                                  decoration: BoxDecoration(
-                                    color: toHexToColor(borderColor),
-                                    borderRadius: BorderRadius.circular(100),
-                                  ),
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.arrow_forward,
-                                      color: toHexToColor(primaryTextColor),
-                                      size: 24,
+                          Builder(
+                            builder: (ctx) {
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: InkWell(
+                                  onTap: () async {
+                                    await bloc.onOtpSubmit(ctx);
+                                    //                                   bool isSuccess=false;
+                                    //                                   bloc.onHide();
+                                    //                                   await showLoadingDialog(context: context,action: () async {
+                                    //                                     isSuccess=await bloc.onOtpSubmit();
+                                    //                                   },);
+                                    // //minhquang03082003@gmail.com
+                                    //                                   if(isSuccess){
+                                    //                                     Navigator.pop(ctx);
+                                    //                                     context.go('/login');
+                                    //                                   }else{
+                                    //                                     showDialog(
+                                    //                                       context: ctx,
+                                    //                                       builder: (_) => AlertDialog(
+                                    //                                         title: const Text('Đăng nhập thất bại'),
+                                    //                                         content: const Text('Email hoặc mật khẩu không đúng.'),
+                                    //                                         actions: [
+                                    //                                           TextButton(
+                                    //                                             onPressed: () => Navigator.of(ctx).pop(),
+                                    //                                             child: const Text('OK'),
+                                    //                                           ),
+                                    //                                         ],
+                                    //                                       ),
+                                    //                                     );
+                                    //                                   }
+                                  },
+                                  child: Container(
+                                    width: AppSize.w(0.22),
+                                    height: AppSize.w(0.15),
+                                    decoration: BoxDecoration(
+                                      color: toHexToColor(borderColor),
+                                      borderRadius: BorderRadius.circular(100),
+                                    ),
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.arrow_forward,
+                                        color: toHexToColor(primaryTextColor),
+                                        size: 24,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },),
-
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ],

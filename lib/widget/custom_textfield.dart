@@ -20,6 +20,8 @@ Widget customTextField(
   bool isObscure = false,
   bool isPassword = false,
   Widget? prefixIcon,
+  Widget? suffixIcon,
+  bool isSuffixIcon=false,
   Color? fillColor,
   double borderRadius = 10,
   Function(String)? onSubmit,
@@ -51,7 +53,7 @@ Widget customTextField(
         filled: true,
         fillColor: fillColor ?? Colors.transparent,
         prefixIcon: prefixIcon,
-        suffixIcon:
+        suffixIcon: isSuffixIcon==true?suffixIcon:
             isPassword
                 ? IconButton(
                   onPressed: () {

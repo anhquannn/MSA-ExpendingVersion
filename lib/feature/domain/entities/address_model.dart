@@ -152,3 +152,73 @@ class UserModelResponseAddress {
     );
   }
 }
+
+class UserAddressModel {
+  final int userAddressId;
+  final String city;
+  final String district;
+  final String street;
+  final String ward;
+  final String cityCode;
+  final String districtCode;
+  final String wardCode;
+  final String createdAt;
+  final bool primary;
+
+  UserAddressModel({
+    required this.userAddressId,
+    required this.city,
+    required this.district,
+    required this.street,
+    required this.ward,
+    required this.cityCode,
+    required this.districtCode,
+    required this.wardCode,
+    required this.createdAt,
+    required this.primary,
+  });
+
+  factory UserAddressModel.fromJson(Map<String, dynamic> json) {
+    return UserAddressModel(
+      userAddressId: json['userAddressId'],
+      city: json['city'],
+      district: json['district'],
+      street: json['street'],
+      ward: json['ward'],
+      cityCode: json['cityCode'],
+      districtCode: json['districtCode'],
+      wardCode: json['wardCode'],
+      createdAt: json['createdAt'],
+      primary: json['primary'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+  return {
+    'userAddressId': userAddressId,
+    'city': city,
+    'district': district,
+    'street': street,
+    'ward': ward,
+    'cityCode': cityCode,
+    'districtCode': districtCode,
+    'wardCode': wardCode,
+    'createdAt': createdAt,
+    'primary': primary,
+  };
+}
+
+}
+
+class UserAddressPaginatedResult {
+  final List<UserAddressModel> content;
+
+  UserAddressPaginatedResult({required this.content});
+
+  factory UserAddressPaginatedResult.fromJson(Map<String, dynamic> json) {
+    final List<dynamic> contentJson = json['content'] ?? [];
+    return UserAddressPaginatedResult(
+      content: contentJson.map((e) => UserAddressModel.fromJson(e)).toList(),
+    );
+  }
+}

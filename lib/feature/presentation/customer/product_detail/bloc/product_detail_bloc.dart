@@ -7,6 +7,7 @@ import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/add_to_cart_request_model.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
+import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/domain/usecase/cart_item_use_case.dart';
@@ -20,6 +21,8 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   final CartItemUseCase _cartItemUseCase = GetIt.I<CartItemUseCase>();
   bool isExpanded = false;
   final productModels = BehaviorSubject<ProductFilterResult>();
+  List<CartItemModel>? listCartItemModel = [];
+  final streamCartItemModels = BehaviorSubject<List<CartItemModel>>.seeded([]);
 
   @override
   String get contextKey => 'ProductDetailScreen';
@@ -59,20 +62,39 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
     );
   }
 
-  onAddToCart(int productId) async {
+  onAddToCart(ProductModel model, BuildContext bcontext) async {
     final data = await _cartItemUseCase.addToCart(
       AddToCartRequest(
         userId: Storage.userModelGlobal?.userId ?? 0,
-        productId: productId,
+        productId: model.productId ?? 0,
         branchId: mockBranch.branchId ?? 0,
         quantity: 1,
       ),
     );
     if (data) {
-      Navigator.pop(viewContext);
+      onGetUserCart();
+      Navigator.pop(bcontext);
       return;
+    } else {
+      showCustomMessageError(bcontext);
     }
-    showCustomMessageError(viewContext);
+  }
+
+  onGetUserCart({BuildContext? bcontext}) async {
+    final data = await _cartItemUseCase
+        .getCartItemsByCartId(Storage.cartModelGlobal?.cartId ?? 0)
+        .timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            showCustomMessageError(bcontext!);
+            return <CartItemModel>[];
+          },
+        );
+    // await onCaculateCart();
+    if (data != null) {
+      listCartItemModel = data ?? [];
+      streamCartItemModels.add(data);
+    }
   }
 
   onGetProduct() async {

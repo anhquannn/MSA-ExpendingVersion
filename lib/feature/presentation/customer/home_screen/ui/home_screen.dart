@@ -2,9 +2,12 @@ import 'dart:ffi';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:msa/core/utils/utility.dart';
+import 'package:msa/feature/data/datasources/local/starage.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
+import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
 import 'package:msa/widget/customBottomSheet.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -33,37 +36,45 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
 
     return CustomScaffold(
       key: bloc.cartIconKey,
-      appBarLeading: Container(
-        width: 45,
-        height: 45,
-        decoration: BoxDecoration(
-          color: toHexToColor(backgroundColor),
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Center(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(22.5),
-            child: StreamBuilder(
-              stream: bloc.userModel,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                }
-                if (snapshot.hasError) {
-                  return const Icon(Icons.error, color: Colors.red);
-                }
-                if (!snapshot.hasData) {
-                  return const Icon(Icons.person, color: Colors.grey);
-                }
-                return Image.asset(
-                  (snapshot.data?.image != '')
-                      ? snapshot.data!.image
-                      : avtWomen1,
-                  fit: BoxFit.cover,
-                  width: 40,
-                  height: 40,
-                );
-              },
+      appBarLeading: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => PersionalScreen()),
+          );
+        },
+        child: Container(
+          width: 45,
+          height: 45,
+          decoration: BoxDecoration(
+            color: toHexToColor(backgroundColor),
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Center(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22.5),
+              child: StreamBuilder(
+                stream: bloc.streamUserModel,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  }
+                  if (snapshot.hasError) {
+                    return const Icon(Icons.error, color: Colors.red);
+                  }
+                  if (!snapshot.hasData) {
+                    return const Icon(Icons.person, color: Colors.grey);
+                  }
+                  return Image.asset(
+                    (snapshot.data?.image != '')
+                        ? snapshot.data!.image
+                        : avtWomen1,
+                    fit: BoxFit.cover,
+                    width: 40,
+                    height: 40,
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -72,7 +83,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StreamBuilder(
-            stream: bloc.userModel,
+            stream: bloc.streamUserModel,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const CircularProgressIndicator();
@@ -90,7 +101,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                 );
               }
               return AutoSizeText(
-                snapshot.data?.fullName ?? '',
+                Storage.userModelGlobal?.fullName ?? '',
                 minFontSize: 12,
                 maxFontSize: 20,
                 maxLines: 1,
@@ -110,7 +121,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                   size: 15,
                 ),
                 StreamBuilder(
-                  stream: bloc.userModel,
+                  stream: bloc.streamUserModel,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const CircularProgressIndicator();
@@ -129,7 +140,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                     }
                     return Expanded(
                       child: AutoSizeText(
-                        snapshot.data?.address ?? '',
+                        '${Storage.addressModel?.street} ${Storage.addressModel?.ward} ${Storage.addressModel?.district} ${Storage.addressModel?.city}',
                         minFontSize: 8,
                         maxFontSize: 12,
                         maxLines: 1,
@@ -160,7 +171,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           padding: const EdgeInsets.symmetric(horizontal: 5),
           child: InkWell(
             onTap: () {
-              bloc.onLogout();
+              bloc.filter();
             },
             child: const Icon(Icons.filter_list_alt, color: Colors.white),
           ),
@@ -171,7 +182,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
       bodyBuilder: (controller) {
         final double width = AppSize.width();
         return StreamBuilder(
-          stream: bloc.categoryModels,
+          stream: bloc.streamCategoryModels,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -231,6 +242,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           if (bloc.indexScreen.value != 2) {
             bloc.indexScreen.value = 2;
           }
+          bloc.onGetUserCart(bcontext: context);
         },
       ),
       BottomBarItem(
@@ -376,7 +388,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         ),
         SliverToBoxAdapter(
           child: StreamBuilder(
-            stream: bloc.promoCodeModels,
+            stream: bloc.streamPromoCodeModels,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -455,69 +467,78 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: customTitleCategory(
-              'Sản phẩm giảm giá',
-              'Xem tất cả',
-              () => bloc.onTapProductSale(),
+
+        if (bloc.listProducts?.discountedProductsPage?.content != null) ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: customTitleCategory(
+                'Sản phẩm giảm giá',
+                'Xem tất cả',
+                () => bloc.onTapProductSale(),
+              ),
             ),
           ),
-        ),
-        // Sản phẩm giảm giá
-        SliverToBoxAdapter(
-          child: StreamBuilder(
-            stream: bloc.productModels,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return Center(child: Text('Lỗi: ${snapshot.error}'));
-              }
-              if (!snapshot.hasData || snapshot.data != null) {
-                return const Center(child: Text('Không có sản phẩm'));
-              }
-              final products = snapshot.data?.discountedProductsPage?.content;
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 3,
-                  mainAxisSpacing: 3,
-                  mainAxisExtent: 300,
-                ),
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemCount: products!.length > 10 ? 10 : products.length,
-                itemBuilder: (context, index) {
-                  final key = bloc.imageKeys.putIfAbsent(
-                    products[index].productId!,
-                    () => GlobalKey(),
-                  );
-                  return InkWell(
-                    key: key,
-                    onTap: () {
-                      // bloc.onTapProductDetail();
-                      bloc.onTapProductDetail(products[index]);
+          // Sản phẩm giảm giá
+          SliverToBoxAdapter(
+            child: StreamBuilder(
+              stream: bloc.streamProductModels,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Lỗi: ${snapshot.error}'));
+                }
+                if (!snapshot.hasData || snapshot.data != null) {
+                  return const Center(child: Text('Không có sản phẩm'));
+                }
+                final products = snapshot.data?.discountedProductsPage?.content;
+                return MediaQuery.removePadding(
+                  context: context,
+                  removeTop: true,
+                  child: GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 3,
+                          mainAxisSpacing: 3,
+                          mainAxisExtent: 300,
+                        ),
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: products!.length > 10 ? 10 : products.length,
+                    itemBuilder: (context, index) {
+                      final key = bloc.imageKeys.putIfAbsent(
+                        products[index].productId!,
+                        () => GlobalKey(),
+                      );
+                      return InkWell(
+                        key: key,
+                        onTap: () {
+                          // bloc.onTapProductDetail();
+                          bloc.onTapProductDetail(products[index]);
+                        },
+                        child: customItemProductCustomer(
+                          onBuy: () {
+                            bloc.onBuy(products[index], context);
+                          },
+                          onAddToCart: () {
+                            bloc.onAddToCart(products[index], context, key);
+                          },
+                          isDiscount: true,
+                          products[index],
+                          width * 0.4,
+                        ),
+                      );
                     },
-                    child: customItemProductCustomer(
-                      onBuy: () {
-                        bloc.onBuy(products[index],context);
-                      },
-                      onAddToCart: () {
-                        bloc.onAddToCart(products[index], context, key);
-                      },
-                      isDiscount: true,
-                      products[index],
-                      width * 0.4,
-                    ),
-                  );
-                },
-              );
-            },
+                  ),
+                );
+              },
+            ),
           ),
-        ),
+        ],
+
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -531,7 +552,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         // Sản phẩm phổ biến
         SliverToBoxAdapter(
           child: StreamBuilder(
-            stream: bloc.productModels,
+            stream: bloc.streamProductModels,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -543,40 +564,43 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                 return const Center(child: Text('Không có sản phẩm'));
               }
               final products = snapshot.data?.productsPage?.content;
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 3,
-                  mainAxisSpacing: 3,
-                  mainAxisExtent: 300,
+              return MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 3,
+                    mainAxisSpacing: 3,
+                    mainAxisExtent: 300,
+                  ),
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: products!.length > 20 ? 20 : products.length,
+                  itemBuilder: (context, index) {
+                    final key = bloc.imageKeys.putIfAbsent(
+                      products[index].productId!,
+                      () => GlobalKey(),
+                    );
+                    return InkWell(
+                      key: key,
+                      onTap: () {
+                        bloc.onTapProductDetail(products[index]);
+                      },
+                      child: customItemProductCustomer(
+                        onBuy: () {
+                          bloc.onBuy(products[index], context);
+                        },
+                        onAddToCart: () {
+                          bloc.onAddToCart(products[index], context, key);
+                        },
+                        isDiscount: false,
+                        products[index],
+                        width * 0.4,
+                      ),
+                    );
+                  },
                 ),
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemCount: products!.length > 20 ? 20 : products.length,
-                itemBuilder: (context, index) {
-                  final key = bloc.imageKeys.putIfAbsent(
-                    products[index].productId!,
-                    () => GlobalKey(),
-                  );
-                  return InkWell(
-                    key: key,
-                    onTap: () {
-                      // bloc.onTapProductDetail();
-                      bloc.onTapProductDetail(products[index]);
-                    },
-                    child: customItemProductCustomer(
-                      onBuy: () {
-                        bloc.onBuy(products[index],context);
-                      },
-                      onAddToCart: () {
-                        bloc.onAddToCart(products[index], context, key);
-                      },
-                      isDiscount: false,
-                      products[index],
-                      width * 0.4,
-                    ),
-                  );
-                },
               );
             },
           ),
@@ -1150,63 +1174,90 @@ class CardTab extends StatelessWidget {
 
   Widget cardScreen() {
     return StreamBuilder<List<CartItemModel>>(
-      stream: bloc?.listCartItemModels,
+      stream: bloc?.streamCartItemModels,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          final data = snapshot.data;
-          return ListView.builder(
-            itemCount: data?.length ?? 0,
-            itemBuilder: (context, index) {
-              return itemCard(model: data?[index]);
+          final data = snapshot.data ?? [];
+
+          return StreamBuilder(
+            stream: bloc?.streamCaculate,
+            builder: (context, snapshot) {
+              final caculate = snapshot.data;
+              return MediaQuery.removePadding(
+                removeTop: true,
+                context: context,
+                child: ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 100),
+                  itemCount: data.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: InkWell(
+                          onTap: bloc?.onTapCreateOrder,
+                          child: Container(
+                            width: double.infinity,
+                            height: 45,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: toHexToColor(primaryButtonColor),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Tạo đơn hàng',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    final item = data[index - 1]; // lùi 1 vì index 0 là nút
+                    return itemCard(model: item);
+                  },
+                ),
+              );
             },
           );
         }
-        return Center(child: Text('Không có dữ liệu....'));
+        return const Center(child: Text('Không có dữ liệu....'));
       },
     );
   }
 
-  Widget itemCard({
-    String? img,
-    String? name,
-    String? price,
-    CartItemModel? model,
-    PromoCodeModel? promoCodeModel,
-  }) {
-    String discount =
-        (model?.product?.currentPrice != null &&
-                model?.product?.price != null &&
-                model!.product!.price != 0)
-            ? (100 -
-                    ((model.product!.currentPrice! / model.product!.price!) *
-                        100))
-                .toStringAsFixed(0)
-            : '0';
+  Widget itemCard({CartItemModel? model}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
-      child: Card(
-        color: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: SizedBox(
-            height: 100,
+      child: InkWell(
+        onTap: () {
+          bloc?.onTapProductDetail(model?.product ?? ProductModel());
+        },
+        child: Card(
+          color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
             child: Row(
               children: [
                 Expanded(
                   flex: 4,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    // child: Image.asset(avtWomen6, fit: BoxFit.cover),
-                    child: CachedNetworkImage(
-                      imageUrl: model?.product?.image ?? '',
-                      placeholder:
-                          (context, url) => CircularProgressIndicator(),
-                      errorWidget:
-                          (context, url, error) =>
-                              Image.asset(imgBranch, fit: BoxFit.cover),
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
+                  child: Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      // child: Image.asset(avtWomen6, fit: BoxFit.cover),
+                      child: CachedNetworkImage(
+                        imageUrl: model?.product?.image ?? '',
+                        placeholder:
+                            (context, url) => CircularProgressIndicator(),
+                        errorWidget:
+                            (context, url, error) =>
+                                Image.asset(imgBranch, fit: BoxFit.cover),
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ),
@@ -1218,7 +1269,7 @@ class CardTab extends StatelessWidget {
                       height: 100,
                       child: Stack(
                         children: [
-                          discount != '0'
+                          model?.product?.discountPercentage != 0
                               ? Positioned(
                                 top: 1,
                                 right: 1,
@@ -1233,13 +1284,39 @@ class CardTab extends StatelessWidget {
                                       horizontal: 8,
                                     ),
                                     child: Text(
-                                      '$discount%',
+                                      '${model?.product?.discountPercentage}%',
                                       style: TextStyle(color: Colors.white),
                                     ),
                                   ),
                                 ),
                               )
                               : SizedBox(),
+                          Positioned(
+                            top: 1,
+                            right: 1,
+                            child: InkWell(
+                              onTap: () {
+                                // bloc?.onUpdateSelected(
+                                //   (model?.selected ?? false),
+                                //   model!,
+                                // );
+                                bloc?.onTapCartItem(model!);
+                              },
+
+                              child:
+                                  model?.selected == false
+                                      ? Icon(
+                                        size: 30,
+                                        Icons.check_box_outline_blank,
+                                        color: toHexToColor(primaryColorGreen),
+                                      )
+                                      : Icon(
+                                        size: 30,
+                                        Icons.check_box,
+                                        color: toHexToColor(primaryColorGreen),
+                                      ),
+                            ),
+                          ),
                           Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             mainAxisSize: MainAxisSize.max,
@@ -1253,12 +1330,11 @@ class CardTab extends StatelessWidget {
                                 textColor: toHexToColor(primaryTextColor),
                               ),
                               // customAutoSizeText(8, 12, '100.000đ', isLine: true),
-                              model?.product?.currentPrice !=
-                                      model?.product?.price
+                              model?.product?.discountPercentage != 0
                                   ? customAutoSizeText(
                                     12,
                                     16,
-                                    '${model?.product?.price.toString() ?? ''}đ',
+                                    '${formatCurrencyVN((model?.product?.price ?? 0) * (model?.product?.discountPercentage ?? 0))}',
                                     isBold: true,
                                     isLine: true,
                                     textColor: toHexToColor(primaryButtonColor),
@@ -1267,7 +1343,7 @@ class CardTab extends StatelessWidget {
                               customAutoSizeText(
                                 12,
                                 16,
-                                '${model?.product?.currentPrice.toString() ?? ''}đ',
+                                '${formatCurrencyVN(model?.price ?? 0)}',
                                 isBold: true,
                                 textColor: toHexToColor(primaryButtonColor),
                               ),
@@ -1286,7 +1362,7 @@ class CardTab extends StatelessWidget {
                                         children: [
                                           InkWell(
                                             onTap: () {
-                                              bloc?.onMinus(0);
+                                              bloc?.onCaculate(model!, true);
                                             },
                                             child: Container(
                                               padding: EdgeInsets.symmetric(
@@ -1316,7 +1392,7 @@ class CardTab extends StatelessWidget {
                                           ),
                                           InkWell(
                                             onTap: () {
-                                              bloc?.onPlus(0);
+                                              bloc?.onCaculate(model!, false);
                                             },
                                             child: Container(
                                               padding: EdgeInsets.symmetric(

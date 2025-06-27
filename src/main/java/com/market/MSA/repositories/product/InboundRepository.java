@@ -1,5 +1,6 @@
 package com.market.MSA.repositories.product;
 
+import com.market.MSA.constants.ProductStatus;
 import com.market.MSA.models.product.InboundTransfer;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,10 +19,10 @@ public interface InboundRepository extends JpaRepository<InboundTransfer, Long> 
           + "(:fromDate IS NULL OR i.inboundTransferDate >= :fromDate) AND "
           + "(:toDate IS NULL OR i.inboundTransferDate <= :toDate) AND "
           + "(:userId IS NULL OR i.user.userId = :userId) AND "
-          + "(:inventoryId IS NULL OR i.Inventory.inventoryId = :inventoryId) AND "
+          + "(:inventoryId IS NULL OR i.inventory.inventoryId = :inventoryId) AND "
           + "(:transferId IS NULL OR i.transfer.transferRequestId = :transferId)")
   Page<InboundTransfer> filterWithPaging(
-      @Param("status") String status,
+      @Param("status") ProductStatus status,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
       @Param("userId") Long userId,
@@ -36,10 +37,10 @@ public interface InboundRepository extends JpaRepository<InboundTransfer, Long> 
           + "(:fromDate IS NULL OR i.inboundTransferDate >= :fromDate) AND "
           + "(:toDate IS NULL OR i.inboundTransferDate <= :toDate) AND "
           + "(:userId IS NULL OR i.user.userId = :userId) AND "
-          + "(:inventoryId IS NULL OR i.Inventory.inventoryId = :inventoryId) AND "
+          + "(:inventoryId IS NULL OR i.inventory.inventoryId = :inventoryId) AND "
           + "(:transferId IS NULL OR i.transfer.transferRequestId = :transferId)")
   List<InboundTransfer> filter(
-      @Param("status") String status,
+      @Param("status") ProductStatus status,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
       @Param("userId") Long userId,

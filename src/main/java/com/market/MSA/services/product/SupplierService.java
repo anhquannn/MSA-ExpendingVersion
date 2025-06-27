@@ -14,7 +14,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -30,6 +32,12 @@ public class SupplierService {
   final SupplierMapper supplierMapper;
 
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "all_suppliers", allEntries = true),
+        @CacheEvict(value = "suppliers_list", allEntries = true),
+        @CacheEvict(value = "suppliers_paging", allEntries = true)
+      })
   public SupplierResponse createSupplier(SupplierRequest request) {
     Supplier supplier = supplierMapper.toSupplier(request);
     supplier = supplierRepository.save(supplier);
@@ -37,6 +45,12 @@ public class SupplierService {
   }
 
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "all_suppliers", allEntries = true),
+        @CacheEvict(value = "suppliers_list", allEntries = true),
+        @CacheEvict(value = "suppliers_paging", allEntries = true)
+      })
   public SupplierResponse updateSupplier(Long supplierId, SupplierRequest request) {
     Supplier supplier =
         supplierRepository
@@ -50,6 +64,12 @@ public class SupplierService {
   }
 
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "all_suppliers", allEntries = true),
+        @CacheEvict(value = "suppliers_list", allEntries = true),
+        @CacheEvict(value = "suppliers_paging", allEntries = true)
+      })
   public boolean deleteSupplier(Long supplierId) {
     if (!supplierRepository.existsById(supplierId)) {
       throw new AppException(ErrorCode.SUPPLIER_NOT_FOUND);

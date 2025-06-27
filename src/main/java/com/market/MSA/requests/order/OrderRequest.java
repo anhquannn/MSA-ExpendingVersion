@@ -1,5 +1,6 @@
 package com.market.MSA.requests.order;
 
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.requests.others.DeliveryInfoRequest;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,11 +21,12 @@ public class OrderRequest {
 
   double grandTotal;
 
-  String status;
+  OrderStatus status;
 
   Long branchId;
   Long cartId;
   Long userId;
+  Long userAddressId;
   List<String> promoCodes;
   DeliveryInfoRequest deliveryInfo;
 }

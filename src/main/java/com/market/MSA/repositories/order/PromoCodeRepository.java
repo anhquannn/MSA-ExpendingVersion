@@ -1,8 +1,8 @@
 package com.market.MSA.repositories.order;
 
+import com.market.MSA.constants.PromocodeStatus;
 import com.market.MSA.models.order.PromoCode;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -27,7 +27,7 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
           + "(:toDate IS NULL OR p.endDate <= :toDate)")
   Page<PromoCode> filterWithPaging(
       @Param("keyword") String keyword,
-      @Param("status") String status,
+      @Param("status") PromocodeStatus status,
       @Param("campaignId") Long campaignId,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
@@ -44,7 +44,7 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
           + "(:toDate IS NULL OR p.endDate <= :toDate)")
   List<PromoCode> filter(
       @Param("keyword") String keyword,
-      @Param("status") String status,
+      @Param("status") PromocodeStatus status,
       @Param("campaignId") Long campaignId,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
@@ -55,12 +55,12 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
   @Modifying
   @Transactional
   @Query(
-      "UPDATE PromoCode p SET p.status = 'active' WHERE p.startDate <= :currentDate AND p.endDate > :currentDate AND p.status != 'active'")
-  void updateActivePromoCodes(Date currentDate);
+      "UPDATE PromoCode p SET p.status = 'ACTIVE' WHERE p.startDate <= :currentDate AND p.endDate > :currentDate AND p.status != 'ACTIVE'")
+  void updateActivePromoCodes(LocalDateTime currentDate);
 
   @Modifying
   @Transactional
   @Query(
-      "UPDATE PromoCode p SET p.status = 'expired' WHERE p.endDate <= :currentDate AND p.status != 'expired'")
-  void updateExpiredPromoCodes(Date currentDate);
+      "UPDATE PromoCode p SET p.status = 'EXPIRED' WHERE p.endDate <= :currentDate AND p.status != 'EXPIRED'")
+  void updateExpiredPromoCodes(LocalDateTime currentDate);
 }

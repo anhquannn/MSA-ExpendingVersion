@@ -1,14 +1,8 @@
 package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import com.market.MSA.constants.OrderStatus;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -38,7 +32,10 @@ public class CancelOrder {
   Long cancelOrderId;
 
   LocalDateTime cancelDate;
-  String status;
+
+  @Enumerated(EnumType.STRING)
+  OrderStatus status;
+
   String reason;
   double refundAmount;
 

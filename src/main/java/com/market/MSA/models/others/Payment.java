@@ -1,6 +1,7 @@
 package com.market.MSA.models.others;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.order.Order;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
@@ -37,7 +38,10 @@ public class Payment {
 
   String paymentMethod;
   String paymentDate;
-  String status;
+
+  @Enumerated(EnumType.STRING)
+  OrderStatus status;
+
   double grandTotal;
   String transactionId;
 

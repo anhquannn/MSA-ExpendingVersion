@@ -1,5 +1,6 @@
 package com.market.MSA.requests.filters;
 
+import com.market.MSA.constants.ProductStatus;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -14,7 +15,7 @@ public class InboundFilterRequest {
   Long userId; // người tạo yêu cầu nhập kho
   Long inventoryId;
   Long transferId;
-  String status;
+  ProductStatus status;
   LocalDateTime fromDate;
   LocalDateTime toDate;
 

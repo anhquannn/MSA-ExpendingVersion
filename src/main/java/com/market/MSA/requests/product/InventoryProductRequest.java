@@ -33,6 +33,13 @@ public class InventoryProductRequest {
   @PositiveOrZero(message = "Stock number must be positive or zero")
   int stockNumber;
 
+  @PositiveOrZero(message = "Stock number checked must be positive or zero")
+  Integer stockNumberChecked;
+
+  @StockNumberConstraint
+  @PositiveOrZero(message = "Stock number must be positive or zero")
+  int stockNumberDifferent;
+
   @NotNull(message = "Inventory ID is required")
   Long inventoryId;
 

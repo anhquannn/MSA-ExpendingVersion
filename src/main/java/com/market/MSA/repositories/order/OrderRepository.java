@@ -1,5 +1,6 @@
 package com.market.MSA.repositories.order;
 
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.order.Order;
 import com.market.MSA.models.product.Branch;
 import java.time.LocalDateTime;
@@ -21,7 +22,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
           + "(:fromDate IS NULL OR o.orderDate >= :fromDate) AND "
           + "(:toDate IS NULL OR o.orderDate <= :toDate)")
   Page<Order> filterWithPaging(
-      @Param("status") String status,
+      @Param("status") OrderStatus status,
       @Param("userId") Long userId,
       @Param("branchId") Long branchId,
       @Param("phoneNumber") String phoneNumber,
@@ -38,7 +39,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
           + "(:fromDate IS NULL OR o.orderDate >= :fromDate) AND "
           + "(:toDate IS NULL OR o.orderDate <= :toDate)")
   List<Order> filter(
-      @Param("status") String status,
+      @Param("status") OrderStatus status,
       @Param("userId") Long userId,
       @Param("branchId") Long branchId,
       @Param("phoneNumber") String phoneNumber,

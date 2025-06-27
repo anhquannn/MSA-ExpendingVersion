@@ -41,6 +41,7 @@ public class OrderController {
         orderService.createOrder(
             request.getUserId(),
             request.getBranchId(),
+            request.getUserAddressId(),
             request.getCartId(),
             request.getPromoCodes());
 
@@ -80,17 +81,21 @@ public class OrderController {
 
   @GetMapping("/preview")
   public ApiResponse<OrderSummaryResponse> previewOrder(
+      @RequestParam Long branchId,
+      @RequestParam Long userAddressId,
       @RequestParam Long userId,
       @RequestParam Long cartId,
       @RequestParam(required = false) List<String> promoCodes) {
 
-    OrderResponse orderSummary = orderService.calculateOrderSummary(userId, cartId, promoCodes);
+    OrderSummaryResponse orderSummary =
+        orderService.calculateOrderSummary(branchId, userAddressId, userId, cartId, promoCodes);
 
     OrderSummaryResponse response =
         OrderSummaryResponse.builder()
             .totalCost(orderSummary.getTotalCost())
             .discount(orderSummary.getDiscount())
             .grandTotal(orderSummary.getGrandTotal())
+            .rates(orderSummary.getRates())
             .build();
 
     return ApiResponse.<OrderSummaryResponse>builder()
@@ -142,7 +147,7 @@ public class OrderController {
       @PathVariable @NotNull(message = "Order ID is required") Long orderId,
       @RequestParam @NotNull(message = "Status is required") String status) {
 
-    if (!OrderStatus.isValidStatus(status)) {
+    if (OrderStatus.isValidStatus(status)) {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
 

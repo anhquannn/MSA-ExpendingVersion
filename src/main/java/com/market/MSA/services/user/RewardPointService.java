@@ -136,7 +136,7 @@ public class RewardPointService {
             .userId(userId)
             .orderId(orderId)
             .pointChange(amount)
-            .type(RewardPointTransactionType.EARN.getValue())
+            .type(RewardPointTransactionType.EARN)
             .description("Earned points from order #" + orderId)
             .createdAt(LocalDateTime.now())
             .build());
@@ -169,7 +169,7 @@ public class RewardPointService {
             .userId(userId)
             .orderId(null) // No order associated with redemption
             .pointChange(-pointsToRedeem)
-            .type(RewardPointTransactionType.REDEEM.getValue())
+            .type(RewardPointTransactionType.REDEEM)
             .description(description)
             .createdAt(LocalDateTime.now())
             .build());
@@ -201,7 +201,7 @@ public class RewardPointService {
             .userId(userId)
             .orderId(null) // No order associated with adjustment
             .pointChange(adjustAmount)
-            .type(RewardPointTransactionType.ADJUST.getValue())
+            .type(RewardPointTransactionType.ADJUST)
             .description(reason)
             .createdAt(LocalDateTime.now())
             .build());

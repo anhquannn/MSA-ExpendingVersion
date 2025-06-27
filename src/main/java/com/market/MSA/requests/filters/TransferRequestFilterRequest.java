@@ -1,5 +1,6 @@
 package com.market.MSA.requests.filters;
 
+import com.market.MSA.constants.ProductStatus;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -15,7 +16,7 @@ public class TransferRequestFilterRequest {
   Long approverId;
   Long fromInventoryId;
   Long toInventoryId;
-  String status;
+  ProductStatus status;
   LocalDateTime fromDate;
   LocalDateTime toDate;
 

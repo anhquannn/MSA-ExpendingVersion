@@ -1,5 +1,6 @@
 package com.market.MSA.repositories.product;
 
+import com.market.MSA.constants.ProductStatus;
 import com.market.MSA.models.product.OutboundTransfer;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,10 +19,10 @@ public interface OutboundRepository extends JpaRepository<OutboundTransfer, Long
           + "(:fromDate IS NULL OR o.outboundTransferDate >= :fromDate) AND "
           + "(:toDate IS NULL OR o.outboundTransferDate <= :toDate) AND "
           + "(:userId IS NULL OR o.user.userId = :userId) AND "
-          + "(:inventoryId IS NULL OR o.Inventory.inventoryId = :inventoryId) AND "
+          + "(:inventoryId IS NULL OR o.inventory.inventoryId = :inventoryId) AND "
           + "(:transferId IS NULL OR o.transfer.transferRequestId = :transferId)")
   Page<OutboundTransfer> filterWithPaging(
-      @Param("status") String status,
+      @Param("status") ProductStatus status,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
       @Param("userId") Long userId,
@@ -36,10 +37,10 @@ public interface OutboundRepository extends JpaRepository<OutboundTransfer, Long
           + "(:fromDate IS NULL OR o.outboundTransferDate >= :fromDate) AND "
           + "(:toDate IS NULL OR o.outboundTransferDate <= :toDate) AND "
           + "(:userId IS NULL OR o.user.userId = :userId) AND "
-          + "(:inventoryId IS NULL OR o.Inventory.inventoryId = :inventoryId) AND "
+          + "(:inventoryId IS NULL OR o.inventory.inventoryId = :inventoryId) AND "
           + "(:transferId IS NULL OR o.transfer.transferRequestId = :transferId)")
   List<OutboundTransfer> filter(
-      @Param("status") String status,
+      @Param("status") ProductStatus status,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
       @Param("userId") Long userId,

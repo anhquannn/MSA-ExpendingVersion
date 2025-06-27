@@ -1,6 +1,7 @@
 package com.market.MSA.models.others;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.order.Order;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -38,7 +39,10 @@ public class DeliveryInfo {
   String height;
   String length;
   String metadata;
-  String status;
+
+  @Enumerated(EnumType.STRING)
+  OrderStatus status;
+
   LocalDateTime deliveryDate;
 
   @OneToOne

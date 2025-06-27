@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -30,16 +31,18 @@ public class CartService {
 
   final CartMapper cartMapper;
 
+  @Transactional
   public CartResponse createCart(CartRequest request) {
     Cart cart = cartMapper.toCartItem(request);
     cart.setUser(
         entityFinderService.findByIdOrThrow(
             userRepository, request.getUserId(), ErrorCode.CART_NOT_FOUND));
-    cart.setStatus(CartStatus.CART_STATUS_1.getStatus());
+    cart.setStatus(CartStatus.ACTIVE);
     cart = cartRepository.save(cart);
     return cartMapper.toCartResponse(cart);
   }
 
+  @Transactional
   public CartResponse updateCart(Long cartId, CartRequest request) {
     Optional<Cart> existingCart = cartRepository.findById(cartId);
     if (existingCart.isPresent()) {
@@ -54,6 +57,7 @@ public class CartService {
     throw new AppException(ErrorCode.CART_NOT_FOUND);
   }
 
+  @Transactional
   public boolean deleteCart(Long cartId) {
     if (!cartRepository.existsById(cartId)) {
       throw new AppException(ErrorCode.CART_NOT_FOUND);
@@ -69,6 +73,7 @@ public class CartService {
         .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
   }
 
+  @Transactional
   public CartResponse getOrCreateCartForUser(Long userId) {
     Optional<Cart> existingCart = cartRepository.findByUser_UserId(userId);
     if (existingCart.isPresent()) {
@@ -84,7 +89,7 @@ public class CartService {
     Cart newCart =
         Cart.builder()
             .user(user) // Use the fetched User entity
-            .status(CartStatus.CART_STATUS_1.getStatus())
+            .status(CartStatus.ACTIVE)
             .build();
 
     cartRepository.save(newCart);

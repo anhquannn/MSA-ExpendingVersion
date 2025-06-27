@@ -150,6 +150,46 @@ public class ApplicationinitConfig {
         defaultBranch.getUsers().add(adminUser);
         branchRepository.save(defaultBranch);
       }
+
+      // Create SURVEYOR permission if not exists
+      Permission surveyorPermission =
+          permissionRepository
+              .findByName("SURVEYOR_ACCESS")
+              .orElseGet(
+                  () ->
+                      permissionRepository.save(
+                          Permission.builder()
+                              .name("SURVEYOR_ACCESS")
+                              .description("Truy cập dành cho nhân viên khảo sát")
+                              .build()));
+
+      // Create SURVEYOR role with permission if not exists
+      Role surveyorRole =
+          roleRepository
+              .findByName("SURVEYOR")
+              .orElseGet(
+                  () -> {
+                    Role role =
+                        Role.builder().name("SURVEYOR").description("Nhân viên khảo sát").build();
+                    role.setPermissions(Set.of(surveyorPermission));
+                    return roleRepository.save(role);
+                  });
+
+      // Create surveyor user if not exists
+      if (userRepository.findByEmail("surveyor@example.com").isEmpty()) {
+        User surveyorUser =
+            User.builder()
+                .email("surveyor@example.com")
+                .password(passwordEncoder.encode("surveyor123"))
+                .fullName("Surveyor")
+                .phoneNumber("0987654321")
+                .build();
+
+        surveyorUser.setRoles(Set.of(surveyorRole));
+
+        // Save the surveyor user
+        userRepository.save(surveyorUser);
+      }
     };
   }
 }

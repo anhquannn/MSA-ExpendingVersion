@@ -69,7 +69,6 @@ public class InventoryService {
     return true;
   }
 
-  @Transactional
   public InventoryResponse getInventoryById(Long id) {
     Inventory inventory =
         inventoryRepository

@@ -42,6 +42,7 @@ public class CartItemService {
 
   final InventoryProductService inventoryProductService;
 
+  @Transactional
   public CartItemResponse createCartItem(CartItemRequest request) {
     CartItem cartItem = cartItemMapper.toCartItem(request);
     cartItem.setCart(
@@ -80,7 +81,7 @@ public class CartItemService {
                   newCart.setUser(
                       entityFinderService.findByIdOrThrow(
                           userRepository, userId, ErrorCode.USER_NOT_EXISTED));
-                  newCart.setStatus(CartStatus.CART_STATUS_1.getStatus());
+                  newCart.setStatus(CartStatus.ACTIVE);
                   return cartRepository.save(newCart);
                 });
 
@@ -104,12 +105,14 @@ public class CartItemService {
           entityFinderService.findByIdOrThrow(
               productRepository, productId, ErrorCode.PRODUCT_NOT_FOUND);
 
+      double effectivePrice = inventoryProductService.getBranchCurrentPrice(branchId, productId);
+
       cartItem =
           CartItem.builder()
               .cart(cart)
               .product(product)
               .quantity(quantity)
-              .price(product.getPrice())
+              .price(effectivePrice)
               .isSelected(true)
               .build();
     }
@@ -140,10 +143,12 @@ public class CartItemService {
     return getCartItemById(cartItemId);
   }
 
+  @Transactional
   public void updateCartItemsSelection(List<Long> cartItemIds, boolean isSelected) {
     cartItemRepository.updateCartItemsSelection(cartItemIds, isSelected);
   }
 
+  @Transactional
   public boolean deleteCartItem(Long cartItemId) {
     if (!cartItemRepository.existsById(cartItemId)) {
       throw new AppException(ErrorCode.CART_ITEM_NOT_FOUND);
@@ -152,6 +157,7 @@ public class CartItemService {
     return true;
   }
 
+  @Transactional
   public void clearCart(Long cartId) {
     cartItemRepository.clearCart(cartId);
   }
@@ -164,7 +170,7 @@ public class CartItemService {
     return cartItemMapper.toCartItemResponse(cartItem);
   }
 
-  @Cacheable("cart_items")
+  @Cacheable("cart_items_true")
   public List<CartItemResponse> getCartItemsByCartId(Long cartId) {
     List<CartItem> cartItems = cartItemRepository.findByCart_CartIdAndIsSelected(cartId, true);
     return cartItems.stream().map(cartItemMapper::toCartItemResponse).collect(Collectors.toList());

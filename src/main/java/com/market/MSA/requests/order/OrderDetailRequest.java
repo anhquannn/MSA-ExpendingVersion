@@ -1,5 +1,6 @@
 package com.market.MSA.requests.order;
 
+import com.market.MSA.constants.OrderStatus;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +19,7 @@ public class OrderDetailRequest {
   double totalPrice;
   String image;
   String name;
-  String status;
+  OrderStatus status;
 
   Long orderId;
   Long productId;

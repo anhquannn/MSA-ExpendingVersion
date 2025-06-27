@@ -1,5 +1,6 @@
 package com.market.MSA.requests.filters;
 
+import com.market.MSA.constants.OrderStatus;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -14,7 +15,7 @@ public class PaymentFilterRequest {
   Long orderId;
   Long userId;
   String paymentMethod;
-  String status;
+  OrderStatus status;
   String transactionId;
   LocalDateTime fromDate;
   LocalDateTime toDate;

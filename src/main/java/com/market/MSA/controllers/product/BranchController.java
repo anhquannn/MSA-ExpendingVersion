@@ -1,9 +1,9 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
-import com.market.MSA.requests.branch.CreateBranchWithManagerRequest;
 import com.market.MSA.requests.filters.BranchFilterRequest;
 import com.market.MSA.requests.product.BranchRequest;
+import com.market.MSA.requests.product.CreateBranchWithManagerRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.BranchResponse;
 import com.market.MSA.services.product.BranchService;

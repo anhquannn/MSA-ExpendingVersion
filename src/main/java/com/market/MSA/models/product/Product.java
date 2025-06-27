@@ -97,4 +97,12 @@ public class Product {
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("product-trending")
   List<TrendingProduct> trendingProducts = new ArrayList<>();
+
+  @OneToMany(mappedBy = "product1", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("comb-product1")
+  List<ProductCombination> product1s = new ArrayList<>();
+
+  @OneToMany(mappedBy = "product2", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("comb-product2")
+  List<ProductCombination> product2s = new ArrayList<>();
 }

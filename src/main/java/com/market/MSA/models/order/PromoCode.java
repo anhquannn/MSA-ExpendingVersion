@@ -2,6 +2,7 @@ package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.PromocodeStatus;
 import com.market.MSA.validators.CampaignDateRangeConstraint;
 import com.market.MSA.validators.DateRangeConstraint;
 import com.market.MSA.validators.DiscountPercentageConstraint;
@@ -43,7 +44,9 @@ public class PromoCode {
   String description;
   LocalDateTime startDate;
   LocalDateTime endDate;
-  String status;
+
+  @Enumerated(EnumType.STRING)
+  PromocodeStatus status;
 
   @DiscountPercentageConstraint double discountPercentage;
 

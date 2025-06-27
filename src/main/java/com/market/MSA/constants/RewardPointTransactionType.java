@@ -4,14 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum RewardPointTransactionType {
-  EARN("earn"),
-  REDEEM("redeem"),
-  ADJUST("adjust"),
+  EARN,
+  REDEEM,
+  ADJUST,
   ;
-
-  private final String value;
-
-  RewardPointTransactionType(String value) {
-    this.value = value;
-  }
 }

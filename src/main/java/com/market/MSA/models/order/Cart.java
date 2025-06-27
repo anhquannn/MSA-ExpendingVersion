@@ -2,16 +2,9 @@ package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.CartStatus;
 import com.market.MSA.models.user.User;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -35,7 +28,8 @@ public class Cart {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long cartId;
 
-  String status;
+  @Enumerated(EnumType.STRING)
+  CartStatus status;
 
   @ManyToOne
   @JoinColumn(name = "userId", nullable = false)

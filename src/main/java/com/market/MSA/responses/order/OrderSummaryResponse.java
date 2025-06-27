@@ -1,5 +1,6 @@
 package com.market.MSA.responses.order;
 
+import com.market.MSA.responses.goship.RatesResponse;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -13,4 +14,6 @@ public class OrderSummaryResponse {
   double totalCost;
   double discount;
   double grandTotal;
+
+  RatesResponse rates;
 }

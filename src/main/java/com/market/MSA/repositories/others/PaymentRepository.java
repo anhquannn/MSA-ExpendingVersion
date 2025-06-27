@@ -1,5 +1,6 @@
 package com.market.MSA.repositories.others;
 
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.others.Payment;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,7 +25,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
   Page<Payment> filterWithPaging(
       @Param("userId") Long userId,
       @Param("orderId") Long orderId,
-      @Param("status") String status,
+      @Param("status") OrderStatus status,
       @Param("paymentMethod") String paymentMethod,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
@@ -42,7 +43,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
   List<Payment> filter(
       @Param("userId") Long userId,
       @Param("orderId") Long orderId,
-      @Param("status") String status,
+      @Param("status") OrderStatus status,
       @Param("paymentMethod") String paymentMethod,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,

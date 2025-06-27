@@ -2,6 +2,7 @@ package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.others.DeliveryInfo;
 import com.market.MSA.models.others.Notification;
 import com.market.MSA.models.others.Payment;
@@ -44,7 +45,8 @@ public class Order {
 
   double grandTotal;
 
-  String status;
+  @Enumerated(EnumType.STRING)
+  OrderStatus status;
 
   @ManyToOne
   @JoinColumn(name = "branchId", nullable = false)

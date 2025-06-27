@@ -1,14 +1,9 @@
 package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.product.Product;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,7 +28,10 @@ public class OrderDetail {
 
   int quantity;
   String name;
-  String status;
+
+  @Enumerated(EnumType.STRING)
+  OrderStatus status;
+
   double unitPrice;
   double totalPrice;
   String image;

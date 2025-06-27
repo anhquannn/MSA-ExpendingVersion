@@ -16,6 +16,7 @@ import com.market.MSA.requests.product.InventoryProductRequest;
 import com.market.MSA.responses.product.InventoryProductResponse;
 import com.market.MSA.responses.product.InventoryStatisticsResponse;
 import com.market.MSA.services.others.EntityFinderService;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -40,7 +41,6 @@ public class InventoryProductService {
   final InventoryRepository inventoryRepository;
   final InventoryProductMapper inventoryProductMapper;
   final ProductRepository productRepository;
-  final ProductService productService;
   final InventoryService inventoryService;
 
   @Transactional
@@ -56,7 +56,7 @@ public class InventoryProductService {
     // Check if there's an existing inventory product for this product in the same inventory
     List<InventoryProduct> existingProducts =
         inventoryProductRepository.filter(
-            inventory.getInventoryId(), product.getProductId(), null, null, null, null, null, null);
+            product.getProductId(), inventory.getInventoryId(), null, true, null, null, null, null);
 
     if (!existingProducts.isEmpty()) {
       // Check if any existing product has remaining stock
@@ -119,6 +119,21 @@ public class InventoryProductService {
     inventoryProduct.setStockNumber(request.getStockNumber());
     inventoryProduct.setStockLevel(request.getStockLevel());
 
+    Integer stockNumberChecked = request.getStockNumberChecked();
+
+    // Nếu stockNumberChecked được cung cấp trong request
+    if (stockNumberChecked != null) {
+      int stockNumber = request.getStockNumber();
+
+      // Tính toán chênh lệch và lấy giá trị tuyệt đối
+      int stockNumberDifferent = Math.abs(stockNumber - stockNumberChecked);
+
+      inventoryProduct.setStockNumberChecked(stockNumberChecked);
+
+      // Set giá trị chênh lệch cho inventoryProduct
+      inventoryProduct.setStockNumberDifferent(stockNumberDifferent);
+    }
+
     InventoryProduct updatedInventoryProduct = inventoryProductRepository.save(inventoryProduct);
     return inventoryProductMapper.toInventoryProductResponse(updatedInventoryProduct);
   }
@@ -157,11 +172,11 @@ public class InventoryProductService {
 
   private String calculateStockLevel(int stockNumber) {
     if (stockNumber < 50) {
-      return "low";
+      return "LOW";
     } else if (stockNumber <= 300) {
-      return "medium";
+      return "MEDIUM";
     } else {
-      return "high";
+      return "HIGH";
     }
   }
 
@@ -209,7 +224,12 @@ public class InventoryProductService {
       inventoryProductRepository.save(inventoryProduct);
 
       // Decrease total revenue in product
-      productService.updateTotalRevenue(productId, -quantity);
+      Product product =
+          productRepository
+              .findById(productId)
+              .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+      product.setTotalRevenue(product.getTotalRevenue() - quantity);
+      productRepository.save(product);
 
       // Decrease total revenue in inventory
       inventoryService.updateTotalRevenue(inventory.getInventoryId(), -quantity);
@@ -253,7 +273,12 @@ public class InventoryProductService {
     inventoryService.updateTotalRevenue(inventory.getInventoryId(), quantity);
 
     // Update total revenue in product
-    productService.updateTotalRevenue(productId, quantity);
+    Product product =
+        productRepository
+            .findById(productId)
+            .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+    product.setTotalRevenue(product.getTotalRevenue() + quantity);
+    productRepository.save(product);
   }
 
   /** Lấy thống kê tổng quan về kho của một chi nhánh */
@@ -338,5 +363,33 @@ public class InventoryProductService {
             request.getToDate(),
             pageable)
         .map(inventoryProductMapper::toInventoryProductResponse);
+  }
+
+  public double getBranchCurrentPrice(Long branchId, Long productId) {
+    // Lấy inventory của chi nhánh
+    Inventory inventory =
+        inventoryRepository
+            .findByBranch_BranchId(branchId)
+            .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
+
+    // Ưu tiên lấy giá ở InventoryProduct (ví dụ hàng giảm giá, cận date, v.v.)
+    List<InventoryProduct> inventoryProducts =
+        inventoryProductRepository.filter(
+            productId, inventory.getInventoryId(), null, true, null, null, null, null);
+
+    return inventoryProducts.stream()
+        // Chỉ xét các sản phẩm còn tồn kho
+        .filter(ip -> ip.getStockNumber() > 0)
+        // Sắp xếp theo currentPrice tăng dần để lấy giá tốt nhất cho khách
+        .sorted(Comparator.comparingDouble(InventoryProduct::getCurrentPrice))
+        .map(InventoryProduct::getCurrentPrice)
+        .findFirst()
+        // Nếu không có bản ghi tồn kho phù hợp thì fallback về giá gốc của Product
+        .orElseGet(
+            () ->
+                productRepository
+                    .findById(productId)
+                    .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND))
+                    .getPrice());
   }
 }

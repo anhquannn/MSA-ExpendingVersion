@@ -1,5 +1,6 @@
 package com.market.MSA.requests.others;
 
+import com.market.MSA.constants.OrderStatus;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -16,7 +17,7 @@ import lombok.experimental.FieldDefaults;
 public class PaymentRequest {
   String paymentMethod;
   String paymentDate;
-  String status;
+  OrderStatus status;
   double grandTotal;
   String transactionId;
 

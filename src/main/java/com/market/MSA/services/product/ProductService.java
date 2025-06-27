@@ -22,7 +22,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -44,10 +46,17 @@ public class ProductService {
   final InventoryRepository inventoryRepository;
   final InventoryProductRepository inventoryProductRepository;
   final InventoryProductMapper inventoryProductMapper;
+  final InventoryProductService inventoryProductService;
   static final String DEFAULT_SORT_BY = "price";
   static final String DEFAULT_SORT_DIRECTION = "asc";
 
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "products", allEntries = true),
+        @CacheEvict(value = "filtered_products", allEntries = true),
+        @CacheEvict(value = "branch_products", allEntries = true)
+      })
   public ProductResponse createProduct(ProductRequest request, boolean sendNotificationToAll) {
     Product product = productMapper.toProduct(request);
     product.setSupplier(
@@ -67,6 +76,12 @@ public class ProductService {
   }
 
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "products", allEntries = true),
+        @CacheEvict(value = "filtered_products", allEntries = true),
+        @CacheEvict(value = "branch_products", allEntries = true)
+      })
   public ProductResponse updateProduct(Long id, ProductRequest request) {
     Product product =
         productRepository
@@ -85,6 +100,12 @@ public class ProductService {
   }
 
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "products", allEntries = true),
+        @CacheEvict(value = "filtered_products", allEntries = true),
+        @CacheEvict(value = "branch_products", allEntries = true)
+      })
   public boolean deleteProduct(Long id) {
     if (!productRepository.existsById(id)) {
       throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
@@ -109,6 +130,12 @@ public class ProductService {
   }
 
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "products", allEntries = true),
+        @CacheEvict(value = "filtered_products", allEntries = true),
+        @CacheEvict(value = "branch_products", allEntries = true)
+      })
   public void updateTotalRevenue(Long productId, int quantity) {
     Product product = findProductEntityById(productId);
     product.setTotalRevenue(product.getTotalRevenue() + quantity);
@@ -202,7 +229,16 @@ public class ProductService {
 
       // Return both regular and discounted products with pagination
       return ProductFilterResponse.fromPages(
-          products.map(productMapper::toProductResponse), discountedProductsPage);
+          products.map(
+              prod -> {
+                ProductResponse resp = productMapper.toProductResponse(prod);
+                double curPrice =
+                    inventoryProductService.getBranchCurrentPrice(
+                        request.getBranchId(), prod.getProductId());
+                resp.setBranchCurrentPrice(curPrice);
+                return resp;
+              }),
+          discountedProductsPage);
     } else {
       // If no branchId is provided, just return the regular filtered products
       Page<Product> products =

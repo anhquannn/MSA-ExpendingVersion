@@ -196,7 +196,7 @@ public class PaymentService {
             .user(order.getUser())
             .grandTotal(order.getGrandTotal())
             .paymentMethod("vnpay")
-            .status(OrderStatus.ORDER_STATUS_2.getStatus())
+            .status(OrderStatus.PAYING)
             .transactionId(String.valueOf(orderId))
             .paymentDate(new Date().toString())
             .build();
@@ -292,16 +292,16 @@ public class PaymentService {
 
     // Update payment status
     if ("00".equals(vnp_ResponseCode)) {
-      payment.setStatus(OrderStatus.ORDER_STATUS_3.getStatus());
+      payment.setStatus(OrderStatus.PAID);
     } else {
-      payment.setStatus(OrderStatus.ORDER_STATUS_9.getStatus());
+      payment.setStatus(OrderStatus.FAILED);
     }
 
     // Update order status
     Order order =
         entityFinderService.findByIdOrThrow(
             orderRepository, Long.parseLong(vnp_TxnRef), ErrorCode.ORDER_NOT_FOUND);
-    order.setStatus(OrderStatus.ORDER_STATUS_3.getStatus());
+    order.setStatus(OrderStatus.PAID);
     orderRepository.save(order);
 
     // Update payment details

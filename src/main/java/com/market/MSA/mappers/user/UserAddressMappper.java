@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 public interface UserAddressMappper {
   UserAddress toUserAddress(UserAddressRequest request);
 
-  @Mapping(target = "user.userAddresses", ignore = true)
   UserAddressResponse toUserAddressResponse(UserAddress userAddress);
 
   @Mapping(target = "userAddressId", ignore = true)

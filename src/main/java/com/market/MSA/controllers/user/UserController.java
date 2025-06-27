@@ -200,6 +200,25 @@ public class UserController {
         .build();
   }
 
+  @PutMapping("/password/{userId}")
+  ApiResponse<UserResponse> changePassword(
+      @PathVariable long userId, @RequestBody UpdatePasswordRequest request) {
+    return ApiResponse.<UserResponse>builder()
+        .result(
+            userService.changePassword(userId, request.getOldPassword(), request.getNewPassword()))
+        .message(ApiMessage.USER_UPDATED.getMessage())
+        .build();
+  }
+
+  @PutMapping("/profile/{userId}")
+  ApiResponse<UserResponse> updateProfile(
+      @PathVariable long userId, @RequestBody UpdateUserRequest request) {
+    return ApiResponse.<UserResponse>builder()
+        .result(userService.updateProfile(userId, request))
+        .message(ApiMessage.USER_UPDATED.getMessage())
+        .build();
+  }
+
   @PostMapping("/logout")
   ApiResponse<Void> logout(@RequestBody LogoutRequest request)
       throws JOSEException, ParseException {

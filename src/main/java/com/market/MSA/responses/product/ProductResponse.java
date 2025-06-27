@@ -22,6 +22,8 @@ public class ProductResponse implements Serializable {
 
   String name;
   double price;
+  // Giá hiện tại tại chi nhánh (nếu có truyền branchId)
+  Double branchCurrentPrice;
   double discountPercentage;
   int discountTriggerDays;
   String unit;

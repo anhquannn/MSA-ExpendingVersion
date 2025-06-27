@@ -1,6 +1,7 @@
 package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.PromocodeStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,7 +29,10 @@ public class Campaign {
 
   String name;
   String description;
-  String status;
+
+  @Enumerated(EnumType.STRING)
+  PromocodeStatus status;
+
   LocalDateTime startDate;
   LocalDateTime endDate;
 

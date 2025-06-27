@@ -2,6 +2,7 @@ package com.market.MSA.services.order;
 
 import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.constants.PromocodeStatus;
+import com.market.MSA.constants.RewardPointTransactionType;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.order.OrderMapper;
@@ -11,6 +12,7 @@ import com.market.MSA.models.order.OrderDetail;
 import com.market.MSA.models.order.PromoCode;
 import com.market.MSA.models.product.Branch;
 import com.market.MSA.models.product.Product;
+import com.market.MSA.models.user.RewardPointTransaction;
 import com.market.MSA.models.user.User;
 import com.market.MSA.repositories.order.CartRepository;
 import com.market.MSA.repositories.order.OrderDetailRepository;
@@ -20,8 +22,10 @@ import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.OrderFilterRequest;
 import com.market.MSA.requests.order.OrderRequest;
 import com.market.MSA.requests.order.PromoCodeUsageRequest;
+import com.market.MSA.responses.goship.RatesResponse;
 import com.market.MSA.responses.order.*;
 import com.market.MSA.services.others.EmailService;
+import com.market.MSA.services.others.GoshipService;
 import com.market.MSA.services.others.NotificationService;
 import com.market.MSA.services.product.InventoryProductService;
 import com.market.MSA.services.product.ProductService;
@@ -67,12 +71,14 @@ public class OrderService {
   final NotificationService notificationService;
   final PromoCodeUsageService promoCodeUsageService;
   final RewardPointService rewardPointService;
+  private final GoshipService goshipService;
 
   @Transactional
   public OrderResponse createOrder(
-      Long userId, Long branchId, Long cartId, List<String> promoCodes) {
+      Long userId, Long branchId, Long userAddressId, Long cartId, List<String> promoCodes) {
     // Tính toán tổng tiền và giảm giá
-    OrderResponse orderSummary = calculateOrderSummary(userId, cartId, promoCodes);
+    OrderSummaryResponse orderSummary =
+        calculateOrderSummary(branchId, userAddressId, userId, cartId, promoCodes);
     double grandTotal = orderSummary.getGrandTotal();
 
     // Lấy thông tin user, cart, branch
@@ -99,7 +105,7 @@ public class OrderService {
             .orderDate(LocalDateTime.now())
             .branch(branch)
             .grandTotal(grandTotal)
-            .status(OrderStatus.ORDER_STATUS_1.getStatus())
+            .status(OrderStatus.PENDING)
             .build();
 
     order = orderRepository.save(order);
@@ -118,7 +124,7 @@ public class OrderService {
         }
 
         PromoCode promo = promoCodeService.findPromoCodeByCode(promoCode);
-        if (!promo.getStatus().equals(PromocodeStatus.PROMO_CODE_STATUS_2.getStatus())) {
+        if (!promo.getStatus().equals(PromocodeStatus.EXPIRED)) {
           order.getPromoCodes().add(promo);
 
           // Record promo code usage
@@ -169,7 +175,9 @@ public class OrderService {
     return orderMapper.toOrderResponse(order);
   }
 
-  public OrderResponse calculateOrderSummary(Long userId, Long cartId, List<String> promoCodes) {
+  @Transactional
+  public OrderSummaryResponse calculateOrderSummary(
+      Long branchId, Long userAddressId, Long userId, Long cartId, List<String> promoCodes) {
     CartResponse cart = cartService.getCartById(cartId);
 
     if (cart == null || !cart.getUser().getUserId().equals(userId)) {
@@ -185,7 +193,7 @@ public class OrderService {
         // Pass userId to check if promo code has been used
         PromoCodeResponse promo = promoCodeService.getPromoCodeByCode(promoCode, userId);
         if (totalCost >= promo.getMinimumOrderValue()
-            && !promo.getStatus().equals(PromocodeStatus.PROMO_CODE_STATUS_2.getStatus())) {
+            && !promo.getStatus().equals(PromocodeStatus.EXPIRED)) {
           double currentDiscount = totalCost * (promo.getDiscountPercentage() / 100);
           discount += currentDiscount;
           grandTotal -= currentDiscount;
@@ -197,10 +205,20 @@ public class OrderService {
       throw new AppException(ErrorCode.WRONG_PROMO_CODE);
     }
 
-    return OrderResponse.builder()
+    List<RatesResponse> rates = goshipService.createRates(branchId, userAddressId, grandTotal);
+    if (rates == null || rates.isEmpty()) {
+      throw new AppException(ErrorCode.RATES_NOT_FOUND);
+    }
+
+    // Get the first rate
+    RatesResponse firstRate = rates.getFirst();
+    grandTotal += firstRate.getTotalAmount();
+
+    return OrderSummaryResponse.builder()
         .totalCost(totalCost)
         .discount(discount)
         .grandTotal(grandTotal)
+        .rates(firstRate)
         .build();
   }
 
@@ -216,6 +234,7 @@ public class OrderService {
     throw new AppException(ErrorCode.ORDER_NOT_FOUND);
   }
 
+  @Transactional
   public boolean deleteOrder(Long orderId) {
     if (!orderRepository.existsById(orderId)) {
       throw new AppException(ErrorCode.ORDER_NOT_FOUND);
@@ -224,7 +243,6 @@ public class OrderService {
     return true;
   }
 
-  @Transactional
   public OrderResponse getOrderById(Long orderId) {
     return orderRepository
         .findById(orderId)
@@ -570,7 +588,7 @@ public class OrderService {
 
   @Transactional
   public OrderResponse updateOrderStatus(Long orderId, String newStatus) {
-    // Validate status
+    // Validate status string
     if (!OrderStatus.isValidStatus(newStatus)) {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
@@ -580,57 +598,47 @@ public class OrderService {
             .findById(orderId)
             .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-    String currentStatus = order.getStatus();
+    OrderStatus currentStatus = order.getStatus();
+    OrderStatus updatedStatus = OrderStatus.from(newStatus);
 
     // Validate status transition
-    validateStatusTransition(currentStatus, newStatus);
+    validateStatusTransition(currentStatus, updatedStatus);
 
-    // If order is being marked as success and wasn't success before
-    if (OrderStatus.ORDER_STATUS_8.getStatus().equals(newStatus)
-        && !OrderStatus.ORDER_STATUS_8.getStatus().equals(currentStatus)) {
-
-      // Check if points were already awarded
+    // If order is being marked as completed and wasn't before
+    if (updatedStatus == OrderStatus.COMPLETED && currentStatus != OrderStatus.COMPLETED) {
       if (!isPointsAwarded(order)) {
-        // Calculate points (1 point per dollar spent, rounded down)
         long pointsEarned = (long) Math.floor(order.getGrandTotal());
         if (pointsEarned > 0) {
           rewardPointService.earnPoints(order.getUser().getUserId(), orderId, pointsEarned);
-
-          // Send notification about points earned
-          //          notificationService.sendPointsEarnedNotification(
-          //              order.getUser().getUserId(),
-          //              orderId,
-          //              pointsEarned);
         }
       }
     }
 
     // Update order status
-    order.setStatus(newStatus);
+    order.setStatus(updatedStatus);
     order = orderRepository.save(order);
-
-    // Send notification about status update
-    //    notificationService.sendOrderStatusUpdateNotification(orderId, newStatus);
 
     return orderMapper.toOrderResponse(order);
   }
 
-  private void validateStatusTransition(String currentStatus, String newStatus) {
-    // Prevent invalid status transitions
-    if (OrderStatus.ORDER_STATUS_7.getStatus().equals(currentStatus)
-        || OrderStatus.ORDER_STATUS_8.getStatus().equals(currentStatus)
-        || OrderStatus.ORDER_STATUS_9.getStatus().equals(currentStatus)) {
+  private void validateStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) {
+    if (currentStatus == OrderStatus.CANCELLED
+        || currentStatus == OrderStatus.COMPLETED
+        || currentStatus == OrderStatus.FAILED) {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
 
-    // Add more specific transition validations as needed
+    // Add more specific rules if needed
   }
 
   private boolean isPointsAwarded(Order order) {
-    // Check if points were already awarded for this order
-    return order.getRewardPointTransactions() != null
-        && !order.getRewardPointTransactions().isEmpty()
-        && order.getRewardPointTransactions().stream()
-            .anyMatch(tx -> tx.getPointChange() > 0 && "EARNED".equals(tx.getType()));
+    List<RewardPointTransaction> transactions = order.getRewardPointTransactions();
+    if (transactions == null || transactions.isEmpty()) {
+      return false;
+    }
+
+    return transactions.stream()
+        .anyMatch(
+            tx -> tx.getPointChange() > 0 && RewardPointTransactionType.EARN.equals(tx.getType()));
   }
 }

@@ -6,6 +6,10 @@ import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.others.DeliveryInfoResponse;
 import com.market.MSA.services.others.DeliveryInfoService;
 import jakarta.validation.Valid;
+import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.web.bind.annotation.RequestParam;
+import com.market.MSA.requests.filters.DeliveryInfoFilterRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,6 +27,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DeliveryInfoController {
+  static final int DEFAULT_PAGE = 1;
+  static final int DEFAULT_SIZE = 10;
   DeliveryInfoService deliveryInfoService;
 
   @PostMapping
@@ -49,6 +55,34 @@ public class DeliveryInfoController {
     return ApiResponse.<Boolean>builder()
         .result(result)
         .message(ApiMessage.DELIVERY_INFO_DELETED.getMessage())
+        .build();
+  }
+
+  @GetMapping()
+  public ApiResponse<List<DeliveryInfoResponse>> getAll() {
+    return ApiResponse.<List<DeliveryInfoResponse>>builder()
+        .result(deliveryInfoService.getAll())
+        .message(ApiMessage.ALL_DELIVERY_INFOS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/list")
+  public ApiResponse<List<DeliveryInfoResponse>> getAllDeliveryInfos(
+      @RequestBody DeliveryInfoFilterRequest filter) {
+    return ApiResponse.<List<DeliveryInfoResponse>>builder()
+        .result(deliveryInfoService.getAllDeliveryInfos(filter))
+        .message(ApiMessage.ALL_DELIVERY_INFOS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/paging")
+  public ApiResponse<Page<DeliveryInfoResponse>> getAllDeliveryInfosWithPaging(
+      @RequestBody DeliveryInfoFilterRequest filter, 
+      @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+      @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size) {
+    return ApiResponse.<Page<DeliveryInfoResponse>>builder()
+        .result(deliveryInfoService.getAllDeliveryInfosWithPaging(filter, page, size))
+        .message(ApiMessage.ALL_DELIVERY_INFOS_RETRIEVED.getMessage())
         .build();
   }
 

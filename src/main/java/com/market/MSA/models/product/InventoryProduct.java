@@ -49,6 +49,14 @@ public class InventoryProduct {
   @PositiveOrZero(message = "Stock number must be positive or zero")
   int stockNumber;
 
+  @StockNumberConstraint
+  @PositiveOrZero(message = "Stock number must be positive or zero")
+  Integer stockNumberChecked;
+
+  @StockNumberConstraint
+  @PositiveOrZero(message = "Stock number must be positive or zero")
+  int stockNumberDifferent;
+
   @ManyToOne
   @JoinColumn(name = "inventoryId", nullable = false)
   @JsonBackReference("inventory-products")

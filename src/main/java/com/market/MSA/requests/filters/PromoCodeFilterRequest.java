@@ -1,5 +1,6 @@
 package com.market.MSA.requests.filters;
 
+import com.market.MSA.constants.PromocodeStatus;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -12,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PromoCodeFilterRequest {
   String keyword;
-  String status;
+  PromocodeStatus status;
   LocalDateTime fromDate;
   LocalDateTime toDate;
   Long campaignId;

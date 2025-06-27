@@ -44,11 +44,11 @@ public class GoshipController {
         .build();
   }
 
-  @PostMapping("/order/{orderId}/address/{userAddressId}")
+  @PostMapping("/order/{orderId}/address/{userAddressId}/rate/{rate}")
   public ApiResponse<ShipmentResponse> createShipment(
-      @PathVariable Long orderId, @PathVariable Long userAddressId) {
+      @PathVariable Long orderId, @PathVariable Long userAddressId, @PathVariable String rate) {
     return ApiResponse.<ShipmentResponse>builder()
-        .result(goshipService.createShipmentWithDefaultRate(orderId, userAddressId))
+        .result(goshipService.createShipment(orderId, userAddressId, rate))
         .message(ApiMessage.SHIPMENT_CREATED.getMessage())
         .build();
   }

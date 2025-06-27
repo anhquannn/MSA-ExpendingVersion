@@ -26,12 +26,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
   List<User> findAllByRole(@Param("role") String role);
 
   @Query(
-      "SELECT u FROM User u JOIN u.roles r JOIN u.branches b JOIN b.inventory i WHERE r.name = 'MANAGER' AND i.inventoryId = :inventoryId")
+      "SELECT u FROM User u JOIN u.roles r JOIN u.branches b JOIN b.inventory i WHERE r.name LIKE 'MANAGER%' AND i.inventoryId = :inventoryId")
   Page<User> findManagersByInventoryIdWithPagination(
       @Param("inventoryId") Long inventoryId, Pageable pageable);
 
   @Query(
-      "SELECT u FROM User u JOIN u.roles r JOIN u.branches b JOIN b.inventory i WHERE r.name = 'MANAGER' AND i.inventoryId = :inventoryId")
+      "SELECT u FROM User u JOIN u.roles r JOIN u.branches b JOIN b.inventory i WHERE r.name LIKE 'MANAGER%' AND i.inventoryId = :inventoryId")
   List<User> findAllManagersByInventoryId(@Param("inventoryId") Long inventoryId);
 
   @Query(

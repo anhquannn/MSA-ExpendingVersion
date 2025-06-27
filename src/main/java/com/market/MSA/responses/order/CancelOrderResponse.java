@@ -1,5 +1,6 @@
 package com.market.MSA.responses.order;
 
+import com.market.MSA.constants.OrderStatus;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,7 @@ public class CancelOrderResponse {
   Long cancelOrderId;
 
   LocalDateTime cancelDate;
-  String status;
+  OrderStatus status;
   String reason;
   double refundAmount;
 

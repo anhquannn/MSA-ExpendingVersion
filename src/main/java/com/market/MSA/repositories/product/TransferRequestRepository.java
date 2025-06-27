@@ -1,5 +1,6 @@
 package com.market.MSA.repositories.product;
 
+import com.market.MSA.constants.ProductStatus;
 import com.market.MSA.models.product.Transfer;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,7 +26,7 @@ public interface TransferRequestRepository extends JpaRepository<Transfer, Long>
       @Param("approverId") Long approverId,
       @Param("fromInventoryId") Long fromInventoryId,
       @Param("toInventoryId") Long toInventoryId,
-      @Param("status") String status,
+      @Param("status") ProductStatus status,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
       Pageable pageable);
@@ -44,7 +45,7 @@ public interface TransferRequestRepository extends JpaRepository<Transfer, Long>
       @Param("approverId") Long approverId,
       @Param("fromInventoryId") Long fromInventoryId,
       @Param("toInventoryId") Long toInventoryId,
-      @Param("status") String status,
+      @Param("status") ProductStatus status,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
       Sort sort);

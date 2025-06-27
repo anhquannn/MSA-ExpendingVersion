@@ -84,7 +84,14 @@ public enum ErrorCode {
   PROMO_CODE_ALREADY_USED(159, "Promo code already used!", HttpStatus.BAD_REQUEST),
   ADDRESS_NOT_FOUND(160, "Address not found!", HttpStatus.NOT_FOUND),
   RATES_NOT_FOUND(161, "Cannot find rates!", HttpStatus.NOT_FOUND),
-  ;
+  OUTBOUND_TRANSFER_NOT_FOUND(162, "Outbound transfer not found!", HttpStatus.NOT_FOUND),
+  INBOUND_TRANSFER_NOT_FOUND(163, "Inbound transfer not found!", HttpStatus.NOT_FOUND),
+  CHECKED_HISTORY_NOT_FOUND(164, "Checked history not found!", HttpStatus.NOT_FOUND),
+  INVALID_BATCH_OR_EXPDATE(165, "Invalid batch or expdate!", HttpStatus.BAD_REQUEST),
+
+  INVENTORY_CHECK_REQUEST_NOT_FOUND(
+      166, "Inventory check request not found!", HttpStatus.NOT_FOUND),
+  PRODUCT_COMBINATION_NOT_FOUND(167, "Product combination not found!", HttpStatus.NOT_FOUND);
 
   private final int code;
   private final String message;

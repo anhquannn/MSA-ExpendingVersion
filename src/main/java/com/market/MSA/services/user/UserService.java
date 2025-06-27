@@ -27,6 +27,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -70,7 +71,7 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
-  //  @Cacheable(value = "users", key = "'email:' + #email")
+  @Cacheable(value = "users", key = "'email:' + #email")
   public UserResponse existsByEmail(String email) {
     User user =
         userRepository
@@ -79,6 +80,7 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
+  @Transactional
   public UserResponse updateDeviceId(String deviceId, Long userId) {
     User user =
         userRepository
@@ -89,7 +91,8 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
-  //  @Cacheable(value = "users", key = "'auth:' + #request.email")
+  @Cacheable(value = "users", key = "'auth:' + #request.email")
+  @Transactional
   public UserResponse validateCredentials(AuthenticationRequest request) {
     User user =
         userRepository
@@ -112,6 +115,7 @@ public class UserService {
     CompletableFuture.runAsync(() -> emailService.resendOTP(email));
   }
 
+  @Transactional
   public AuthenticationResponse verifyOtp(String otp) {
     String email = emailService.validateOTP(otp);
     User user =
@@ -130,6 +134,7 @@ public class UserService {
         .build();
   }
 
+  @Transactional
   public AuthenticationResponse loginAdmin(String email, String password) {
     User user =
         userRepository
@@ -276,6 +281,7 @@ public class UserService {
     return user.map(UserResponse::fromUser).orElse(null);
   }
 
+  @Transactional
   public String generateAndSetRandomPasswordByEmail(String email) {
     Optional<User> userOpt = userRepository.findByEmail(email);
     if (userOpt.isEmpty()) {
@@ -317,6 +323,36 @@ public class UserService {
     user.setRoles(new HashSet<>(roles));
 
     user = userRepository.save(user);
+    return userMapper.toUserResponse(user);
+  }
+
+  @Transactional
+  public UserResponse changePassword(Long userId, String oldPassword, String newPassword) {
+    User user = getUserEntityByID(userId);
+
+    if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+      throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+    }
+
+    user.setPassword(passwordEncoder.encode(newPassword));
+    userRepository.save(user);
+    return userMapper.toUserResponse(user);
+  }
+
+  @Transactional
+  public UserResponse updateProfile(Long userId, UpdateUserRequest request) {
+    User user = getUserEntityByID(userId);
+
+    // cập nhật các trường ngoại trừ roles, password (nếu Request.password null)
+    userMapper.updateUser(user, request);
+
+    // không thay đổi role nếu request.roles null hoặc rỗng
+    if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+      // giữ nguyên roles hiện tại
+    }
+
+    // không đổi mật khẩu tại đây
+    userRepository.save(user);
     return userMapper.toUserResponse(user);
   }
 

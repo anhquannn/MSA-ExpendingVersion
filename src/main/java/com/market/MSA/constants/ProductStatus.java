@@ -4,13 +4,14 @@ import lombok.Getter;
 
 @Getter
 public enum ProductStatus {
-  PENDING("pending"),
-  APPROVED("approved"),
-  REJECTED("rejected");
-
-  private final String value;
-
-  ProductStatus(String value) {
-    this.value = value;
-  }
+  PENDING,
+  APPROVED,
+  REJECTED,
+  IN_PROGRESS,
+  SHIPPED,
+  CANCELLED,
+  RECEIVED,
+  COMPLETED,
+  SENT,
+  ;
 }

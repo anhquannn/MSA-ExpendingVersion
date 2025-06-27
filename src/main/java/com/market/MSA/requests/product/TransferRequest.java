@@ -1,5 +1,6 @@
 package com.market.MSA.requests.product;
 
+import com.market.MSA.constants.ProductStatus;
 import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -10,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TransferRequest {
-  String status;
+  ProductStatus status;
   String note;
   LocalDateTime createdAt;
   LocalDateTime updatedAt;

@@ -1,5 +1,6 @@
 package com.market.MSA.repositories.order;
 
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.order.CancelOrder;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,7 +15,7 @@ public interface CancelOrderRepository extends JpaRepository<CancelOrder, Long> 
   // Có phân trang
   @Query(
       "SELECT c FROM CancelOrder c WHERE "
-          + "(:orderId IS NULL OR c.order.id = :orderId) AND "
+          + "(:orderId IS NULL OR c.order.orderId = :orderId) AND "
           + "(:userId IS NULL OR c.order.user.userId = :userId) AND "
           + "(:status IS NULL OR c.status = :status) AND "
           + "(:reason IS NULL OR LOWER(c.reason) LIKE LOWER(CONCAT('%', :reason, '%'))) AND "
@@ -23,7 +24,7 @@ public interface CancelOrderRepository extends JpaRepository<CancelOrder, Long> 
   Page<CancelOrder> filterWithPaging(
       @Param("orderId") Long orderId,
       @Param("userId") Long userId,
-      @Param("status") String status,
+      @Param("status") OrderStatus status,
       @Param("reason") String reason,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
@@ -32,7 +33,7 @@ public interface CancelOrderRepository extends JpaRepository<CancelOrder, Long> 
   // Không phân trang
   @Query(
       "SELECT c FROM CancelOrder c WHERE "
-          + "(:orderId IS NULL OR c.order.id = :orderId) AND "
+          + "(:orderId IS NULL OR c.order.orderId = :orderId) AND "
           + "(:userId IS NULL OR c.order.user.userId = :userId) AND "
           + "(:status IS NULL OR c.status = :status) AND "
           + "(:reason IS NULL OR LOWER(c.reason) LIKE LOWER(CONCAT('%', :reason, '%'))) AND "
@@ -41,7 +42,7 @@ public interface CancelOrderRepository extends JpaRepository<CancelOrder, Long> 
   List<CancelOrder> filter(
       @Param("orderId") Long orderId,
       @Param("userId") Long userId,
-      @Param("status") String status,
+      @Param("status") OrderStatus status,
       @Param("reason") String reason,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,

@@ -4,12 +4,11 @@ import com.market.MSA.constants.ProductStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.product.TransferRequestMapper;
-import com.market.MSA.models.product.Inventory;
-import com.market.MSA.models.product.InventoryProduct;
-import com.market.MSA.models.product.Transfer;
-import com.market.MSA.models.product.TransferItem;
+import com.market.MSA.models.product.*;
+import com.market.MSA.repositories.product.InboundRepository;
 import com.market.MSA.repositories.product.InventoryProductRepository;
 import com.market.MSA.repositories.product.InventoryRepository;
+import com.market.MSA.repositories.product.OutboundRepository;
 import com.market.MSA.repositories.product.TransferRequestRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.TransferRequestFilterRequest;
@@ -43,6 +42,8 @@ public class TransferRequestService {
   final TransferRequestRepository transferRequestRepository;
   final InventoryProductRepository inventoryProductRepository;
   final InventoryProductService inventoryProductService;
+  final OutboundRepository outboundRepository;
+  final InboundRepository inboundRepository;
 
   @Transactional
   public TransferResponse createTransferRequest(TransferRequest transferRequest) {
@@ -164,7 +165,7 @@ public class TransferRequestService {
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_NOT_FOUND));
 
     // Check if request is already processed
-    if (!ProductStatus.PENDING.getValue().equals(transfer.getStatus())) {
+    if (!ProductStatus.PENDING.equals(transfer.getStatus())) {
       throw new AppException(ErrorCode.TRANSFER_REQUEST_ALREADY_PROCESSED);
     }
 
@@ -249,56 +250,39 @@ public class TransferRequestService {
           centralInventoryProduct.getStockNumber() - item.getQuantityRequested());
       inventoryProductRepository.save(centralInventoryProduct);
 
-      // Add stock to destination inventory
-      InventoryProduct finalCentralInventoryProduct = centralInventoryProduct;
-      InventoryProduct destinationInventoryProduct =
-          inventoryProductRepository
-              .filter(
-                  item.getProduct().getProductId(),
-                  transfer.getToInventory().getInventoryId(),
-                  null,
-                  null,
-                  null,
-                  null,
-                  null,
-                  null)
-              .stream()
-              .filter(
-                  ip ->
-                      sourceExpDate == null
-                          ? ip.getExpDate() == null
-                          : (ip.getExpDate() != null && ip.getExpDate().equals(sourceExpDate)))
-              .findFirst()
-              .orElseGet(
-                  () -> {
-                    InventoryProduct newProduct =
-                        InventoryProduct.builder()
-                            .inventory(transfer.getToInventory())
-                            .product(item.getProduct())
-                            .expDate(sourceExpDate)
-                            .stockNumber(0)
-                            .currentPrice(finalCentralInventoryProduct.getCurrentPrice())
-                            .isActive(true)
-                            .isDiscounted(finalCentralInventoryProduct.isDiscounted())
-                            .build();
-                    return inventoryProductRepository.save(newProduct);
-                  });
+      // Không cộng tồn kho đích tại bước approve, sẽ cộng khi inbound được nhận.
 
-      destinationInventoryProduct.setStockNumber(
-          destinationInventoryProduct.getStockNumber() + item.getQuantityTransferred());
-      inventoryProductRepository.save(destinationInventoryProduct);
-
-      // Update transferred quantity
-      item.setQuantityTransferred(item.getQuantityTransferred());
-
+      // Cập nhật stock level cho central inventory product
       inventoryProductService.updateStockLevel(centralInventoryProduct);
-      inventoryProductService.updateStockLevel(destinationInventoryProduct);
+      // quantityTransferred lưu bằng quantityRequested cho outbound
+      item.setQuantityTransferred(item.getQuantityRequested());
     }
 
     // Update transfer request status
-    transfer.setStatus(ProductStatus.APPROVED.getValue());
+    transfer.setStatus(ProductStatus.APPROVED);
     transfer.setUpdatedAt(LocalDateTime.now());
     Transfer updatedTransfer = transferRequestRepository.save(transfer);
+
+    OutboundTransfer outboundTransfer =
+        OutboundTransfer.builder()
+            .status(ProductStatus.SHIPPED)
+            .outboundTransferDate(LocalDateTime.now())
+            .inventory(updatedTransfer.getFromInventory())
+            .user(updatedTransfer.getApprover())
+            .transfer(updatedTransfer)
+            .build();
+    outboundRepository.save(outboundTransfer);
+
+    // Tạo inbound ở kho đích với trạng thái IN_PROGRESS
+    InboundTransfer inboundTransfer =
+        InboundTransfer.builder()
+            .status(ProductStatus.IN_PROGRESS)
+            .inboundTransferDate(LocalDateTime.now())
+            .inventory(updatedTransfer.getToInventory())
+            .user(updatedTransfer.getRequester())
+            .transfer(updatedTransfer)
+            .build();
+    inboundRepository.save(inboundTransfer);
 
     return transferRequestMapper.toTransferResponse(updatedTransfer);
   }
@@ -311,12 +295,12 @@ public class TransferRequestService {
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_NOT_FOUND));
 
     // Check if request is already processed
-    if (!ProductStatus.PENDING.getValue().equals(transfer.getStatus())) {
+    if (!ProductStatus.PENDING.equals(transfer.getStatus())) {
       throw new AppException(ErrorCode.TRANSFER_REQUEST_ALREADY_PROCESSED);
     }
 
     // Update transfer request status
-    transfer.setStatus(ProductStatus.REJECTED.getValue());
+    transfer.setStatus(ProductStatus.REJECTED);
     transfer.setNote(note);
     transfer.setUpdatedAt(LocalDateTime.now());
     Transfer updatedTransfer = transferRequestRepository.save(transfer);

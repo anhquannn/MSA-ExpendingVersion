@@ -4,12 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum CartStatus {
-  CART_STATUS_1("active"),
+  ACTIVE,
+  INACTIVE,
   ;
-
-  private final String status;
-
-  CartStatus(String status) {
-    this.status = status;
-  }
 }

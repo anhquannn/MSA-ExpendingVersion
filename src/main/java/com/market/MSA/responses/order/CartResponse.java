@@ -1,5 +1,6 @@
 package com.market.MSA.responses.order;
 
+import com.market.MSA.constants.CartStatus;
 import com.market.MSA.responses.user.UserResponse;
 import java.util.List;
 import lombok.AccessLevel;
@@ -17,7 +18,7 @@ import lombok.experimental.FieldDefaults;
 public class CartResponse {
   Long cartId;
 
-  String status;
+  CartStatus status;
 
   UserResponse user;
 

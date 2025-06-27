@@ -1,5 +1,6 @@
 package com.market.MSA.responses.order;
 
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.responses.others.DeliveryInfoResponse;
 import com.market.MSA.responses.others.PaymentResponse;
 import com.market.MSA.responses.product.BranchResponse;
@@ -24,9 +25,7 @@ public class OrderResponse {
 
   LocalDateTime orderDate;
   double grandTotal;
-  double totalCost;
-  String status;
-  double discount;
+  OrderStatus status;
 
   BranchResponse branch;
   CartResponse cart;

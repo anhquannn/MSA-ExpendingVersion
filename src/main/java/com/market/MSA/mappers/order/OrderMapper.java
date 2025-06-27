@@ -21,7 +21,7 @@ public interface OrderMapper {
 
   @Mapping(target = "branch.inventory", ignore = true)
   @Mapping(target = "orderDetails.product.orderDetails", ignore = true)
-  @Mapping(target = "user.userAddresses", ignore = true)
+  @Mapping(target = "rewardPointTransactions", ignore = true)
   OrderResponse toOrderResponse(Order order);
 
   @Mapping(target = "orderId", ignore = true)

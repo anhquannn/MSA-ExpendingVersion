@@ -42,7 +42,7 @@ public class PromoCodeService {
   @Transactional
   public PromoCodeResponse createPromoCode(PromoCodeRequest request) {
     PromoCode promoCode = promoCodeMapper.toPromoCode(request);
-    promoCode.setStatus(PromocodeStatus.PROMO_CODE_STATUS_3.getStatus());
+    promoCode.setStatus(PromocodeStatus.INACTIVE);
     promoCode.setCampaign(
         entityFinderService.findByIdOrThrow(
             campaignRepository, request.getCampaignId(), ErrorCode.CAMPAIGN_NOT_FOUND));
@@ -184,7 +184,7 @@ public class PromoCodeService {
       throw new AppException(ErrorCode.PROMO_CODE_NOT_YET_ACTIVE);
     }
     if (promoCode.getEndDate().isBefore(currentDate)) {
-      promoCode.setStatus(PromocodeStatus.PROMO_CODE_STATUS_2.getStatus());
+      promoCode.setStatus(PromocodeStatus.EXPIRED);
       promoCodeRepository.save(promoCode);
       throw new AppException(ErrorCode.PROMO_CODE_EXPIRED);
     }

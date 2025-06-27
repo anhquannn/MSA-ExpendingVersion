@@ -1,5 +1,6 @@
 package com.market.MSA.requests.filters;
 
+import com.market.MSA.constants.OrderStatus;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -13,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 public class CancelOrderFilterRequest {
   Long orderId;
   Long userId;
-  String status;
+  OrderStatus status;
   String reason;
   LocalDateTime fromDate;
   LocalDateTime toDate;

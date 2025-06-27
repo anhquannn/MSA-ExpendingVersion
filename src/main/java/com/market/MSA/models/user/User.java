@@ -81,6 +81,10 @@ public class User {
   List<Feedback> feedbacks = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("user-checked-histories")
+  List<CheckedHistory> checkedHistories = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-requested-inbounds")
   List<InboundTransfer> inboundTransfers = new ArrayList<>();
 
@@ -131,4 +135,12 @@ public class User {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-promo-usages")
   List<PromoCodeUsage> promoCodeUsages = new ArrayList<>();
+
+  @OneToMany(mappedBy = "surveyor", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("icr-surveyor")
+  List<InventoryCheckRequest> inventoryCheckRequestS = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("icr-user")
+  List<InventoryCheckRequest> inventoryCheckRequests = new ArrayList<>();
 }

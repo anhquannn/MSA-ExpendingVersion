@@ -48,11 +48,19 @@ public class Inventory {
   @JsonManagedReference("inventory-to-transfers")
   List<Transfer> toTransfers = new ArrayList<>();
 
-  @OneToMany(mappedBy = "Inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("inventory-inbounds")
   List<InboundTransfer> inboundTransfers = new ArrayList<>();
 
-  @OneToMany(mappedBy = "Inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("inventory-outbounds")
   List<OutboundTransfer> outboundTransfers = new ArrayList<>();
+
+  @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("inventory-checked-histories")
+  List<CheckedHistory> checkedHistories = new ArrayList<>();
+
+  @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("icr-inventory")
+  List<InventoryCheckRequest> inventoryCheckRequests = new ArrayList<>();
 }

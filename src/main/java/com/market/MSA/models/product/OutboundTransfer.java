@@ -1,6 +1,7 @@
 package com.market.MSA.models.product;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.market.MSA.constants.ProductStatus;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -20,7 +21,9 @@ public class OutboundTransfer {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long outboundTransferId;
 
-  String status;
+  @Enumerated(EnumType.STRING)
+  ProductStatus status;
+
   LocalDateTime outboundTransferDate;
 
   @ManyToOne
@@ -31,7 +34,7 @@ public class OutboundTransfer {
   @ManyToOne
   @JoinColumn(name = "inventoryId", nullable = false)
   @JsonBackReference("inventory-outbounds")
-  Inventory Inventory;
+  Inventory inventory;
 
   @ManyToOne
   @JoinColumn(name = "userId", nullable = false)

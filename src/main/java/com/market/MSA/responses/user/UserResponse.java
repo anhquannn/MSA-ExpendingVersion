@@ -31,7 +31,8 @@ public class UserResponse {
   Set<RoleResponse> roles;
 
   List<BranchResponse> branches;
-  List<UserAddressResponse> userAddresses;
+
+  // List<UserAddressResponse> userAddresses;
 
   public static UserResponse fromUser(User user) {
     return UserResponse.builder()

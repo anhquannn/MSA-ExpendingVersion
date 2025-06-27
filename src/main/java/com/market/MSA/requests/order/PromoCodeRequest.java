@@ -1,5 +1,6 @@
 package com.market.MSA.requests.order;
 
+import com.market.MSA.constants.PromocodeStatus;
 import com.market.MSA.validators.DiscountPercentageConstraint;
 import com.market.MSA.validators.PositiveAmountConstraint;
 import java.time.LocalDateTime;
@@ -21,7 +22,7 @@ public class PromoCodeRequest {
   String description;
   LocalDateTime startDate;
   LocalDateTime endDate;
-  String status;
+  PromocodeStatus status;
 
   @DiscountPercentageConstraint double discountPercentage;
 

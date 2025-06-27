@@ -1,5 +1,6 @@
 package com.market.MSA.requests.order;
 
+import com.market.MSA.constants.CartStatus;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartRequest {
-  String status;
+  CartStatus status;
 
   Long userId;
 }

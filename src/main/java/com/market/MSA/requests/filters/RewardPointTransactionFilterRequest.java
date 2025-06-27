@@ -1,5 +1,6 @@
 package com.market.MSA.requests.filters;
 
+import com.market.MSA.constants.RewardPointTransactionType;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -13,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 public class RewardPointTransactionFilterRequest {
   Long userId;
   Long orderId;
-  String transactionType;
+  RewardPointTransactionType transactionType;
   LocalDateTime fromDate;
   LocalDateTime toDate;
   Double minPoints;

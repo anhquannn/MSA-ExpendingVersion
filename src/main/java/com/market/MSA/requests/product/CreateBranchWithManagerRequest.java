@@ -1,4 +1,4 @@
-package com.market.MSA.requests.branch;
+package com.market.MSA.requests.product;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

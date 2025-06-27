@@ -57,11 +57,11 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
   int sumStockByInventoryId(@Param("inventoryId") Long inventoryId);
 
   @Query(
-      "SELECT COUNT(i) FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId AND i.stockLevel = 'low'")
+      "SELECT COUNT(i) FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId AND i.stockLevel = 'LOW'")
   int countLowStockByInventoryId(@Param("inventoryId") Long inventoryId);
 
   @Query(
-      "SELECT COUNT(i) FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId AND i.stockLevel = 'high'")
+      "SELECT COUNT(i) FROM InventoryProduct i WHERE i.inventory.inventoryId = :inventoryId AND i.stockLevel = 'HIGH'")
   int countHighStockByInventoryId(@Param("inventoryId") Long inventoryId);
 
   @Query(

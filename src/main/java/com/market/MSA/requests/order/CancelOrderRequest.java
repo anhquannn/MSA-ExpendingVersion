@@ -1,5 +1,6 @@
 package com.market.MSA.requests.order;
 
+import com.market.MSA.constants.OrderStatus;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -15,7 +16,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CancelOrderRequest {
   LocalDateTime cancelDate;
-  String status;
+  OrderStatus status;
   String reason;
   double refundAmount;
 

@@ -1,5 +1,6 @@
 package com.market.MSA.requests.user;
 
+import com.market.MSA.validators.PhoneNumberConstraint;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
@@ -18,10 +19,14 @@ public class UpdateUserRequest {
   String fullName;
 
   String email;
-  String phoneNumber;
+
+  @PhoneNumberConstraint String phoneNumber;
+
   LocalDateTime birthday;
+
   String password;
-  String address;
+  String image;
+  String deviceId;
   String googleId;
 
   List<Long> roles;

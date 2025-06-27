@@ -53,7 +53,7 @@ public class CancelOrderService {
             .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
     // Cập nhật trạng thái đơn hàng gốc
-    order.setStatus(OrderStatus.ORDER_STATUS_7.getStatus());
+    order.setStatus(OrderStatus.CANCELLED);
     orderRepository.save(order);
 
     // Lưu đơn trả hàng vào cơ sở dữ liệu
@@ -63,7 +63,7 @@ public class CancelOrderService {
             .reason(request.getReason())
             .order(order)
             .refundAmount(order.getGrandTotal())
-            .status(OrderStatus.ORDER_STATUS_8.getStatus())
+            .status(OrderStatus.COMPLETED)
             .build();
 
     cancelOrder = cancelOrderRepository.save(cancelOrder);
@@ -111,7 +111,6 @@ public class CancelOrderService {
     return cancelOrderMapper.toCancelOrderResponse(cancelOrder);
   }
 
-  @Transactional(readOnly = true)
   @Cacheable("all_cancel_orders")
   public List<CancelOrderResponse> getAll() {
     return cancelOrderRepository.findAll().stream()

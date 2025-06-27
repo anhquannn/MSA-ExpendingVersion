@@ -17,6 +17,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -73,6 +74,7 @@ public class TransferRequestItemService {
     return transferRequestItemMapper.toTransferResponseItem(updatedTransferItem);
   }
 
+  @Transactional
   public boolean deleteTransferRequestItem(Long transferItemId) {
     if (!transferRequestItemRepository.existsById(transferItemId)) {
       throw new AppException(ErrorCode.TRANSFER_REQUEST_ITEM_NOT_FOUND);
@@ -88,14 +90,14 @@ public class TransferRequestItemService {
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_ITEM_NOT_FOUND)));
   }
 
-  // @Cacheable("all_transfer_request_items")
+  @Cacheable("all_transfer_request_items")
   public List<TransferResponseItem> getAll() {
     return transferRequestItemRepository.findAll().stream()
         .map(transferRequestItemMapper::toTransferResponseItem)
         .collect(Collectors.toList());
   }
 
-  // @Cacheable("transfer_request_items_list")
+  @Cacheable("transfer_request_items_list")
   public List<TransferResponseItem> getAllTransferRequestItems(
       TransferRequestItemFilterRequest request) {
     return transferRequestItemRepository
@@ -105,7 +107,7 @@ public class TransferRequestItemService {
         .collect(Collectors.toList());
   }
 
-  // @Cacheable("transfer_request_items_paging")
+  @Cacheable("transfer_request_items_paging")
   public Page<TransferResponseItem> getAllTransferRequestItemsWithPaging(
       TransferRequestItemFilterRequest request) {
 

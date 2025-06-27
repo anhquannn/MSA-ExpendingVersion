@@ -1,5 +1,6 @@
 package com.market.MSA.responses.order;
 
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.responses.product.ProductResponse;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -21,7 +22,7 @@ public class OrderDetailResponse {
   double totalPrice;
   String image;
   String name;
-  String status;
+  OrderStatus status;
 
   ProductResponse product;
   OrderResponse order;

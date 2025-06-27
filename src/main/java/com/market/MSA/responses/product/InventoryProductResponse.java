@@ -14,7 +14,10 @@ import lombok.experimental.FieldDefaults;
 public class InventoryProductResponse implements Serializable {
   private static final long serialVersionUID = 1L;
   Long inventoryProductId;
+
   int stockNumber;
+  Integer stockNumberChecked;
+  int stockNumberDifferent;
   double currentPrice;
 
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

@@ -1,5 +1,6 @@
 package com.market.MSA.requests.others;
 
+import com.market.MSA.constants.OrderStatus;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -27,7 +28,7 @@ public class DeliveryInfoRequest {
   String height;
   String length;
   String metadata;
-  String status;
+  OrderStatus status;
   LocalDateTime deliveryDate;
 
   Long orderId;

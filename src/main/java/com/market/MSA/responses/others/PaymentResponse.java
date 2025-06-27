@@ -1,5 +1,6 @@
 package com.market.MSA.responses.others;
 
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.user.UserResponse;
 import java.time.LocalDateTime;
@@ -20,7 +21,7 @@ public class PaymentResponse {
 
   String paymentMethod;
   String paymentDate;
-  String status;
+  OrderStatus status;
   double grandTotal;
   String transactionId;
 

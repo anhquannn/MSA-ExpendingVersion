@@ -1,6 +1,7 @@
 package com.market.MSA.models.user;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.market.MSA.constants.RewardPointTransactionType;
 import com.market.MSA.models.order.Order;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -21,7 +22,10 @@ public class RewardPointTransaction {
   Long rewardPointTransactionId;
 
   double pointChange;
-  String type;
+
+  @Enumerated(EnumType.STRING)
+  RewardPointTransactionType type;
+
   String description;
   LocalDateTime createdAt;
 

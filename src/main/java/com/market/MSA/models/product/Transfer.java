@@ -2,6 +2,7 @@ package com.market.MSA.models.product;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.ProductStatus;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -50,7 +51,9 @@ public class Transfer {
   @JsonBackReference("user-approved-transfers")
   User approver;
 
-  String status;
+  @Enumerated(EnumType.STRING)
+  ProductStatus status;
+
   String note;
   LocalDateTime createdAt;
   LocalDateTime updatedAt;

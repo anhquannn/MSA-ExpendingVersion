@@ -17,7 +17,10 @@ export interface Product {
   productId: number;
   name: string;
   price: number;
+  discountPercentage?: number;
+  discountTriggerDays?: number;
   unit: string;
+  netWeight?: string;
   specification: string;
   description: string;
   totalRevenue: number;
@@ -29,7 +32,10 @@ export interface Product {
 export interface ProductCreatePayload {
   name: string;
   price: number;
+  discountPercentage?: number;
+  discountTriggerDays?: number;
   unit: string;
+  netWeight?: string;
   specification: string;
   description: string;
   totalRevenue?: number;
@@ -40,7 +46,10 @@ export interface ProductCreatePayload {
 export interface ProductUpdatePayload {
   name: string;
   price: number;
+  discountPercentage?: number;
+  discountTriggerDays?: number;
   unit: string;
+  netWeight?: string;
   specification: string;
   description: string;
   totalRevenue?: number;

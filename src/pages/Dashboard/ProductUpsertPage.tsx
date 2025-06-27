@@ -31,7 +31,11 @@ const ProductUpsertPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   // --- STATE ---
-  const [productForm, setProductForm] = useState<Partial<ProductCreatePayload>>({});
+  const [productForm, setProductForm] = useState<Partial<ProductCreatePayload>>({
+    discountPercentage: undefined,
+    discountTriggerDays: undefined,
+    netWeight: '',
+  });
   const [inventoryForm, setInventoryForm] = useState<Omit<InventoryProductCreatePayload, 'productId'>>({
     inventoryId: 0, stockNumber: 100, stockLevel: 'MEDIUM',
   });
@@ -64,7 +68,10 @@ const ProductUpsertPage: React.FC = () => {
       setProductForm({
         name: existingProduct.name,
         price: existingProduct.price,
+        discountPercentage: existingProduct.discountPercentage,
+        discountTriggerDays: existingProduct.discountTriggerDays,
         unit: existingProduct.unit,
+        netWeight: existingProduct.netWeight,
         specification: existingProduct.specification,
         description: existingProduct.description,
         categoryId: existingProduct.category.categoryId,
@@ -154,9 +161,7 @@ const ProductUpsertPage: React.FC = () => {
     }
   });
 
-
-
-
+  const isSubmitting = createProductMutation.isPending || updateProductMutation.isPending;
 
   // --- EVENT HANDLERS ---
 
@@ -187,6 +192,11 @@ const ProductUpsertPage: React.FC = () => {
       alert("Vui lòng điền các trường sản phẩm bắt buộc (*).");
       return;
     }
+    if (productForm.price !== undefined && Number(productForm.price) < 0) {
+      alert("Giá bán không được âm.");
+      return;
+    }
+
     // Khi thêm mới, bắt buộc phải có ảnh và thông tin kho
     if (!isEditMode) {
       if (imageFiles.length === 0) {
@@ -204,11 +214,17 @@ const ProductUpsertPage: React.FC = () => {
       // Chỉ upload ảnh nếu có file mới được chọn (cho cả thêm và sửa)
       const imageUrls = imageFiles.length > 0 ? await uploadMultipleImages(imageFiles, 'msa') : [];
 
+      const discountPercentageValue = productForm.discountPercentage === undefined || String(productForm.discountPercentage).trim() === '' ? undefined : Number(productForm.discountPercentage);
+      const discountTriggerDaysValue = productForm.discountTriggerDays === undefined || String(productForm.discountTriggerDays).trim() === '' ? undefined : Number(productForm.discountTriggerDays);
+
       const productPayload: ProductCreatePayload | ProductUpdatePayload = {
         name: productForm.name!,
         description: productForm.description || '',
         price: Number(productForm.price) || 0,
+        discountPercentage: discountPercentageValue,
+        discountTriggerDays: discountTriggerDaysValue,
         unit: productForm.unit!,
+        netWeight: productForm.netWeight || undefined,
         specification: productForm.specification || '',
         categoryId: Number(productForm.categoryId),
         supplierId: Number(productForm.supplierId),
@@ -253,9 +269,21 @@ const ProductUpsertPage: React.FC = () => {
               <input type="text" name="name" id="name" required value={productForm.name || ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border rounded-md" />
             </div>
             <div>
-              <label htmlFor="price">Giá bán (VNĐ) (*)</label>
-              <input type="number" name="price" id="price" required value={productForm.price || 0} onChange={handleFormChange} className="mt-1 block w-full p-2 border rounded-md" />
-            </div>
+               <label htmlFor="price">Giá bán (VNĐ) (*)</label>
+               <input type="number" name="price" id="price" min={0} required value={productForm.price ?? ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border rounded-md" />
+             </div>
+             <div>
+               <label htmlFor="discountPercentage">Giảm giá (%)</label>
+               <input type="number" step="0.01" name="discountPercentage" id="discountPercentage" value={productForm.discountPercentage ?? ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border rounded-md" />
+             </div>
+             <div>
+               <label htmlFor="discountTriggerDays">Số ngày áp dụng giảm</label>
+               <input type="number" name="discountTriggerDays" id="discountTriggerDays" value={productForm.discountTriggerDays ?? ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border rounded-md" />
+             </div>
+             <div>
+               <label htmlFor="netWeight">Khối lượng tịnh</label>
+               <input type="text" name="netWeight" id="netWeight" value={productForm.netWeight || ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border rounded-md" />
+             </div>
             {/* SỬ DỤNG COMPONENT DROPDOWN MỚI */}
             <SelectWithAddNew
               label="Danh mục"
@@ -388,13 +416,16 @@ const ProductUpsertPage: React.FC = () => {
           <button type="button" onClick={() => navigate('/dashboard/products')} className="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-md hover:bg-gray-300">
             Hủy
           </button>
-          <button type="submit" disabled={addProductMutation.isPending} className="bg-green-600 text-white font-bold py-2 px-6 rounded-md hover:bg-green-700 disabled:bg-gray-400">
-            {addProductMutation.isPending ? 'Đang xử lý...' : 'Lưu Sản Phẩm'}
+          <button type="submit" disabled={isSubmitting} className="bg-green-600 text-white font-bold py-2 px-6 rounded-md hover:bg-green-700 disabled:bg-gray-400">
+            {isSubmitting ? 'Đang xử lý...' : isEditMode ? 'Cập nhật' : 'Lưu Sản Phẩm'}
           </button>
         </div>
       </form>
-
-
+      {isSubmitting && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-500"></div>
+        </div>
+      )}
 
       <Modal
         title="Thêm Danh Mục Mới"

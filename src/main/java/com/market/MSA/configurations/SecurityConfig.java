@@ -25,6 +25,10 @@ public class SecurityConfig {
     "/user/refresh",
     "/user/reset-password/{email}",
     "/payment/vnpay/callback",
+    "/shipment/cities",
+    "/shipment/districts/{cityCode}",
+    "/shipment/wards/{districtCode}",
+    "/address"
   };
 
   @Autowired private CustomJwtDecoder customJwtDecoder;

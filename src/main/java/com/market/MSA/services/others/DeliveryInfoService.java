@@ -7,20 +7,20 @@ import com.market.MSA.mappers.others.DeliveryInfoMapper;
 import com.market.MSA.models.others.DeliveryInfo;
 import com.market.MSA.repositories.order.OrderRepository;
 import com.market.MSA.repositories.others.DeliveryInfoRepository;
+import com.market.MSA.requests.filters.DeliveryInfoFilterRequest;
 import com.market.MSA.requests.others.DeliveryInfoRequest;
 import com.market.MSA.responses.others.DeliveryInfoResponse;
-import java.util.Optional;
 import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.cache.annotation.Cacheable;
-import com.market.MSA.requests.filters.DeliveryInfoFilterRequest;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,7 +105,8 @@ public class DeliveryInfoService {
 
   // Get all DeliveryInfos with filter and paging
   @Cacheable(value = CACHE_FILTER_PAGING)
-  public Page<DeliveryInfoResponse> getAllDeliveryInfosWithPaging(DeliveryInfoFilterRequest filter, int page, int size) {
+  public Page<DeliveryInfoResponse> getAllDeliveryInfosWithPaging(
+      DeliveryInfoFilterRequest filter, int page, int size) {
     Pageable pageable = PageRequest.of(page, size, Sort.by("deliveryInfoId").descending());
     Page<DeliveryInfo> pageS =
         deliveryInfoRepository.filterWithPaging(

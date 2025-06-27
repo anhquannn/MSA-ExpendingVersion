@@ -15,6 +15,8 @@ import com.market.MSA.responses.product.ProductFilterResponse;
 import com.market.MSA.responses.product.ProductResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import com.market.MSA.services.others.NotificationService;
+
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -65,6 +67,7 @@ public class ProductService {
     product.setCategory(
         entityFinderService.findByIdOrThrow(
             categoryRepository, request.getCategoryId(), ErrorCode.CATEGORY_NOT_FOUND));
+    product.setCreatedAt(LocalDateTime.now());
 
     Product savedProduct = productRepository.save(product);
 

@@ -31,8 +31,10 @@ public class ProductCombinationService {
 
   ProductCombinationRepository pcRepository;
   ProductRepository productRepository;
-    @Qualifier("productCombinationMapper")
-    ProductCombinationMapper pcMapper;
+
+  @Qualifier("productCombinationMapper")
+  ProductCombinationMapper pcMapper;
+
   EntityFinderService entityFinderService;
 
   @Transactional

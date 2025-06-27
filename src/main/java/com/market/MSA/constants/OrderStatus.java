@@ -1,5 +1,6 @@
 package com.market.MSA.constants;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
 
 @Getter
@@ -26,6 +27,7 @@ public enum OrderStatus {
     return false;
   }
 
+  @JsonCreator
   public static OrderStatus from(String status) {
     if (!isValidStatus(status)) {
       throw new IllegalArgumentException("Invalid order status: " + status);

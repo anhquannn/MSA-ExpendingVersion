@@ -1,15 +1,15 @@
 package com.market.MSA.repositories.others;
 
-import com.market.MSA.models.others.DeliveryInfo;
 import com.market.MSA.constants.OrderStatus;
+import com.market.MSA.models.others.DeliveryInfo;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DeliveryInfoRepository extends JpaRepository<DeliveryInfo, Long> {
 

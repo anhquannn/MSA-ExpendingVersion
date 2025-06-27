@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { PagedResponse } from '../../services/categoryService';
 import { useDebounce } from 'use-debounce';
 import { inventoryProductService, InventoryProductFilterParams, InventoryProductUpdatePayload ,InventoryProduct} from '../../services/inventoryProductService';
 import { AlertTriangle, Edit, LoaderCircle, Search, X } from 'lucide-react';
@@ -60,8 +61,7 @@ export function InventoryManagementSingleFile({ branchId }: Props) {
     page: 1,
     pageSize: 10,
     sortBy: 'stockNumber',
-    sortDirection: 'DESC',
-    keyword: '',
+    sortDirection: 'DESC'
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
@@ -69,36 +69,36 @@ export function InventoryManagementSingleFile({ branchId }: Props) {
   const [newStockValue, setNewStockValue] = useState<number>(0);
 
   // --- DATA FETCHING & MUTATION (Không thay đổi logic) ---
-  const queryParams: InventoryProductFilterParams = { ...filters, inventoryId: branchId, keyword: debouncedSearchTerm };
+  const queryParams: InventoryProductFilterParams = { ...filters, inventoryId: branchId};
   
   // const { data: products, isLoading, isError, error } = useQuery({
   //   queryKey: ['inventoryProducts', queryParams],
   //   queryFn: () => inventoryProductService.getInventoryProductList(queryParams) as Promise<InventoryProduct[]>, // Ép kiểu để an toàn hơn
   //   placeholderData: (previousData) => previousData,
   // });
-const { 
-    data: products, // `products` giờ đây sẽ là kiểu InventoryProduct[]
-    isLoading, 
-    isError, 
-    error 
-} = useQuery<
-    ApiResponse<InventoryProduct[]>, // 1. Kiểu dữ liệu mà queryFn trả về
-    Error,                         // 2. Kiểu dữ liệu của lỗi
-    InventoryProduct[]             // 3. Kiểu dữ liệu cuối cùng mà `data` sẽ nhận (SAU KHI SELECT)
->({
+const {
+    data: products, // `products` will now be of type InventoryProduct[]
+    isLoading,
+    isError,
+    error
+  } = useQuery<
+    PagedResponse<InventoryProduct>, // This is the actual type returned by your queryFn
+    Error,
+    InventoryProduct[] // This is the type of the data after the 'select' transformation
+  >({
     queryKey: ['inventoryProducts', queryParams],
-    queryFn: () => inventoryProductService.getInventoryProductList(queryParams), // 4. Bỏ ép kiểu 'as' nguy hiểm
-    
-    // 5. Thêm option `select` để trích xuất và biến đổi dữ liệu
-    select: (response) => {
-        // `response` ở đây là object ApiResponse đầy đủ
-        // Chúng ta chỉ trả về mảng `result` mà component cần
-        return response.result; 
-    },
+    queryFn: () => inventoryProductService.getInventoryProductList(queryParams),
+
+    // The 'select' option transforms the data.
+    // The API returns a PagedResponse, and we extract the product list from it.
+    // I'm assuming the list is in a property called 'items'.
+    // If your PagedResponse uses a different property name (like 'data' or 'content'),
+    // please update it here.
+    select: (data) => data.content,
 
     placeholderData: (previousData) => previousData,
-    // ... các options khác nếu có
-});
+    // ... other options
+  });
   const updateStockMutation = useMutation({
     mutationFn: ({ id, payload }: { id: number, payload: InventoryProductUpdatePayload }) =>
       inventoryProductService.updateInventoryProduct(id, payload),
@@ -112,10 +112,6 @@ const {
   });
 
   // --- EFFECTS & HANDLERS (Không thay đổi logic) ---
-  useEffect(() => {
-    handleUpdateFilters({ keyword: debouncedSearchTerm });
-  }, [debouncedSearchTerm]);
-  
   useEffect(() => {
     if (editingProduct) {
       setNewStockValue(editingProduct.stockNumber);

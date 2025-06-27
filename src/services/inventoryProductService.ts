@@ -1,14 +1,10 @@
-// File: src/services/inventoryProductService.ts
-
-import { api, ApiResponse } from './apiService';
-import { Product } from './productService'; // Import các type cần thiết
+import { api } from './apiService';
+import { Product } from './productService';
 import { Inventory } from './inventoryService';
+import { PagedResponse } from './categoryService'; // ✅ đã có sẵn
 
 // === TYPES ===
 
-/**
- * @description Dữ liệu thống kê của một kho hàng cụ thể.
- */
 export interface InventoryStatistics {
   totalProducts: number;
   totalQuantity: number;
@@ -16,28 +12,23 @@ export interface InventoryStatistics {
   highStockCount: number;
 }
 
-/**
- * @description Đại diện cho một sản phẩm cụ thể nằm trong một kho.
- * Đây là type chi tiết dựa trên JSON response bạn đã cung cấp.
- */
 export interface InventoryProduct {
   inventoryProductId: number;
   stockNumber: number;
+  stockNumberChecked: number | null;
+  stockNumberDifferent: number;
   currentPrice: number;
   expDate: string | null;
   batchNumber: string | null;
+  discounted: boolean;
   stockLevel: 'low' | 'medium' | 'high' | string;
   active: boolean;
-  product: Product; // Thông tin chi tiết sản phẩm
-  inventory: Inventory; // Thông tin kho chứa sản phẩm
+  product: Product;
+  inventory: Inventory;
 }
 
-/**
- * @description Tham số bộ lọc để lấy danh sách sản phẩm trong kho.
- */
 export interface InventoryProductFilterParams {
   inventoryId: number;
-  keyword?: string;
   minStock?: number;
   maxStock?: number;
   minPrice?: number;
@@ -46,91 +37,101 @@ export interface InventoryProductFilterParams {
   discounted?: boolean;
   batchNumber?: string;
   productId?: number;
-  fromDate?: string; // Format: 'YYYY-MM-DD'
-  toDate?: string;   // Format: 'YYYY-MM-DD'
+  fromDate?: string;
+  toDate?: string;
   sortBy?: string;
   sortDirection?: 'DESC' | 'ASC';
   page?: number;
   pageSize?: number;
 }
 
-/**
- * @description Dữ liệu cần thiết để thêm một sản phẩm vào kho.
- */
 export interface InventoryProductCreatePayload {
   stockNumber: number;
   inventoryId: number;
   productId: number;
-   stockLevel: 'low' | 'medium' | 'high' | string; 
+  stockLevel: 'low' | 'medium' | 'high' | string;
+  expDate?: string; // "YYYY-MM-DD HH:mm:ss"
+  batchNumber?: string;
+  discounted?: boolean;
 }
+
 export interface InventoryProductUpdatePayload {
   stockNumber: number;
   inventoryId: number;
   productId: number;
   stockLevel: 'low' | 'medium' | 'high' | string;
+  expDate?: string;
+  batchNumber?: string;
+  discounted?: boolean;
 }
-/**
- * @description Dữ liệu để cập nhật một sản phẩm trong kho (thường là số lượng).
- */
-// export type InventoryProductUpdatePayload = Pick<InventoryProductCreatePayload, 'stockNumber'>;
 
-
-// === SERVICE OBJECT ===
+// === SERVICE ===
 
 export const inventoryProductService = {
-  /**
-   * @description Lấy dữ liệu thống kê của một kho hàng.
-   * @returns Promise chứa toàn bộ ApiResponse.
-   */
-  getInventoryStatistics: async (inventoryId: number): Promise<ApiResponse<InventoryStatistics>> => {
-    const response = await api.get<ApiResponse<InventoryStatistics>>(`/inventory-product/statistic/${inventoryId}`);
-    return response;
+  getInventoryStatistics: async (inventoryId: number): Promise<InventoryStatistics> => {
+    type FullApiResponse = {
+      result: InventoryStatistics;
+      message: string;
+      success: boolean;
+    };
+    const response = await api.get<FullApiResponse>(`inventory-product/statistic/${inventoryId}`);
+    return response.result;
   },
 
-  /**
-   * @description Lấy danh sách sản phẩm trong kho theo bộ lọc.
-   * @returns Promise chứa toàn bộ ApiResponse.
-   */
-  getInventoryProductList: async (params: InventoryProductFilterParams): Promise<ApiResponse<InventoryProduct[]>> => {
-    // Lưu ý: Dùng POST để gửi filter body là một lựa chọn của backend.
-    // Về mặt RESTful convention, GET với query params thường được ưa chuộng hơn.
-    const response = await api.post<ApiResponse<InventoryProduct[]>>('/inventory-product/list', params);
-    return response;
+  getInventoryProductList: async (
+    params: InventoryProductFilterParams
+  ): Promise<PagedResponse<InventoryProduct>> => {
+    type FullApiResponse = {
+      result: PagedResponse<InventoryProduct>;
+      message: string;
+      success: boolean;
+    };
+
+    const finalParams = {
+      ...params,
+      active: true,
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? 10,
+    };
+
+    const response = await api.post<FullApiResponse>('inventory-product/paging', finalParams);
+    return response.result;
   },
 
-  /**
-   * @description Cập nhật một sản phẩm trong kho.
-   * @returns Promise chứa toàn bộ ApiResponse.
-   */
-  updateInventoryProduct: async (inventoryProductId: number, payload: InventoryProductUpdatePayload): Promise<ApiResponse<InventoryProduct>> => {
-    const response = await api.put<ApiResponse<InventoryProduct>>(`/inventory-product/${inventoryProductId}`, payload);
-    return response;
+  getInventoryProductById: async (inventoryProductId: number): Promise<InventoryProduct> => {
+    type FullApiResponse = {
+      result: InventoryProduct;
+      message: string;
+      success: boolean;
+    };
+    const response = await api.get<FullApiResponse>(`inventory-product/${inventoryProductId}`);
+    return response.result;
   },
 
-  /**
-   * @description Lấy chi tiết một sản phẩm trong kho bằng ID của nó.
-   * @returns Promise chứa toàn bộ ApiResponse.
-   */
-  getInventoryProductById: async (inventoryProductId: number): Promise<ApiResponse<InventoryProduct>> => {
-    const response = await api.get<ApiResponse<InventoryProduct>>(`/inventory-product/${inventoryProductId}`);
-    return response;
+  createInventoryProduct: async (payload: InventoryProductCreatePayload): Promise<InventoryProduct> => {
+    type FullApiResponse = {
+      result: InventoryProduct;
+      message: string;
+      success: boolean;
+    };
+    const response = await api.post<FullApiResponse>('inventory-product', payload);
+    return response.result;
   },
 
-  /**
-   * @description Thêm một sản phẩm mới vào kho.
-   * @returns Promise chứa toàn bộ ApiResponse.
-   */
-  createInventoryProduct: async (payload: InventoryProductCreatePayload): Promise<ApiResponse<InventoryProduct>> => {
-    const response = await api.post<ApiResponse<InventoryProduct>>('/inventory-product', payload);
-    return response;
+  updateInventoryProduct: async (
+    inventoryProductId: number,
+    payload: InventoryProductUpdatePayload
+  ): Promise<InventoryProduct> => {
+    type FullApiResponse = {
+      result: InventoryProduct;
+      message: string;
+      success: boolean;
+    };
+    const response = await api.put<FullApiResponse>(`inventory-product/${inventoryProductId}`, payload);
+    return response.result;
   },
 
-  /**
-   * @description Xóa một sản phẩm khỏi kho.
-   * @returns Promise chứa toàn bộ ApiResponse.
-   */
-  deleteInventoryProduct: async (inventoryProductId: number): Promise<ApiResponse<null>> => {
-    const response = await api.delete<ApiResponse<null>>(`/inventory-product/${inventoryProductId}`);
-    return response;
+  deleteInventoryProduct: async (inventoryProductId: number): Promise<void> => {
+    await api.delete<void>(`inventory-product/${inventoryProductId}`);
   },
 };

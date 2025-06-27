@@ -2,6 +2,8 @@
 
 import {api} from './apiService';
 import { Branch } from './branchService'; 
+import { PagedResponse } from './categoryService';
+
 export interface Inventory {
   inventoryId: number;
   name: string;
@@ -30,12 +32,28 @@ export interface InventoryListParams {
   pageSize?: number; 
 }
 
+export interface CheckedHistory {
+  checkedHistoryId: number;
+  checkedDate: string; // ISO string
+  note: string;
+  user: { id: number; fullName: string } | null;
+}
+
 export const inventoryService = {
   getAllInventories: async (params: InventoryListParams): Promise<Inventory[]> => {
     type FullApiResponse = { result: Inventory[] };
     const response = await api.post<FullApiResponse>('inventory/list', params);
     return response.result;
   },
+
+  getInventoryWithPaging: async (
+    params: InventoryListParams
+  ): Promise<PagedResponse<Inventory>> => {
+    type FullApiResponse = { result: PagedResponse<Inventory> };
+    const response = await api.post<FullApiResponse>('inventory/paging', params);
+    return response.result;
+  },
+  
   getInventoryById: async (inventoryId: number): Promise<Inventory> => {
     type FullApiResponse = { result: Inventory };
     const response = await api.get<FullApiResponse>(`inventory/${inventoryId}`);
@@ -53,5 +71,24 @@ export const inventoryService = {
   },
   deleteInventory: (inventoryId: number): Promise<void> => {
     return api.delete<void>(`inventory/${inventoryId}`);
+  },
+  getCheckedHistoriesPaging: async (params: {
+    inventoryId: number;
+    keyword?: string;
+    page?: number;
+    pageSize?: number;
+    sortBy?: string;
+    sortDirection?: 'ASC' | 'DESC';
+  }): Promise<PagedResponse<CheckedHistory>> => {
+    type FullApiResponse = { result: PagedResponse<CheckedHistory> };
+    const response = await api.post<FullApiResponse>('checked-history/paging', {
+      keyword: params.keyword ?? '',
+      sortBy: params.sortBy || 'checkedDate',
+      sortDirection: params.sortDirection || 'DESC',
+      page: params.page || 1,
+      pageSize: params.pageSize || 10,
+      inventoryId: params.inventoryId,
+    });
+    return response.result;
   },
 };

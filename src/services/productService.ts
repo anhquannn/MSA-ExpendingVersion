@@ -70,6 +70,17 @@ export interface FilteredProductsResult {
     discountedProductsPage: PagedResponse<Product>;
 }
 
+export interface ProductCombinationCreatePayload {
+  productId1: number;
+  productId2: number;
+}
+
+export interface ProductCombinationResponse {
+  combinationId: number;
+  productId1: number;
+  productId2: number;
+}
+
 export const productService = {
   getProducts: async (params: ProductFilterParams): Promise<FilteredProductsResult> => {
     type FullApiResponse = {
@@ -81,13 +92,14 @@ export const productService = {
     return fullResponse.result;
   },
   createProduct: async (
-    productData: ProductCreatePayload,
+    productData: ProductCreatePayload & { combinationProductIds?: number[] },
     imageUrls: string[],
     initialInventoryData: Omit<InventoryProductCreatePayload, 'productId'>
   ): Promise<Product> => {
     
     console.log("Service: Bước 1 - Đang tạo sản phẩm...");
-    const productResponse = await api.post<{ result: Product }>('product', productData);
+    const { combinationProductIds, ...baseProductData } = productData as any;
+    const productResponse = await api.post<{ result: Product }>('product', baseProductData);
     const newProduct = productResponse.result;
 
     if (!newProduct || !newProduct.productId) {
@@ -115,11 +127,30 @@ export const productService = {
       stockNumber: initialInventoryData.stockNumber,
       stockLevel: initialInventoryData.stockLevel,
     });
+    // create product combinations if any
+    if (productData.combinationProductIds && productData.combinationProductIds.length > 0) {
+      const comboPromises = productData.combinationProductIds.map((id) =>
+        api.post('product-combinations', {
+          productId1: newProduct.productId,
+          productId2: id,
+        })
+      );
+      await Promise.all(comboPromises);
+    }
     return newProduct;
   },
-  updateProduct: async (productId: number, payload: ProductUpdatePayload): Promise<Product> => {
+  getRelatedProductIds: async (productId: number): Promise<number[]> => {
+    type ListResp = { result: ProductCombinationResponse[] };
+    const filterPayload = { productId1: productId, page: 1, pageSize: 100 };
+    const resp = await api.post<ListResp>('product-combinations/list', filterPayload);
+    const combos = resp.result || [];
+    return combos.map(c => (c.productId1 === productId ? c.productId2 : c.productId1));
+  },
+
+  updateProduct: async (productId: number, payload: ProductUpdatePayload & { combinationProductIds?: number[] }): Promise<Product> => {
     type UpdateApiResponse = { result: Product };
-    const response = await api.put<UpdateApiResponse>(`product/${productId}`, payload);
+    const { combinationProductIds, ...basePayload } = payload as any;
+    const response = await api.put<UpdateApiResponse>(`product/${productId}`, basePayload);
     return response.result;
   },
 

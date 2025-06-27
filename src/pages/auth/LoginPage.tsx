@@ -57,7 +57,7 @@ const handleSubmit = async (event: React.FormEvent) => {
         setError(loginResponse.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
       }
     } catch (err: any) {
-      const errorMessage = err.message || 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.';
+      const errorMessage = err.message || 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.';  
       setError(errorMessage);
       // Xóa token nếu có lỗi trong quá trình sau khi đăng nhập (đảm bảo sạch trạng thái)
       AuthTokenManager.clearTokens(); 

@@ -100,6 +100,7 @@ public class CartItemService {
       }
 
       cartItem.setQuantity(newQuantity);
+      cartItem.setSelected(true);
     } else {
       Product product =
           entityFinderService.findByIdOrThrow(

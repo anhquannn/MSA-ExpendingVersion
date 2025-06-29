@@ -1,5 +1,6 @@
 package com.market.MSA.requests.user;
 
+import com.market.MSA.models.others.Platform;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,4 +16,6 @@ import lombok.experimental.FieldDefaults;
 public class AuthenticationRequest {
   String email;
   String password;
+  String fcmToken;
+  Platform platform;
 }

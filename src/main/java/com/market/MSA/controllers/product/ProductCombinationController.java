@@ -5,7 +5,6 @@ import com.market.MSA.requests.filters.ProductCombinationFilterRequest;
 import com.market.MSA.requests.product.ProductCombinationRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.ProductCombinationResponse;
-import com.market.MSA.responses.product.ProductCombinationListResponse;
 import com.market.MSA.responses.product.ProductResponse;
 import com.market.MSA.services.product.ProductCombinationService;
 import jakarta.validation.Valid;

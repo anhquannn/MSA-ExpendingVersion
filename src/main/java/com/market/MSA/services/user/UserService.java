@@ -5,8 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.user.UserMapper;
+import com.market.MSA.models.others.DeviceToken;
+import com.market.MSA.models.others.Platform;
 import com.market.MSA.models.user.Role;
 import com.market.MSA.models.user.User;
+import com.market.MSA.repositories.others.DeviceTokenRepository;
 import com.market.MSA.repositories.user.RoleRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.user.AuthenticationRequest;
@@ -45,15 +48,52 @@ import org.springframework.web.client.RestTemplate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class UserService {
+  DeviceTokenRepository deviceTokenRepository;
   static final String CHARACTERS =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()";
-
   final UserRepository userRepository;
   final UserMapper userMapper;
   final RoleRepository roleRepository;
   final EmailService emailService;
   final AuthenticationService authenticationService;
   final PasswordEncoder passwordEncoder;
+
+  @Transactional
+  public AuthenticationResponse loginAdmin(
+      String email, String password, String fcmToken, Platform platform) {
+    User user =
+        userRepository
+            .findByEmail(email)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+    if (!passwordEncoder.matches(password, user.getPassword())) {
+      throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+    }
+
+    // Save FCM token if provided
+    if (fcmToken != null && platform != null) {
+      DeviceToken deviceToken =
+          deviceTokenRepository
+              .findByToken(fcmToken)
+              .orElse(
+                  DeviceToken.builder()
+                      .userId(user.getUserId())
+                      .token(fcmToken)
+                      .platform(platform)
+                      .build());
+      deviceTokenRepository.save(deviceToken);
+    }
+
+    String accessToken = authenticationService.generateToken(user, false);
+    String refreshToken = authenticationService.generateToken(user, true);
+
+    return AuthenticationResponse.builder()
+        .accessToken(accessToken)
+        .refreshToken(refreshToken)
+        .expiresIn(authenticationService.getValidDuration() * 3600)
+        .authenticated(true)
+        .build();
+  }
 
   @Transactional
   public UserResponse registerUser(UserRequest request) {

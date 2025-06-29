@@ -58,7 +58,7 @@ public class FcmService {
               .putAllData(data == null ? Map.of() : data)
               .setNotification(Notification.builder().setTitle(title).setBody(body).build())
               .build();
-      FirebaseMessaging.getInstance().sendMulticast(message);
+      FirebaseMessaging.getInstance().sendEachForMulticast(message);
       log.info("Sent FCM notification to user {} with {} tokens", toUserId, tokens.size());
     } catch (Exception ex) {
       log.error("Error sending FCM", ex);

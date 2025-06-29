@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 public interface OrderDetailMapper {
   OrderDetail toOrderDetail(OrderDetailRequest request);
 
+  @Mapping(target = "product.productImageResponses", source = "product.images")
   OrderDetailResponse toOrderDetailResponse(OrderDetail orderDetail);
 
   @Mapping(target = "orderDetailId", ignore = true)

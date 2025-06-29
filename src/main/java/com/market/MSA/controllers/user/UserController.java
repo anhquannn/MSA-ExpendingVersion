@@ -68,6 +68,17 @@ public class UserController {
   @PostMapping("/admin/login")
   public ApiResponse<AuthenticationResponse> loginAdmin(
       @RequestBody @Valid AuthenticationRequest request) {
+    if (request.getFcmToken() != null && request.getPlatform() != null) {
+      return ApiResponse.<AuthenticationResponse>builder()
+          .result(
+              userService.loginAdmin(
+                  request.getEmail(),
+                  request.getPassword(),
+                  request.getFcmToken(),
+                  request.getPlatform()))
+          .message(ApiMessage.USER_LOGGED_IN.getMessage())
+          .build();
+    }
     return ApiResponse.<AuthenticationResponse>builder()
         .result(userService.loginAdmin(request.getEmail(), request.getPassword()))
         .message(ApiMessage.USER_LOGGED_IN.getMessage())

@@ -132,7 +132,7 @@ public class ApplicationinitConfig {
         User adminUser =
             User.builder()
                 .email("admin@example.com")
-                .password(passwordEncoder.encode("" + ""))
+                .password(passwordEncoder.encode("admin123"))
                 .fullName("Admin")
                 .phoneNumber("0123456789")
                 .branches(new ArrayList<>(List.of(defaultBranch)))

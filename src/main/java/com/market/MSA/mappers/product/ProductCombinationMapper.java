@@ -13,6 +13,8 @@ public interface ProductCombinationMapper {
 
   @Mapping(target = "productId1", source = "product1")
   @Mapping(target = "productId2", source = "product2")
+  @Mapping(target = "productId1.productImageResponses", source = "product1.images")
+  @Mapping(target = "productId2.productImageResponses", source = "product2.images")
   ProductCombinationResponse toProductCombinationResponse(ProductCombination pc);
 
   @Mapping(target = "combinationId", ignore = true)

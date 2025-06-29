@@ -172,8 +172,6 @@ Future<void> showCustomDialog(
   );
 }
 
-
-
 showCustomMessageError(BuildContext context) async {
   return await showCustomDialog(
     context,
@@ -187,5 +185,28 @@ showCustomMessageError(BuildContext context) async {
     true,
     false,
     null,
+  );
+}
+
+showCustomSuccessError(
+  BuildContext context,
+  String text,
+  VoidCallback onClose,
+) async {
+  return await showCustomDialog(
+    context,
+    AppSize.w(0.8),
+    150,
+    'Thông báo',
+    Text(
+      text,
+      style: TextStyle(color: toHexToColor(primaryTextColor), fontSize: 16),
+    ),
+    true,
+    false,
+    onClose: () {
+      onClose();
+    },
+    Icon(Icons.check_circle, color: Colors.green),
   );
 }

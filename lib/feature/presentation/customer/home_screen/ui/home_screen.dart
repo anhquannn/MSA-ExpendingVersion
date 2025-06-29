@@ -2,6 +2,7 @@ import 'dart:ffi';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
 import 'package:msa/feature/data/model/response/get_order_response_model.dart';
@@ -10,9 +11,11 @@ import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
+import 'package:msa/feature/presentation/customer/product_list/ui/product_list_screen.dart';
 import 'package:msa/widget/customBottomSheet.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../../../../core/config/base_bloc.dart';
 import '../../../../../core/config/config.dart';
@@ -195,7 +198,10 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
               );
             }
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text('Không có danh mục nào'));
+              return Center(child: SizedBox(
+              height: 150,
+              child: Lottie.asset('assets/animations/loading.json'),
+            ),);
             }
 
             return buildBodyContent(
@@ -318,11 +324,16 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return widgetHome(
-      widget.bloc,
-      widget.width,
-      widget.labels,
-      promoPageController,
+    return Builder(
+      builder: (innerContext) {
+        return widgetHome(
+          widget.bloc,
+          widget.width,
+          widget.labels,
+          promoPageController,
+          innerContext, // truyền đúng context nằm trong Navigator
+        );
+      },
     );
   }
 
@@ -331,26 +342,35 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     double width,
     List<CategoryModel> labels,
     PageController promoPageController,
+    BuildContext bContext,
   ) {
     final chipList =
         labels
             .map(
-              (label) => InkWell(
-                onTap: () {
-                  bloc.onTapCategory(label);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child: Chip(
-                    label: Text(label.name ?? ''),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 3,
-                      vertical: 3,
+              (label) => Builder(
+                builder:
+                    (context) => InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          bContext,
+                          MaterialPageRoute(
+                            builder: (_) => ProductListScreen(category: label, listCartItemModel: bloc.listCartItemModel,),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        child: Chip(
+                          label: Text(label.name ?? ''),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 3,
+                            vertical: 3,
+                          ),
+                          backgroundColor: toHexToColor(primaryButtonColor),
+                          labelStyle: const TextStyle(color: Colors.white),
+                        ),
+                      ),
                     ),
-                    backgroundColor: toHexToColor(primaryButtonColor),
-                    labelStyle: const TextStyle(color: Colors.white),
-                  ),
-                ),
               ),
             )
             .toList();
@@ -363,14 +383,17 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               ...chipList,
               ...List.generate(
                 maxChips - chipList.length,
-                (i) => Chip(
-                  label: Text('Chip ${chipList.length + i + 1}'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 6,
+                (i) => InkWell(
+                  onTap: () {},
+                  child: Chip(
+                    label: Text('Chip ${chipList.length + i + 1}'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 6,
+                    ),
+                    backgroundColor: toHexToColor(primaryButtonColor),
+                    labelStyle: const TextStyle(color: Colors.white),
                   ),
-                  backgroundColor: toHexToColor(primaryButtonColor),
-                  labelStyle: const TextStyle(color: Colors.white),
                 ),
               ),
             ]
@@ -460,16 +483,18 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: SizedBox(
-            width: width,
-            child: Padding(
-              padding: const EdgeInsets.all(0.0),
-              child: Wrap(children: dynamicChipList),
-            ),
-          ),
-        ),
-
+        // SliverToBoxAdapter(
+        //   child: SizedBox(
+        //     width: width,
+        //     child: Padding(
+        //       padding: const EdgeInsets.all(0.0),
+        //       child: Wrap(children: dynamicChipList),
+        //     ),
+        //   ),
+        // ),
+        buildCategoryChips(context, labels, (model) {
+          bloc.onTapCategory(model);
+        }),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -509,7 +534,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   itemCount: products!.length > 20 ? 20 : products.length,
                   itemBuilder: (context, index) {
                     final key = bloc.imageKeys.putIfAbsent(
-                      (products[index].productId??0)+99999,
+                      (products[index].productId ?? 0) + 99999,
                       () => GlobalKey(),
                     );
                     return InkWell(
@@ -693,6 +718,51 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           ),
         ),
       ],
+    );
+  }
+
+  Widget buildCategoryChips(
+    BuildContext context,
+    List<CategoryModel> labels,
+    Function(CategoryModel model) onTap,
+  ) {
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: 35,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          itemCount: labels.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 6),
+          itemBuilder: (ctx, index) {
+            final label = labels[index];
+            return GestureDetector(
+              onTap: () {
+                onTap(label);
+                // Navigator.of(context, rootNavigator: true).push(
+                //   MaterialPageRoute(
+                //     builder: (_) => ProductListScreen(category: label),
+                //   ),
+                // );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: toHexToColor(primaryButtonColor),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  label.name ?? '',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

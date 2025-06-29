@@ -37,6 +37,7 @@ import 'package:msa/feature/presentation/customer/product_list/ui/product_list_s
 import 'package:msa/feature/presentation/customer/promo_code_list/ui/promo_code_list_screen.dart';
 import 'package:msa/widget/animate_add_to_cart.dart';
 import 'package:msa/widget/custom_dropdown.dart';
+import 'package:msa/widget/custom_loading.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../../../data/datasources/local/starage.dart';
 import '../ui/home_screen.dart';
@@ -312,13 +313,29 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     );
   }
 
+  onTapCategory(CategoryModel model) {
+    Navigator.push(
+      viewContext,
+      MaterialPageRoute(
+        builder:
+            (context) => ProductListScreen(
+              // productList: listProducts,
+              listCartItemModel: listCartItemModel,
+              isSale: true,
+              category: model,
+            ),
+      ),
+    );
+  }
+
   onTapProductSale() {
     Navigator.push(
       viewContext,
       MaterialPageRoute(
         builder:
             (context) =>
-                ProductListScreen(productList: listProducts, isSale: true),
+                ProductListScreen(productList: listProducts, 
+              listCartItemModel: listCartItemModel,isSale: true),
       ),
     );
   }
@@ -329,23 +346,9 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       MaterialPageRoute(
         builder:
             (context) =>
-                ProductListScreen(productList: listProducts, isSale: false),
+                ProductListScreen(productList: listProducts, isSale: false, listCartItemModel: listCartItemModel,),
       ),
     );
-  }
-
-  onTapCategory(CategoryModel model) {
-    // Navigator.push(
-    //   viewContext,
-    //   MaterialPageRoute(
-    //     builder: (context) => ProductListScreen(
-    //       productList: productModels.value
-    //           .where((product) => product.categoryId == model.id)
-    //           .toList(),
-    //       isSale: false,
-    //     ),
-    //   ),
-    // );
   }
 
   onTapProductDetail(ProductModel model) {
@@ -358,6 +361,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onBuyNow(ProductModel model, BuildContext bContext) async {
+    showFullScreenLoading(bContext);
     List<int> cartIds = [];
     print('🛒 1111111111Danh sách cartItemIds: $cartIds');
     listCartItemModel?.forEach((element) {
@@ -393,11 +397,13 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     print('🛒 Kết quả thêm vào giỏ: $data');
 
     if (data) {
+      hideFullScreenLoading(bContext);
       Navigator.push(
         bContext,
         MaterialPageRoute(builder: (bContext) => CreateOrderScreen()),
       );
     } else {
+      hideFullScreenLoading(bContext);
       print('❌ Không thể thêm sản phẩm vào giỏ hàng.');
     }
   }

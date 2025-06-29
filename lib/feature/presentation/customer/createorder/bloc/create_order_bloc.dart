@@ -21,6 +21,7 @@ import 'package:msa/feature/presentation/customer/createorder/ui/create_order_sc
 import 'package:msa/feature/presentation/customer/createorder/ui/vnpay_webview.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
 import 'package:msa/widget/custom_dropdown.dart';
+import 'package:msa/widget/custom_loading.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -269,7 +270,8 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
     setState(() {});
   }
 
-  Future<void> onBuy(BuildContext bContext) async {
+  onBuy(BuildContext bContext) async {
+    showFullScreenLoading(bContext);
     final CreateOrderRequestModel model = CreateOrderRequestModel(
       branchId: Storage.branchModelGlobal?.branchId,
       cartId: Storage.cartModelGlobal?.cartId,
@@ -307,7 +309,7 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
     }
   }
 
-  Future<void> _handleCodPayment(
+  _handleCodPayment(
     BuildContext context,
     CreateOrderRequestModel model,
     int? orderId,
@@ -319,14 +321,16 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
     print('############ COD orderId: ${orderUpdate?.orderId}');
 
     if (orderUpdate?.orderId != null) {
+      hideFullScreenLoading(context);
       await _showSuccessDialog(context, 'Đặt hàng thành công');
       // Navigator.pop(context);
     } else {
+      hideFullScreenLoading(context);
       await _showErrorDialog(context, 'Đặt hàng không thành công');
     }
   }
 
-  Future<void> _handleOnlinePayment(
+  _handleOnlinePayment(
     BuildContext context,
     CreateOrderRequestModel model,
     int? orderId,
@@ -336,6 +340,7 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
 
     final paymentUrl = await Repository.onGetVnpayUrl(orderId);
 
+    hideFullScreenLoading(context);
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -375,7 +380,7 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
     }
   }
 
-  Future<void> _showSuccessDialog(BuildContext context, String message) async {
+  _showSuccessDialog(BuildContext context, String message) async {
     await showCustomDialog(
       context,
       AppSize.width(),
@@ -399,7 +404,7 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
     );
   }
 
-  Future<void> _showErrorDialog(BuildContext context, String message) async {
+  _showErrorDialog(BuildContext context, String message) async {
     await showCustomDialog(
       context,
       AppSize.width(),
@@ -419,7 +424,7 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
     );
   }
 
-  void openUrlInChrome(String url) {
+  openUrlInChrome(String url) {
     if (Platform.isAndroid) {
       final intent = AndroidIntent(
         action: 'action_view',
@@ -430,7 +435,7 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
     }
   }
 
-  Future<void> openVNPayUrlWithChrome(String url) async {
+  openVNPayUrlWithChrome(String url) async {
     if (url.contains('vnp_Locale=&')) {
       url = url.replaceAll('vnp_Locale=&', 'vnp_Locale=vn&');
     }

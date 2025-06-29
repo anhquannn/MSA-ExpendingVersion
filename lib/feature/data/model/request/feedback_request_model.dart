@@ -1,16 +1,16 @@
 class FeedbackRequest {
-  final int rating;
+  final int? rating;
   final String? comments;
-  final String createAt;
-  final int userId;
-  final int productId;
+  final String? createAt;
+  final int? userId;
+  final int? productId;
 
   FeedbackRequest({
-    required this.rating,
+    this.rating,
     this.comments,
-    required this.createAt,
-    required this.userId,
-    required this.productId,
+    this.createAt,
+    this.userId,
+    this.productId,
   });
 
   factory FeedbackRequest.fromJson(Map<String, dynamic> json) {

@@ -5,7 +5,7 @@ class FeedbackModel {
   final int feedbackId;
   final int rating;
   final String? comments;
-  final DateTime createAt;
+  final String? createAt;
   final UserModel user;
   final ProductModel product;
 
@@ -23,7 +23,7 @@ class FeedbackModel {
       feedbackId: json['feedbackId'],
       rating: json['rating'],
       comments: json['comments'],
-      createAt: DateTime.fromMillisecondsSinceEpoch(json['createAt']),
+      createAt: json['createAt'],
       user: UserModel.fromJson(json['user']),
       product: ProductModel.fromJson(json['product']),
     );
@@ -34,7 +34,7 @@ class FeedbackModel {
       'feedbackId': feedbackId,
       'rating': rating,
       'comments': comments,
-      'createAt': createAt.millisecondsSinceEpoch,
+      'createAt': createAt,
       'user': user.toJson(),
       'product': product.toJson(),
     };

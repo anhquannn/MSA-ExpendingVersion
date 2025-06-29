@@ -82,13 +82,13 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
         selected: false,
         color: Colors.blue,
       ),
-      PaymentMethod(
-        id: 'zalopay',
-        name: 'ZALO PAY',
-        iconUrl: iconZaloPay,
-        selected: false,
-        color: Colors.green,
-      ),
+      // PaymentMethod(
+      //   id: 'zalopay',
+      //   name: 'ZALO PAY',
+      //   iconUrl: iconZaloPay,
+      //   selected: false,
+      //   color: Colors.green,
+      // ),
     ];
     paymentMethods = paymentMethod;
     streamPaymentMethod.set(paymentMethod);
@@ -268,173 +268,6 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
 
     setState(() {});
   }
-
-  // onBuy(BuildContext bContext) async {
-  //   print('#############1234');
-  //   final CreateOrderRequestModel model = CreateOrderRequestModel(
-  //     branchId: Storage.branchModelGlobal?.branchId,
-  //     cartId: Storage.cartModelGlobal?.cartId,
-  //     grandTotal: previewOrder?.grandTotal,
-  //     orderDate: formatDateTime(DateTime.now()),
-  //     promoCodes:
-  //         listPromocode
-  //             ?.where((e) => e.selected == true)
-  //             .map((e) => e.code ?? '')
-  //             .toList(),
-  //     status: OrderStatus.pending,
-  //     userAddressId: Storage.addressModel?.userAddressId,
-  //     userId: Storage.userModelGlobal?.userId,
-  //   );
-
-  //   final OrderCreateResponseModel? data = await Repository.onCreateOrder(
-  //     model,
-  //   );
-
-  //   OrderCreateResponseModel? orderUpdate;
-
-  //   if (data != null) {
-  //     final shipmentResponse = await Repository.createShipment(
-  //       addressId: Storage.addressModel?.userAddressId,
-  //       orderId: data.orderId,
-  //       rateId: previewOrder?.rates?.id,
-  //     );
-
-  //     final typePayment =
-  //         paymentMethods?.firstWhere((element) => element.selected == true).id;
-
-  //     if (typePayment == 'cod') {
-  //       model.status = OrderStatus.pending;
-  //       orderUpdate = await Repository.onUpdateOrderAPI(model, data.orderId);
-  //       // showCustomDialog(
-  //       //   bContext,
-  //       //   AppSize.width(),
-  //       //   AppSize.width(),
-  //       //   'Thông báo',
-  //       //   Text('Đặt hàng thành công', style: TextStyle(color: Colors.black)),
-  //       //   true,
-  //       //   false,
-  //       //   Icon(
-  //       //     Icons.check_box_outline_blank_rounded,
-  //       //     color: toHexToColor(primaryColorGreen),
-  //       //   ),
-  //       // );
-  //       // Navigator.pop(bContext);
-  //       print('############3333# ${orderUpdate?.orderId}');
-  //       if (orderUpdate?.orderId != null) {
-  //         Navigator.pop(bContext);
-  //         await showCustomDialog(
-  //           bContext,
-  //           AppSize.width(),
-  //           AppSize.width(),
-  //           'Thông báo',
-  //           Text('Đặt hàng thành công', style: TextStyle(color: Colors.black)),
-  //           true,
-  //           false,
-  //           Icon(
-  //             Icons.check_circle_outline_sharp,
-  //             size: 24,
-  //             color: toHexToColor(primaryColorGreen),
-  //           ),
-  //         );
-  //         // Navigator.pop(bContext);
-  //       } else {
-  //         await showCustomDialog(
-  //           bContext,
-  //           AppSize.width(),
-  //           AppSize.width(),
-  //           'Thông báo',
-  //           Text(
-  //             'Đặt hàng không thành công',
-  //             style: TextStyle(color: Colors.black),
-  //           ),
-  //           true,
-  //           false,
-  //           Icon(
-  //             size: 24,
-  //             Icons.check_circle_outline_sharp,
-  //             color: toHexToColor(primaryColorGreen),
-  //           ),
-  //         );
-  //       }
-  //       // Navigator.pop(bContext);
-  //     }
-
-  //     if (typePayment == 'vnpay' || typePayment == 'zalopay') {
-  //       model.status = OrderStatus.paying;
-
-  //       orderUpdate = await Repository.onUpdateOrderAPI(model, data.orderId);
-
-  //       final vnPay = await Repository.onGetVnpayUrl(data.orderId);
-  //       // openUrlInChrome(vnPay);
-  //       Navigator.push(
-  //         bContext,
-  //         MaterialPageRoute(
-  //           builder:
-  //               (_) => VnPayWebViewScreen(
-  //                 paymentUrl: vnPay,
-  //                 onPaymentResult: (success) async {
-  //                   if (success) {
-  //                     model.status = OrderStatus.paid;
-  //                     await Repository.onUpdateOrderAPI(model, data.orderId);
-  //                     // ✅ Hiển thị thông báo, chuyển màn hình,...
-  //                     ScaffoldMessenger.of(bContext).showSnackBar(
-  //                       const SnackBar(content: Text("Thanh toán thành công!")),
-  //                     );
-  //                   } else {
-  //                     ScaffoldMessenger.of(bContext).showSnackBar(
-  //                       const SnackBar(content: Text("Thanh toán thất bại!")),
-  //                     );
-  //                   }
-  //                 },
-  //               ),
-  //         ),
-  //       );
-
-  //       model.status = OrderStatus.paid;
-  //       print('########### updatePaying');
-  //       final updatePaying = await Repository.onUpdateOrderAPI(
-  //         model,
-  //         data.orderId,
-  //       );
-  //       if (updatePaying != null) {
-  //         await showCustomDialog(
-  //           bContext,
-  //           AppSize.width(),
-  //           AppSize.width(),
-  //           'Thông báo',
-  //           Text('Đặt hàng thành công', style: TextStyle(color: Colors.black)),
-  //           true,
-  //           false,
-  //           Icon(
-  //             size: 24,
-  //             Icons.check_circle_outline_sharp,
-  //             color: toHexToColor(primaryColorGreen),
-  //           ),
-  //         );
-  //         Navigator.pop(bContext);
-  //       } else {
-  //         await showCustomDialog(
-  //           bContext,
-  //           AppSize.width(),
-  //           AppSize.width(),
-  //           'Thông báo',
-  //           Text(
-  //             'Đặt hàng không thành công',
-  //             style: TextStyle(color: Colors.black),
-  //           ),
-  //           true,
-  //           false,
-  //           Icon(
-  //             size: 24,
-  //             Icons.check_circle_outline_sharp,
-  //             color: toHexToColor(primaryColorGreen),
-  //           ),
-  //         );
-  //       }
-  //       print('########### ${updatePaying.toString()}');
-  //     }
-  //   }
-  // }
 
   Future<void> onBuy(BuildContext bContext) async {
     final CreateOrderRequestModel model = CreateOrderRequestModel(

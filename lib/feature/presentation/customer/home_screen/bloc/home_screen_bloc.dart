@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/config.dart';
+import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/config/global.dart';
+import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/model/request/add_to_cart_request_model.dart';
+import 'package:msa/feature/data/model/request/cartitem_selection_request_model.dart';
 import 'package:msa/feature/data/model/request/category_filter_request.dart';
+import 'package:msa/feature/data/model/request/feedback_request_model.dart';
 import 'package:msa/feature/data/model/request/get_branch_request_model.dart';
 import 'package:msa/feature/data/model/request/order_paging_request_model.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
@@ -26,6 +30,7 @@ import 'package:msa/feature/domain/usecase/user_use_case.dart';
 import 'package:msa/feature/presentation/customer/category_list/ui/category_list_screen.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/selec_branch_screen.dart';
+import 'package:msa/feature/presentation/customer/order_detail/ui/order_detail_screen.dart';
 import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
 import 'package:msa/feature/presentation/customer/product_detail/ui/product_detail_screen.dart';
 import 'package:msa/feature/presentation/customer/product_list/ui/product_list_screen.dart';
@@ -38,26 +43,36 @@ import '../ui/home_screen.dart';
 import 'package:get/get.dart';
 
 class HomeScreenBloc extends BaseBloc<HomeScreen> {
+  // UseCases
   final UserUseCases _userUseCases = GetIt.I<UserUseCases>();
-  final CartItemUseCase _cartItemUseCase = GetIt.I<CartItemUseCase>();
   final CartUseCase _cartUseCase = GetIt.I<CartUseCase>();
+  final CartItemUseCase _cartItemUseCase = GetIt.I<CartItemUseCase>();
+
+  // GlobalKeys
   final GlobalKey cartIconKey = GlobalKey();
   final GlobalKey cartIconKey1 = GlobalKey();
   Map<int, GlobalKey> imageKeys = {};
 
   UserModel? userModel;
+  CartModel? cartModel;
   ProductFilterResult? listProducts;
   List<CategoryModel>? listCategoryModel = [];
   List<PromoCodeModel>? listPromocode = [];
   List<CartItemModel>? listCartItemModel = [];
-  CartModel? cartModel;
+
+  List<OrderResponse> listPending = [];
+  List<OrderResponse> listPaying = [];
+  List<OrderResponse> listPaid = [];
+  List<OrderResponse> listDelivering = [];
+  List<OrderResponse> listShipped = [];
+  List<OrderResponse> listCancelling = [];
+  List<OrderResponse> listCancelled = [];
+  List<OrderResponse> listCompleted = [];
+  List<OrderResponse> listFailed = [];
 
   final PageController categoryController = PageController(initialPage: 0);
+  final ScrollController scrollController = ScrollController();
   final ValueNotifier<int> indexScreen = ValueNotifier(0);
-
-  ScrollController scrollController = ScrollController();
-
-  double currentPage = 0;
 
   final streamCaculate = BehaviorSubject<double>();
   final streamUserModel = BehaviorSubject<UserModel>();
@@ -70,22 +85,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   ]);
   final cartModels = BehaviorSubject<CartModel>();
 
-  bool _isManuallyScrolling = false;
-  bool _isAnimatingPage = false;
-  bool _hasInitCalled = false;
-  final Map<int, Debouncer> _debouncers = {};
-
-  List<OrderResponse> listPending = [];
-  List<OrderResponse> listPaying = [];
-  List<OrderResponse> listPaid = [];
-  List<OrderResponse> listDelivering = [];
-  List<OrderResponse> listShipped = [];
-  List<OrderResponse> listCancelling = [];
-  List<OrderResponse> listCancelled = [];
-  List<OrderResponse> listCompleted = [];
-  List<OrderResponse> listFailed = [];
-
-  // Stream controller tương ứng
   final streamPending = BehaviorSubject<List<OrderResponse>>();
   final streamPaying = BehaviorSubject<List<OrderResponse>>();
   final streamPaid = BehaviorSubject<List<OrderResponse>>();
@@ -95,6 +94,13 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   final streamCancelled = BehaviorSubject<List<OrderResponse>>();
   final streamCompleted = BehaviorSubject<List<OrderResponse>>();
   final streamFailed = BehaviorSubject<List<OrderResponse>>();
+
+  bool _isManuallyScrolling = false;
+  bool _isAnimatingPage = false;
+  bool _hasInitCalled = false;
+  final Map<int, Debouncer> _debouncers = {};
+
+  final TextEditingController rateController = TextEditingController();
 
   @override
   String get contextKey => 'HomeScreen';
@@ -156,8 +162,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   @override
   void onReady() {
-    onCheckBranch();
-    print("onReady called");
     if (!_hasInitCalled) {
       _hasInitCalled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -170,12 +174,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     }
   }
 
-  // onGetAddress() async {
-  //   if (Storage.addressModel != null) {
-  //     final response = await Repository.getUserAddresses();
-  //     Storage.saveAddress(response);
-  //   }
-  // }
   onGetAddress() async {
     if (Storage.addressModel == null) {
       final response = await Repository.getUserAddresses();
@@ -204,6 +202,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       // onGetUserCart().catchError((e) => print('Lỗi product: $e')),
       onCaculateCart().catchError((e) => print('Lỗi onCaculateCart: $e')),
       onGetAddress().catchError((e) => print('Lỗi onGetAddress: $e')),
+      onCheckBranch(),
+      onGetUserCart(),
     ];
 
     await Future.wait(futures);
@@ -263,12 +263,12 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       );
 
       ProductFilterResult product = await Repository.onFilterProducts(filter);
-
       listProducts = product;
       streamProductModels.add(product);
-    } catch (e) {
+    } catch (e, stack) {
       print('❌ Lỗi khi lấy danh sách sản phẩm: $e');
-      streamProductModels.add(ProductFilterResult()); // Fallback nếu có lỗi
+      print('📛 Stacktrace: $stack');
+      streamProductModels.add(ProductFilterResult());
     }
     setState(() {});
   }
@@ -317,10 +317,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       viewContext,
       MaterialPageRoute(
         builder:
-            (context) => ProductListScreen(
-              productList: streamProductModels.value,
-              isSale: true,
-            ),
+            (context) =>
+                ProductListScreen(productList: listProducts, isSale: true),
       ),
     );
   }
@@ -330,10 +328,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       viewContext,
       MaterialPageRoute(
         builder:
-            (context) => ProductListScreen(
-              productList: streamProductModels.value,
-              isSale: true,
-            ),
+            (context) =>
+                ProductListScreen(productList: listProducts, isSale: false),
       ),
     );
   }
@@ -352,7 +348,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     // );
   }
 
-  // onTapProductDetail(ProductModel model) {
   onTapProductDetail(ProductModel model) {
     Navigator.push(
       viewContext,
@@ -362,6 +357,55 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     );
   }
 
+  onBuyNow(ProductModel model, BuildContext bContext) async {
+    List<int> cartIds = [];
+    print('🛒 1111111111Danh sách cartItemIds: $cartIds');
+    listCartItemModel?.forEach((element) {
+      print(element.cartItemId);
+      cartIds.add(element.cartItemId ?? 0);
+    });
+
+    print('🛒 Danh sách cartItemIds: $cartIds');
+
+    final CartItemSelectionRequest request = CartItemSelectionRequest(
+      cartId: Storage.cartModelGlobal?.cartId ?? 0,
+      cartItemIds: cartIds,
+    );
+
+    print('📦 Request cập nhật cart selection: ${request.toJson()}');
+
+    final updateResponse = await Repository.onUpdateCartItemsSelectionAPI(
+      request,
+      false,
+    );
+
+    print('✅ Kết quả cập nhật cart selection: $updateResponse');
+
+    final data = await _cartItemUseCase.addToCart(
+      AddToCartRequest(
+        userId: Storage.userModelGlobal?.userId ?? 0,
+        productId: model.productId ?? 0,
+        branchId: mockBranch.branchId ?? 0,
+        quantity: 1,
+      ),
+    );
+
+    print('🛒 Kết quả thêm vào giỏ: $data');
+
+    if (data) {
+      Navigator.push(
+        bContext,
+        MaterialPageRoute(builder: (bContext) => CreateOrderScreen()),
+      );
+    } else {
+      print('❌ Không thể thêm sản phẩm vào giỏ hàng.');
+    }
+  }
+
+  //- truyền cartID ->UpdateCartItemsSelection
+  // - addtoCart
+  // BE:
+  // - thêm list sp vào API orderDetail
   onGetOrCreateCart({BuildContext? bcontext}) async {
     final data = await _cartUseCase
         .create(Storage.userModelGlobal?.userId ?? 0)
@@ -393,7 +437,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
         .timeout(
           const Duration(seconds: 10),
           onTimeout: () {
-            showCustomMessageError(bcontext!);
+            bcontext != null ? showCustomMessageError(bcontext) : null;
             return <CartItemModel>[];
           },
         );
@@ -404,7 +448,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     }
   }
 
-  void onCaculate(CartItemModel model, bool isMinus) {
+  onCaculate(CartItemModel model, bool isMinus) {
+    if (model.quantity == 1 && isMinus == true) return;
     final quantity =
         isMinus ? (model.quantity ?? 1) - 1 : (model.quantity ?? 1) + 1;
 
@@ -434,13 +479,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     });
   }
 
-  onBuy(ProductModel model, BuildContext? context) async {
-    Navigator.push(
-      context!,
-      MaterialPageRoute(builder: (context) => CreateOrderScreen()),
-    );
-  }
-
   onAddToCart(ProductModel model, BuildContext bcontext, GlobalKey key) async {
     final data = await _cartItemUseCase.addToCart(
       AddToCartRequest(
@@ -463,7 +501,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     showCustomMessageError(bcontext);
   }
 
-  void runAddToCartAnimation({
+  runAddToCartAnimation({
     required BuildContext context,
     required GlobalKey cartKey,
     required GlobalKey imageKey,
@@ -604,4 +642,156 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
         break;
     }
   }
+
+  _showSuccessDialog(BuildContext context, String message) async {
+    await showCustomDialog(
+      context,
+      AppSize.width(),
+      AppSize.width(),
+      'Thông báo',
+      Text(message, style: const TextStyle(color: Colors.black)),
+      true,
+      false,
+      Icon(
+        Icons.check_circle_outline_sharp,
+        size: 24,
+        color: toHexToColor(primaryColorGreen),
+      ),
+      onClose: () {
+        Navigator.pop(context);
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => HomeScreen()),
+        // );
+      },
+    );
+  }
+
+  _showErrorDialog(BuildContext context, String message) async {
+    await showCustomDialog(
+      context,
+      AppSize.width(),
+      AppSize.width(),
+      'Thông báo',
+      Text(message, style: const TextStyle(color: Colors.black)),
+      true,
+      false,
+      onClose: () {
+        Navigator.pop(context);
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => HomeScreen()),
+        // );
+      },
+      Icon(Icons.error_outline, size: 24, color: Colors.red),
+    );
+  }
+
+  onTapOrderDetail(BuildContext bContext, OrderResponse model) {
+    Navigator.push(
+      bContext,
+      MaterialPageRoute(builder: (bContext) => OrderDetailScreen(order: model)),
+    );
+  }
+
+  // onCreateRate({OrderResponse? model, int? rating, BuildContext? bContext}) async {
+  //   final rate = FeedbackRequest(
+  //     comments: rateController.text,
+  //     createAt: formatDateTime(DateTime.now()),
+  //     productId: productId,
+  //     rating: rating,
+  //     userId: Storage.userModelGlobal?.userId,
+  //   );
+
+  //   final response = await Repository.onCreateFeedBack(rate);
+
+  //   if (response != null) {
+  //     _showSuccessDialog(bContext!, 'Gửi đánh giá thành công');
+  //   } else {
+  //     _showErrorDialog(bContext!, 'Gửi đánh giá thất bại');
+  //   }
+  // }
+  // onTapRate()async{
+  //   await showRatingDialog(
+  //     context: context,
+  //     productId: productId!,
+  //     onSubmit: (rating, comment) {
+  //       rateController.text = comment;
+  //       onCreateRate(productId: productId, rating: rating, bContext: context);
+  //     },
+  //   );
+  // }
+
+  // Future<void> showRatingDialog({
+  //   required BuildContext bContext,
+  //   required int productId,
+  //   required Function(int rating, String comment) onSubmit,
+  // }) async {
+  //   final TextEditingController commentController = TextEditingController();
+  //   int selectedRating = 5;
+
+  //   await showDialog(
+  //     context: bContext,
+  //     builder: (bContext) {
+  //       return Dialog(
+  //         insetPadding: EdgeInsets.symmetric(horizontal: AppSize.w(0.05)),
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(12),
+  //         ),
+  //         child: Container(
+  //           padding: const EdgeInsets.all(20),
+  //           width: AppSize.w(0.9),
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               const Text(
+  //                 'Gửi đánh giá sản phẩm',
+  //                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  //               ),
+  //               const SizedBox(height: 20),
+  //               DropdownButtonFormField<int>(
+  //                 value: selectedRating,
+  //                 decoration: const InputDecoration(
+  //                   labelText: 'Chọn số sao đánh giá',
+  //                   border: OutlineInputBorder(),
+  //                 ),
+  //                 items: List.generate(
+  //                   5,
+  //                   (index) => DropdownMenuItem(
+  //                     value: index + 1,
+  //                     child: Text('${index + 1} sao'),
+  //                   ),
+  //                 ),
+  //                 onChanged: (value) {
+  //                   selectedRating = value ?? 5;
+  //                 },
+  //               ),
+  //               const SizedBox(height: 20),
+  //               TextField(
+  //                 controller: commentController,
+  //                 maxLines: 5,
+  //                 decoration: const InputDecoration(
+  //                   labelText: 'Nhập nhận xét',
+  //                   border: OutlineInputBorder(),
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 20),
+  //               InkWell(
+  //                 onTap: () {
+  //                   Navigator.pop(bContext);
+  //                   onSubmit(selectedRating, commentController.text);
+  //                 },
+  //                 child: Container(
+  //                   decoration: BoxDecoration(
+  //                     borderRadius: BorderRadius.circular(8),
+  //                   ),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 }

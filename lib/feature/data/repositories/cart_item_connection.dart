@@ -4,6 +4,7 @@ import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/add_to_cart_request_model.dart';
+import 'package:msa/feature/data/model/request/cartitem_selection_request_model.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/repositories/cart_item_repository.dart';
 
@@ -144,5 +145,19 @@ class CartItemRepositoryImpl extends ICartItemRepository {
     );
 
     return response.result ?? [];
+  }
+
+   static Future<bool> onUpdateCartItemsSelectionAPI(
+    CartItemSelectionRequest request,bool isSelected
+  ) async {
+    final String path =
+        '$updateCartItemsSelection$isSelected';
+
+    final response = await HttpConnection.put<dynamic>(
+      path,
+      body: request.toJson(),
+      fromJsonT: (json) => json,
+    );
+    return response.isSuccess;
   }
 }

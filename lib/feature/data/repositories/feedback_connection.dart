@@ -56,4 +56,14 @@ class FeedbackRepositoryImpl extends IFeedbackRepository {
     );
     return response.isSuccess;
   }
+
+  static Future<FeedbackModel?> createFeedbackApi(FeedbackRequest request) async {
+    final response = await HttpConnection.post<FeedbackModel>(
+      createFeedbackUrl,
+      body: request.toJson(),
+      fromJsonT: (json) => FeedbackModel.fromJson(json),
+    );
+    return response.result;
+  }
+
 }

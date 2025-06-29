@@ -5,6 +5,7 @@ import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/add_to_cart_request_model.dart';
+import 'package:msa/feature/data/model/request/product_conbine_model_request.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
@@ -24,6 +25,11 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   List<CartItemModel>? listCartItemModel = [];
   final streamCartItemModels = BehaviorSubject<List<CartItemModel>>.seeded([]);
 
+  ProductModel? productModel;
+
+  List<ProductModel>? productCombine = [];
+  final streamProductCombine = BehaviorSubject<List<ProductModel>?>();
+
   @override
   String get contextKey => 'ProductDetailScreen';
 
@@ -32,19 +38,19 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
     setState(() {});
   }
 
-  ProductModel productModel = ProductModel(
-    name: 'Product Name',
-    description: 'Product Description',
-  );
   @override
-  void onInit() {}
+  void onInit() {
+    if (widget.productModel != null) {
+      productModel = widget.productModel;
+    }
+  }
 
   @override
   void onDispose() {}
 
   @override
   void onReady() {
-    onGetProduct();
+    Future.wait<void>([onGetProduct(), onGetProducts(), onGetProductCombination()]);
   }
 
   @override
@@ -97,11 +103,12 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
     }
   }
 
-  onGetProduct() async {
+  onGetProducts() async {
     try {
       ProductFilterRequest filter = ProductFilterRequest(
         page: 1,
         pageSize: 10,
+        categoryId: productModel?.category?.categoryId,
         branchId: Storage.branchModelGlobal?.branchId,
       );
 
@@ -111,6 +118,27 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
     } catch (e) {
       print('Lỗi khi lấy danh sách sản phẩm: $e');
       productModels.add(ProductFilterResult()); // Fallback nếu có lỗi
+    }
+  }
+
+  onGetProduct() async {
+    if (widget.productId == null) return;
+    if (widget.productId != null) {
+      final data = await Repository.onGetProductById(widget.productId ?? 0);
+      if (data != null) {
+        productModel = data;
+        setState(() {});
+      }
+    }
+  }
+
+  onGetProductCombination() async {
+    final ProductCombinationFilterRequest request =
+        ProductCombinationFilterRequest(productId1: productModel?.productId);
+    final response = await Repository.onGetConbineProduct(request);
+    if (response != null) {
+      productCombine = response;
+      streamProductCombine.set(productCombine);
     }
   }
 }

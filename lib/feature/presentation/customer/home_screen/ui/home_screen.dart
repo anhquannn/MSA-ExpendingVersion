@@ -407,7 +407,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
-                    height: 180,
+                    height: 170,
                     child: PageView.builder(
                       controller: promoPageController,
                       itemCount: snapshot.data!.length,
@@ -470,77 +470,71 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
           ),
         ),
 
-        if (bloc.listProducts?.discountedProductsPage?.content != null) ...[
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: customTitleCategory(
-                'Sản phẩm giảm giá',
-                'Xem tất cả',
-                () => bloc.onTapProductSale(),
-              ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: customTitleCategory(
+              'Sản phẩm giảm giá',
+              'Xem tất cả',
+              () => bloc.onTapProductSale(),
             ),
           ),
-          // Sản phẩm giảm giá
-          SliverToBoxAdapter(
-            child: StreamBuilder(
-              stream: bloc.streamProductModels,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Lỗi: ${snapshot.error}'));
-                }
-                if (!snapshot.hasData || snapshot.data != null) {
-                  return const Center(child: Text('Không có sản phẩm'));
-                }
-                final products = snapshot.data?.discountedProductsPage?.content;
-                return MediaQuery.removePadding(
-                  context: context,
-                  removeTop: true,
-                  child: GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 3,
-                          mainAxisSpacing: 3,
-                          mainAxisExtent: 300,
-                        ),
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: products!.length > 10 ? 10 : products.length,
-                    itemBuilder: (context, index) {
-                      final key = bloc.imageKeys.putIfAbsent(
-                        products[index].productId!,
-                        () => GlobalKey(),
-                      );
-                      return InkWell(
-                        key: key,
-                        onTap: () {
-                          // bloc.onTapProductDetail();
-                          bloc.onTapProductDetail(products[index]);
-                        },
-                        child: customItemProductCustomer(
-                          onBuy: () {
-                            bloc.onBuy(products[index], context);
-                          },
-                          onAddToCart: () {
-                            bloc.onAddToCart(products[index], context, key);
-                          },
-                          isDiscount: true,
-                          products[index],
-                          width * 0.4,
-                        ),
-                      );
-                    },
+        ),
+        SliverToBoxAdapter(
+          child: StreamBuilder(
+            stream: bloc.streamProductModels,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('Lỗi: ${snapshot.error}'));
+              }
+              if (!snapshot.hasData || snapshot.data == null) {
+                return const Center(child: Text('Không có sản phẩm'));
+              }
+              final products = snapshot.data?.discountedProductsPage?.content;
+              return MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 3,
+                    mainAxisSpacing: 3,
+                    mainAxisExtent: 300,
                   ),
-                );
-              },
-            ),
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: products!.length > 20 ? 20 : products.length,
+                  itemBuilder: (context, index) {
+                    final key = bloc.imageKeys.putIfAbsent(
+                      (products[index].productId??0)+99999,
+                      () => GlobalKey(),
+                    );
+                    return InkWell(
+                      key: key,
+                      onTap: () {
+                        bloc.onTapProductDetail(products[index]);
+                      },
+                      child: customItemProductCustomer(
+                        onBuy: () {
+                          bloc.onBuyNow(products[index], context);
+                        },
+                        onAddToCart: () {
+                          bloc.onAddToCart(products[index], context, key);
+                        },
+                        isDiscount: false,
+                        products[index],
+                        width * 0.4,
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           ),
-        ],
-
+        ),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -591,7 +585,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                       },
                       child: customItemProductCustomer(
                         onBuy: () {
-                          bloc.onBuy(products[index], context);
+                          bloc.onBuyNow(products[index], context);
                         },
                         onAddToCart: () {
                           bloc.onAddToCart(products[index], context, key);
@@ -783,6 +777,7 @@ class _OrderTabState extends State<OrderTab>
                                 order: order,
                                 status: status,
                                 bCOntext: context,
+                                bloc: widget.bloc,
                               );
                             },
                           ),
@@ -826,128 +821,137 @@ class _OrderTabState extends State<OrderTab>
     required OrderResponse order,
     OrderStatus? status,
     BuildContext? bCOntext,
+    HomeScreenBloc? bloc,
   }) {
     final orderCode = order.orderId;
     final total = order.grandTotal ?? 0;
 
-    return Stack(
-      children: [
-        SizedBox(
-          width: width,
-          height: 150,
-          child: Card(
-            color: Colors.white,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  height: 110,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        flex: 4,
-                        child: Padding(
-                          padding: const EdgeInsets.all(5.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(8),
-                                topRight: Radius.circular(8),
-                              ),
-                              image: DecorationImage(
-                                image: AssetImage(imgOrder),
-                                fit: BoxFit.cover,
+    return InkWell(
+      onTap: () {
+        bloc?.onTapOrderDetail(bCOntext!, order);
+      },
+      child: Stack(
+        children: [
+          SizedBox(
+            width: width,
+            height: 150,
+            child: Card(
+              color: Colors.white,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    height: 110,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          flex: 4,
+                          child: Padding(
+                            padding: const EdgeInsets.all(5.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(8),
+                                  topRight: Radius.circular(8),
+                                ),
+                                image: DecorationImage(
+                                  image: AssetImage(imgOrder),
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      Flexible(
-                        flex: 6,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: SizedBox(
-                            height: 70,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                customAutoSizeText(
-                                  14,
-                                  20,
-                                  'Mã đơn hàng #$orderCode',
-                                  isBold: true,
-                                ),
-                                SizedBox(height: 8),
-                                Card(
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 5,
-                                      horizontal: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: toHexToColor(secondaryColorOrange),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: customAutoSizeText(
-                                      12,
-                                      18,
-                                      'Tổng tiền: ${formatCurrencyVN(total)}',
-                                      textColor: toHexToColor(
-                                        secondaryTextColor,
+                        Flexible(
+                          flex: 6,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: SizedBox(
+                              height: 70,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  customAutoSizeText(
+                                    14,
+                                    20,
+                                    'Mã đơn hàng #$orderCode',
+                                    isBold: true,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Card(
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 5,
+                                        horizontal: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: toHexToColor(
+                                          secondaryColorOrange,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: customAutoSizeText(
+                                        12,
+                                        18,
+                                        'Tổng tiền: ${formatCurrencyVN(total)}',
+                                        textColor: toHexToColor(
+                                          secondaryTextColor,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(8),
-                        bottomRight: Radius.circular(8),
-                      ),
-                      color: toHexToColor(primaryButtonColor),
-                    ),
-                    height: 20,
-                    child: buildOrderStatusWidget(
-                      status: status ?? OrderStatus.pending,
-                      bContext: bCOntext,
-                      model: order,
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: Container(
-            decoration: BoxDecoration(
-              color: toHexToColor(primaryErrorColor),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 5),
-              child: Text(
-                order.status ?? '',
-                style: TextStyle(color: Colors.white, fontSize: 10),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(8),
+                          bottomRight: Radius.circular(8),
+                        ),
+                        color: toHexToColor(primaryButtonColor),
+                      ),
+                      height: 20,
+                      child: buildOrderStatusWidget(
+                        status: status ?? OrderStatus.pending,
+                        bContext: bCOntext,
+                        model: order,
+                        bloc: bloc,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ),
-      ],
+          Positioned(
+            top: 4,
+            right: 4,
+            child: Container(
+              decoration: BoxDecoration(
+                color: toHexToColor(primaryErrorColor),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 5),
+                child: Text(
+                  order.status ?? '',
+                  style: TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -955,6 +959,7 @@ class _OrderTabState extends State<OrderTab>
     required OrderStatus status,
     OrderResponse? model,
     BuildContext? bContext,
+    HomeScreenBloc? bloc,
   }) {
     switch (status) {
       case OrderStatus.pending:
@@ -962,30 +967,34 @@ class _OrderTabState extends State<OrderTab>
       case OrderStatus.paying:
         return _buildTapText('Thanh toán', bContext, model ?? OrderResponse());
       case OrderStatus.delivering:
-        return _buildTapText(
-          'Đơn hàng của bạn đang được vận chuyển',
-          bContext,
-          model ?? OrderResponse(),
-          isIcon: false
-        );
+        return _buildText('Đơn hàng của bạn đang được vận chuyển');
+      // return _buildTapText(
+      //   'Đơn hàng của bạn đang được vận chuyển',
+      //   bContext,
+      //   model ?? OrderResponse(),
+      //   isIcon: false,
+      // );
       case OrderStatus.completed:
+        return _buildText('Đơn hàng đã giao thành công');
       case OrderStatus.shipped:
-        return _buildSuccessButtons(bContext);
+        return _buildText('Đơn hàng đã giao thành công');
+      // return _buildSuccessButtons(bContext, bloc!, model!);
       case OrderStatus.cancelling:
-        return _buildTapText(
-          'Đơn hàng đang được hủy',
-          bContext,
-          model ?? OrderResponse(),
-          isIcon: false
-
-        );
+        return _buildText('Đơn hàng đang được hủy');
+      // return _buildTapText(
+      //   'Đơn hàng đang được hủy',
+      //   bContext,
+      //   model ?? OrderResponse(),
+      //   isIcon: false,
+      // );
       case OrderStatus.cancelled:
-        return _buildTapText(
-          'Đơn hàng đã được hủy',
-          bContext,
-          model ?? OrderResponse(),
-          isIcon: false
-        );
+        return _buildText('Đơn hàng đã được hủy');
+      // return _buildTapText(
+      //   'Đơn hàng đã được hủy',
+      //   bContext,
+      //   model ?? OrderResponse(),
+      //   isIcon: false,
+      // );
       case OrderStatus.paid:
         return _buildText('Đơn hàng đang được xử lí');
       case OrderStatus.failed:
@@ -1042,15 +1051,14 @@ class _OrderTabState extends State<OrderTab>
     );
   }
 
-  Widget _buildSuccessButtons(BuildContext? context) {
+  Widget _buildSuccessButtons(
+    BuildContext? context,
+    HomeScreenBloc bloc,
+    OrderResponse model,
+  ) {
     return InkWell(
       onTap: () {
-        if (context != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => CreateOrderScreen()),
-          );
-        }
+        // bloc.onTapOrderDetail(context!, model);
       },
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1077,267 +1085,17 @@ class _OrderTabState extends State<OrderTab>
           ),
           Expanded(
             flex: 5,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.blueGrey,
-                borderRadius: BorderRadius.only(
-                  bottomRight: Radius.circular(10),
-                ),
-              ),
-              child: Center(
-                child: customAutoSizeText(
-                  12,
-                  18,
-                  'Đánh giá',
-                  textColor: Colors.white,
-                  isBold: true,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Widget _itemPending({String? orderDate}) {
-  //   return Row(
-  //     mainAxisAlignment: MainAxisAlignment.center,
-  //     crossAxisAlignment: CrossAxisAlignment.center,
-  //     mainAxisSize: MainAxisSize.min,
-  //     children: [
-  //       customAutoSizeText(
-  //         12,
-  //         18,
-  //         'Ngày đặt hàng: $orderDate',
-  //         textColor: Colors.white,
-  //         isBold: true,
-  //       ),
-  //     ],
-  //   );
-  // }
-
-  // Widget _itemPaying({OrderResponse? model, BuildContext? bContext}) {
-  //   return InkWell(
-  //     onTap: () {
-  //       Navigator.push(
-  //         bContext!,
-  //         MaterialPageRoute(builder: (context) => CreateOrderScreen()),
-  //       );
-  //     },
-  //     child: customAutoSizeText(
-  //       12,
-  //       18,
-  //       'Thanh toán',
-  //       textColor: Colors.white,
-  //       isBold: true,
-  //     ),
-  //   );
-  // }
-
-  // Widget _itemDelivering({OrderResponse? model, BuildContext? bContext}) {
-  //   return InkWell(
-  //     onTap: () {
-  //       Navigator.push(
-  //         bContext!,
-  //         MaterialPageRoute(builder: (context) => CreateOrderScreen()),
-  //       );
-  //     },
-  //     child: customAutoSizeText(
-  //       12,
-  //       18,
-  //       'Đơn hàng của bạn đang được vận chuyển',
-  //       textColor: Colors.white,
-  //       isBold: true,
-  //     ),
-  //   );
-  // }
-
-  // Widget _itemSuccess({OrderResponse? model, BuildContext? bContext}) {
-  //   return InkWell(
-  //     onTap: () {
-  //       Navigator.push(
-  //         bContext!,
-  //         MaterialPageRoute(builder: (context) => CreateOrderScreen()),
-  //       );
-  //     },
-  //     child: Row(
-  //       crossAxisAlignment: CrossAxisAlignment.stretch,
-  //       children: [
-  //         Expanded(
-  //           flex: 5,
-  //           child: Container(
-  //             decoration: BoxDecoration(
-  //               color: toHexToColor(primaryButtonColor),
-  //               borderRadius: BorderRadius.only(
-  //                 bottomLeft: Radius.circular(10),
-  //               ),
-  //             ),
-  //             child: Center(
-  //               child: customAutoSizeText(
-  //                 12,
-  //                 18,
-  //                 'Mua lại',
-  //                 textColor: Colors.white,
-  //                 isBold: true,
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //         Expanded(
-  //           flex: 5,
-  //           child: Container(
-  //             decoration: BoxDecoration(
-  //               color: Colors.blueGrey,
-  //               borderRadius: BorderRadius.only(
-  //                 bottomRight: Radius.circular(10),
-  //               ),
-  //             ),
-
-  //             child: Center(
-  //               child: customAutoSizeText(
-  //                 12,
-  //                 18,
-  //                 'Đánh giá',
-  //                 textColor: Colors.white,
-  //                 isBold: true,
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  //  Widget _itemCancelling({OrderResponse? model, BuildContext? bContext}) {
-  //   return InkWell(
-  //     onTap: () {
-  //       Navigator.push(
-  //         bContext!,
-  //         MaterialPageRoute(builder: (context) => CreateOrderScreen()),
-  //       );
-  //     },
-  //     child: customAutoSizeText(
-  //       12,
-  //       18,
-  //       'Đơn hàng đang được hủy',
-  //       textColor: Colors.white,
-  //       isBold: true,
-  //     ),
-  //   );
-  // }
-
-  //  Widget _itemCancelled({OrderResponse? model, BuildContext? bContext}) {
-  //   return InkWell(
-  //     onTap: () {
-  //       Navigator.push(
-  //         bContext!,
-  //         MaterialPageRoute(builder: (context) => CreateOrderScreen()),
-  //       );
-  //     },
-  //     child: customAutoSizeText(
-  //       12,
-  //       18,
-  //       'Đơn hàng đã được hủy',
-  //       textColor: Colors.white,
-  //       isBold: true,
-  //     ),
-  //   );
-  // }
-
-  Widget customBottomCard({bool isPending = false, bool isSuccess = false}) {
-    return isPending
-        ? Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 7,
+            child: InkWell(
+              onTap: () {
+                // bloc.onCreateRate();
+              },
               child: Container(
-                decoration: BoxDecoration(
-                  color: toHexToColor(primaryButtonColor),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                    bottomRight:
-                        isPending ? Radius.circular(0) : Radius.circular(10),
-                  ),
-                ),
-                child: Center(
-                  child: customAutoSizeText(
-                    12,
-                    18,
-                    'Tổng tiền: 100.000đ',
-                    textColor: Colors.white,
-                    isBold: true,
-                  ),
-                ),
-              ),
-            ),
-            isPending
-                ? Expanded(
-                  flex: 3,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.blueGrey,
-                      borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(10),
-                      ),
-                    ),
-
-                    child: Center(
-                      child: customAutoSizeText(
-                        12,
-                        18,
-                        'Trả hàng',
-                        textColor: Colors.white,
-                        isBold: true,
-                      ),
-                    ),
-                  ),
-                )
-                : Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                      bottomRight: Radius.circular(10),
-                    ),
-                  ),
-                ),
-          ],
-        )
-        : isSuccess
-        ? Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 5,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: toHexToColor(primaryButtonColor),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                  ),
-                ),
-                child: Center(
-                  child: customAutoSizeText(
-                    12,
-                    18,
-                    'Mua lại',
-                    textColor: Colors.white,
-                    isBold: true,
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 5,
-              child: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.blueGrey,
                   borderRadius: BorderRadius.only(
                     bottomRight: Radius.circular(10),
                   ),
                 ),
-
                 child: Center(
                   child: customAutoSizeText(
                     12,
@@ -1349,33 +1107,10 @@ class _OrderTabState extends State<OrderTab>
                 ),
               ),
             ),
-          ],
-        )
-        : Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: toHexToColor(primaryButtonColor),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
-                  ),
-                ),
-                child: Center(
-                  child: customAutoSizeText(
-                    12,
-                    18,
-                    'Đơn hàng sẽ được giao trong 12/12/2020',
-                    textColor: Colors.white,
-                    isBold: true,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1455,190 +1190,219 @@ class CardTab extends StatelessWidget {
         child: Card(
           color: Colors.white,
           child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Row(
+            padding: const EdgeInsets.all(8),
+            child: Stack(
               children: [
-                Expanded(
-                  flex: 4,
-                  child: Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      // child: Image.asset(avtWomen6, fit: BoxFit.cover),
-                      child: CachedNetworkImage(
-                        imageUrl: model?.product?.image ?? '',
-                        placeholder:
-                            (context, url) => CircularProgressIndicator(),
-                        errorWidget:
-                            (context, url, error) =>
-                                Image.asset(imgBranch, fit: BoxFit.cover),
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.contain,
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 4,
+                      child: Center(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          // child: Image.asset(avtWomen6, fit: BoxFit.cover),
+                          child: CachedNetworkImage(
+                            imageUrl: model?.product?.image ?? '',
+                            placeholder:
+                                (context, url) => CircularProgressIndicator(),
+                            errorWidget:
+                                (context, url, error) =>
+                                    Image.asset(imgBranch, fit: BoxFit.cover),
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                Expanded(
-                  flex: 6,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: SizedBox(
-                      height: 100,
-                      child: Stack(
-                        children: [
-                          model?.product?.discountPercentage != 0
-                              ? Positioned(
-                                top: 1,
-                                right: 1,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: toHexToColor(primaryErrorColor),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 2,
-                                      horizontal: 8,
-                                    ),
-                                    child: Text(
-                                      '${model?.product?.discountPercentage}%',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              )
-                              : SizedBox(),
-                          Positioned(
-                            top: 1,
-                            right: 1,
-                            child: InkWell(
-                              onTap: () {
-                                // bloc?.onUpdateSelected(
-                                //   (model?.selected ?? false),
-                                //   model!,
-                                // );
-                                bloc?.onTapCartItem(model!);
-                              },
-
-                              child:
-                                  model?.selected == false
-                                      ? Icon(
-                                        size: 30,
-                                        Icons.check_box_outline_blank,
-                                        color: toHexToColor(primaryColorGreen),
-                                      )
-                                      : Icon(
-                                        size: 30,
-                                        Icons.check_box,
-                                        color: toHexToColor(primaryColorGreen),
-                                      ),
-                            ),
-                          ),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.max,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    Expanded(
+                      flex: 6,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 10),
+                        child: SizedBox(
+                          height: 100,
+                          child: Stack(
                             children: [
-                              customAutoSizeText(
-                                14,
-                                18,
-                                model?.product?.name ?? '',
-                                isBold: true,
-                                textColor: toHexToColor(primaryTextColor),
-                              ),
-                              // customAutoSizeText(8, 12, '100.000đ', isLine: true),
                               model?.product?.discountPercentage != 0
-                                  ? customAutoSizeText(
-                                    12,
-                                    16,
-                                    '${formatCurrencyVN((model?.product?.price ?? 0) * (model?.product?.discountPercentage ?? 0))}',
-                                    isBold: true,
-                                    isLine: true,
-                                    textColor: toHexToColor(primaryButtonColor),
-                                  )
-                                  : SizedBox(),
-                              customAutoSizeText(
-                                12,
-                                16,
-                                '${formatCurrencyVN(model?.price ?? 0)}',
-                                isBold: true,
-                                textColor: toHexToColor(primaryButtonColor),
-                              ),
-                              Spacer(),
-                              Row(
-                                children: [
-                                  Spacer(),
-                                  Card(
-                                    color: Colors.white,
+                                  ? Positioned(
+                                    top: 1,
+                                    right: 1,
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        color: Colors.grey[300],
-                                        borderRadius: BorderRadius.circular(5),
+                                        color: toHexToColor(primaryErrorColor),
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
-                                      child: Row(
-                                        children: [
-                                          InkWell(
-                                            onTap: () {
-                                              bloc?.onCaculate(model!, true);
-                                            },
-                                            child: Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 10,
-                                                vertical: 3,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.only(
-                                                  topLeft: Radius.circular(5),
-                                                  bottomLeft: Radius.circular(
-                                                    5,
-                                                  ),
-                                                ),
-                                              ),
-                                              child: Text(' - '),
-                                            ),
-                                          ),
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 3,
-                                            ),
-                                            color: Colors.white,
-                                            child: Text(
-                                              model?.quantity.toString() ?? '0',
-                                            ),
-                                          ),
-                                          InkWell(
-                                            onTap: () {
-                                              bloc?.onCaculate(model!, false);
-                                            },
-                                            child: Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 3,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.only(
-                                                  bottomRight: Radius.circular(
-                                                    5,
-                                                  ),
-                                                  topRight: Radius.circular(5),
-                                                ),
-                                                // color: Colors.white,
-                                              ),
-                                              child: Text(' + '),
-                                            ),
-                                          ),
-                                        ],
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 2,
+                                          horizontal: 8,
+                                        ),
+                                        child: Text(
+                                          '${model?.product?.discountPercentage}%',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
                                       ),
                                     ),
+                                  )
+                                  : SizedBox(),
+
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.max,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 20),
+                                    child: customAutoSizeText(
+                                      14,
+                                      18,
+                                      model?.product?.name ?? '',
+                                      isBold: true,
+                                      textColor: toHexToColor(primaryTextColor),
+                                    ),
+                                  ),
+                                  // customAutoSizeText(8, 12, '100.000đ', isLine: true),
+                                  model?.product?.discountPercentage != 0
+                                      ? customAutoSizeText(
+                                        12,
+                                        16,
+                                        '${formatCurrencyVN((model?.product?.price ?? 0) * (model?.product?.discountPercentage ?? 0))}',
+                                        isBold: true,
+                                        isLine: true,
+                                        textColor: toHexToColor(
+                                          primaryButtonColor,
+                                        ),
+                                      )
+                                      : SizedBox(),
+                                  customAutoSizeText(
+                                    12,
+                                    16,
+                                    '${formatCurrencyVN(model?.price ?? 0)}',
+                                    isBold: true,
+                                    textColor: toHexToColor(primaryButtonColor),
+                                  ),
+                                  Spacer(),
+                                  Row(
+                                    children: [
+                                      Spacer(),
+                                      Card(
+                                        color: Colors.white,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[300],
+                                            borderRadius: BorderRadius.circular(
+                                              5,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              InkWell(
+                                                onTap: () {
+                                                  bloc?.onCaculate(
+                                                    model!,
+                                                    true,
+                                                  );
+                                                },
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 3,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.only(
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                5,
+                                                              ),
+                                                          bottomLeft:
+                                                              Radius.circular(
+                                                                5,
+                                                              ),
+                                                        ),
+                                                  ),
+                                                  child: Text(' - '),
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 3,
+                                                ),
+                                                color: Colors.white,
+                                                child: Text(
+                                                  model?.quantity.toString() ??
+                                                      '0',
+                                                ),
+                                              ),
+                                              InkWell(
+                                                onTap: () {
+                                                  bloc?.onCaculate(
+                                                    model!,
+                                                    false,
+                                                  );
+                                                },
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 3,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.only(
+                                                          bottomRight:
+                                                              Radius.circular(
+                                                                5,
+                                                              ),
+                                                          topRight:
+                                                              Radius.circular(
+                                                                5,
+                                                              ),
+                                                        ),
+                                                    // color: Colors.white,
+                                                  ),
+                                                  child: Text(' + '),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
+                  ],
+                ),
+                Positioned(
+                  top: 1,
+                  right: 1,
+                  child: InkWell(
+                    onTap: () {
+                      // bloc?.onUpdateSelected(
+                      //   (model?.selected ?? false),
+                      //   model!,
+                      // );
+                      bloc?.onTapCartItem(model!);
+                    },
+
+                    child:
+                        model?.selected == false
+                            ? Icon(
+                              size: 30,
+                              Icons.check_box_outline_blank,
+                              color: toHexToColor(primaryColorGreen),
+                            )
+                            : Icon(
+                              size: 30,
+                              Icons.check_box,
+                              color: toHexToColor(primaryColorGreen),
+                            ),
                   ),
                 ),
               ],

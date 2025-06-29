@@ -10,14 +10,14 @@ import '../bloc/product_list_bloc.dart';
 class ProductListScreen extends BaseView<ProductListBloc> {
   final bool? isSale;
   final ProductFilterResult? productList;
-  const ProductListScreen({super.key, this.isSale, this.productList});
+  final CategoryModel? category;
+  const ProductListScreen({super.key, this.isSale, this.productList, this.category});
 
   @override
   ProductListBloc createBloc() => ProductListBloc();
 
   Widget build(BuildContext context) {
     final bloc = (context as StatefulElement).state as ProductListBloc;
-  
 
     return CustomScaffold(
       appBarGradient: false,
@@ -56,10 +56,10 @@ class ProductListScreen extends BaseView<ProductListBloc> {
                   if (!snapshot.hasData || snapshot == null) {
                     return const Center(child: Text('Không có sản phẩm'));
                   }
-                    final List<ProductModel>? model =
-        isSale == true
-            ? productList?.discountedProductsPage?.content
-            : productList?.productsPage?.content;
+                  final List<ProductModel>? model =
+                      isSale == true
+                          ? productList?.discountedProductsPage?.content
+                          : productList?.productsPage?.content;
                   return GridView.builder(
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(

@@ -17,12 +17,12 @@ Widget customItemPromoCode(
   // ProductModel? model,
   // required PromoCodeBloc bloc,
 }) {
-  final width = AppSize.w(0.95);
+  final width = AppSize.w(0.9);
   return Padding(
     padding: const EdgeInsets.only(bottom: 5),
     child: SizedBox(
       width: width,
-      height: 300,
+      height: 200,
       child: Card(
         color: Colors.white,
         elevation: 3,
@@ -107,7 +107,7 @@ Widget buildBottomInfo(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           buildInfoContainer(
-            width: isShow ? width * 0.3 : width * 0.2,
+            width:  width * 0.3,
             color: toHexToColor(primaryColorOrange),
             label: AutoSizeText(
               model.code ?? '',
@@ -118,10 +118,10 @@ Widget buildBottomInfo(
             ),
             isBold: true,
           ),
-          SizedBox(width: 10),
+          SizedBox(width: 5),
           model.startDate != ''
               ? buildInfoContainer(
-                width: width * 0.45,
+                width: width * 0.5,
                 color: toHexToColor(primaryColorPurple),
                 label: AutoSizeText(
                   '${formatDateString(model.startDate ?? '')} - ${formatDateString(model.endDate ?? '')}',

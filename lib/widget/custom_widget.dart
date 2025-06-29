@@ -180,9 +180,9 @@ Widget customItemProductCustomer(
                     clipBehavior: Clip.hardEdge, // Đảm bảo ảnh bo góc
                     child: Image.network(
                       model.image ?? imgProductDefault,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
-                        return Image.asset(imgBranch, fit: BoxFit.cover);
+                        return Image.asset(imgBranch, fit: BoxFit.contain);
                       },
                     ),
                   ),

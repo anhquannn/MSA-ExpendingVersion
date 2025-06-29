@@ -1,10 +1,13 @@
 import 'package:msa/feature/data/datasources/global/http_connection.dart'
     show ApiResponse;
+import 'package:msa/feature/data/model/request/cartitem_selection_request_model.dart';
 import 'package:msa/feature/data/model/request/category_filter_request.dart';
 import 'package:msa/feature/data/model/request/change_password_request_model.dart';
 import 'package:msa/feature/data/model/request/create_order_model_request.dart';
+import 'package:msa/feature/data/model/request/feedback_request_model.dart';
 import 'package:msa/feature/data/model/request/get_branch_request_model.dart';
 import 'package:msa/feature/data/model/request/order_paging_request_model.dart';
+import 'package:msa/feature/data/model/request/product_conbine_model_request.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/product_get_all_request_model.dart';
 import 'package:msa/feature/data/model/request/promocode_request_model.dart';
@@ -13,6 +16,7 @@ import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:msa/feature/data/repositories/branch_connection.dart';
 import 'package:msa/feature/data/repositories/cart_item_connection.dart';
 import 'package:msa/feature/data/repositories/category_connection.dart';
+import 'package:msa/feature/data/repositories/feedback_connection.dart';
 import 'package:msa/feature/data/repositories/order_connection.dart';
 import 'package:msa/feature/data/repositories/product_connection.dart';
 import 'package:msa/feature/data/repositories/promo_code_connection.dart';
@@ -93,4 +97,22 @@ class Repository {
 
   static onGetListOrder(OrderFilterRequest model) =>
       OrderRepositoryImpl.onGetListOrder(model);
+
+  static onCreateFeedBack(FeedbackRequest request) =>
+      FeedbackRepositoryImpl.createFeedbackApi(request);
+
+  static onGetOrderDetail({int? orderId}) =>
+      OrderRepositoryImpl.onGetOrderDetail(orderId: orderId);
+
+  static onGetProductById(int productId) =>
+      ProductRepositoryImpl.getProductByIdApi(productId);
+
+  static onGetConbineProduct(ProductCombinationFilterRequest request) =>
+      ProductRepositoryImpl.getProductCombine(request);
+
+  static onUpdateCartItemsSelectionAPI(
+    CartItemSelectionRequest request,
+    bool isSelected,
+  ) =>
+      CartItemRepositoryImpl.onUpdateCartItemsSelectionAPI(request, isSelected);
 }

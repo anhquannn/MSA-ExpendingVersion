@@ -11,6 +11,7 @@ import 'package:msa/feature/data/model/request/order_paging_request_model.dart';
 import 'package:msa/feature/data/model/response/create_order_response_model.dart';
 import 'package:msa/feature/data/model/response/create_shipment_response_model.dart';
 import 'package:msa/feature/data/model/response/get_order_response_model.dart';
+import 'package:msa/feature/data/model/response/order_detail_response_model.dart';
 import 'package:msa/feature/data/model/response/revenue_order_response.dart';
 import 'package:msa/feature/domain/entities/order_model.dart';
 import 'package:msa/feature/domain/entities/order_preview_model.dart';
@@ -286,5 +287,33 @@ class OrderRepositoryImpl extends IOrderRepository {
     );
 
     return response.result?.content ?? [];
+  }
+
+  // static Future<OrderDetailListModel?> onGetOrderDetail({int? orderId}) async {
+  //   final data = await HttpConnection.get<OrderDetailListModel>(
+  //     '$orderDetail$orderId',
+  //     fromJsonT: (json) => OrderDetailListModel.fromJson(json),
+  //   );
+
+  //   if (data.isSuccess) {
+  //     return data.result;
+  //   }
+  // }
+  static Future<List<OrderDetailResponse>> onGetOrderDetail({
+    int? orderId,
+  }) async {
+    final data = await HttpConnection.get<List<OrderDetailResponse>>(
+      '$orderDetail$orderId',
+      fromJsonT: (json) {
+        return (json as List)
+            .map((e) => OrderDetailResponse.fromJson(e))
+            .toList();
+      },
+    );
+
+    if (data.isSuccess) {
+      return data.result ?? [];
+    }
+    return [];
   }
 }

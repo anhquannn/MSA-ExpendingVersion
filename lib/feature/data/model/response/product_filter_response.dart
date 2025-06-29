@@ -10,12 +10,33 @@ class ProductFilterResult {
   final List<ProductModel>? discountedProducts;
 
   ProductFilterResult({
-     this.productsPage,
-     this.discountedProductsPage,
-     this.products,
-     this.discountedProducts,
+    this.productsPage,
+    this.discountedProductsPage,
+    this.products,
+    this.discountedProducts,
   });
 
+  // factory ProductFilterResult.fromJson(Map<String, dynamic> json) {
+  //   List<ProductModel> parseProducts(dynamic productList) {
+  //     if (productList is List) {
+  //       return productList.map((item) => ProductModel.fromJson(item)).toList();
+  //     }
+  //     return [];
+  //   }
+
+  //   return ProductFilterResult(
+  //     productsPage: PaginatedResult.fromJson(
+  //       json['productsPage'] ?? {},
+  //       (item) => ProductModel.fromJson(item),
+  //     ),
+  //     discountedProductsPage: PaginatedResult.fromJson(
+  //       json['discountedProductsPage'] ?? {},
+  //       (item) => ProductModel.fromJson(item),
+  //     ),
+  //     products: parseProducts(json['products']),
+  //     discountedProducts: parseProducts(json['discountedProducts']),
+  //   );
+  // }
   factory ProductFilterResult.fromJson(Map<String, dynamic> json) {
     List<ProductModel> parseProducts(dynamic productList) {
       if (productList is List) {
@@ -24,15 +45,27 @@ class ProductFilterResult {
       return [];
     }
 
+    // ✅ parse productsPage bình thường
+    final productsPage = PaginatedResult.fromJson(
+      json['productsPage'] ?? {},
+      (item) => ProductModel.fromJson(item),
+    );
+
+    // ✅ parse discountedProductsPage: lấy product từ mỗi item
+    final discountedPageJson = json['discountedProductsPage'];
+    final discountedPage =
+        discountedPageJson != null
+            ? PaginatedResult.fromJson(
+              discountedPageJson,
+              (item) => ProductModel.fromJson(
+                item['product'] ?? {},
+              ), // ⚠ Lấy từ item['product']
+            )
+            : null;
+
     return ProductFilterResult(
-      productsPage: PaginatedResult.fromJson(
-        json['productsPage'] ?? {},
-        (item) => ProductModel.fromJson(item),
-      ),
-      discountedProductsPage: PaginatedResult.fromJson(
-        json['discountedProductsPage'] ?? {},
-        (item) => ProductModel.fromJson(item),
-      ),
+      productsPage: productsPage,
+      discountedProductsPage: discountedPage,
       products: parseProducts(json['products']),
       discountedProducts: parseProducts(json['discountedProducts']),
     );
@@ -62,16 +95,16 @@ class ProductImage {
   }
 
   Map<String, dynamic> toJson() => {
-        'productImageId': productImageId,
-        'imageUrl': imageUrl,
-        'sortOrder': sortOrder,
-        'primary': isPrimary,
-      };
+    'productImageId': productImageId,
+    'imageUrl': imageUrl,
+    'sortOrder': sortOrder,
+    'primary': isPrimary,
+  };
 
   static ProductImage empty() => ProductImage(
-        productImageId: 0,
-        imageUrl: '',
-        sortOrder: 99,
-        isPrimary: false,
-      );
+    productImageId: 0,
+    imageUrl: '',
+    sortOrder: 99,
+    isPrimary: false,
+  );
 }

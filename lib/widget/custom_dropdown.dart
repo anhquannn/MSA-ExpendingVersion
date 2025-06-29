@@ -172,7 +172,9 @@ Future<void> showCustomDialog(
   );
 }
 
-Future<void> showCustomMessageError(BuildContext context) async {
+
+
+showCustomMessageError(BuildContext context) async {
   return await showCustomDialog(
     context,
     AppSize.w(0.8),

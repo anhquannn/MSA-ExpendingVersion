@@ -40,6 +40,7 @@ final String updateProduct = 'product/';
 final String deleteProduct = 'product/';
 final String filterProduct = 'product/filter';
 final String getBranch = 'branch/paging';
+final String productCombine = 'product-combinations/paging-products';
 
 //____________________________________MANUFACTURER____________________________________
 
@@ -95,6 +96,7 @@ final String deleteOrder = 'order/';
 final String getAllBranch = 'branch';
 final String getUrlVnPay = 'payment/vnpay/';
 final String getListOrder = 'order/paging';
+final String orderDetail = 'order-detail/order/';
 
 //____________________________________GOSHIP____________________________________
 final String getCities = 'shipment/cities';

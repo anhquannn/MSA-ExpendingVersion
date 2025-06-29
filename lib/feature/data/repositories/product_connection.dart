@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import 'package:msa/feature/data/model/request/product_conbine_model_request.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/product_get_all_request_model.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
@@ -232,25 +233,47 @@ class ProductRepositoryImpl extends IProductRepository {
   //   }
   //   return null;
   // }
-static Future<ProductFilterResult?> onFilterProducts(
-  ProductFilterRequest request, {
-  BuildContext? context,
-}) async {
-  const String endpoint = 'product/filter';
+  static Future<ProductFilterResult?> onFilterProducts(
+    ProductFilterRequest request, {
+    BuildContext? context,
+  }) async {
+    const String endpoint = 'product/filter';
 
-  final response = await HttpConnection.post<ProductFilterResult>(
-    endpoint,
-    context: context,
-    body: request.toJson(),
-    isToken: true,
-    fromJsonT: (json) => ProductFilterResult.fromJson(json),
-  );
+    final response = await HttpConnection.post<ProductFilterResult>(
+      endpoint,
+      context: context,
+      body: request.toJson(),
+      isToken: true,
+      fromJsonT: (json) => ProductFilterResult.fromJson(json),
+    );
 
+    if (response.isSuccess) {
+      return response.result;
+    }
+    return null;
+  }
 
-  if (response.isSuccess) {
+  static getProductByIdApi(int productId) async {
+    final response = await HttpConnection.get<ProductModel>(
+      '$getProductById$productId',
+      fromJsonT: (json) => ProductModel.fromJson(json),
+    );
     return response.result;
   }
-  return null;
-}
 
+  //productCombine
+  static Future<List<ProductModel>?> getProductCombine(
+    ProductCombinationFilterRequest request,
+  ) async {
+    final response = await HttpConnection.post<PaginatedResult<ProductModel>>(
+      productCombine,
+      body: request.toJson(),
+      fromJsonT:
+          (json) => PaginatedResult<ProductModel>.fromJson(
+            json,
+            (item) => ProductModel.fromJson(item),
+          ),
+    );
+    return response.result?.content;
+  }
 }

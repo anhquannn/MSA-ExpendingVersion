@@ -32,7 +32,6 @@ public class OrderResponse {
   UserResponse user;
 
   DeliveryInfoResponse deliveryInfo;
-  // List<CancelOrderResponse> cancelOrders;
   List<PaymentResponse> payments;
   List<PromoCodeResponse> promoCodes;
   List<RewardPointTransactionResponse> rewardPointTransactions;

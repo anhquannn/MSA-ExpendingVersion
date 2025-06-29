@@ -52,7 +52,8 @@ public class UserAddressService {
             .findById(addressId)
             .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
     address.setUser(
-        entityFinderService.findByIdOrThrow(userRepository, addressId, ErrorCode.USER_NOT_EXISTED));
+        entityFinderService.findByIdOrThrow(
+            userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
     userAddressMappper.updateUserAddressFromRequest(request, address);
 
     UserAddress updatedAddress = userAddressRepository.save(address);

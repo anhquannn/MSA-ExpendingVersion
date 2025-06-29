@@ -144,8 +144,12 @@ public class CartItemService {
   }
 
   @Transactional
-  public void updateCartItemsSelection(List<Long> cartItemIds, boolean isSelected) {
-    cartItemRepository.updateCartItemsSelection(cartItemIds, isSelected);
+  public void updateCartItemsSelection(Long cartId, List<Long> cartItemIds, boolean isSelected) {
+    if (cartId != null) {
+      cartItemRepository.updateCartItemsSelectionByCartId(cartId, isSelected);
+    } else {
+      cartItemRepository.updateCartItemsSelection(cartItemIds, isSelected);
+    }
   }
 
   @Transactional

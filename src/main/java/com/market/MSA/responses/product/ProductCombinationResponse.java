@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductCombinationResponse {
   Long combinationId;
-  Long productId1;
-  Long productId2;
+
+  ProductResponse productId1;
+  ProductResponse productId2;
 }

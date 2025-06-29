@@ -51,6 +51,7 @@ public class PromoCodeUsageService {
     PromoCodeUsage promoCodeUsage = promoCodeUsageMapper.toUsage(request);
     promoCodeUsage.setPromoCode(promoCode);
     promoCodeUsage.setOrder(order);
+    promoCodeUsage.setUser(order.getUser());
 
     if (request.getUsedAt() == null) {
       promoCodeUsage.setUsedAt(java.time.LocalDateTime.now());

@@ -3,8 +3,11 @@ package com.market.MSA.controllers.others;
 import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.NotificationFilterRequest;
 import com.market.MSA.requests.others.NotificationRequest;
+import com.market.MSA.requests.others.PushRequest;
+import com.market.MSA.requests.others.RegisterTokenRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.others.NotificationResponse;
+import com.market.MSA.services.others.FcmService;
 import com.market.MSA.services.others.NotificationService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -13,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +27,21 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController {
 
   NotificationService notificationService;
+  FcmService fcmService;
+
+  @PostMapping("/register-token")
+  public ApiResponse<Void> registerToken(
+      @RequestBody RegisterTokenRequest request,
+      @AuthenticationPrincipal(expression = "userId") Long userId) {
+    fcmService.registerToken(userId, request.token(), request.platform());
+    return ApiResponse.<Void>builder().message("Token registered").build();
+  }
+
+  @PostMapping("/push-test")
+  public ApiResponse<Void> pushTest(@RequestBody PushRequest request) {
+    fcmService.pushNotification(request.userId(), request.title(), request.body(), request.data());
+    return ApiResponse.<Void>builder().message("Pushed").build();
+  }
 
   @PostMapping
   public ApiResponse<NotificationResponse> createNotification(

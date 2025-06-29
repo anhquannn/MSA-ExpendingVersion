@@ -61,6 +61,7 @@ public class TransferRequestService {
             userRepository, transferRequest.getRequesterId(), ErrorCode.USER_NOT_EXISTED));
     transfer.setApprover(
         entityFinderService.findByIdOrThrow(userRepository, 1L, ErrorCode.USER_NOT_EXISTED));
+    transfer.setStatus(ProductStatus.PENDING);
     transfer.setCreatedAt(LocalDateTime.now());
 
     Transfer saveTransfer = transferRequestRepository.save(transfer);

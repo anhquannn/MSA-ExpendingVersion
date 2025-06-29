@@ -9,6 +9,7 @@ import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.requests.filters.ProductCombinationFilterRequest;
 import com.market.MSA.requests.product.ProductCombinationRequest;
 import com.market.MSA.responses.product.ProductCombinationResponse;
+import com.market.MSA.responses.product.ProductResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,10 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -98,5 +96,24 @@ public class ProductCombinationService {
     return pcRepository
         .filterWithPaging(req.getProductId1(), req.getProductId2(), pageable)
         .map(pcMapper::toProductCombinationResponse);
+  }
+
+  @Cacheable("product-combinations-page-products")
+  public Page<ProductResponse> filterPagingProducts(ProductCombinationFilterRequest req) {
+    Sort sort = Sort.by(Sort.Direction.fromString(req.getSortDirection()), req.getSortBy());
+    Pageable pageable = PageRequest.of(req.getPage() - 1, req.getPageSize(), sort);
+    Page<ProductCombination> page = pcRepository.filterWithPaging(req.getProductId1(), req.getProductId2(), pageable);
+    
+    // Tạo list các productId2 từ page
+    List<ProductResponse> products = page.getContent().stream()
+        .map(pc -> pcMapper.toProductCombinationResponse(pc).getProductId2())
+        .collect(Collectors.toList());
+    
+    // Tạo response với list products
+    return new PageImpl<>(
+        products,
+        pageable,
+        page.getTotalElements()
+    );
   }
 }

@@ -14,15 +14,14 @@ public class CorsConfig {
       @Override
       public void addCorsMappings(CorsRegistry registry) {
         registry
-            .addMapping("/**") // Áp dụng cấu hình CORS cho TẤT CẢ các endpoint
+            .addMapping("/**")
             .allowedOrigins(
                 "http://localhost:3000",
-                "http://127.0.0.1:3000") // <-- RẤT QUAN TRỌNG: Thay bằng ORIGIN CỦA FRONTEND CỦA
-            // BẠN
-            .allowedMethods(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS") // Cho phép các phương thức HTTP này
-            .allowedHeaders("*") // Cho phép tất cả các header (bao gồm Authorization)
-            .allowCredentials(true); // Cho phép gửi cookies, header xác thực (Authorization)
+                "http://127.0.0.1:3000",
+                "http://localhost:3001") // 👈 Quan trọng
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true);
       }
     };
   }

@@ -60,7 +60,8 @@ public class CartItemController {
   @PutMapping("/update-selection")
   ApiResponse<String> updateCartItemsSelection(
       @RequestBody CartItemSelectionRequest request, @RequestParam boolean isSelected) {
-    cartItemService.updateCartItemsSelection(request.getCartItemIds(), isSelected);
+    cartItemService.updateCartItemsSelection(
+        request.getCartId(), request.getCartItemIds(), isSelected);
     return ApiResponse.<String>builder()
         .result("Cart items selection updated")
         .message(ApiMessage.CART_ITEMS_SELECTION_UPDATED.getMessage())

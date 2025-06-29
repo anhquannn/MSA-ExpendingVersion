@@ -5,6 +5,8 @@ import com.market.MSA.requests.filters.ProductCombinationFilterRequest;
 import com.market.MSA.requests.product.ProductCombinationRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.ProductCombinationResponse;
+import com.market.MSA.responses.product.ProductCombinationListResponse;
+import com.market.MSA.responses.product.ProductResponse;
 import com.market.MSA.services.product.ProductCombinationService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -70,6 +72,15 @@ public class ProductCombinationController {
       @Valid @RequestBody ProductCombinationFilterRequest req) {
     return ApiResponse.<Page<ProductCombinationResponse>>builder()
         .result(pcService.filterPaging(req))
+        .message(ApiMessage.ALL_PRODUCT_COMBINATIONS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/paging-products")
+  public ApiResponse<Page<ProductResponse>> filterPagingProducts(
+      @Valid @RequestBody ProductCombinationFilterRequest req) {
+    return ApiResponse.<Page<ProductResponse>>builder()
+        .result(pcService.filterPagingProducts(req))
         .message(ApiMessage.ALL_PRODUCT_COMBINATIONS_RETRIEVED.getMessage())
         .build();
   }

@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 public interface ProductCombinationMapper {
   ProductCombination toProductCombination(ProductCombinationRequest request);
 
-  @Mapping(target = "productId1", source = "product1.productId")
-  @Mapping(target = "productId2", source = "product2.productId")
+  @Mapping(target = "productId1", source = "product1")
+  @Mapping(target = "productId2", source = "product2")
   ProductCombinationResponse toProductCombinationResponse(ProductCombination pc);
 
   @Mapping(target = "combinationId", ignore = true)

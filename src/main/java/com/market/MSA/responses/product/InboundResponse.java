@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class InboundResponse {
-  Long inboundRequestId;
+  Long inboundTransferId;
 
   ProductStatus status;
   LocalDateTime inboundTransferDate;

@@ -133,7 +133,7 @@ public class OrderService {
                   .usedAt(LocalDateTime.now())
                   .promoCodeId(promo.getPromoCodeId())
                   .orderId(order.getOrderId())
-                  .userId(order.getUser().getUserId())
+                  .userId(userId)
                   .build();
           promoCodeUsageService.createPromoCodeUsage(usageRequest);
         }

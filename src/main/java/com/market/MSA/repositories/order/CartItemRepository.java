@@ -30,6 +30,12 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
   void updateCartItemsSelection(
       @Param("cartItemIds") List<Long> cartItemIds, @Param("isSelected") boolean isSelected);
 
+  @Transactional
+  @Modifying
+  @Query("UPDATE CartItem c SET c.isSelected = :isSelected WHERE c.cart.cartId = :cartId")
+  void updateCartItemsSelectionByCartId(
+      @Param("cartId") Long cartId, @Param("isSelected") boolean isSelected);
+
   @Query(
       "SELECT c FROM CartItem c WHERE c.cart.cartId = :cartId AND c.product.productId = :productId")
   Optional<CartItem> findByCart_CartIdAndProduct_ProductId(

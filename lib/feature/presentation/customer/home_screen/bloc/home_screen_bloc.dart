@@ -7,9 +7,11 @@ import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/model/request/add_to_cart_request_model.dart';
 import 'package:msa/feature/data/model/request/category_filter_request.dart';
 import 'package:msa/feature/data/model/request/get_branch_request_model.dart';
+import 'package:msa/feature/data/model/request/order_paging_request_model.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/promocode_request_model.dart';
 import 'package:msa/feature/data/model/response/branch_response_response.dart';
+import 'package:msa/feature/data/model/response/get_order_response_model.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/branch_model.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
@@ -73,6 +75,27 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   bool _hasInitCalled = false;
   final Map<int, Debouncer> _debouncers = {};
 
+  List<OrderResponse> listPending = [];
+  List<OrderResponse> listPaying = [];
+  List<OrderResponse> listPaid = [];
+  List<OrderResponse> listDelivering = [];
+  List<OrderResponse> listShipped = [];
+  List<OrderResponse> listCancelling = [];
+  List<OrderResponse> listCancelled = [];
+  List<OrderResponse> listCompleted = [];
+  List<OrderResponse> listFailed = [];
+
+  // Stream controller tương ứng
+  final streamPending = BehaviorSubject<List<OrderResponse>>();
+  final streamPaying = BehaviorSubject<List<OrderResponse>>();
+  final streamPaid = BehaviorSubject<List<OrderResponse>>();
+  final streamDelivering = BehaviorSubject<List<OrderResponse>>();
+  final streamShipped = BehaviorSubject<List<OrderResponse>>();
+  final streamCancelling = BehaviorSubject<List<OrderResponse>>();
+  final streamCancelled = BehaviorSubject<List<OrderResponse>>();
+  final streamCompleted = BehaviorSubject<List<OrderResponse>>();
+  final streamFailed = BehaviorSubject<List<OrderResponse>>();
+
   @override
   String get contextKey => 'HomeScreen';
 
@@ -116,11 +139,9 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
               )
               .then((_) {
                 _isAnimatingPage = false;
-                // onCheckBranch();
               });
         }
       });
-      // onCheckBranch();
     });
   }
 
@@ -135,6 +156,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   @override
   void onReady() {
+    onCheckBranch();
     print("onReady called");
     if (!_hasInitCalled) {
       _hasInitCalled = true;
@@ -142,7 +164,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
         if (!_hasInitCalled) {
           _hasInitCalled = true;
         }
-        onCheckBranch();
       });
 
       onRefresh();
@@ -249,7 +270,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       print('❌ Lỗi khi lấy danh sách sản phẩm: $e');
       streamProductModels.add(ProductFilterResult()); // Fallback nếu có lỗi
     }
-    onCheckBranch();
     setState(() {});
   }
 
@@ -290,7 +310,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
                 CategoryListScreen(categoryList: streamCategoryModels.value),
       ),
     );
-    onCheckBranch();
   }
 
   onTapProductSale() {
@@ -304,7 +323,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
             ),
       ),
     );
-    onCheckBranch();
   }
 
   onTapPopularProduct() {
@@ -342,7 +360,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
         builder: (context) => ProductDetailCustomerScreen(productModel: model),
       ),
     );
-    onCheckBranch();
   }
 
   onGetOrCreateCart({BuildContext? bcontext}) async {
@@ -370,7 +387,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     }
   }
 
-  /// MOCK DATA
   onGetUserCart({BuildContext? bcontext}) async {
     final data = await _cartItemUseCase
         .getCartItemsByCartId(Storage.cartModelGlobal?.cartId ?? 0)
@@ -388,25 +404,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     }
   }
 
-  // onCaculate(CartItemModel model, bool isMinus) async {
-  //   final quantity =
-  //       isMinus ? (model.quantity ?? 1) - 1 : (model.quantity ?? 1) + 1;
-  //   listCartItemModel
-  //       ?.firstWhere((element) => element.cartItemId == model.cartItemId)
-  //       .quantity = quantity;
-  //   print('###################### $quantity');
-  //   final response = await Repository.onUpdateQuantity(
-  //     branchId: Storage.branchModelGlobal?.branchId ?? 3,
-  //     cartItemId: model.cartItemId,
-  //     quantity: quantity,
-  //     select: model.selected ?? true,
-  //   );
-
-  //   if (response) {
-  //     await onGetUserCart();
-  //   }
-  //   // await onCaculateCart();
-  // }
   void onCaculate(CartItemModel model, bool isMinus) {
     final quantity =
         isMinus ? (model.quantity ?? 1) - 1 : (model.quantity ?? 1) + 1;
@@ -437,10 +434,10 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     });
   }
 
-  onBuy(ProductModel model, BuildContext? bContext) async {
+  onBuy(ProductModel model, BuildContext? context) async {
     Navigator.push(
-      context,
-      MaterialPageRoute(builder: (bContext) => CreateOrderScreen()),
+      context!,
+      MaterialPageRoute(builder: (context) => CreateOrderScreen()),
     );
   }
 
@@ -542,7 +539,12 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     }
   }
 
-  onTapCreateOrder() {}
+  onTapCreateOrder(BuildContext bContext) {
+    Navigator.push(
+      bContext,
+      MaterialPageRoute(builder: (bContext) => CreateOrderScreen()),
+    );
+  }
 
   onCaculateCart() async {
     final response = await Repository.onCaculateOrder(
@@ -550,5 +552,56 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     );
 
     streamCaculate.set(double.tryParse(response ?? 0) ?? 0);
+  }
+
+  onGetListOrderByStatus(OrderStatus status) async {
+    final model = OrderFilterRequest(
+      branchId: Storage.branchModelGlobal?.branchId,
+      page: 1,
+      pageSize: 20,
+      userId: Storage.userModelGlobal?.userId,
+      status: status,
+    );
+
+    final response = await Repository.onGetListOrder(model);
+
+    switch (status) {
+      case OrderStatus.pending:
+        listPending = response;
+        streamPending.add(listPending);
+        break;
+      case OrderStatus.paying:
+        listPaying = response;
+        streamPaying.add(listPaying);
+        break;
+      case OrderStatus.paid:
+        listPaid = response;
+        streamPaid.add(listPaid);
+        break;
+      case OrderStatus.delivering:
+        listDelivering = response;
+        streamDelivering.add(listDelivering);
+        break;
+      case OrderStatus.shipped:
+        listShipped = response;
+        streamShipped.add(listShipped);
+        break;
+      case OrderStatus.cancelling:
+        listCancelling = response;
+        streamCancelling.add(listCancelling);
+        break;
+      case OrderStatus.cancelled:
+        listCancelled = response;
+        streamCancelled.add(listCancelled);
+        break;
+      case OrderStatus.completed:
+        listCompleted = response;
+        streamCompleted.add(listCompleted);
+        break;
+      case OrderStatus.failed:
+        listFailed = response;
+        streamFailed.add(listFailed);
+        break;
+    }
   }
 }

@@ -1,5 +1,4 @@
 import '../../data/model/request/create_order_model_request.dart';
-import '../../data/model/response/preview_order_response.dart';
 import '../../data/model/response/revenue_order_response.dart';
 import '../entities/order_model.dart';
 import '../repositories/order_repository.dart';
@@ -9,7 +8,6 @@ class OrderUseCases {
   final GetOrderByIdUseCase getOrderById;
   final SearchOrdersByPhoneNumberUseCase searchOrdersByPhoneNumber;
   final GetOrdersByUserIdAndStatusUseCase getOrdersByUserIdAndStatus;
-  final PreviewOrderUseCase previewOrder;
   final GetAllOrdersUseCase getAllOrders;
   final GetRevenueStatisticsUseCase getRevenueStatistics;
   final GetOrdersByBranchIdUseCase getOrdersByBranchId;
@@ -21,7 +19,6 @@ class OrderUseCases {
     required this.getOrderById,
     required this.searchOrdersByPhoneNumber,
     required this.getOrdersByUserIdAndStatus,
-    required this.previewOrder,
     required this.getAllOrders,
     required this.getRevenueStatistics,
     required this.getOrdersByBranchId,
@@ -80,19 +77,6 @@ class GetOrdersByUserIdAndStatusUseCase {
   }
 }
 
-class PreviewOrderUseCase {
-  final IOrderRepository repository;
-
-  PreviewOrderUseCase(this.repository);
-
-  Future<PreviewOrderResponse?> call(
-    int userId,
-    int cartId,
-    List<String>? promoCodes,
-  ) {
-    return repository.onPreviewOrder(userId, cartId, promoCodes);
-  }
-}
 
 class GetAllOrdersUseCase {
   final IOrderRepository repository;

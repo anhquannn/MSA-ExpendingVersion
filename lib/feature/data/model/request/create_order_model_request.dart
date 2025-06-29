@@ -1,32 +1,37 @@
+import 'package:msa/core/utils/utility.dart';
+
 class CreateOrderRequestModel {
-  DateTime orderDate;
-  double grandTotal;
-  String status;
-  int branchId;
-  int cartId;
-  int userId;
-  List<String> promoCodes;
-  DeliveryInfoRequestModel deliveryInfo;
+  String? orderDate;
+  double? grandTotal;
+  OrderStatus? status;
+  int? branchId;
+  int? cartId;
+  int? userId;
+  int? userAddressId;
+  List<String>? promoCodes;
+  DeliveryInfoRequestModel? deliveryInfo;
 
   CreateOrderRequestModel({
-    required this.orderDate,
-    required this.grandTotal,
-    required this.status,
-    required this.branchId,
-    required this.cartId,
-    required this.userId,
-    required this.promoCodes,
-    required this.deliveryInfo,
+    this.orderDate,
+    this.grandTotal,
+    this.status,
+    this.branchId,
+    this.cartId,
+    this.userId,
+    this.userAddressId,
+    this.promoCodes,
+    this.deliveryInfo,
   });
 
   factory CreateOrderRequestModel.fromJson(Map<String, dynamic> json) {
     return CreateOrderRequestModel(
-      orderDate: DateTime.parse(json['orderDate']),
+      orderDate: json['orderDate'],
       grandTotal: json['grandTotal']?.toDouble() ?? 0.0,
-      status: json['status'],
+      status: OrderStatusExtension.fromString(json['status'])!,
       branchId: json['branchId'],
       cartId: json['cartId'],
       userId: json['userId'],
+      userAddressId: json['userAddressId'],
       promoCodes: List<String>.from(json['promoCodes'] ?? []),
       deliveryInfo: DeliveryInfoRequestModel.fromJson(json['deliveryInfo']),
     );
@@ -34,17 +39,19 @@ class CreateOrderRequestModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'orderDate': orderDate.toIso8601String(),
+      'orderDate': orderDate,
       'grandTotal': grandTotal,
-      'status': status,
+      'status': status?.name,
       'branchId': branchId,
       'cartId': cartId,
       'userId': userId,
+      'userAddressId': userAddressId,
       'promoCodes': promoCodes,
-      'deliveryInfo': deliveryInfo.toJson(),
+      'deliveryInfo': deliveryInfo?.toJson(),
     };
   }
 }
+
 class DeliveryInfoRequestModel {
   String deliveryDate;
   String street;

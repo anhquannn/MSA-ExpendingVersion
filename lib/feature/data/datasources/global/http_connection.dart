@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:msa/core/config/global.dart';
+import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
 import 'package:msa/feature/domain/entities/branch_model.dart';
 import 'package:msa/feature/domain/entities/cart_model.dart';
@@ -25,7 +26,8 @@ class HttpConnection {
   final String tokenSupabase =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtdHF3Z2xubmJnc3J4aGVscHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3MTI1NzIsImV4cCI6MjA2MTI4ODU3Mn0.5D6-g10oFKgB5eJw7jbJPGtOsr2BmrYnm5pTpfjA_J0';
   static BuildContext? context;
-
+  static String tk =
+      'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtd2FuZzM4MjAzQGdtYWlsLmNvbSIsInNjb3BlIjoiUk9MRV9DVVNUT01FUiIsImlzcyI6ImNvbS5tc2EiLCJleHAiOjE3NjQwNjYwODQsInRva2VuX3R5cGUiOiJhY2Nlc3MiLCJpYXQiOjE3NTExMDYwODQsImp0aSI6IjY5YjQ1MGUyLTkwNDktNDdlMi04MWYwLTFiMDgwODljMDdlOSJ9.bH_NS5KyZWffuKRc1gpB7-WORDopL0BI709h7dHCp9-OPAvAIeF8IL5nVRZnLr_plhj4EMhmcMxkmViNrWSXSQ';
   static List<City> cityGlobal = [];
   static List<Ward> wardGlobal = [];
   static List<District> districtGlobal = [];
@@ -54,7 +56,8 @@ class HttpConnection {
     final headers = <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     };
-    if (isToken) headers['Authorization'] = 'Bearer ${Storage.token}';
+    // if (isToken) headers['Authorization'] = 'Bearer ${Storage.token}';
+    if (isToken) headers['Authorization'] = 'Bearer $tk';
     if (extraHeaders != null) headers.addAll(extraHeaders);
     return headers;
   }
@@ -242,7 +245,8 @@ class HttpConnection {
           );
         }
         final refreshed = await Repository.onRefresh(
-          Storage.refreshToken ?? '',
+          Storage.refreshToken ??
+              'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtd2FuZzM4MjAzQGdtYWlsLmNvbSIsInNjb3BlIjoiUk9MRV9DVVNUT01FUiIsImlzcyI6ImNvbS5tc2EiLCJleHAiOjE4ODA3MDYwODQsInRva2VuX3R5cGUiOiJyZWZyZXNoIiwiaWF0IjoxNzUxMTA2MDg0LCJqdGkiOiI1NTRjMzg1ZC1lYjgwLTRiNmYtODJmMC1mNDhhYTZkMWM0NTEifQ.r47-F54ytvnUjBXsoIMGPaOaGVNGo8q2-M25gf7MOWmuTUc7iXsVOwZB8mSQPbL-Fl_VLK11j8U02Sbr2w9Bbg',
         );
 
         if (refreshed) {
@@ -295,6 +299,7 @@ class HttpConnection {
 \t Response: ${response.body}
 ########################### [STATUS CODE $statusCode] ##########################\n
 ''');
+      // customPrint(jsonDecode(response.body.toString()));
     }
   }
 }

@@ -13,6 +13,7 @@ Widget customItemPromoCode(
   VoidCallback onUpdate,
   VoidCallback onDelete, {
   bool isShow = true,
+  bool isSelected = false,
   // ProductModel? model,
   // required PromoCodeBloc bloc,
 }) {
@@ -31,6 +32,10 @@ Widget customItemPromoCode(
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
+            border:
+                isSelected == true
+                    ? Border.all(color: Colors.redAccent, width: 3)
+                    : null,
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,

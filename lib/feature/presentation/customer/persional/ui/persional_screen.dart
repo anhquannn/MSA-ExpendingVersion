@@ -6,6 +6,7 @@ import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/selec_branch_screen.dart';
 import 'package:msa/feature/presentation/customer/persional/bloc/persional_bloc.dart';
+import 'package:msa/widget/custom_dropdown.dart';
 import 'package:msa/widget/custom_textfield.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 
@@ -163,14 +164,16 @@ class PersionalScreen extends BaseView<PersionalBloc> {
               ),
             ),
             _buildPasswordField(
+              context,
               bloc,
-              bloc.passwordController,
-              '******',
-              bloc.obscurePassword!,
-              bloc.changObscurePassword,
-              bloc.errPassword,
-              bloc.errTextValidPassword,
+              TextEditingController(), // không cần dùng trong trường hợp này, nhưng vẫn giữ nếu cần mở rộng
+              'Đổi mật khẩu',
+              true,
+              (value) {}, // toggle không cần vì không hiển thị field mật khẩu
+              false,
+              null,
             ),
+
             SizedBox(height: 5),
             Divider(),
             SizedBox(height: 5),
@@ -180,9 +183,7 @@ class PersionalScreen extends BaseView<PersionalBloc> {
                   child: _buildButton(
                     buttonColor: toHexToColor(primaryButtonColor),
                     isBorderType: true,
-                    onTap: () {
-                      bloc.onLogout();
-                    },
+                    onTap: () => bloc.onLogout(context),
                     text: 'Đăng xuất',
                   ),
                 ),
@@ -211,6 +212,7 @@ class PersionalScreen extends BaseView<PersionalBloc> {
     Color? buttonColor,
   }) {
     return InkWell(
+      onTap: () => onTap!(),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration:
@@ -266,6 +268,7 @@ class PersionalScreen extends BaseView<PersionalBloc> {
   }
 
   Widget _buildPasswordField(
+    BuildContext context,
     PersionalBloc? bloc,
     TextEditingController controller,
     String label,
@@ -274,24 +277,63 @@ class PersionalScreen extends BaseView<PersionalBloc> {
     bool? hasError,
     String? errorText,
   ) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: InkWell(
-        onTap: () {
-          bloc?.onChangePassword();
+        onTap: () async {
+          final data = await bloc?.onChangePassword(context);
+          if (data == true) {
+            showCustomDialog(
+              context,
+              screenWidth * 0.9,
+              screenWidth * 0.9,
+              'Thông báo',
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Đổi mật khẩu thành công',
+                  style: TextStyle(color: toHexToColor(primaryTextColor)),
+                ),
+              ),
+              true,
+              false,
+              Icon(Icons.check_circle, color: toHexToColor(primaryColorGreen)),
+            );
+          } else {
+            showCustomDialog(
+              context,
+              screenWidth * 0.9,
+              screenWidth * 0.9,
+              'Thông báo',
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Sai mật khẩu',
+                  style: TextStyle(color: toHexToColor(primaryTextColor)),
+                ),
+              ),
+              true,
+              false,
+              const Icon(Icons.warning, color: Colors.red),
+            );
+          }
         },
+        borderRadius: BorderRadius.circular(10),
         child: Container(
-          width: MediaQuery.sizeOf(context).width,
+          width: screenWidth * 0.9,
           height: 45,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: toHexToColor(borderColorGreen)),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
-            children: [
-              Text('Đổi mật khẩu...'),
-              Spacer(),
-              Icon(Icons.arrow_forward_ios),
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              Text('Đổi mật khẩu...', style: TextStyle(fontSize: 16)),
+              Icon(Icons.arrow_forward_ios, size: 16),
             ],
           ),
         ),

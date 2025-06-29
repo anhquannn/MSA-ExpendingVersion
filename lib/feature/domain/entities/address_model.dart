@@ -154,28 +154,28 @@ class UserModelResponseAddress {
 }
 
 class UserAddressModel {
-  final int userAddressId;
-  final String city;
-  final String district;
-  final String street;
-  final String ward;
-  final String cityCode;
-  final String districtCode;
-  final String wardCode;
-  final String createdAt;
-  final bool primary;
+  final int? userAddressId;
+  final String? city;
+  final String? district;
+  final String? street;
+  final String? ward;
+  final String? cityCode;
+  final String? districtCode;
+  final String? wardCode;
+  final String? createdAt;
+   bool? primary;
 
   UserAddressModel({
-    required this.userAddressId,
-    required this.city,
-    required this.district,
-    required this.street,
-    required this.ward,
-    required this.cityCode,
-    required this.districtCode,
-    required this.wardCode,
-    required this.createdAt,
-    required this.primary,
+     this.userAddressId,
+     this.city,
+     this.district,
+     this.street,
+     this.ward,
+     this.cityCode,
+     this.districtCode,
+     this.wardCode,
+     this.createdAt,
+     this.primary,
   });
 
   factory UserAddressModel.fromJson(Map<String, dynamic> json) {

@@ -4,9 +4,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
+import 'package:msa/feature/data/model/response/get_order_response_model.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
+import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
 import 'package:msa/widget/customBottomSheet.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -709,125 +711,85 @@ class OrderTab extends StatefulWidget {
 }
 
 class _OrderTabState extends State<OrderTab>
-    with AutomaticKeepAliveClientMixin {
-  late final ScrollController _tab1Controller;
-  late final ScrollController _tab2Controller;
-  late final ScrollController _tab3Controller;
-  double _lastOffset1 = 0, _lastOffset2 = 0, _lastOffset3 = 0;
-
-  // Store the listener functions
-  late final VoidCallback _tab1Listener;
-  late final VoidCallback _tab2Listener;
-  late final VoidCallback _tab3Listener;
+    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final List<OrderStatus> orderStatuses = OrderStatus.values;
 
   @override
   void initState() {
     super.initState();
-    _tab1Controller = ScrollController();
-    _tab2Controller = ScrollController();
-    _tab3Controller = ScrollController();
+    _tabController = TabController(length: orderStatuses.length, vsync: this);
 
-    // Create the listener functions
-    _tab1Listener = () => _onScroll(_tab1Controller, 1);
-    _tab2Listener = () => _onScroll(_tab2Controller, 2);
-    _tab3Listener = () => _onScroll(_tab3Controller, 3);
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) return;
+      final status = orderStatuses[_tabController.index];
+      widget.bloc.onGetListOrderByStatus(status); // Gọi API khi đổi tab
+    });
 
-    // Add the listeners
-    _tab1Controller.addListener(_tab1Listener);
-    _tab2Controller.addListener(_tab2Listener);
-    _tab3Controller.addListener(_tab3Listener);
-  }
-
-  void _onScroll(ScrollController controller, int tab) {
-    if (!mounted) return;
-
-    double lastOffset =
-        tab == 1
-            ? _lastOffset1
-            : tab == 2
-            ? _lastOffset2
-            : _lastOffset3;
-
-    if (controller.offset > lastOffset && controller.offset > 50) {
-      isBarVisible.value = false;
-    } else if (controller.offset < lastOffset) {
-      isBarVisible.value = true;
-    }
-
-    if (tab == 1) _lastOffset1 = controller.offset;
-    if (tab == 2) _lastOffset2 = controller.offset;
-    if (tab == 3) _lastOffset3 = controller.offset;
+    // Gọi tab đầu tiên khi khởi tạo
+    widget.bloc.onGetListOrderByStatus(orderStatuses[0]);
   }
 
   @override
   void dispose() {
-    // Remove the stored listener functions
-    _tab1Controller.removeListener(_tab1Listener);
-    _tab2Controller.removeListener(_tab2Listener);
-    _tab3Controller.removeListener(_tab3Listener);
-
-    _tab1Controller.dispose();
-    _tab2Controller.dispose();
-    _tab3Controller.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
   @override
   bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return buildFourTabBar();
-  }
-
-  Widget buildFourTabBar() {
-    return DefaultTabController(
-      length: 3,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
         children: [
           Container(
             color: toHexToColor(backgroundColor),
-            child: const TabBar(
+            child: TabBar(
+              isScrollable: true,
+              controller: _tabController,
               dividerHeight: 0,
               labelColor: Colors.blueGrey,
               unselectedLabelColor: Colors.black,
               indicatorColor: Colors.blueGrey,
-              tabs: [
-                Tab(text: "Đang xử lí"),
-                Tab(text: "Đang giao"),
-                Tab(text: "Hoàn tất"),
-              ],
+              tabs:
+                  orderStatuses
+                      .map((status) => Tab(text: status.description))
+                      .toList(),
             ),
           ),
           const SizedBox(height: 10),
           Expanded(
             child: TabBarView(
-              children: [
-                ListView(
-                  controller: _tab1Controller,
-                  children: [
-                    customCardOrder(AppSize.w(0.9), isPending: true),
-                    customCardOrder(AppSize.w(0.9), isPending: true),
-                    customCardOrder(AppSize.w(0.9), isPending: true),
-                  ],
-                ),
-                ListView(
-                  controller: _tab2Controller,
-                  children: [
-                    customCardOrder(AppSize.w(0.9), isDelivering: true),
-                    customCardOrder(AppSize.w(0.9), isDelivering: true),
-                    customCardOrder(AppSize.w(0.9), isDelivering: true),
-                  ],
-                ),
-                ListView(
-                  controller: _tab3Controller,
-                  children: [
-                    customCardOrder(AppSize.w(0.9), isSuccess: true),
-                    customCardOrder(AppSize.w(0.9), isSuccess: true),
-                    customCardOrder(AppSize.w(0.9), isSuccess: true),
-                  ],
-                ),
-              ],
+              controller: _tabController,
+              children:
+                  orderStatuses.map((status) {
+                    return StreamBuilder<List<OrderResponse>>(
+                      stream: getStreamByStatus(status),
+                      builder: (context, snapshot) {
+                        final data = snapshot.data ?? [];
+                        return MediaQuery.removePadding(
+                          context: context,
+                          removeTop: true,
+                          child: ListView.builder(
+                            itemCount: data.length,
+                            itemBuilder: (context, index) {
+                              final order = data[index];
+                              return customCardOrder(
+                                AppSize.w(1),
+                                order: order,
+                                status: status,
+                                bCOntext: context,
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    );
+                  }).toList(),
             ),
           ),
         ],
@@ -835,26 +797,51 @@ class _OrderTabState extends State<OrderTab>
     );
   }
 
+  /// Lấy stream tương ứng theo OrderStatus
+  Stream<List<OrderResponse>> getStreamByStatus(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return widget.bloc.streamPending.stream;
+      case OrderStatus.paying:
+        return widget.bloc.streamPaying.stream;
+      case OrderStatus.paid:
+        return widget.bloc.streamPaid.stream;
+      case OrderStatus.delivering:
+        return widget.bloc.streamDelivering.stream;
+      case OrderStatus.shipped:
+        return widget.bloc.streamShipped.stream;
+      case OrderStatus.cancelling:
+        return widget.bloc.streamCancelling.stream;
+      case OrderStatus.cancelled:
+        return widget.bloc.streamCancelled.stream;
+      case OrderStatus.completed:
+        return widget.bloc.streamCompleted.stream;
+      case OrderStatus.failed:
+        return widget.bloc.streamFailed.stream;
+    }
+  }
+
   Widget customCardOrder(
     double width, {
-    bool isPending = false,
-    bool isDelivering = false,
-    bool isSuccess = false,
+    required OrderResponse order,
+    OrderStatus? status,
+    BuildContext? bCOntext,
   }) {
-    return Padding(
-      padding: EdgeInsets.all(10.0),
-      child: SizedBox(
-        width: width,
-        height: 200,
-        child: Card(
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 10),
+    final orderCode = order.orderId;
+    final total = order.grandTotal ?? 0;
+
+    return Stack(
+      children: [
+        SizedBox(
+          width: width,
+          height: 150,
+          child: Card(
+            color: Colors.white,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Flexible(
-                  flex: 8,
+                SizedBox(
+                  height: 110,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
@@ -866,14 +853,12 @@ class _OrderTabState extends State<OrderTab>
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(10),
-                                topRight: Radius.circular(10),
+                                topLeft: Radius.circular(8),
+                                topRight: Radius.circular(8),
                               ),
                               image: DecorationImage(
-                                image: AssetImage(imgCategoryBotGiat),
-                                fit:
-                                    BoxFit
-                                        .cover, // Quan trọng để ảnh chiếm toàn bộ
+                                image: AssetImage(imgOrder),
+                                fit: BoxFit.cover,
                               ),
                             ),
                           ),
@@ -884,85 +869,37 @@ class _OrderTabState extends State<OrderTab>
                         child: Padding(
                           padding: const EdgeInsets.only(left: 10),
                           child: SizedBox(
-                            height: 100, // Đảm bảo Stack có height xác định
-                            child: Stack(
+                            height: 70,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Positioned(
-                                  top: 1,
-                                  right: 1,
+                                customAutoSizeText(
+                                  14,
+                                  20,
+                                  'Mã đơn hàng #$orderCode',
+                                  isBold: true,
+                                ),
+                                SizedBox(height: 8),
+                                Card(
                                   child: Container(
-                                    decoration: BoxDecoration(
-                                      color: toHexToColor(primaryErrorColor),
-                                      borderRadius: BorderRadius.circular(10),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 5,
+                                      horizontal: 10,
                                     ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 2,
-                                        horizontal: 8,
-                                      ),
-                                      child: Text(
-                                        // '${model?.discountPercentage}%',
-                                        '',
-                                        style: TextStyle(color: Colors.white),
+                                    decoration: BoxDecoration(
+                                      color: toHexToColor(secondaryColorOrange),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: customAutoSizeText(
+                                      12,
+                                      18,
+                                      'Tổng tiền: ${formatCurrencyVN(total)}',
+                                      textColor: toHexToColor(
+                                        secondaryTextColor,
                                       ),
                                     ),
                                   ),
-                                ),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  // mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    customAutoSizeText(
-                                      14,
-                                      20,
-                                      'Mã đơn hàng #122222',
-                                      isBold: true,
-                                    ),
-                                    Card(
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 5,
-                                          horizontal: 10,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: toHexToColor(
-                                            secondaryColorOrange,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                        child: customAutoSizeText(
-                                          12,
-                                          18,
-                                          'Tổng sản phẩm: 3',
-                                          textColor: toHexToColor(
-                                            secondaryTextColor,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Card(
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 5,
-                                          horizontal: 10,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: toHexToColor(
-                                            secondaryColorPurple,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                        child: buildSuccessBody(
-                                          isSuccess: isSuccess,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ],
                             ),
@@ -972,64 +909,342 @@ class _OrderTabState extends State<OrderTab>
                     ],
                   ),
                 ),
-                Flexible(
-                  flex: 2,
-                  child: customBottomCard(
-                    isPending: isPending,
-                    isSuccess: isSuccess,
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8),
+                      ),
+                      color: toHexToColor(primaryButtonColor),
+                    ),
+                    height: 20,
+                    child: buildOrderStatusWidget(
+                      status: status ?? OrderStatus.pending,
+                      bContext: bCOntext,
+                      model: order,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
         ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: Container(
+            decoration: BoxDecoration(
+              color: toHexToColor(primaryErrorColor),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 5),
+              child: Text(
+                order.status ?? '',
+                style: TextStyle(color: Colors.white, fontSize: 10),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget buildOrderStatusWidget({
+    required OrderStatus status,
+    OrderResponse? model,
+    BuildContext? bContext,
+  }) {
+    switch (status) {
+      case OrderStatus.pending:
+        return _buildText('Ngày đặt hàng: ${model?.orderDate}');
+      case OrderStatus.paying:
+        return _buildTapText('Thanh toán', bContext, model ?? OrderResponse());
+      case OrderStatus.delivering:
+        return _buildTapText(
+          'Đơn hàng của bạn đang được vận chuyển',
+          bContext,
+          model ?? OrderResponse(),
+          isIcon: false
+        );
+      case OrderStatus.completed:
+      case OrderStatus.shipped:
+        return _buildSuccessButtons(bContext);
+      case OrderStatus.cancelling:
+        return _buildTapText(
+          'Đơn hàng đang được hủy',
+          bContext,
+          model ?? OrderResponse(),
+          isIcon: false
+
+        );
+      case OrderStatus.cancelled:
+        return _buildTapText(
+          'Đơn hàng đã được hủy',
+          bContext,
+          model ?? OrderResponse(),
+          isIcon: false
+        );
+      case OrderStatus.paid:
+        return _buildText('Đơn hàng đang được xử lí');
+      case OrderStatus.failed:
+        return _buildText('Giao hàng thất bại');
+      default:
+        return const SizedBox(); // hoặc có thể custom thêm
+    }
+  }
+
+  Widget _buildText(String text) {
+    return Center(
+      child: customAutoSizeText(
+        12,
+        18,
+        text,
+        textColor: Colors.white,
+        isBold: true,
       ),
     );
   }
 
-  Widget buildSuccessBody({bool isSuccess = false}) {
-    return !isSuccess
-        ? Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            customAutoSizeText(
-              12,
-              18,
-              'Tổng tiền: 100.000đ',
-              textColor: toHexToColor(secondaryTextColor),
-              maxLine: 1,
-            ),
-            customAutoSizeText(
-              12,
-              18,
-              'Tổng tiền: 100.000đ',
-              textColor: toHexToColor(secondaryTextColor),
-              maxLine: 1,
-            ),
-            customAutoSizeText(
-              12,
-              18,
-              'Tổng tiền: 100.000đ',
-              textColor: toHexToColor(secondaryTextColor),
-              maxLine: 1,
-            ),
+  Widget _buildTapText(
+    String text,
+    BuildContext? bContext,
+    OrderResponse model, {
+    bool isIcon = true,
+  }) {
+    return InkWell(
+      onTap: () {
+        if (bContext != null) {
+          Navigator.push(
+            bContext,
+            MaterialPageRoute(builder: (_) => CreateOrderScreen()),
+          );
+        }
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          customAutoSizeText(
+            12,
+            18,
+            text,
+            textColor: Colors.white,
+            isBold: true,
+          ),
+          if (isIcon == true) ...[
+            SizedBox(width: 20),
+            Icon(Icons.arrow_forward_ios, color: Colors.white),
           ],
-        )
-        : Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            customAutoSizeText(
-              12,
-              18,
-              'Tổng tiền: 100.000đ',
-              textColor: toHexToColor(secondaryTextColor),
-              maxLine: 1,
-            ),
-          ],
-        );
+        ],
+      ),
+    );
   }
+
+  Widget _buildSuccessButtons(BuildContext? context) {
+    return InkWell(
+      onTap: () {
+        if (context != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => CreateOrderScreen()),
+          );
+        }
+      },
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 5,
+            child: Container(
+              decoration: BoxDecoration(
+                color: toHexToColor(primaryButtonColor),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(10),
+                ),
+              ),
+              child: Center(
+                child: customAutoSizeText(
+                  12,
+                  18,
+                  'Mua lại',
+                  textColor: Colors.white,
+                  isBold: true,
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 5,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.blueGrey,
+                borderRadius: BorderRadius.only(
+                  bottomRight: Radius.circular(10),
+                ),
+              ),
+              child: Center(
+                child: customAutoSizeText(
+                  12,
+                  18,
+                  'Đánh giá',
+                  textColor: Colors.white,
+                  isBold: true,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget _itemPending({String? orderDate}) {
+  //   return Row(
+  //     mainAxisAlignment: MainAxisAlignment.center,
+  //     crossAxisAlignment: CrossAxisAlignment.center,
+  //     mainAxisSize: MainAxisSize.min,
+  //     children: [
+  //       customAutoSizeText(
+  //         12,
+  //         18,
+  //         'Ngày đặt hàng: $orderDate',
+  //         textColor: Colors.white,
+  //         isBold: true,
+  //       ),
+  //     ],
+  //   );
+  // }
+
+  // Widget _itemPaying({OrderResponse? model, BuildContext? bContext}) {
+  //   return InkWell(
+  //     onTap: () {
+  //       Navigator.push(
+  //         bContext!,
+  //         MaterialPageRoute(builder: (context) => CreateOrderScreen()),
+  //       );
+  //     },
+  //     child: customAutoSizeText(
+  //       12,
+  //       18,
+  //       'Thanh toán',
+  //       textColor: Colors.white,
+  //       isBold: true,
+  //     ),
+  //   );
+  // }
+
+  // Widget _itemDelivering({OrderResponse? model, BuildContext? bContext}) {
+  //   return InkWell(
+  //     onTap: () {
+  //       Navigator.push(
+  //         bContext!,
+  //         MaterialPageRoute(builder: (context) => CreateOrderScreen()),
+  //       );
+  //     },
+  //     child: customAutoSizeText(
+  //       12,
+  //       18,
+  //       'Đơn hàng của bạn đang được vận chuyển',
+  //       textColor: Colors.white,
+  //       isBold: true,
+  //     ),
+  //   );
+  // }
+
+  // Widget _itemSuccess({OrderResponse? model, BuildContext? bContext}) {
+  //   return InkWell(
+  //     onTap: () {
+  //       Navigator.push(
+  //         bContext!,
+  //         MaterialPageRoute(builder: (context) => CreateOrderScreen()),
+  //       );
+  //     },
+  //     child: Row(
+  //       crossAxisAlignment: CrossAxisAlignment.stretch,
+  //       children: [
+  //         Expanded(
+  //           flex: 5,
+  //           child: Container(
+  //             decoration: BoxDecoration(
+  //               color: toHexToColor(primaryButtonColor),
+  //               borderRadius: BorderRadius.only(
+  //                 bottomLeft: Radius.circular(10),
+  //               ),
+  //             ),
+  //             child: Center(
+  //               child: customAutoSizeText(
+  //                 12,
+  //                 18,
+  //                 'Mua lại',
+  //                 textColor: Colors.white,
+  //                 isBold: true,
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //         Expanded(
+  //           flex: 5,
+  //           child: Container(
+  //             decoration: BoxDecoration(
+  //               color: Colors.blueGrey,
+  //               borderRadius: BorderRadius.only(
+  //                 bottomRight: Radius.circular(10),
+  //               ),
+  //             ),
+
+  //             child: Center(
+  //               child: customAutoSizeText(
+  //                 12,
+  //                 18,
+  //                 'Đánh giá',
+  //                 textColor: Colors.white,
+  //                 isBold: true,
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  //  Widget _itemCancelling({OrderResponse? model, BuildContext? bContext}) {
+  //   return InkWell(
+  //     onTap: () {
+  //       Navigator.push(
+  //         bContext!,
+  //         MaterialPageRoute(builder: (context) => CreateOrderScreen()),
+  //       );
+  //     },
+  //     child: customAutoSizeText(
+  //       12,
+  //       18,
+  //       'Đơn hàng đang được hủy',
+  //       textColor: Colors.white,
+  //       isBold: true,
+  //     ),
+  //   );
+  // }
+
+  //  Widget _itemCancelled({OrderResponse? model, BuildContext? bContext}) {
+  //   return InkWell(
+  //     onTap: () {
+  //       Navigator.push(
+  //         bContext!,
+  //         MaterialPageRoute(builder: (context) => CreateOrderScreen()),
+  //       );
+  //     },
+  //     child: customAutoSizeText(
+  //       12,
+  //       18,
+  //       'Đơn hàng đã được hủy',
+  //       textColor: Colors.white,
+  //       isBold: true,
+  //     ),
+  //   );
+  // }
 
   Widget customBottomCard({bool isPending = false, bool isSuccess = false}) {
     return isPending
@@ -1194,7 +1409,9 @@ class CardTab extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: InkWell(
-                          onTap: bloc?.onTapCreateOrder,
+                          onTap: () {
+                            bloc?.onTapCreateOrder(context);
+                          },
                           child: Container(
                             width: double.infinity,
                             height: 45,

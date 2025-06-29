@@ -238,11 +238,6 @@ static Future<ProductFilterResult?> onFilterProducts(
 }) async {
   const String endpoint = 'product/filter';
 
-  print('📤 [onFilterProducts] Gửi yêu cầu lọc sản phẩm đến endpoint: $endpoint');
-  print('📦 Request body: ${request.toJson()}');
-
-  final stopwatch = Stopwatch()..start();
-
   final response = await HttpConnection.post<ProductFilterResult>(
     endpoint,
     context: context,
@@ -251,15 +246,10 @@ static Future<ProductFilterResult?> onFilterProducts(
     fromJsonT: (json) => ProductFilterResult.fromJson(json),
   );
 
-  stopwatch.stop();
-  print('⏱️ Thời gian phản hồi: ${stopwatch.elapsedMilliseconds}ms');
 
   if (response.isSuccess) {
-    print('✅ [onFilterProducts] Lọc sản phẩm thành công. Tổng số kết quả: ${response.result}');
     return response.result;
   }
-
-  print('❌ [onFilterProducts] Lỗi khi lọc sản phẩm: ${response.message}');
   return null;
 }
 

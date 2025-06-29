@@ -99,6 +99,8 @@ class VerifyOtpBloc extends BaseBloc<VerifyOtpScreen> {
       return false;
     }
     bool success = await _userUseCases.verifyOtp(otp);
+
+    await Repository.onUpdateDeviceId();
     if (success) {
       // Navigator.pushAndRemoveUntil(
       //   viewContext,

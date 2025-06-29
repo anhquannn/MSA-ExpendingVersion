@@ -1,5 +1,5 @@
 /// API Connection
-final String urlConnection = 'http://192.168.1.8:1081/msa/api/';
+final String urlConnection = 'http://192.168.1.7:1081/msa/api/';
 final String urlSupabase = 'https://lmtqwglnnbgsrxhelpxz.supabase.co';
 final String anonKey =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtdHF3Z2xubmJnc3J4aGVscHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3MTI1NzIsImV4cCI6MjA2MTI4ODU3Mn0.5D6-g10oFKgB5eJw7jbJPGtOsr2BmrYnm5pTpfjA_J0';
@@ -15,6 +15,9 @@ final String updateUser = 'user/';
 final String deleteUser = 'user/';
 final String getUserByEmail = 'user/email/'; //user/email/{email}
 final String refreshTokenUrl = 'user/refresh';
+final String changePassword = 'user/password/';
+final String getAddress = 'address/paging';
+final String updateUserAddress = 'address/';
 
 ///user/device/deviceId/2
 final String updateDeviceId = 'user/device/';
@@ -63,7 +66,7 @@ final String getCartItem = 'cart-item/'; //cart-item/1/3{cartId}/{productId}
 final String calculateCartTotal = 'cart-item/calculate-total/'; //{cartId}
 final String getCartItemById = 'cart-item/by-id/';
 final String getCartItemsByCartId = 'cart-item/all-by-cart/';
-final String getAllCartItem = 'cart-item/all-by-cart/';
+final String getAllCartItem = 'cart-item/by-cart/';
 final String addToCart =
     'cart-item/add'; //cart-item/add?userId=1&productId=7&branchId=3&quantity=1
 final String createCartItem = 'cart-item';
@@ -89,8 +92,9 @@ final String getOrdersByBranchId =
     'order/branch/'; //order/branch/1?page=1&size=20&sortDirection=asc
 final String updateOrder = 'order/';
 final String deleteOrder = 'order/';
-
 final String getAllBranch = 'branch';
+final String getUrlVnPay = 'payment/vnpay/';
+final String getListOrder = 'order/paging';
 
 //____________________________________GOSHIP____________________________________
 final String getCities = 'shipment/cities';
@@ -187,6 +191,10 @@ final String imgCategoryThitCa = 'assets/images/thit-ca.png';
 final String imgCategoryThuCung = 'assets/images/thu_cung.png';
 final String imgCategoryTraiCay = 'assets/images/trai_cay.png';
 final String imgCategoryTrungSua = 'assets/images/trung_sua.png';
+final String iconZaloPay = 'assets/images/icon_zalopay.png';
+final String iconVnPay = 'assets/images/icon_vnpay.png';
+final String iconCash = 'assets/images/icon_cash.png';
+final String imgOrder = 'assets/images/img_order.png';
 
 /// Avatar
 final String avtMen1 = 'assets/images/avt_men1.jpg';

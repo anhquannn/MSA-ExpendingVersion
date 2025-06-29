@@ -1,6 +1,7 @@
 // SỬA: user_repository_impl.dart
 
 import 'package:flutter/widgets.dart';
+import 'package:msa/feature/data/model/request/change_password_request_model.dart';
 import 'package:msa/feature/data/model/response/auth_response.dart';
 import 'package:msa/feature/data/model/response/user_login_response.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
@@ -11,6 +12,7 @@ import 'package:msa/feature/data/model/request/user_register_request.dart';
 import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/core/config/constant.dart';
+import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/domain/repositories/user_repository.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // Sửa lại tên file nếu là storage.dart
@@ -20,6 +22,7 @@ class UserRepositoryImpl implements IUserRepository {
   Future<UserModel?> registerUser(UserRegisterRequest request) async {
     final response = await HttpConnection.post<UserModel>(
       register,
+      isToken: false,
       body: request.toJson(),
       fromJsonT: (json) => UserModel.fromJson(json),
     );
@@ -52,12 +55,20 @@ class UserRepositoryImpl implements IUserRepository {
       isToken: false,
       fromJsonT: (json) => AccessTokenResponse.fromJson(json),
     );
+
     if (response.isSuccess && response.result != null) {
       final data = response.result!;
+
+      // Log access token và refresh token để kiểm tra
+      debugPrint('Access Token: ${data.accessToken}');
+      debugPrint('Refresh Token: ${data.refreshToken}');
+
       await Storage.saveToken(data.accessToken);
       await Storage.saveRefreshToken(data.refreshToken);
       return true;
     }
+
+    debugPrint('OTP Verification failed. Response: ${response.message}');
     return false;
   }
 
@@ -67,6 +78,7 @@ class UserRepositoryImpl implements IUserRepository {
     final response = await HttpConnection.post<Map<String, dynamic>>(
       resetPass,
       body: {'email': email},
+      isToken: false,
       fromJsonT: (json) => json,
     );
     if (response.isSuccess && response.result != null) {
@@ -115,9 +127,12 @@ class UserRepositoryImpl implements IUserRepository {
     String refreshToken, {
     BuildContext? context,
   }) async {
+    // String tk =
+    //     'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtd2FuZzM4MjAzQGdtYWlsLmNvbSIsInNjb3BlIjoiUk9MRV9DVVNUT01FUiIsImlzcyI6ImNvbS5tc2EiLCJleHAiOjE4ODA3MDYwODQsInRva2VuX3R5cGUiOiJyZWZyZXNoIiwiaWF0IjoxNzUxMTA2MDg0LCJqdGkiOiI1NTRjMzg1ZC1lYjgwLTRiNmYtODJmMC1mNDhhYTZkMWM0NTEifQ.r47-F54ytvnUjBXsoIMGPaOaGVNGo8q2-M25gf7MOWmuTUc7iXsVOwZB8mSQPbL-Fl_VLK11j8U02Sbr2w9Bbg';
     final response = await HttpConnection.post<AuthResponseModelRequest>(
       refreshTokenUrl,
-      body: {'token': refreshToken},
+      body: {'token': Storage.refreshToken},
+      // body: {'token': tk},
       isToken: false,
       fromJsonT: (json) => AuthResponseModelRequest.fromJson(json),
     );
@@ -133,7 +148,7 @@ class UserRepositoryImpl implements IUserRepository {
   static Future<bool> onAddAddress(UserAddressRequest model) async {
     final response = await HttpConnection.post(
       'address',
-      isToken: true,
+      isToken: false,
       body: model.toJson(),
       fromJsonT: (json) => UserModelResponseAddress.fromJson(json),
     );
@@ -147,6 +162,7 @@ class UserRepositoryImpl implements IUserRepository {
     String path =
         '$updateDeviceId${Storage.deviceId}${Storage.userModelGlobal?.userId}';
     final response = await HttpConnection.put(
+      isToken: false,
       path,
       fromJsonT: (json) => UserModel.fromJson(json),
     );
@@ -163,7 +179,7 @@ class UserRepositoryImpl implements IUserRepository {
     return response.isSuccess;
   }
 
-  static onResendOtp(UserLoginRequest request)async{
+  static onResendOtp(UserLoginRequest request) async {
     final response = await HttpConnection.post(
       resentOtp,
       body: request.toJson(),
@@ -172,36 +188,60 @@ class UserRepositoryImpl implements IUserRepository {
     return response.isSuccess;
   }
 
-static Future<List<UserAddressModel>> getUserAddresses() async {
-  final requestBody = {
-    'userId': Storage.userModelGlobal?.userId,
-    'page': 1,
-    'pageSize': 10,
-  };
+  static Future<List<UserAddressModel>> getUserAddresses() async {
+    final requestBody = {
+      'userId': Storage.userModelGlobal?.userId,
+      'page': 1,
+      'pageSize': 10,
+    };
 
-  print('📤 Gửi yêu cầu lấy danh sách địa chỉ với body: $requestBody');
+    print('📤 Gửi yêu cầu lấy danh sách địa chỉ với body: $requestBody');
 
-  final response = await HttpConnection.post<UserAddressPaginatedResult>(
-    'address/paging',
-    body: requestBody,
-    isToken: true,
-    fromJsonT: (json) => UserAddressPaginatedResult.fromJson(json),
-  );
+    final response = await HttpConnection.post<UserAddressPaginatedResult>(
+      getAddress,
+      body: requestBody,
+      isToken: true,
+      fromJsonT: (json) => UserAddressPaginatedResult.fromJson(json),
+    );
 
-  if (response.result != null) {
-    final addresses = response.result!.content;
-    print('✅ Đã nhận ${addresses.length} địa chỉ:');
+    if (response.result != null) {
+      final addresses = response.result!.content;
+      print('✅ Đã nhận ${addresses.length} địa chỉ:');
 
-    for (final addr in addresses) {
-      print(
-          '📍 ID: ${addr.userAddressId}, ${addr.street}, ${addr.ward}, ${addr.district}, ${addr.city} - Primary: ${addr.primary}');
+      for (final addr in addresses) {
+        print(
+          '📍 ID: ${addr.userAddressId}, ${addr.street}, ${addr.ward}, ${addr.district}, ${addr.city} - Primary: ${addr.primary}',
+        );
+      }
+
+      return addresses;
+    } else {
+      print('❌ Lỗi khi lấy danh sách địa chỉ: ${response.message}');
+      throw Exception('Lỗi khi lấy danh sách địa chỉ: ${response.message}');
     }
-
-    return addresses;
-  } else {
-    print('❌ Lỗi khi lấy danh sách địa chỉ: ${response.message}');
-    throw Exception('Lỗi khi lấy danh sách địa chỉ: ${response.message}');
   }
-}
 
+  static onChangePassword(UpdatePasswordRequest request, userId) async {
+    final response = await HttpConnection.put(
+      '$changePassword$userId',
+      body: request.toJson(),
+      fromJsonT: (json) => UserModel.fromJson(json),
+    );
+    return response.isSuccess;
+  }
+
+  static onUpdateUserAddress(
+    int userAddressId,
+    UserAddressRequest model,
+  ) async {
+    final response = await HttpConnection.put(
+      '$updateUserAddress$userAddressId',
+      body: model.toJson(),
+      fromJsonT: (json) => UserAddressModel.fromJson(json),
+    );
+    if (response.isSuccess) {
+      Storage.addressModel = response.result;
+    }
+    return response.isSuccess;
+  }
 }

@@ -53,11 +53,13 @@ Future<void> showCustomDialog(
   Widget? content,
   bool close,
   bool submit,
-  Widget? icon,
-) async {
+  Widget? icon, {
+  VoidCallback? onSubmit,
+  VoidCallback? onClose,
+}) async {
   showDialog(
     context: context,
-    barrierDismissible: true,
+    barrierDismissible: false,
     builder: (BuildContext context) {
       return AlertDialog(
         backgroundColor: toHexToColor(backgroundColor),
@@ -118,7 +120,9 @@ Future<void> showCustomDialog(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: InkWell(
                     onTap: () {
-                      Navigator.of(context).pop(false);
+                      onSubmit != null
+                          ? onSubmit()
+                          : Navigator.of(context).pop(false);
                     },
                     child: Container(
                       width: width * 0.3,
@@ -140,7 +144,9 @@ Future<void> showCustomDialog(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: InkWell(
                   onTap: () {
-                    Navigator.of(context).pop(false);
+                    onClose != null
+                        ? onClose()
+                        : Navigator.of(context).pop(false);
                   },
                   child: Container(
                     width: width * 0.3,

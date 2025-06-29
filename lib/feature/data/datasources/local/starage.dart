@@ -2,16 +2,16 @@ import 'package:msa/core/config/constant.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/domain/entities/branch_model.dart';
 import 'package:msa/feature/domain/entities/cart_model.dart';
-import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
-import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class Storage {
   static String otp = '';
-  static String token = '';
+  // static String token = '';
+  static  String token =
+      'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtd2FuZzM4MjAzQGdtYWlsLmNvbSIsInNjb3BlIjoiUk9MRV9DVVNUT01FUiIsImlzcyI6ImNvbS5tc2EiLCJleHAiOjE3NjQwNjYwODQsInRva2VuX3R5cGUiOiJhY2Nlc3MiLCJpYXQiOjE3NTExMDYwODQsImp0aSI6IjY5YjQ1MGUyLTkwNDktNDdlMi04MWYwLTFiMDgwODljMDdlOSJ9.bH_NS5KyZWffuKRc1gpB7-WORDopL0BI709h7dHCp9-OPAvAIeF8IL5nVRZnLr_plhj4EMhmcMxkmViNrWSXSQ';
   static String deviceId = '';
   static String? messageError;
   static String? refreshToken = '';
@@ -20,7 +20,7 @@ class Storage {
   static UserModel? userModelGlobal;
   static CartModel? cartModelGlobal;
   static BranchModel? branchModelGlobal;
-  static String email = 'minhquang03082003@gmail.com';
+  static String email = 'mwang38203@gmail.com';
 
   // ===================== ĐỌC DỮ LIỆU =====================
   static Future<void> readFromLocalStorage() async {
@@ -28,7 +28,9 @@ class Storage {
 
     token = prefs.getString(accessTokenKey) ?? '';
     deviceId = prefs.getString(deviceIdKey) ?? '';
-    email = prefs.getString(emailKey) ?? 'minhquang03082003@gmail.com';
+    email = prefs.getString(emailKey) ?? 'mwang38203@gmail.com';
+    // refreshToken=prefs.getString(refreshTokenKey) ?? '';
+    refreshToken = '';
 
     final userJson = prefs.getString(userModelKey);
     if (userJson != null) {
@@ -45,18 +47,20 @@ class Storage {
       branchModelGlobal = BranchModel.fromJson(jsonDecode(branchJson));
     }
 
-     final addressJson = prefs.getString(addressKey);
+    final addressJson = prefs.getString(addressKey);
     if (addressJson != null) {
       addressModel = UserAddressModel.fromJson(jsonDecode(addressJson));
     }
   }
 
   static Future<void> saveToken(String value) async {
+    token = value;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(accessTokenKey, value);
   }
 
   static Future<void> saveRefreshToken(String value) async {
+    refreshToken = value;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(refreshTokenKey, value);
   }
@@ -120,13 +124,18 @@ class Storage {
   }
 
   static Future<bool> checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final tokenKey = refreshTokenKey;
-    final storedRefreshToken = prefs.getString(tokenKey);
-    if (storedRefreshToken == null || storedRefreshToken.isEmpty) {
-      return false;
+    bool isLogin = false;
+    if (refreshToken != null) {
+      isLogin = true;
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      final tokenKey = refreshTokenKey;
+      final storedRefreshToken = prefs.getString(tokenKey);
+      if (storedRefreshToken == null || storedRefreshToken.isEmpty) {
+        return false;
+      }
     }
-    final isLogin = await Repository.onRefresh(storedRefreshToken);
+    isLogin = await Repository.onRefresh(Storage.refreshToken ?? '');
     return isLogin;
   }
 }

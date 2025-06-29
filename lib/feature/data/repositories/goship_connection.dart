@@ -8,6 +8,7 @@ class GoshipRepository {
   static Future<List<City>> onGetCities() async {
     final response = await HttpConnection.get<List<City>>(
       getCities,
+      isToken: false,
       fromJsonT: (json) => (json as List).map((e) => City.fromJson(e)).toList(),
     );
     
@@ -21,6 +22,7 @@ class GoshipRepository {
   static Future<List<District>> onGetDistrictsApi(String cityId) async {
     final response = await HttpConnection.get<List<District>>(
       '$getDistricts$cityId',
+      isToken: false,
       fromJsonT: (json) => (json as List).map((e) => District.fromJson(e)).toList(),
     );
     
@@ -34,6 +36,7 @@ class GoshipRepository {
   static Future<List<Ward>> onGetWardsApi(String districtId) async {
     final response = await HttpConnection.get<List<Ward>>(
       '$getWards$districtId',
+      isToken: false,
       fromJsonT: (json) => (json as List).map((e) => Ward.fromJson(e)).toList(),
     );
     

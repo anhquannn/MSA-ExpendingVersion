@@ -4,8 +4,10 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:msa/core/config/base_bloc.dart';
+import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/config/global.dart';
+import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
 import 'package:msa/feature/data/model/request/user_update_request.dart';
@@ -15,9 +17,11 @@ import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/domain/usecase/user_use_case.dart';
+import 'package:msa/feature/presentation/customer/persional/ui/change_password.dart';
 import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
 import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
 import 'package:msa/feature/presentation/logins/register/ui/register_screen.dart';
+import 'package:msa/widget/custom_dropdown.dart';
 
 class PersionalBloc extends BaseBloc<PersionalScreen> {
   @override
@@ -148,15 +152,23 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     emailController.text = model.email ?? '';
     phoneNumberController.text = model.phoneNumber ?? '';
     passwordController.text = model.password ?? '';
-    provinceController.text = '';
-    districtController.text = '';
-    wardController.text = '';
-    streetController.text = '';
+    provinceController.text = Storage.addressModel?.city ?? '';
+    districtController.text = Storage.addressModel?.district ?? '';
+    wardController.text = Storage.addressModel?.ward ?? '';
+    streetController.text = Storage.addressModel?.street ?? '';
     birthDayController.text = model.birthday ?? '';
     branchController.text = Storage.branchModelGlobal?.name ?? '';
   }
 
-  onLogout() async {
+  onUpdateUser(){
+    
+  }
+
+  onLogout(BuildContext context) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
     Storage.onLogout();
 
     // Navigator.pushAndRemoveUntil(
@@ -164,14 +176,14 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     //   MaterialPageRoute(builder: (context) => const LoginScreen()),
     //   (route) => false,
     // );
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-    );
   }
 
-  onChangePassword(){
-    
+  onChangePassword(BuildContext context) async {
+    final isSuccess = await showDialog(
+      context: context,
+      builder: (context) => const ChangePasswordDialog(),
+    );
+    return isSuccess;
   }
 
   onGetCity() async {
@@ -205,17 +217,17 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     } catch (e) {}
   }
 
-  void changObscurePassword(bool value) {
+  changObscurePassword(bool value) {
     obscurePassword = value;
     setState(() {});
   }
 
-  void changValidObscurePassword(bool value) {
+  changValidObscurePassword(bool value) {
     obscureValidPassword = value;
     setState(() {});
   }
 
-  void showPicker(BuildContext context) async {
+  showPicker(BuildContext context) async {
     final result = await pickDateTime(context);
     if (result != null) {
       birthDayController.text = result;
@@ -224,7 +236,7 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     }
   }
 
-  Future<String?> pickDateTime(BuildContext context) async {
+  pickDateTime(BuildContext context) async {
     // Chọn ngày
     final DateTime? date = await showDatePicker(
       context: context,
@@ -258,7 +270,7 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     return formatted;
   }
 
-  void showWardSelector(BuildContext context) async {
+  showWardSelector(BuildContext context) async {
     await onGetWard();
     showDialog(
       context: context,
@@ -277,7 +289,7 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     setState(() {});
   }
 
-  void showCitySelector(BuildContext context) async {
+  showCitySelector(BuildContext context) async {
     await onGetCity();
     showDialog(
       context: context,
@@ -296,7 +308,7 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     setState(() {});
   }
 
-  void showDistrictSelector(BuildContext context) async {
+  showDistrictSelector(BuildContext context) async {
     await onGetDistrict();
     showDialog(
       context: context,
@@ -316,7 +328,7 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     setState(() {});
   }
 
-  bool validateFields() {
+  validateFields() {
     bool isValid = true;
     bool validateField({
       required TextEditingController controller,

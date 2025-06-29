@@ -1,34 +1,64 @@
+import 'dart:io';
+
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
 import 'package:msa/core/config/base_bloc.dart';
-import 'package:msa/feature/domain/usecase/cart_item_use_case.dart';
-import 'package:msa/feature/domain/usecase/cart_use_case.dart';
-import 'package:msa/feature/domain/usecase/category_use_case.dart';
-import 'package:msa/feature/domain/usecase/product_use_case.dart';
-import 'package:msa/feature/domain/usecase/promo_code_use_case.dart';
-import 'package:msa/feature/domain/usecase/user_use_case.dart';
+import 'package:msa/core/config/config.dart';
+import 'package:msa/core/config/constant.dart';
+import 'package:msa/core/utils/prarse_color.dart';
+import 'package:msa/core/utils/utility.dart';
+import 'package:msa/feature/data/datasources/local/starage.dart';
+import 'package:msa/feature/data/model/request/create_order_model_request.dart';
+import 'package:msa/feature/data/model/request/promocode_request_model.dart';
+import 'package:msa/feature/data/model/response/create_order_response_model.dart';
+import 'package:msa/feature/domain/entities/address_model.dart';
+import 'package:msa/feature/domain/entities/cart_item.dart';
+import 'package:msa/feature/domain/entities/order_preview_model.dart';
+import 'package:msa/feature/domain/entities/promo_code_model.dart';
+import 'package:msa/feature/domain/repositories/repository.dart';
+import 'package:msa/feature/presentation/customer/createorder/ui/change_address_screen.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
+import 'package:msa/feature/presentation/customer/createorder/ui/vnpay_webview.dart';
+import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
+import 'package:msa/widget/custom_dropdown.dart';
+import 'package:rxdart/rxdart.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
-  final UserUseCases _userUseCases = GetIt.I<UserUseCases>();
-  final CategoryUseCase _categoryUseCase = GetIt.I<CategoryUseCase>();
-  final ProductUseCase _productUseCase = GetIt.I<ProductUseCase>();
-  final PromoCodeUseCase _promoCodeUseCase = GetIt.I<PromoCodeUseCase>();
-  final CartItemUseCase _cartItemUseCase = GetIt.I<CartItemUseCase>();
-  final CartUseCase _cartUseCase = GetIt.I<CartUseCase>();
+  UserAddressModel? model;
 
+  List<CartItemModel>? listCartItem;
+  final streamListCartItem = BehaviorSubject<List<CartItemModel>>();
+
+  OrderPreviewModel? previewOrder;
+  final streamPreviewOrder = BehaviorSubject<OrderPreviewModel>();
+
+  List<PaymentMethod>? paymentMethods;
+  final streamPaymentMethod = BehaviorSubject<List<PaymentMethod>?>();
+
+  List<PromoCodeModel>? listPromocode = [];
+  final streamPromoCodeModels = BehaviorSubject<List<PromoCodeModel>>();
+
+  String vnPayurl = '';
+
+  final Map<int, Debouncer> _debouncers = {};
   bool isZaloPaySelected = false;
   @override
   String get contextKey => 'CreateOrderScreen';
 
   @override
-  void onInit() {}
+  void onInit() {
+    initPaymentMethod();
+  }
 
   @override
   void onDispose() {}
 
   @override
-  void onReady() {}
+  void onReady() {
+    onInitData();
+    Future.wait<void>([onGetCartItem(), onGetPreviewOrder(), onGetPromoCode()]);
+  }
 
   @override
   void onResumed() {}
@@ -36,7 +66,593 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
   @override
   Widget build(BuildContext viewContext) => widget.build(viewContext);
 
-  onBuy() {}
-  onMinus(int data) {}
-  onPlus(int data) {}
+  initPaymentMethod() {
+    List<PaymentMethod> paymentMethod = [
+      PaymentMethod(
+        id: 'cod',
+        name: 'Tiền mặt',
+        iconUrl: iconCash,
+        selected: true,
+        color: Colors.tealAccent,
+      ),
+      PaymentMethod(
+        id: 'vnpay',
+        name: 'VNPAY',
+        iconUrl: iconVnPay,
+        selected: false,
+        color: Colors.blue,
+      ),
+      PaymentMethod(
+        id: 'zalopay',
+        name: 'ZALO PAY',
+        iconUrl: iconZaloPay,
+        selected: false,
+        color: Colors.green,
+      ),
+    ];
+    paymentMethods = paymentMethod;
+    streamPaymentMethod.set(paymentMethod);
+  }
+
+  onInitData() {
+    model = Storage.addressModel;
+    setState(() {});
+  }
+
+  onChangeAddress(BuildContext bcontext) async {
+    print('####################### ${Storage.addressModel?.ward}');
+    final data = await Navigator.push(
+      bcontext,
+      MaterialPageRoute(
+        builder:
+            (bcontext) => AddressListWidget(
+              addresses: Storage.addressModel ?? UserAddressModel(),
+            ),
+      ),
+    );
+
+    if (data != null) {
+      print('Địa chỉ đã chọn: ${data.toJson()}');
+
+      model = data;
+      print('####################### ${Storage.addressModel?.ward}');
+      setState(() {});
+    } else {}
+    print('####################### ${Storage.addressModel?.ward}');
+  }
+
+  onGetCartItem() async {
+    final data = await Repository.getCartItem(
+      Storage.cartModelGlobal?.cartId ?? 0,
+    );
+
+    listCartItem = data;
+    streamListCartItem.set(listCartItem ?? []);
+  }
+
+  onCreateOrder(BuildContext bContext) async {
+    final data = await Repository.onCreateOrder(CreateOrderRequestModel());
+    if (data != null) {
+      await showCustomDialog(
+        bContext,
+        AppSize.width(),
+        AppSize.width(),
+        'Thông báo',
+        Text('Đặt hàng thành công', style: TextStyle(color: Colors.white)),
+        true,
+        false,
+        Icon(
+          Icons.check_box_outline_blank_rounded,
+          color: toHexToColor(primaryColorGreen),
+        ),
+      );
+      Navigator.pop(bContext);
+    } else {
+      showCustomDialog(
+        bContext,
+        AppSize.width(),
+        AppSize.width(),
+        'Thông báo',
+        Text(
+          'Đặt hàng thấy bại, vui lòng thử lại sau !!!',
+          style: TextStyle(color: Colors.white),
+        ),
+        true,
+        false,
+        Icon(
+          Icons.warning_amber_rounded,
+          color: toHexToColor(primaryColorGreen),
+        ),
+      );
+    }
+  }
+
+  onCaculate(CartItemModel model, bool isMinus) {
+    final quantity =
+        isMinus ? (model.quantity ?? 1) - 1 : (model.quantity ?? 1) + 1;
+    final index = listCartItem?.indexWhere(
+      (e) => e.cartItemId == model.cartItemId,
+    );
+    if (index != null && index >= 0) {
+      listCartItem![index].quantity = quantity;
+      streamListCartItem.set(listCartItem!);
+    }
+    _debouncers[model.cartItemId!] ??= Debouncer(milliseconds: 600);
+    _debouncers[model.cartItemId!]!.run(() async {
+      final response = await Repository.onUpdateQuantity(
+        branchId: Storage.branchModelGlobal?.branchId ?? 3,
+        cartItemId: model.cartItemId,
+        quantity: quantity,
+        select: model.selected ?? true,
+      );
+      await onGetPreviewOrder();
+      // if (response) {
+      //   await onGetCartItem();
+      // }
+    });
+  }
+
+  onGetPreviewOrder() async {
+    List<String> promo = [];
+    listPromocode?.forEach((element) {
+      if (element.selected == true) {
+        promo.add(element.code ?? '');
+      }
+    });
+    final data = await Repository.onGetPreviewOrder(promoCode: promo);
+    if (data != null) {
+      previewOrder = data;
+      streamPreviewOrder.set(previewOrder ?? OrderPreviewModel());
+      return true;
+    } else {
+      print('###################');
+      return false;
+    }
+  }
+
+  onSelectdPaymentMethod(PaymentMethod model) {
+    paymentMethods?.forEach((element) {
+      if (element.id == model.id) {
+        model.selected = true;
+      } else {
+        element.selected = false;
+      }
+    });
+    streamPaymentMethod.set(paymentMethods);
+  }
+
+  onGetPromoCode() async {
+    try {
+      List<PromoCodeModel>? promoCode = await Repository.onGetAllPromoCode(
+        PromoCodeRequestModel(
+          userId: Storage.userModelGlobal?.userId ?? 0,
+          status: PromoCodeStatusEnum.active,
+        ),
+      );
+
+      streamPromoCodeModels.add(promoCode ?? []);
+      listPromocode = promoCode;
+    } catch (e) {
+      print('Lỗi khi lấy danh sách mã giảm giá: $e');
+      streamPromoCodeModels.add([]);
+    }
+  }
+
+  onSelectPromoCode(PromoCodeModel model, {BuildContext? bContext}) async {
+    listPromocode?.forEach((element) {
+      if (element.promoCodeId == model.promoCodeId) {
+        element.selected = !(model.selected ?? false);
+      }
+    });
+    final isSuccess = await onGetPreviewOrder();
+    if (isSuccess) {
+      streamPromoCodeModels.set(listPromocode!);
+    } else {
+      listPromocode?.forEach((element) {
+        if (element.promoCodeId == model.promoCodeId) {
+          element.selected = !(model.selected ?? false);
+        }
+      });
+      print('########################');
+      showCustomDialog(
+        bContext!,
+        AppSize.width(),
+        AppSize.width(),
+        'Thông báo',
+        Text('Không thể áp dụng mã giảm giá'),
+        true,
+        false,
+        Icon(Icons.warning, color: toHexToColor(primaryButtonColorRed)),
+      );
+    }
+
+    setState(() {});
+  }
+
+  // onBuy(BuildContext bContext) async {
+  //   print('#############1234');
+  //   final CreateOrderRequestModel model = CreateOrderRequestModel(
+  //     branchId: Storage.branchModelGlobal?.branchId,
+  //     cartId: Storage.cartModelGlobal?.cartId,
+  //     grandTotal: previewOrder?.grandTotal,
+  //     orderDate: formatDateTime(DateTime.now()),
+  //     promoCodes:
+  //         listPromocode
+  //             ?.where((e) => e.selected == true)
+  //             .map((e) => e.code ?? '')
+  //             .toList(),
+  //     status: OrderStatus.pending,
+  //     userAddressId: Storage.addressModel?.userAddressId,
+  //     userId: Storage.userModelGlobal?.userId,
+  //   );
+
+  //   final OrderCreateResponseModel? data = await Repository.onCreateOrder(
+  //     model,
+  //   );
+
+  //   OrderCreateResponseModel? orderUpdate;
+
+  //   if (data != null) {
+  //     final shipmentResponse = await Repository.createShipment(
+  //       addressId: Storage.addressModel?.userAddressId,
+  //       orderId: data.orderId,
+  //       rateId: previewOrder?.rates?.id,
+  //     );
+
+  //     final typePayment =
+  //         paymentMethods?.firstWhere((element) => element.selected == true).id;
+
+  //     if (typePayment == 'cod') {
+  //       model.status = OrderStatus.pending;
+  //       orderUpdate = await Repository.onUpdateOrderAPI(model, data.orderId);
+  //       // showCustomDialog(
+  //       //   bContext,
+  //       //   AppSize.width(),
+  //       //   AppSize.width(),
+  //       //   'Thông báo',
+  //       //   Text('Đặt hàng thành công', style: TextStyle(color: Colors.black)),
+  //       //   true,
+  //       //   false,
+  //       //   Icon(
+  //       //     Icons.check_box_outline_blank_rounded,
+  //       //     color: toHexToColor(primaryColorGreen),
+  //       //   ),
+  //       // );
+  //       // Navigator.pop(bContext);
+  //       print('############3333# ${orderUpdate?.orderId}');
+  //       if (orderUpdate?.orderId != null) {
+  //         Navigator.pop(bContext);
+  //         await showCustomDialog(
+  //           bContext,
+  //           AppSize.width(),
+  //           AppSize.width(),
+  //           'Thông báo',
+  //           Text('Đặt hàng thành công', style: TextStyle(color: Colors.black)),
+  //           true,
+  //           false,
+  //           Icon(
+  //             Icons.check_circle_outline_sharp,
+  //             size: 24,
+  //             color: toHexToColor(primaryColorGreen),
+  //           ),
+  //         );
+  //         // Navigator.pop(bContext);
+  //       } else {
+  //         await showCustomDialog(
+  //           bContext,
+  //           AppSize.width(),
+  //           AppSize.width(),
+  //           'Thông báo',
+  //           Text(
+  //             'Đặt hàng không thành công',
+  //             style: TextStyle(color: Colors.black),
+  //           ),
+  //           true,
+  //           false,
+  //           Icon(
+  //             size: 24,
+  //             Icons.check_circle_outline_sharp,
+  //             color: toHexToColor(primaryColorGreen),
+  //           ),
+  //         );
+  //       }
+  //       // Navigator.pop(bContext);
+  //     }
+
+  //     if (typePayment == 'vnpay' || typePayment == 'zalopay') {
+  //       model.status = OrderStatus.paying;
+
+  //       orderUpdate = await Repository.onUpdateOrderAPI(model, data.orderId);
+
+  //       final vnPay = await Repository.onGetVnpayUrl(data.orderId);
+  //       // openUrlInChrome(vnPay);
+  //       Navigator.push(
+  //         bContext,
+  //         MaterialPageRoute(
+  //           builder:
+  //               (_) => VnPayWebViewScreen(
+  //                 paymentUrl: vnPay,
+  //                 onPaymentResult: (success) async {
+  //                   if (success) {
+  //                     model.status = OrderStatus.paid;
+  //                     await Repository.onUpdateOrderAPI(model, data.orderId);
+  //                     // ✅ Hiển thị thông báo, chuyển màn hình,...
+  //                     ScaffoldMessenger.of(bContext).showSnackBar(
+  //                       const SnackBar(content: Text("Thanh toán thành công!")),
+  //                     );
+  //                   } else {
+  //                     ScaffoldMessenger.of(bContext).showSnackBar(
+  //                       const SnackBar(content: Text("Thanh toán thất bại!")),
+  //                     );
+  //                   }
+  //                 },
+  //               ),
+  //         ),
+  //       );
+
+  //       model.status = OrderStatus.paid;
+  //       print('########### updatePaying');
+  //       final updatePaying = await Repository.onUpdateOrderAPI(
+  //         model,
+  //         data.orderId,
+  //       );
+  //       if (updatePaying != null) {
+  //         await showCustomDialog(
+  //           bContext,
+  //           AppSize.width(),
+  //           AppSize.width(),
+  //           'Thông báo',
+  //           Text('Đặt hàng thành công', style: TextStyle(color: Colors.black)),
+  //           true,
+  //           false,
+  //           Icon(
+  //             size: 24,
+  //             Icons.check_circle_outline_sharp,
+  //             color: toHexToColor(primaryColorGreen),
+  //           ),
+  //         );
+  //         Navigator.pop(bContext);
+  //       } else {
+  //         await showCustomDialog(
+  //           bContext,
+  //           AppSize.width(),
+  //           AppSize.width(),
+  //           'Thông báo',
+  //           Text(
+  //             'Đặt hàng không thành công',
+  //             style: TextStyle(color: Colors.black),
+  //           ),
+  //           true,
+  //           false,
+  //           Icon(
+  //             size: 24,
+  //             Icons.check_circle_outline_sharp,
+  //             color: toHexToColor(primaryColorGreen),
+  //           ),
+  //         );
+  //       }
+  //       print('########### ${updatePaying.toString()}');
+  //     }
+  //   }
+  // }
+
+  Future<void> onBuy(BuildContext bContext) async {
+    final CreateOrderRequestModel model = CreateOrderRequestModel(
+      branchId: Storage.branchModelGlobal?.branchId,
+      cartId: Storage.cartModelGlobal?.cartId,
+      grandTotal: previewOrder?.grandTotal,
+      orderDate: formatDateTime(DateTime.now()),
+      promoCodes:
+          listPromocode
+              ?.where((e) => e.selected == true)
+              .map((e) => e.code ?? '')
+              .toList(),
+      status: OrderStatus.pending,
+      userAddressId: Storage.addressModel?.userAddressId,
+      userId: Storage.userModelGlobal?.userId,
+    );
+
+    final OrderCreateResponseModel? data = await Repository.onCreateOrder(
+      model,
+    );
+
+    if (data == null) return;
+
+    final shipmentResponse = await Repository.createShipment(
+      addressId: Storage.addressModel?.userAddressId,
+      orderId: data.orderId,
+      rateId: previewOrder?.rates?.id,
+    );
+
+    final typePayment =
+        paymentMethods?.firstWhere((element) => element.selected == true).id;
+
+    if (typePayment == 'cod') {
+      await _handleCodPayment(bContext, model, data.orderId);
+    } else if (typePayment == 'vnpay' || typePayment == 'zalopay') {
+      await _handleOnlinePayment(bContext, model, data.orderId);
+    }
+  }
+
+  Future<void> _handleCodPayment(
+    BuildContext context,
+    CreateOrderRequestModel model,
+    int? orderId,
+  ) async {
+    model.status = OrderStatus.pending;
+
+    final orderUpdate = await Repository.onUpdateOrderAPI(model, orderId);
+
+    print('############ COD orderId: ${orderUpdate?.orderId}');
+
+    if (orderUpdate?.orderId != null) {
+      await _showSuccessDialog(context, 'Đặt hàng thành công');
+      // Navigator.pop(context);
+    } else {
+      await _showErrorDialog(context, 'Đặt hàng không thành công');
+    }
+  }
+
+  Future<void> _handleOnlinePayment(
+    BuildContext context,
+    CreateOrderRequestModel model,
+    int? orderId,
+  ) async {
+    model.status = OrderStatus.paying;
+    await Repository.onUpdateOrderAPI(model, orderId);
+
+    final paymentUrl = await Repository.onGetVnpayUrl(orderId);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => VnPayWebViewScreen(
+              paymentUrl: paymentUrl,
+              onPaymentResult: (success) async {
+                if (success) {
+                  model.status = OrderStatus.paid;
+                  await Repository.onUpdateOrderAPI(model, orderId);
+                  await _showSuccessDialog(context, 'Đặt hàng thành công');
+                  // Navigator.pop(context);
+                  // ScaffoldMessenger.of(context).showSnackBar(
+                  //   const SnackBar(content: Text("Thanh toán thành công!")),
+                  // );
+                } else {
+                  _showErrorDialog(context, 'Đặt hàng không thành công');
+                  // ScaffoldMessenger.of(context).showSnackBar(
+                  //   const SnackBar(content: Text("Thanh toán thất bại!")),
+                  // );
+                }
+              },
+            ),
+      ),
+    );
+
+    model.status = OrderStatus.paid;
+    final updatePaying = await Repository.onUpdateOrderAPI(model, orderId);
+
+    print('########### updatePaying: $updatePaying');
+
+    if (updatePaying != null) {
+      await _showSuccessDialog(context, 'Đặt hàng thành công');
+      Navigator.pop(context);
+    } else {
+      await _showErrorDialog(context, 'Đặt hàng không thành công');
+    }
+  }
+
+  Future<void> _showSuccessDialog(BuildContext context, String message) async {
+    await showCustomDialog(
+      context,
+      AppSize.width(),
+      AppSize.width(),
+      'Thông báo',
+      Text(message, style: const TextStyle(color: Colors.black)),
+      true,
+      false,
+      Icon(
+        Icons.check_circle_outline_sharp,
+        size: 24,
+        color: toHexToColor(primaryColorGreen),
+      ),
+      onClose: () {
+        print('############12311');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      },
+    );
+  }
+
+  Future<void> _showErrorDialog(BuildContext context, String message) async {
+    await showCustomDialog(
+      context,
+      AppSize.width(),
+      AppSize.width(),
+      'Thông báo',
+      Text(message, style: const TextStyle(color: Colors.black)),
+      true,
+      false,
+      onClose: () {
+        print('############12311');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      },
+      Icon(Icons.error_outline, size: 24, color: Colors.red),
+    );
+  }
+
+  void openUrlInChrome(String url) {
+    if (Platform.isAndroid) {
+      final intent = AndroidIntent(
+        action: 'action_view',
+        data: url,
+        package: 'com.android.chrome',
+      );
+      intent.launch();
+    }
+  }
+
+  Future<void> openVNPayUrlWithChrome(String url) async {
+    if (url.contains('vnp_Locale=&')) {
+      url = url.replaceAll('vnp_Locale=&', 'vnp_Locale=vn&');
+    }
+
+    final uri = Uri.parse(url);
+
+    // ✅ Mở bằng Chrome nếu có
+    final chromePackage = 'com.android.chrome';
+    final canLaunchWithChrome = await canLaunchUrl(
+      Uri(
+        scheme: 'googlechrome',
+        host: uri.host,
+        path: uri.path,
+        query: uri.query,
+      ),
+    );
+
+    if (canLaunchWithChrome) {
+      final chromeUri = Uri(
+        scheme: 'googlechrome',
+        host: uri.host,
+        path: uri.path,
+        query: uri.query,
+      );
+
+      print('🚀 Đang mở bằng Chrome: $chromeUri');
+      await launchUrl(chromeUri);
+    } else {
+      print('⚠️ Chrome không cài hoặc không hỗ trợ. Đang fallback...');
+      // ✅ fallback nếu không có Chrome (mở bằng mặc định)
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        print('❌ Không thể mở liên kết: $url');
+        throw 'Không thể mở liên kết: $url';
+      }
+    }
+  }
+
+  onRefresh() {
+    setState(() {});
+  }
+}
+
+class PaymentMethod {
+  final String? id;
+  final String? iconUrl;
+  bool? selected;
+  Color? color;
+  final String? name;
+  PaymentMethod({
+    this.id,
+    this.iconUrl,
+    this.selected = false,
+    this.color,
+    this.name,
+  });
 }

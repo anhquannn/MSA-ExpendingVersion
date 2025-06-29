@@ -1,5 +1,4 @@
 import 'package:msa/feature/data/model/request/create_order_model_request.dart';
-import 'package:msa/feature/data/model/response/preview_order_response.dart';
 import 'package:msa/feature/data/model/response/revenue_order_response.dart';
 import 'package:msa/feature/domain/entities/order_model.dart';
 
@@ -16,11 +15,6 @@ abstract class IOrderRepository {
     String status,
     int page,
     int pageSize,
-  );
-  Future<PreviewOrderResponse?> onPreviewOrder(
-    int userId,
-    int cartId,
-    List<String>? promoCodes,
   );
   Future<List<OrderModel>?> onGetAllOrders({
     int page,

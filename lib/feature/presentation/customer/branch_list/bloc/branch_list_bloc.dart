@@ -1,18 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:msa/core/config/base_bloc.dart';
-import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/response/branch_response_response.dart';
 import 'package:msa/feature/domain/entities/branch_model.dart';
 import 'package:msa/feature/domain/usecase/branch_use_case.dart';
-import 'package:msa/feature/domain/usecase/cart_item_use_case.dart';
-import 'package:msa/feature/domain/usecase/cart_use_case.dart';
-import 'package:msa/feature/domain/usecase/category_use_case.dart';
-import 'package:msa/feature/domain/usecase/product_use_case.dart';
-import 'package:msa/feature/domain/usecase/promo_code_use_case.dart';
-import 'package:msa/feature/domain/usecase/user_use_case.dart';
 import 'package:msa/feature/presentation/customer/branch_list/ui/branch_list_screen.dart';
-import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../../../../data/datasources/local/starage.dart';

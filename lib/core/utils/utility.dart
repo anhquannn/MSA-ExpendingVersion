@@ -103,3 +103,83 @@ String formatDateString(String dateString) {
     return '';
   }
 }
+customPrint(String data){
+   print('[✅ DEBUG] ${data.toString()}');
+}
+enum OrderStatus {
+  pending,
+  paying,
+  paid,
+  delivering,
+  shipped,
+  cancelling,
+  cancelled,
+  completed,
+  failed,
+}
+extension OrderStatusExtension on OrderStatus {
+  String get name => toString().split('.').last.toUpperCase();
+
+  String get description {
+    switch (this) {
+      case OrderStatus.pending:
+        return 'Chờ xử lý';
+      case OrderStatus.paying:
+        return 'Đang thanh toán';
+      case OrderStatus.paid:
+        return 'Đã thanh toán';
+      case OrderStatus.delivering:
+        return 'Đang vận chuyển';
+      case OrderStatus.shipped:
+        return 'Giao hàng thành công';
+      case OrderStatus.cancelling:
+        return 'Đang hủy đơn hàng';
+      case OrderStatus.cancelled:
+        return 'Đã hủy';
+      case OrderStatus.completed:
+        return 'Hoàn thành';
+      case OrderStatus.failed:
+        return 'Thất bại';
+    }
+  }
+
+  static OrderStatus? fromString(String status) {
+    try {
+      return OrderStatus.values.firstWhere(
+        (e) => e.name == status.toUpperCase(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+}
+enum PromoCodeStatusEnum {
+  active,
+  inactive,
+  expired,
+}
+
+extension PromoCodeStatusExtension on PromoCodeStatusEnum {
+  String get name => toString().split('.').last.toUpperCase();
+
+  String get description {
+    switch (this) {
+      case PromoCodeStatusEnum.active:
+        return 'Kích hoạt';
+      case PromoCodeStatusEnum.inactive:
+        return 'Chưa kích hoạt';
+      case PromoCodeStatusEnum.expired:
+        return 'Đã hết hạn';
+    }
+  }
+
+  static PromoCodeStatusEnum? fromString(String status) {
+    try {
+      return PromoCodeStatusEnum.values.firstWhere(
+        (e) => e.name == status.toUpperCase(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+}

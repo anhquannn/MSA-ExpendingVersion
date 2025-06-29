@@ -129,4 +129,20 @@ class CartItemRepositoryImpl extends ICartItemRepository {
     );
     return response.isSuccess;
   }
+
+  static Future<List<CartItemModel>> onGetCartItemsCartId(int cartId) async {
+    final String path = '$getAllCartItem$cartId';
+
+    final response = await HttpConnection.get<List<CartItemModel>>(
+      path,
+      fromJsonT: (json) {
+        final List<dynamic> jsonList = json as List<dynamic>;
+        return jsonList
+            .map((itemJson) => CartItemModel.fromJson(itemJson))
+            .toList();
+      },
+    );
+
+    return response.result ?? [];
+  }
 }

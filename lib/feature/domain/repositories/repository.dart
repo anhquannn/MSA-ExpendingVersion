@@ -1,7 +1,10 @@
 import 'package:msa/feature/data/datasources/global/http_connection.dart'
     show ApiResponse;
 import 'package:msa/feature/data/model/request/category_filter_request.dart';
+import 'package:msa/feature/data/model/request/change_password_request_model.dart';
+import 'package:msa/feature/data/model/request/create_order_model_request.dart';
 import 'package:msa/feature/data/model/request/get_branch_request_model.dart';
+import 'package:msa/feature/data/model/request/order_paging_request_model.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/product_get_all_request_model.dart';
 import 'package:msa/feature/data/model/request/promocode_request_model.dart';
@@ -10,6 +13,7 @@ import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:msa/feature/data/repositories/branch_connection.dart';
 import 'package:msa/feature/data/repositories/cart_item_connection.dart';
 import 'package:msa/feature/data/repositories/category_connection.dart';
+import 'package:msa/feature/data/repositories/order_connection.dart';
 import 'package:msa/feature/data/repositories/product_connection.dart';
 import 'package:msa/feature/data/repositories/promo_code_connection.dart';
 import 'package:msa/feature/data/repositories/user_connection.dart';
@@ -58,4 +62,35 @@ class Repository {
       UserRepositoryImpl.onResendOtp(request);
 
   static getUserAddresses() => UserRepositoryImpl.getUserAddresses();
+
+  static getCartItem(int cartId) =>
+      CartItemRepositoryImpl.onGetCartItemsCartId(cartId);
+
+  static onChangePassword(UpdatePasswordRequest request, int userId) =>
+      UserRepositoryImpl.onChangePassword(request, userId);
+
+  static onUpdateUserAddress(int userAdressId, UserAddressRequest model) =>
+      UserRepositoryImpl.onUpdateUserAddress(userAdressId, model);
+
+  static onCreateOrder(CreateOrderRequestModel model) =>
+      OrderRepositoryImpl.createOrderAPI(model);
+
+  static onGetPreviewOrder({List<String>? promoCode}) =>
+      OrderRepositoryImpl.onGetPreviewOrder(promoCodes: promoCode);
+
+  static createShipment({int? orderId, int? addressId, String? rateId}) =>
+      OrderRepositoryImpl.createShipment(
+        addressId: addressId,
+        orderId: orderId,
+        rateId: rateId,
+      );
+
+  static onUpdateOrderAPI(CreateOrderRequestModel model, int? orderId) =>
+      OrderRepositoryImpl.onUpdateOrderAPI(model, orderId);
+
+  static onGetVnpayUrl(int? orderId) =>
+      OrderRepositoryImpl.onGetVnpayUrl(orderId);
+
+  static onGetListOrder(OrderFilterRequest model) =>
+      OrderRepositoryImpl.onGetListOrder(model);
 }

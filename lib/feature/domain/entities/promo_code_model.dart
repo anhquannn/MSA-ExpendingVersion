@@ -12,6 +12,7 @@ class PromoCodeModel {
   final double? discountPercentage;
   final double? minimumOrderValue;
   final dynamic campaignResponse;
+  bool? selected;
 
   PromoCodeModel({
     this.promoCodeId,
@@ -25,30 +26,33 @@ class PromoCodeModel {
     this.discountPercentage,
     this.minimumOrderValue,
     this.campaignResponse,
+    this.selected=false
   });
 
-factory PromoCodeModel.fromJson(Map<String, dynamic> json) {
-  return PromoCodeModel(
-    promoCodeId: json['promoCodeId'] is int
-        ? json['promoCodeId']
-        : int.tryParse(json['promoCodeId'].toString()),
-    name: json['name']?.toString(),
-    code: json['code']?.toString(),
-    description: json['description']?.toString(),
-    startDate: json['startDate']??'',
-    endDate: json['endDate']??'',
-    status: json['status']??'',
-    discountType: json['discountType']?.toString(),
-    discountPercentage: json['discountPercentage'] is double
-        ? json['discountPercentage']
-        : double.tryParse(json['discountPercentage'].toString()),
-    minimumOrderValue: json['minimumOrderValue'] is double
-        ? json['minimumOrderValue']
-        : double.tryParse(json['minimumOrderValue'].toString()),
-    campaignResponse: json['campaignResponse'],
-  );
-}
-
+  factory PromoCodeModel.fromJson(Map<String, dynamic> json) {
+    return PromoCodeModel(
+      promoCodeId:
+          json['promoCodeId'] is int
+              ? json['promoCodeId']
+              : int.tryParse(json['promoCodeId'].toString()),
+      name: json['name']?.toString(),
+      code: json['code']?.toString(),
+      description: json['description']?.toString(),
+      startDate: json['startDate'] ?? '',
+      endDate: json['endDate'] ?? '',
+      status: json['status'] ?? '',
+      discountType: json['discountType']?.toString(),
+      discountPercentage:
+          json['discountPercentage'] is double
+              ? json['discountPercentage']
+              : double.tryParse(json['discountPercentage'].toString()),
+      minimumOrderValue:
+          json['minimumOrderValue'] is double
+              ? json['minimumOrderValue']
+              : double.tryParse(json['minimumOrderValue'].toString()),
+      campaignResponse: json['campaignResponse'],
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {

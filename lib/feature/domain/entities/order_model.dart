@@ -5,7 +5,7 @@ import 'package:msa/feature/domain/entities/user_model.dart';
 
 class OrderModel {
   int? orderId;
-  int? orderDate;
+  String? orderDate;
   double? grandTotal;
   double? totalCost;
   String? status;
@@ -38,7 +38,7 @@ class OrderModel {
 
   factory OrderModel.fromJson(Map<String, dynamic> json) => OrderModel(
         orderId: json['orderId'] as int?,
-        orderDate: json['orderDate'] as int?,
+        orderDate: json['orderDate'],
         grandTotal: (json['grandTotal'] as num?)?.toDouble(),
         totalCost: (json['totalCost'] as num?)?.toDouble(),
         status: json['status'] as String?,

@@ -1,8 +1,10 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/user_login_request.dart';
+import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/presentation/logins/forgot_pasword/ui/forgot_password_screen.dart';
 import 'package:msa/feature/presentation/logins/register/ui/register_screen.dart';
 import '../../../../data/datasources/local/starage.dart';
@@ -57,13 +59,23 @@ class LoginBloc extends BaseBloc<LoginScreen> {
     isSuccess = await _userUseCases.login.call(
       UserLoginRequest(email: email, password: password),
     );
-
     Storage.email = email;
     if (isSuccess == false) {
       showLoginError('Sai mật khẩu!!!');
     }
+
+    await getFcmToken();
     viewSetState(() {});
     return isSuccess == true;
+  }
+
+  Future<void> getFcmToken() async {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken == null) {
+      Storage.deviceId = fcmToken ?? '';
+      Storage.saveDeviceId(fcmToken ?? '');
+      print('FCM Token: $fcmToken');
+    }
   }
 
   void forgotPassword() {

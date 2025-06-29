@@ -137,7 +137,6 @@ void setupLocator() {
       getOrdersByUserIdAndStatus: GetOrdersByUserIdAndStatusUseCase(
         locator<IOrderRepository>(),
       ),
-      previewOrder: PreviewOrderUseCase(locator<IOrderRepository>()),
       getAllOrders: GetAllOrdersUseCase(locator<IOrderRepository>()),
       getRevenueStatistics: GetRevenueStatisticsUseCase(
         locator<IOrderRepository>(),

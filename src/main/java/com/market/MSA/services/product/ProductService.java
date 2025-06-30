@@ -153,10 +153,14 @@ public class ProductService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable(
-      value = "filtered_products",
-      key =
-          "{#request.branchId, #request.categoryId, #request.supplierId, #request.unit, #request.netWeight, #request.minPrice, #request.maxPrice, #request.keyword, #request.page, #request.pageSize, #request.sortBy, #request.sortDirection}")
+  //  @Cacheable(
+  //      value = "filtered_products",
+  //      key =
+  //          "{#request.branchId, #request.categoryId, #request.supplierId, #request.unit,
+  // #request.netWeight,
+  // #request.minPrice, #request.maxPrice, #request.keyword, #request.page, #request.pageSize,
+  // #request.sortBy,
+  // #request.sortDirection}")
   public ProductFilterResponse filterProducts(ProductFilterRequest request) {
     // Set default values for pagination and sorting
     String sortBy =

@@ -98,22 +98,20 @@ public class ProductCombinationService {
         .map(pcMapper::toProductCombinationResponse);
   }
 
-  @Cacheable("product-combinations-page-products")
+  //  @Cacheable("product-combinations-page-products")
   public Page<ProductResponse> filterPagingProducts(ProductCombinationFilterRequest req) {
     Sort sort = Sort.by(Sort.Direction.fromString(req.getSortDirection()), req.getSortBy());
     Pageable pageable = PageRequest.of(req.getPage() - 1, req.getPageSize(), sort);
-    Page<ProductCombination> page = pcRepository.filterWithPaging(req.getProductId1(), req.getProductId2(), pageable);
-    
+    Page<ProductCombination> page =
+        pcRepository.filterWithPaging(req.getProductId1(), req.getProductId2(), pageable);
+
     // Tạo list các productId2 từ page
-    List<ProductResponse> products = page.getContent().stream()
-        .map(pc -> pcMapper.toProductCombinationResponse(pc).getProductId2())
-        .collect(Collectors.toList());
-    
+    List<ProductResponse> products =
+        page.getContent().stream()
+            .map(pc -> pcMapper.toProductCombinationResponse(pc).getProductId2())
+            .collect(Collectors.toList());
+
     // Tạo response với list products
-    return new PageImpl<>(
-        products,
-        pageable,
-        page.getTotalElements()
-    );
+    return new PageImpl<>(products, pageable, page.getTotalElements());
   }
 }

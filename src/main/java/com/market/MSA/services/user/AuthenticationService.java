@@ -112,6 +112,7 @@ public class AuthenticationService {
             .expirationTime(
                 new Date(Instant.now().plus(expirationTime, ChronoUnit.HOURS).toEpochMilli()))
             .jwtID(UUID.randomUUID().toString())
+            .claim("userId", user.getUserId())
             .claim("scope", buildScope(user))
             .claim("token_type", tokenType)
             .build();

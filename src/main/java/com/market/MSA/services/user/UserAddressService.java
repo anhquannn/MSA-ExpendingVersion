@@ -93,7 +93,7 @@ public class UserAddressService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("user_addresses_paging")
+  //  @Cacheable("user_addresses_paging")
   public Page<UserAddressResponse> getAllUserAddressesWithPaging(UserAddressFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

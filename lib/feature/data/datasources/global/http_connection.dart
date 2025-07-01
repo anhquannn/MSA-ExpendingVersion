@@ -21,6 +21,7 @@ import 'package:path/path.dart' as path;
 import '../../../../core/config/constant.dart';
 
 class HttpConnection {
+  //A0:86:1F:F4:87:FF:1F:3C:1D:28:B2:77:A6:7C:00:18:12:61:9B:AF
   static final String _urlConnection = urlConnection;
   final String baseUrlSupabase = 'https://lmtqwglnnbgsrxhelpxz.supabase.co';
   final String tokenSupabase =
@@ -245,8 +246,8 @@ class HttpConnection {
           );
         }
         final refreshed = await Repository.onRefresh(
-          Storage.refreshToken ??
-              'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtd2FuZzM4MjAzQGdtYWlsLmNvbSIsInNjb3BlIjoiUk9MRV9DVVNUT01FUiIsImlzcyI6ImNvbS5tc2EiLCJleHAiOjE4ODA3MDYwODQsInRva2VuX3R5cGUiOiJyZWZyZXNoIiwiaWF0IjoxNzUxMTA2MDg0LCJqdGkiOiI1NTRjMzg1ZC1lYjgwLTRiNmYtODJmMC1mNDhhYTZkMWM0NTEifQ.r47-F54ytvnUjBXsoIMGPaOaGVNGo8q2-M25gf7MOWmuTUc7iXsVOwZB8mSQPbL-Fl_VLK11j8U02Sbr2w9Bbg',
+          Storage.refreshToken ??''
+              // 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtd2FuZzM4MjAzQGdtYWlsLmNvbSIsInNjb3BlIjoiUk9MRV9DVVNUT01FUiIsImlzcyI6ImNvbS5tc2EiLCJleHAiOjE4ODA3MDYwODQsInRva2VuX3R5cGUiOiJyZWZyZXNoIiwiaWF0IjoxNzUxMTA2MDg0LCJqdGkiOiI1NTRjMzg1ZC1lYjgwLTRiNmYtODJmMC1mNDhhYTZkMWM0NTEifQ.r47-F54ytvnUjBXsoIMGPaOaGVNGo8q2-M25gf7MOWmuTUc7iXsVOwZB8mSQPbL-Fl_VLK11j8U02Sbr2w9Bbg',
         );
 
         if (refreshed) {

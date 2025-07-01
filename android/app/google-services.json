@@ -1,21 +1,30 @@
 {
   "project_info": {
-    "project_number": "252119744538",
-    "project_id": "msa-project-ce2df",
-    "storage_bucket": "msa-project-ce2df.firebasestorage.app"
+    "project_number": "202289676220",
+    "project_id": "msa-project-69e00",
+    "storage_bucket": "msa-project-69e00.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:252119744538:android:4199538638edd16a4251a3",
+        "mobilesdk_app_id": "1:202289676220:android:8c4b0689d1c610a77175b9",
         "android_client_info": {
           "package_name": "com.example.msa"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "202289676220-tueukuofg72vju18ksdaof0oegtnuhvp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.msa",
+            "certificate_hash": "a0861ff487ff1f3c1d28b277a67c001812619baf"
+          }
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyBVCBAe3-_eA2Q664ssixKbLimF4Qm2NJM"
+          "current_key": "AIzaSyCGA2H6lpkgCpjCvWv3bxJamH0a2ItfRtw"
         }
       ],
       "services": {

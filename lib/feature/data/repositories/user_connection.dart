@@ -2,7 +2,10 @@
 
 import 'package:flutter/widgets.dart';
 import 'package:msa/feature/data/model/request/change_password_request_model.dart';
+import 'package:msa/feature/data/model/request/login_request_model.dart';
+import 'package:msa/feature/data/model/request/user_address_request.dart';
 import 'package:msa/feature/data/model/response/auth_response.dart';
+import 'package:msa/feature/data/model/response/authentication_response.dart';
 import 'package:msa/feature/data/model/response/user_login_response.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/domain/entities/goship_model.dart';
@@ -232,7 +235,7 @@ class UserRepositoryImpl implements IUserRepository {
 
   static onUpdateUserAddress(
     int userAddressId,
-    UserAddressRequest model,
+    UserAddressUpdateRequest model,
   ) async {
     final response = await HttpConnection.put(
       '$updateUserAddress$userAddressId',
@@ -243,5 +246,60 @@ class UserRepositoryImpl implements IUserRepository {
       Storage.addressModel = response.result;
     }
     return response.isSuccess;
+  }
+
+  static onLoginFCM(LoginRequest request) async {
+    final response = await HttpConnection.post<UserModel>(
+      login,
+      body: request.toJson(),
+      isToken: false,
+      fromJsonT: (json) => UserModel.fromJson(json),
+    );
+    if (response.isSuccess && response.result != null) {
+      final data = response.result!;
+      Storage.userModelGlobal = data;
+      Storage.saveUserModel(data);
+      Storage.saveEmail(data.email ?? '');
+      return true;
+    }
+    return false;
+  }
+
+  static loginWithGoogleToken(String accessToken) async {
+    try {
+      final response = await HttpConnection.post(
+        '$loginGoogle?accessToken=$accessToken',
+        fromJsonT: (json) => AuthenticationResponse.fromJson(json),
+      );
+
+      if (response.isSuccess) {
+        Storage.refreshToken = response.result?.refreshToken;
+        Storage.refreshToken = response.result?.accessToken;
+        Storage.saveRefreshToken(response.result?.refreshToken ?? '');
+        Storage.saveToken(response.result?.accessToken ?? '');
+      }
+
+      return response.isSuccess;
+    } catch (e, stack) {
+      print('❌ Lỗi gọi API loginWithGoogle: $e');
+      print('📛 Stacktrace: $stack');
+      return false;
+    }
+  }
+
+  static onGetUserInfo() async {
+    final response = await HttpConnection.get<UserModel>(
+      info,
+      fromJsonT: (json) => UserModel.fromJson(json),
+    );
+    final data = response.result!;
+    Storage.userModelGlobal = data;
+    Storage.saveUserModel(data);
+    Storage.saveEmail(data.email ?? '');
+    if (response.isSuccess && response.result != null) {
+      Storage.userModelGlobal = response.result!;
+      Storage.saveUserModel(response.result!);
+    }
+    return response.result;
   }
 }

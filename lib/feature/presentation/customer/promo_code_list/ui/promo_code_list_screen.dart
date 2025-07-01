@@ -32,30 +32,34 @@ class PromoCodeListScreen extends BaseView<PromoCodeListBloc> {
       bodyBuilder: (controller) {
         return Padding(
           padding: const EdgeInsets.all(8.0),
-          child: listPromoCode(promoCodeList, controller),
+          child: MediaQuery.removePadding(
+            context: context,
+            removeTop: true,
+            child: ListView.builder(
+              // controller: controller,
+              itemCount: promoCodeList.length,
+              itemBuilder: (context, index) {
+                final model = promoCodeList[index];
+                return SizedBox(
+                  height: 180,
+                  child: widgetCustomItemPromoCode(
+                    model,
+                    () => _showPromoCodeSheet(
+                      context,
+                      'Mã giảm giá',
+                      const SizedBox(),
+                      model,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         );
       },
       hideBottomBarOnScroll: true,
     );
   }
-}
-
-Widget listPromoCode(List<PromoCodeModel> promoCodeList, ScrollController controller) {
-  return ListView.builder(
-    // controller: controller,
-    itemCount: promoCodeList.length,
-    itemBuilder: (context, index) {
-      final model = promoCodeList[index];
-      return SizedBox(
-        height: 180,
-        child: widgetCustomItemPromoCode(
-          model,
-          () => _showPromoCodeSheet(context, 'Mã giảm giá', const SizedBox(), model),
-        
-        ),
-      );
-    },
-  );
 }
 
 void _showPromoCodeSheet(
@@ -105,13 +109,6 @@ Widget _customTextSpan(String title, String body) {
   );
 }
 
-Widget widgetCustomItemPromoCode(
-  PromoCodeModel model,
-  VoidCallback onTap,
-) {
-  return InkWell(
-    onTap: onTap,
-    child: customItemPromoCode(model, () {
-      
-    }, () {}));
+Widget widgetCustomItemPromoCode(PromoCodeModel model, VoidCallback onTap) {
+  return InkWell(onTap: onTap, child: customItemPromoCode(model, () {}, () {}));
 }

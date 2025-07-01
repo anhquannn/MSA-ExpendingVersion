@@ -1,26 +1,26 @@
 class UserAddressRequest {
-  final String city;
-  final String district;
-  final String street;
-  final String ward;
-  final String cityCode;
-  final String districtCode;
-  final String wardCode;
-  final bool isPrimary;
+  final String? city;
+  final String? district;
+  final String? street;
+  final String? ward;
+  final String? cityCode;
+  final String? districtCode;
+  final String? wardCode;
+  final bool? isPrimary;
   final String? createdAt;
-  final int userId;
+  final int? userId;
 
   UserAddressRequest({
-    required this.city,
-    required this.district,
-    required this.street,
-    required this.ward,
-    required this.cityCode,
-    required this.districtCode,
-    required this.wardCode,
-    required this.isPrimary,
+    this.city,
+    this.district,
+    this.street,
+    this.ward,
+    this.cityCode,
+    this.districtCode,
+    this.wardCode,
+    this.isPrimary,
     this.createdAt,
-    required this.userId,
+    this.userId,
   });
 
   factory UserAddressRequest.fromJson(Map<String, dynamic> json) {

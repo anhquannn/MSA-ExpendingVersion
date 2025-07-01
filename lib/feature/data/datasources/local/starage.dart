@@ -9,9 +9,9 @@ import 'dart:convert';
 
 class Storage {
   static String otp = '';
-  // static String token = '';
-  static  String token =
-      'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtd2FuZzM4MjAzQGdtYWlsLmNvbSIsInNjb3BlIjoiUk9MRV9DVVNUT01FUiIsImlzcyI6ImNvbS5tc2EiLCJleHAiOjE3NjQwNjYwODQsInRva2VuX3R5cGUiOiJhY2Nlc3MiLCJpYXQiOjE3NTExMDYwODQsImp0aSI6IjY5YjQ1MGUyLTkwNDktNDdlMi04MWYwLTFiMDgwODljMDdlOSJ9.bH_NS5KyZWffuKRc1gpB7-WORDopL0BI709h7dHCp9-OPAvAIeF8IL5nVRZnLr_plhj4EMhmcMxkmViNrWSXSQ';
+  static String token = '';
+  // static  String token =
+  //     'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtd2FuZzM4MjAzQGdtYWlsLmNvbSIsInNjb3BlIjoiUk9MRV9DVVNUT01FUiIsImlzcyI6ImNvbS5tc2EiLCJleHAiOjE3NjQwNjYwODQsInRva2VuX3R5cGUiOiJhY2Nlc3MiLCJpYXQiOjE3NTExMDYwODQsImp0aSI6IjY5YjQ1MGUyLTkwNDktNDdlMi04MWYwLTFiMDgwODljMDdlOSJ9.bH_NS5KyZWffuKRc1gpB7-WORDopL0BI709h7dHCp9-OPAvAIeF8IL5nVRZnLr_plhj4EMhmcMxkmViNrWSXSQ';
   static String deviceId = '';
   static String? messageError;
   static String? refreshToken = '';
@@ -20,7 +20,7 @@ class Storage {
   static UserModel? userModelGlobal;
   static CartModel? cartModelGlobal;
   static BranchModel? branchModelGlobal;
-  static String email = 'mwang38203@gmail.com';
+  static String email = '';//'mwang38203@gmail.com';
 
   // ===================== ĐỌC DỮ LIỆU =====================
   static Future<void> readFromLocalStorage() async {
@@ -28,7 +28,7 @@ class Storage {
 
     token = prefs.getString(accessTokenKey) ?? '';
     deviceId = prefs.getString(deviceIdKey) ?? '';
-    email = prefs.getString(emailKey) ?? 'mwang38203@gmail.com';
+    email = prefs.getString(emailKey) ?? ''; //'mwang38203@gmail.com';
     // refreshToken=prefs.getString(refreshTokenKey) ?? '';
     refreshToken = '';
 

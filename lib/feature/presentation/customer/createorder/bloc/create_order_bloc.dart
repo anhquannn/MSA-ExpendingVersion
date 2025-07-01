@@ -40,6 +40,8 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
   List<PromoCodeModel>? listPromocode = [];
   final streamPromoCodeModels = BehaviorSubject<List<PromoCodeModel>>();
 
+  final streamCanBuy = BehaviorSubject<bool>();
+
   String vnPayurl = '';
 
   final Map<int, Debouncer> _debouncers = {};
@@ -169,6 +171,7 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
   }
 
   onCaculate(CartItemModel model, bool isMinus) {
+    if ((model.quantity ?? 1) == 1 && isMinus == true) return;
     final quantity =
         isMinus ? (model.quantity ?? 1) - 1 : (model.quantity ?? 1) + 1;
     final index = listCartItem?.indexWhere(
@@ -307,6 +310,10 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
     } else if (typePayment == 'vnpay' || typePayment == 'zalopay') {
       await _handleOnlinePayment(bContext, model, data.orderId);
     }
+  }
+
+  onSetCanBuy(bool value) {
+    streamCanBuy.set(value);
   }
 
   _handleCodPayment(

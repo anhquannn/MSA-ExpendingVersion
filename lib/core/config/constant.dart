@@ -18,11 +18,14 @@ final String refreshTokenUrl = 'user/refresh';
 final String changePassword = 'user/password/';
 final String getAddress = 'address/paging';
 final String updateUserAddress = 'address/';
+final String loginGoogle = 'user/login/google';
+final String info = 'user/myinfo';
 
 ///user/device/deviceId/2
 final String updateDeviceId = 'user/device/';
-final String updateInfo = 'user/admin/';
+final String updateInfo = 'user/';
 final String resentOtp = 'user/resend';
+final String getUserByGoogle = 'user/google/';
 
 //____________________________________PRODUCT___________________________________
 final String getAllProducts = 'product'; //product?page=1&pageSize=10

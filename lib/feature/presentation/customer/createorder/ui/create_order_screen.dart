@@ -11,6 +11,7 @@ import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/feature/presentation/customer/createorder/bloc/create_order_bloc.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/change_address_screen.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/select_promocode.dart';
+import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
 import 'package:msa/feature/presentation/customer/promo_code_list/ui/promo_code_list_screen.dart';
 import 'package:msa/widget/customBottomSheet.dart';
 import 'package:msa/widget/custom_item_promocode.dart';
@@ -36,8 +37,18 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
     return CustomScaffold(
       isHide: false,
       centerTitle: true,
+
       title: Text('Tạo đơn hàng', style: TextStyle(color: Colors.white)),
-      appBarLeading: iconBack(bloc.viewContext, color: Colors.white),
+      appBarLeading: InkWell(
+        onTap: () {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+            (route) => true,
+          );
+        },
+        child: Icon(Icons.arrow_back_ios, color: Colors.white, size: 24),
+      ),
       bodyBuilder: (controller) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -493,6 +504,7 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
       stream: bloc.streamPreviewOrder,
       builder: (context, snapshot) {
         if (snapshot.data != null) {
+          bloc.onSetCanBuy(true);
           final data = snapshot.data;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -504,7 +516,10 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
             ],
           );
         } else {
-          return Center(child: Text('Không có dữ liệu'));
+          bloc.onSetCanBuy(false);
+          return Center(
+            child: Text('Không có đơn vị vận chuyển cho địa chỉ của bạn.'),
+          );
         }
       },
     );
@@ -528,7 +543,12 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
                   double.parse((model.totalCost ?? 0).toString()),
                 ),
               ),
-              _itemGrandTotal('Tổng tiền: ', '${model.discount}%'),
+              _itemGrandTotal(
+                'Số tiền giảm giá: ',
+                formatCurrencyVN(
+                  double.parse((model.discount ?? 0).toString()),
+                ),
+              ),
               _itemGrandTotal(
                 'Tổng tiền: ',
                 formatCurrencyVN(
@@ -542,93 +562,104 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
     );
   }
 
-  Widget _buildItemRate(OrderPreviewModel model, BuildContext bContext) {
-    return InkWell(
-      onTap: () {
-        showRateDetailBottomSheet(
-          context: bContext,
-          rate: model.rates ?? RateModel(),
-        );
-      },
-      child: Card(
-        color: Colors.white70,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        elevation: 2,
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  // Logo bên trái
-                  Container(
-                    width: 80,
-                    height: 80,
+  Widget _buildItemRate(OrderPreviewModel? model, BuildContext bContext) {
+    return model != null
+        ? InkWell(
+          onTap: () {
+            showRateDetailBottomSheet(
+              context: bContext,
+              rate: model.rates ?? RateModel(),
+            );
+          },
+          child: Card(
+            color: Colors.white70,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            elevation: 2,
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      // Logo bên trái
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child:
+                            model.rates?.carrierLogo != null
+                                ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    model.rates!.carrierLogo!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                                : const Icon(Icons.image),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Nội dung bên phải
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              model.rates?.carrierName ?? '',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              model.rates?.expected ?? '',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              'Phí giao hàng: ${formatCurrencyVN(model.rates?.totalFee ?? 0)}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Positioned label ở góc phải trên cùng của Card
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
+                      color: toHexToColor(primaryColorGreen),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child:
-                        model.rates?.carrierLogo != null
-                            ? ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                model.rates!.carrierLogo!,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                            : const Icon(Icons.image),
-                  ),
-                  const SizedBox(width: 8),
-
-                  // Nội dung bên phải
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          model.rates?.carrierName ?? '',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          model.rates?.expected ?? '',
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          'Phí giao hàng: ${formatCurrencyVN(model.rates?.totalFee ?? 0)}',
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                    child: Text(
+                      model.rates?.service ?? '',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            // Positioned label ở góc phải trên cùng của Card
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: toHexToColor(primaryColorGreen),
-                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  model.rates?.service ?? '',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        )
+        : Center(
+          child: Text('Không có đơn vị vận chuyển cho địa chỉ của bạn.'),
+        );
   }
 
   Widget itemDetail(CreateOrderBloc bloc, BuildContext bContext) {
@@ -803,23 +834,26 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           final data = snapshot.data;
+          final selectedPromoCodes =
+              data?.where((e) => e.selected == true).toList() ?? [];
+
+          if (selectedPromoCodes.isEmpty) return SizedBox.shrink();
+
           return MediaQuery.removePadding(
             context: bContext,
             removeBottom: true,
             removeTop: true,
             child: ListView.builder(
-              itemCount: data?.length,
+              itemCount: selectedPromoCodes.length,
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) {
-                if (data?[index].selected == true) {
-                  return _customItemPromoCode(
-                    data?[index] ?? PromoCodeModel(),
-                    bloc,
-                    bContext,
-                    data ?? [],
-                  );
-                }
+                return _customItemPromoCode(
+                  selectedPromoCodes[index],
+                  bloc,
+                  bContext,
+                  selectedPromoCodes,
+                );
               },
             ),
           );
@@ -865,34 +899,51 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
   }
 
   Widget _buildButton(BuildContext bContext, CreateOrderBloc bloc) {
-    return InkWell(
-      onTap: () {
-        bloc.onBuy(bContext);
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Card(
-          child: Container(
-            height: 45,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              gradient: LinearGradient(
-                colors: [toHexToColor(primaryButtonColor), Colors.blueGrey],
-              ),
-            ),
-            child: const Center(
-              child: Text(
-                'Đặt hàng',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+    return StreamBuilder<bool>(
+      stream: bloc.streamCanBuy,
+      builder: (context, snapshot) {
+        final isEnabled = snapshot.data == true;
+
+        return InkWell(
+          onTap: isEnabled ? () => bloc.onBuy(bContext) : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Card(
+              elevation: isEnabled ? 4 : 0,
+              child: Container(
+                height: 45,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  gradient:
+                      isEnabled
+                          ? LinearGradient(
+                            colors: [
+                              toHexToColor(primaryButtonColor),
+                              Colors.blueGrey,
+                            ],
+                          )
+                          : LinearGradient(
+                            colors: [
+                              Colors.grey.shade400,
+                              Colors.grey.shade500,
+                            ],
+                          ),
+                ),
+                child: Center(
+                  child: Text(
+                    'Đặt hàng',
+                    style: TextStyle(
+                      color: isEnabled ? Colors.white : Colors.black38,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

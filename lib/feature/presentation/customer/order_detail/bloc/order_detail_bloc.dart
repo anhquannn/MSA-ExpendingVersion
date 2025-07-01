@@ -4,6 +4,7 @@ import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/model/response/get_order_response_model.dart';
 import 'package:msa/feature/data/model/response/order_detail_response_model.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
+import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/presentation/customer/order_detail/ui/order_detail_screen.dart';
 import 'package:rxdart/subjects.dart';
@@ -14,6 +15,9 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
 
   List<ProductModel> listProduct = [];
   final streamListProduct = BehaviorSubject<List<ProductModel>>();
+
+  List<PromoCodeModel> listPromoCode = [];
+  final streamListPromoCode = BehaviorSubject<List<PromoCodeModel>>();
 
   OrderResponse? model;
 
@@ -55,6 +59,15 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
         }
       }
       streamListProduct.set(listProduct);
+
+      for (OrderDetailResponse i in response) {
+        if (i.order?.promoCodes != null) {
+          i.order?.promoCodes?.forEach((element) {
+            listPromoCode.add(element);
+          });
+        }
+      }
+      streamListPromoCode.set(listPromoCode);
     }
   }
 

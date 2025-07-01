@@ -289,7 +289,9 @@ class LoginScreen extends BaseView<LoginBloc> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             customButton(
-              bloc.loginWithGoogle,
+              () {
+                bloc.loginWithGoogle(context);
+              },
               45,
               45,
               Padding(

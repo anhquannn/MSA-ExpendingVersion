@@ -4,6 +4,7 @@ import 'package:msa/core/config/config.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
+import 'package:msa/feature/presentation/customer/product_detail/ui/product_detail_screen.dart';
 import 'package:msa/widget/custom_widget.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 import '../bloc/product_list_bloc.dart';
@@ -13,12 +14,14 @@ class ProductListScreen extends BaseView<ProductListBloc> {
   final ProductFilterResult? productList;
   final CategoryModel? category;
   List<CartItemModel>? listCartItemModel = [];
+  final String? title;
   ProductListScreen({
     super.key,
     this.isSale,
     this.productList,
     this.category,
     this.listCartItemModel,
+    this.title,
   });
 
   @override
@@ -36,11 +39,13 @@ class ProductListScreen extends BaseView<ProductListBloc> {
         isBold: true,
         16,
         20,
-        isSale == true
-            ? 'Danh sách sản phẩm khuyến mãi'
-            : 'Danh sách sản phẩm phổ biến',
+        title ??
+            (isSale == true
+                ? 'Danh sách sản phẩm khuyến mãi'
+                : 'Danh sách sản phẩm phổ biến'),
         textColor: Colors.white,
       ),
+      centerTitle: true,
       appBarActions: [
         Padding(
           padding: const EdgeInsets.only(right: 10),
@@ -90,16 +95,29 @@ class ProductListScreen extends BaseView<ProductListBloc> {
                       itemCount: model.length,
                       itemBuilder: (context, index) {
                         final product = model[index];
-                        return customItemProductCustomer(
-                          isDiscount: (product.discountPercentage ?? 0) > 0,
-                          product,
-                          AppSize.w(0.4),
-                          onAddToCart: () {
-                            bloc.onAddToCart(product, context);
+                        return InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (bContext) => ProductDetailCustomerScreen(
+                                      productId: product.productId,
+                                    ),
+                              ),
+                            );
                           },
-                          onBuy: () {
-                            bloc.onBuyNow(product, context);
-                          },
+                          child: customItemProductCustomer(
+                            isDiscount: (product.discountPercentage ?? 0) > 0,
+                            product,
+                            AppSize.w(0.4),
+                            onAddToCart: () {
+                              bloc.onAddToCart(product, context);
+                            },
+                            onBuy: () {
+                              bloc.onBuyNow(product, context);
+                            },
+                          ),
                         );
                       },
                     );

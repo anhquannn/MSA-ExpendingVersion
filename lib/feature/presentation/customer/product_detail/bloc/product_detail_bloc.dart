@@ -13,6 +13,8 @@ import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/domain/usecase/cart_item_use_case.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
+import 'package:msa/feature/presentation/customer/product_detail/ui/product_list_detail_screen.dart';
+import 'package:msa/feature/presentation/customer/product_list/ui/product_list_screen.dart';
 import 'package:msa/widget/custom_dropdown.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../../../data/datasources/local/starage.dart';
@@ -21,11 +23,16 @@ import '../ui/product_detail_screen.dart';
 class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   final CartItemUseCase _cartItemUseCase = GetIt.I<CartItemUseCase>();
   bool isExpanded = false;
+
   final productModels = BehaviorSubject<ProductFilterResult>();
   List<CartItemModel>? listCartItemModel = [];
+
   final streamCartItemModels = BehaviorSubject<List<CartItemModel>>.seeded([]);
 
   ProductModel? productModel;
+
+  List<ProductModel>? productPopular = [];
+  final streamProductPopular = BehaviorSubject<List<ProductModel>?>();
 
   List<ProductModel>? productCombine = [];
   final streamProductCombine = BehaviorSubject<List<ProductModel>?>();
@@ -50,7 +57,12 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
 
   @override
   void onReady() {
-    Future.wait<void>([onGetProduct(), onGetProducts(), onGetProductCombination()]);
+    Future.wait<void>([
+      onGetProduct(),
+      onGetProducts(),
+      onGetProductCombination(),
+      onGetProductPopular(),
+    ]);
   }
 
   @override
@@ -121,6 +133,23 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
     }
   }
 
+  onGetProductPopular() async {
+    try {
+      ProductFilterRequest filter = ProductFilterRequest(
+        page: 1,
+        pageSize: 10,
+        branchId: Storage.branchModelGlobal?.branchId,
+      );
+
+      ProductFilterResult product = await Repository.onFilterProducts(filter);
+      productPopular = product.productsPage?.content;
+      streamProductPopular.add(productPopular);
+    } catch (e) {
+      print('Lỗi khi lấy danh sách sản phẩm: $e');
+      productModels.add(ProductFilterResult()); // Fallback nếu có lỗi
+    }
+  }
+
   onGetProduct() async {
     if (widget.productId == null) return;
     if (widget.productId != null) {
@@ -140,5 +169,50 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
       productCombine = response;
       streamProductCombine.set(productCombine);
     }
+  }
+
+  onTapPopularProduct(BuildContext bContext, List<ProductModel> models) {
+    Navigator.push(
+      viewContext,
+      MaterialPageRoute(
+        builder:
+            (context) => ProductListDetailScreen(
+              productList: models,
+              listCartItemModel: listCartItemModel,
+              isSale: true,
+              title: 'Sản phẩm phổ biến',
+            ),
+      ),
+    );
+  }
+
+  onTapCombineProduct(BuildContext bContext, List<ProductModel> models) {
+    Navigator.push(
+      viewContext,
+      MaterialPageRoute(
+        builder:
+            (context) => ProductListDetailScreen(
+              productList: models,
+              listCartItemModel: listCartItemModel,
+              isSale: true,
+              title: 'Sản phẩm kết hợp',
+            ),
+      ),
+    );
+  }
+
+  onTapSeeAllProduct(BuildContext bContext, List<ProductModel> models) {
+    Navigator.push(
+      viewContext,
+      MaterialPageRoute(
+        builder:
+            (context) => ProductListDetailScreen(
+              productList: models,
+              listCartItemModel: listCartItemModel,
+              isSale: true,
+              title: 'Sản phẩm liên quan',
+            ),
+      ),
+    );
   }
 }

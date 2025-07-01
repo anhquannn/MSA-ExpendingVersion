@@ -7,9 +7,11 @@ import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
+import 'package:msa/feature/data/model/request/user_address_request.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
+import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:msa/widget/custom_dropdown.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 import 'package:rxdart/subjects.dart';
@@ -27,6 +29,7 @@ class _AddressListWidgetState extends State<AddressListWidget> {
   int? selectedIndex;
   final streamAddress = BehaviorSubject<List<UserAddressModel>>();
   List<UserAddressModel> address = [];
+  int? userAddresId = Storage.addressModel?.userAddressId;
 
   @override
   void initState() {
@@ -46,11 +49,12 @@ class _AddressListWidgetState extends State<AddressListWidget> {
   }
 
   onCheckAddress() {
-    if (address != null) {
+    if (address != []) {
       for (UserAddressModel model in address) {
         if (widget.addresses.userAddressId == model.userAddressId) {
           model.primary = true;
-          break;
+        } else {
+          model.primary = false;
         }
       }
       streamAddress.set(address);
@@ -58,48 +62,60 @@ class _AddressListWidgetState extends State<AddressListWidget> {
   }
 
   onChange(int userAddressId) {
+    userAddressId = userAddressId;
     for (UserAddressModel model in address) {
       if (userAddressId == model.userAddressId) {
         Storage.addressModel = model;
         model.primary = true;
-        break;
+      } else {
+        model.primary = false;
       }
     }
+
     streamAddress.set(address);
   }
 
-  onSave(UserAddressModel model, BuildContext bContext) async {
-    // In dữ liệu đầu vào
-    print('[onSave] Input Model: ${model.toJson()}');
+  onSave(BuildContext bContext) async {
+    UserAddressUpdateRequest request = UserAddressUpdateRequest();
+    UserAddressModel model = UserAddressModel();
+    for (var i in address) {
+      if (i.primary == true) {
+        model = i;
+        request = UserAddressUpdateRequest(
+          city: i.city ?? '',
+          district: i.district ?? '',
+          street: i.street ?? '',
+          ward: i.ward ?? '',
+          cityCode: i.cityCode ?? '',
+          districtCode: i.districtCode ?? '',
+          wardCode: i.wardCode ?? '',
+          primary: true,
+          userId: Storage.userModelGlobal?.userId ?? 0,
+        );
 
-    final request = UserAddressRequest(
-      city: model.city ?? '',
-      district: model.district ?? '',
-      street: model.street ?? '',
-      ward: model.ward ?? '',
-      cityCode: model.cityCode ?? '',
-      districtCode: model.districtCode ?? '',
-      wardCode: model.wardCode ?? '',
-      isPrimary: true,
-      userId: Storage.userModelGlobal?.userId ?? 0,
-    );
+        print('[onSave] Sending Request1: ${request.toJson()}');
+      }
+    }
 
     // In request sẽ gửi đi
-    print('[onSave] Sending Request: ${request.toJson()}');
 
     final data = await Repository.onUpdateUserAddress(
-      model.userAddressId ?? 0,
+      userAddresId ?? 0,
       request,
     );
 
     // In kết quả từ API
-    print('[onSave] Response: $data');
+    print('[onSave] Response2: $data');
 
     if (data) {
       Storage.addressModel = model;
       Storage.saveAddress(model);
       print('[onSave] Address updated and saved locally');
-      Navigator.pop(bContext, model);
+      Navigator.pushAndRemoveUntil(
+        bContext,
+        MaterialPageRoute(builder: (bContext) => CreateOrderScreen()),
+        (route) => false,
+      );
     } else {
       print('[onSave] Update failed - show dialog');
       showCustomDialog(
@@ -121,6 +137,15 @@ class _AddressListWidgetState extends State<AddressListWidget> {
   @override
   Widget build(BuildContext context) {
     return CustomScaffold(
+      appBarLeading: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CreateOrderScreen()),
+          );
+        },
+        child: Icon(Icons.arrow_back_ios, color: Colors.white, size: 24),
+      ),
       centerTitle: true,
       title: Text(
         'Danh sách địa chỉ',
@@ -139,84 +164,112 @@ class _AddressListWidgetState extends State<AddressListWidget> {
             if (addresses.isEmpty) {
               return const Center(child: Text('Không có địa chỉ nào.'));
             }
-
             return Column(
-              children: List.generate(addresses.length, (index) {
-                final UserAddressModel data = addresses[index];
-                final isSelected = selectedIndex == index;
+              children: [
+                Column(
+                  children: List.generate(addresses.length, (index) {
+                    final UserAddressModel data = addresses[index];
+                    final isSelected = selectedIndex == index;
 
-                return GestureDetector(
-                  onTap: () {
-                    selectedIndex = index;
-                    onChange(data.userAddressId ?? 0);
-                  },
-                  child: Card(
-                    color: Colors.white,
-                    margin: const EdgeInsets.symmetric(
-                      vertical: 6,
-                      horizontal: 10,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          // Thông tin địa chỉ
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${data.street} ${data.ward} ${data.district} ${data.city}',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          // Custom Radio Button
-                          Container(
-                            width: 22,
-                            height: 22,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isSelected ? Colors.green : Colors.grey,
-                                width: 2,
-                              ),
-                            ),
-                            child:
-                                isSelected
-                                    ? Center(
-                                      child: Container(
-                                        width: 10,
-                                        height: 10,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.green,
-                                          shape: BoxShape.circle,
-                                        ),
+                    return GestureDetector(
+                      onTap: () {
+                        selectedIndex = index;
+                        onChange(data.userAddressId ?? 0);
+                      },
+                      child: Card(
+                        color: Colors.white,
+                        margin: const EdgeInsets.symmetric(
+                          vertical: 6,
+                          horizontal: 10,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              // Thông tin địa chỉ
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${data.street} ${data.ward} ${data.district} ${data.city}',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                    )
-                                    : null,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              // Custom Radio Button
+                              Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color:
+                                        isSelected ? Colors.green : Colors.grey,
+                                    width: 2,
+                                  ),
+                                ),
+                                child:
+                                    isSelected
+                                        ? Center(
+                                          child: Container(
+                                            width: 10,
+                                            height: 10,
+                                            decoration: const BoxDecoration(
+                                              color: Colors.green,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                        )
+                                        : null,
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          // Nút chỉnh sửa
-                          InkWell(
-                            onTap: () => onSave(data, context),
-                            child: const Icon(
-                              Icons.edit,
-                              color: Colors.black54,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+
+                InkWell(
+                  onTap: () {
+                    onSave(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Card(
+                      child: Container(
+                        height: 45,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          gradient: LinearGradient(
+                            colors: [
+                              toHexToColor(primaryButtonColor),
+                              Colors.blueGrey,
+                            ],
+                          ),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Chỉnh sửa',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                );
-              }),
+                ),
+              ],
             );
           },
         );

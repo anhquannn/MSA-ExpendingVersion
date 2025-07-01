@@ -4,6 +4,8 @@ import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/utils/prarse_color.dart';
+import 'package:msa/feature/data/datasources/local/starage.dart';
+import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/selec_branch_screen.dart';
 import 'package:msa/feature/presentation/customer/persional/bloc/persional_bloc.dart';
 import 'package:msa/widget/custom_dropdown.dart';
@@ -24,7 +26,11 @@ class PersionalScreen extends BaseView<PersionalBloc> {
     return CustomScaffold(
       appBarLeading: InkWell(
         onTap: () {
-          Navigator.pop(context);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+            (route) => false,
+          );
         },
         child: Icon(Icons.arrow_back_ios, color: Colors.white, size: 24),
       ),
@@ -148,10 +154,15 @@ class PersionalScreen extends BaseView<PersionalBloc> {
             Divider(),
             SizedBox(height: 5),
             InkWell(
-              onTap: () {
+              onTap: () async {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SelectBranchScreen()),
+                  MaterialPageRoute(
+                    builder:
+                        (context) => SelectBranchScreen(
+                          branchId: Storage.branchModelGlobal?.branchId,
+                        ),
+                  ),
                 );
               },
               child: _buildField(
@@ -166,6 +177,7 @@ class PersionalScreen extends BaseView<PersionalBloc> {
             _buildPasswordField(
               context,
               bloc,
+              width: MediaQuery.sizeOf(context).width,
               TextEditingController(), // không cần dùng trong trường hợp này, nhưng vẫn giữ nếu cần mở rộng
               'Đổi mật khẩu',
               true,
@@ -192,7 +204,9 @@ class PersionalScreen extends BaseView<PersionalBloc> {
                   child: _buildButton(
                     buttonColor: toHexToColor(primaryButtonColor),
                     isBorderType: false,
-                    onTap: bloc.onUpdate,
+                    onTap: () {
+                      bloc.onUpdate(context);
+                    },
                     text: 'Chỉnh sửa',
                   ),
                 ),
@@ -275,8 +289,9 @@ class PersionalScreen extends BaseView<PersionalBloc> {
     bool isObscure,
     Function(bool) toggleObscure,
     bool? hasError,
-    String? errorText,
-  ) {
+    String? errorText, {
+    double? width,
+  }) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Padding(
@@ -322,7 +337,7 @@ class PersionalScreen extends BaseView<PersionalBloc> {
         },
         borderRadius: BorderRadius.circular(10),
         child: Container(
-          width: screenWidth * 0.9,
+          width: width ?? screenWidth * 0.9,
           height: 45,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),

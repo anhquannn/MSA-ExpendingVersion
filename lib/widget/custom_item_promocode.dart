@@ -39,8 +39,7 @@ Widget customItemPromoCode(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors:
-                  generatePastelGradientForWhiteText(), // Gọi hàm tạo gradient pastel
+              colors: generatePastelGradientFromId(model.promoCodeId ?? 0),
             ),
           ),
           child: Column(
@@ -107,7 +106,7 @@ Widget buildBottomInfo(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           buildInfoContainer(
-            width:  width * 0.3,
+            width: width * 0.3,
             color: toHexToColor(primaryColorOrange),
             label: AutoSizeText(
               model.code ?? '',

@@ -1,12 +1,19 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:msa/core/config/base_bloc.dart';
+import 'package:msa/core/config/config.dart';
+import 'package:msa/core/config/constant.dart';
+import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
+import 'package:msa/feature/data/model/request/login_request_model.dart';
 import 'package:msa/feature/data/model/request/user_login_request.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
+import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
 import 'package:msa/feature/presentation/logins/forgot_pasword/ui/forgot_password_screen.dart';
 import 'package:msa/feature/presentation/logins/register/ui/register_screen.dart';
+import 'package:msa/widget/custom_dropdown.dart';
 import '../../../../data/datasources/local/starage.dart';
 import '../../../../domain/usecase/user_use_case.dart';
 import '../ui/login_screen.dart';
@@ -44,7 +51,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
     passwordNode.dispose();
   }
 
-  Future<bool> login() async {
+  login() async {
     final email = emailController.text;
     final password = passwordController.text;
 
@@ -56,20 +63,27 @@ class LoginBloc extends BaseBloc<LoginScreen> {
       return false;
     }
 
-    isSuccess = await _userUseCases.login.call(
-      UserLoginRequest(email: email, password: password),
+    isSuccess = await Repository.onLoginFCM(
+      LoginRequest(
+        email: email,
+        password: password,
+        fcmToken: Storage.deviceId,
+        platform: PlatformType.ANDROID,
+      ),
     );
+
+    // isSuccess = await _userUseCases.login.call(
+    //   UserLoginRequest(email: email, password: password),
+    // );
     Storage.email = email;
     if (isSuccess == false) {
       showLoginError('Sai mật khẩu!!!');
     }
-
-    await getFcmToken();
     viewSetState(() {});
     return isSuccess == true;
   }
 
-  Future<void> getFcmToken() async {
+  getFcmToken() async {
     final fcmToken = await FirebaseMessaging.instance.getToken();
     if (fcmToken == null) {
       Storage.deviceId = fcmToken ?? '';
@@ -78,23 +92,18 @@ class LoginBloc extends BaseBloc<LoginScreen> {
     }
   }
 
-  void forgotPassword() {
+  forgotPassword() {
     Navigator.push(
       viewContext,
       MaterialPageRoute(builder: (viewContext) => const ForgotPasswordScreen()),
     );
   }
 
-  void onRegister() {
+  onRegister() {
     Navigator.push(
       viewContext,
       MaterialPageRoute(builder: (viewContext) => const RegisterScreen()),
     );
-  }
-
-  void loginWithGoogle() {
-    print("Login bằng Google");
-    // TODO: Viết logic login Google
   }
 
   @override
@@ -107,7 +116,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
     // Gọi khi ứng dụng quay lại từ nền
   }
 
-  bool validateEmail(String? value) {
+  validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       isValidEmail = true;
       validEmail = 'Email không được để trống';
@@ -124,7 +133,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
     return true;
   }
 
-  bool validatePassword(String? value) {
+  validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       isValidPassword = true;
       validPassword = 'Mật khẩu không được để trống';
@@ -139,25 +148,96 @@ class LoginBloc extends BaseBloc<LoginScreen> {
     return true;
   }
 
-  void obscurePassword(bool value) {
+  obscurePassword(bool value) {
     isShowPass = value;
     viewSetState(() {});
   }
 
-  // Hàm tiện ích để hiển thị thông báo từ bất kỳ đâu
-  void showErrorMessage(String message) {
+  showErrorMessage(String message) {
     ScaffoldMessenger.of(
       viewContext,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  // Hàm tiện ích để truy cập từ bên ngoài
-  static void showLoginError(String message) {
+  static showLoginError(String message) {
     final context = AppContext.of('LoginScreen');
     if (context != null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  loginWithGoogle(BuildContext bContext) async {
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        print('❌ Người dùng đã hủy đăng nhập');
+        return null;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final accessToken = googleAuth.accessToken;
+      final idToken = googleAuth.idToken;
+
+      print('❌ Người dùng đã hủy đăng nhập $idToken');
+      print('❌ Người dùng đã hủy đăng nhập $accessToken');
+
+      final isSuccess = await Repository.loginWithGoogleToken(
+        accessToken ?? '',
+      );
+
+      final response = await Repository.onGetUserInfo();
+
+      if (isSuccess) {
+        showCustomDialog(
+          bContext,
+          AppSize.w(0.9),
+          AppSize.w(0.9),
+          'Thông báo',
+          Text('Đăng nhập thành công !!!'),
+          true,
+          false,
+          Icon(
+            Icons.check_circle_outline,
+            color: toHexToColor(primaryColorGreen),
+          ),
+          onClose: () {
+            Navigator.push(
+              bContext,
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+            );
+          },
+        );
+      } else {
+        showCustomDialog(
+          bContext,
+          AppSize.w(0.9),
+          AppSize.w(0.9),
+          'Thông báo',
+          Text('Đăng nhập không thành công !!!'),
+          true,
+          false,
+          Icon(
+            Icons.warning_amber_rounded,
+            color: toHexToColor(primaryColorGreen),
+          ),
+          onClose: () {
+            Navigator.push(
+              bContext,
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+            );
+          },
+        );
+      }
+
+      print('🔑 Access Token Google: $accessToken');
+
+      return accessToken;
+    } catch (e, stack) {
+      print('❌ Lỗi khi đăng nhập bằng Google: $e');
+      print('📛 Stacktrace: $stack');
+      return null;
     }
   }
 

@@ -10,6 +10,7 @@ import 'package:msa/core/config/global.dart';
 import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
+import 'package:msa/feature/data/model/request/user_address_request.dart';
 import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:msa/feature/data/repositories/goship_connection.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
@@ -138,12 +139,84 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
   @override
   void onResumed() {}
 
-  onUpdate() {
+  onUpdate(BuildContext bContext) async {
     final request = UserUpdateRequest(
       birthday: birthDayController.text,
       fullName: nameController.text,
       phoneNumber: phoneNumberController.text,
     );
+
+    final addressRequest = UserAddressUpdateRequest(
+      city: city?.name,
+      cityCode: city?.id,
+      district: district?.name,
+      districtCode: district?.id,
+      primary: true,
+      street: streetController.text,
+      userId: Storage.userModelGlobal?.userId,
+      ward: ward?.name,
+      wardCode: ward?.id,
+    );
+
+    final addressResponse = await Repository.onUpdateUserAddress(
+      Storage.addressModel?.userAddressId ?? 0,
+      addressRequest,
+    );
+
+    final userResponse = await Repository.onUpdateInfo(request);
+
+    if (addressResponse && userResponse) {
+      showCustomDialog(
+        bContext,
+        AppSize.w(0.9),
+        AppSize.w(0.9),
+        'Thông báo',
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'Cập nhật thông tin thành công',
+            style: TextStyle(color: toHexToColor(primaryTextColor)),
+          ),
+        ),
+        true,
+        false,
+        Icon(Icons.check_circle, color: toHexToColor(primaryColorGreen)),
+      );
+    } else if (!addressResponse) {
+      showCustomDialog(
+        bContext,
+        AppSize.w(0.9),
+        AppSize.w(0.9),
+        'Thông báo',
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'Cập nhật địa chỉ thất bại',
+            style: TextStyle(color: toHexToColor(primaryTextColor)),
+          ),
+        ),
+        true,
+        false,
+        Icon(Icons.check_circle, color: toHexToColor(primaryColorGreen)),
+      );
+    } else {
+      showCustomDialog(
+        bContext,
+        AppSize.w(0.9),
+        AppSize.w(0.9),
+        'Thông báo',
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'Cập nhật thông tin thất bại',
+            style: TextStyle(color: toHexToColor(primaryTextColor)),
+          ),
+        ),
+        true,
+        false,
+        Icon(Icons.check_circle, color: toHexToColor(primaryColorGreen)),
+      );
+    }
   }
 
   initData() {
@@ -160,9 +233,7 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     branchController.text = Storage.branchModelGlobal?.name ?? '';
   }
 
-  onUpdateUser(){
-    
-  }
+  onUpdateUser() {}
 
   onLogout(BuildContext context) async {
     Navigator.push(
@@ -316,11 +387,11 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
           (_) => SelectorDialog<District>(
             items: listDistrict,
             title: 'Chọn Quận/Huyện',
-            onConfirm: (wards) {
-              district = wards;
+            onConfirm: (distric) {
+              district = distric;
               districtController.text = district?.name ?? '';
               Navigator.of(context).pop();
-              print('Đã chọn: ${wards.name}');
+              print('Đã chọn: ${distric.name}');
             },
           ),
     );

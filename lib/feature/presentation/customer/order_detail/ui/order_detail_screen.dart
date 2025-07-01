@@ -14,10 +14,13 @@ import 'package:msa/feature/data/model/response/get_order_response_model.dart';
 import 'package:msa/feature/data/model/response/order_detail_response_model.dart';
 import 'package:msa/feature/domain/entities/order_model.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
+import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/feature/presentation/admin/product/product_detail/ui/product_detail_screen.dart';
 import 'package:msa/feature/presentation/customer/order_detail/bloc/order_detail_bloc.dart';
 import 'package:msa/feature/presentation/customer/product_detail/ui/product_detail_screen.dart';
+import 'package:msa/widget/customBottomSheet.dart';
 import 'package:msa/widget/custom_button.dart';
+import 'package:msa/widget/custom_item_promocode.dart';
 import 'package:msa/widget/custom_widget.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 
@@ -103,6 +106,16 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
                           context,
                           bloc,
                         ),
+                        _buildListPromoCode(context, bloc),
+                        _buildBottomCondition(
+                          context,
+                          bloc,
+                          OrderStatusExtension.fromString(
+                                order.status ?? OrderStatus.pending.name,
+                              ) ??
+                              OrderStatus.pending,
+                        ),
+                        SizedBox(height: 30,)
                       ],
                     ),
                   );
@@ -326,145 +339,144 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
           padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
           child: Card(
             color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: SizedBox(
-                height: 100,
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 4,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            // child: Image.asset(avtWomen6, fit: BoxFit.cover),
-                            child:
-                                (product?.image != null)
-                                    ? CachedNetworkImage(
-                                      imageUrl: product!.image!,
-                                      placeholder:
-                                          (context, url) =>
-                                              CircularProgressIndicator(),
-                                      errorWidget:
-                                          (context, url, error) => Image.asset(
-                                            imgBranch,
-                                            fit: BoxFit.cover,
-                                          ),
-                                      width: 100,
-                                      height: 100,
-                                      fit: BoxFit.cover,
-                                    )
-                                    : Image.asset(imgBranch, fit: BoxFit.cover),
-                          ),
+            child: SizedBox(
+              height: 100,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          // child: Image.asset(avtWomen6, fit: BoxFit.cover),
+                          child:
+                              (product?.image != null)
+                                  ? CachedNetworkImage(
+                                    imageUrl: product!.image!,
+                                    placeholder:
+                                        (context, url) =>
+                                            CircularProgressIndicator(),
+                                    errorWidget:
+                                        (context, url, error) => Image.asset(
+                                          imgBranch,
+                                          fit: BoxFit.contain,
+                                        ),
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.contain,
+                                  )
+                                  : Image.asset(imgBranch, fit: BoxFit.contain),
                         ),
-                        Expanded(
-                          flex: 6,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 10),
-                            child: SizedBox(
-                              height: 100,
-                              child: Stack(
-                                children: [
-                                  product?.discountPercentage != 0
-                                      ? Positioned(
-                                        top: 1,
-                                        right: 1,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: toHexToColor(
-                                              primaryErrorColor,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
+                      ),
+                      Expanded(
+                        flex: 6,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: SizedBox(
+                            height: 100,
+                            child: Stack(
+                              children: [
+                                product?.discountPercentage != 0
+                                    ? Positioned(
+                                      top: 1,
+                                      right: 1,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: toHexToColor(
+                                            primaryErrorColor,
                                           ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 2,
-                                              horizontal: 8,
-                                            ),
-                                            child: Text(
-                                              '${product?.discountPercentage}%',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                              ),
-                                            ),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
                                           ),
                                         ),
-                                      )
-                                      : SizedBox(),
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.max,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      customAutoSizeText(
-                                        14,
-                                        18,
-                                        product?.name ?? '',
-                                        isBold: true,
-                                        textColor: toHexToColor(
-                                          primaryTextColor,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 2,
+                                            horizontal: 8,
+                                          ),
+                                          child: Text(
+                                            '${product?.discountPercentage}%',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                      // customAutoSizeText(8, 12, '100.000đ', isLine: true),
-                                      customAutoSizeText(
-                                        12,
-                                        16,
-                                        formatCurrencyVN(
-                                          orderModel?.totalPrice ?? 0.0,
-                                        ),
-                                        isBold: true,
-                                        // isLine: true,
-                                        textColor: toHexToColor(
-                                          primaryButtonColor,
-                                        ),
+                                    )
+                                    : SizedBox(),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.max,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    customAutoSizeText(
+                                      14,
+                                      18,
+                                      product?.name ?? '',
+                                      isBold: true,
+                                      textColor: toHexToColor(primaryTextColor),
+                                    ),
+                                    // customAutoSizeText(8, 12, '100.000đ', isLine: true),
+                                    customAutoSizeText(
+                                      12,
+                                      16,
+                                      formatCurrencyVN(
+                                        orderModel?.totalPrice ?? 0.0,
                                       ),
-                                      customAutoSizeText(
-                                        10,
-                                        12,
-                                        '${orderModel?.quantity} x ${formatCurrencyVN(product?.price ?? 0.0)}',
-                                        isBold: true,
-                                        // isLine: true,
-                                        textColor: toHexToColor(
-                                          primaryTextColor,
-                                        ),
+                                      isBold: true,
+                                      // isLine: true,
+                                      textColor: toHexToColor(
+                                        primaryButtonColor,
                                       ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                                    ),
+                                    customAutoSizeText(
+                                      10,
+                                      12,
+                                      '${orderModel?.quantity} x ${formatCurrencyVN(product?.price ?? 0.0)}',
+                                      isBold: true,
+                                      // isLine: true,
+                                      textColor: toHexToColor(primaryTextColor),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
-
-                    if (bloc?.onCheckStatus(
-                      OrderStatusExtension.fromString(order!.status ?? '') ??
-                          OrderStatus.failed,
-                    ))
-                      SizedBox(
-                        height: 40,
-                        child: _buildBottom(
-                          bContext!,
-                          bloc!,
-                          OrderStatusExtension.fromString(
-                                order!.status ?? '',
-                              ) ??
-                              OrderStatus.failed,
-                        ),
                       ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildBottomCondition(
+    BuildContext bContext,
+    OrderDetailBloc bloc,
+    OrderStatus status,
+  ) {
+    return bloc.onCheckStatus(
+          OrderStatusExtension.fromString(order!.status ?? '') ??
+              OrderStatus.failed,
+        )
+        ? Center(
+          child: SizedBox(
+            height: 50,
+            child: _buildBottom(
+              bContext,
+              bloc,
+              OrderStatusExtension.fromString(order!.status ?? '') ??
+                  OrderStatus.failed,
+            ),
+          ),
+        )
+        : SizedBox();
   }
 
   Widget _buildBottom(
@@ -474,47 +486,59 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
   ) {
     switch (status) {
       case OrderStatus.pending:
-        return customButton(
-          bloc.onCreateRate,
-          AppSize.w(0.4),
-          40,
-          Text(
-            'Trả hàng',
-            style: TextStyle(
-              color: toHexToColor(primaryTextColor),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+        return Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: customButton(
+            bloc.onCreateRate,
+            AppSize.w(0.4),
+            40,
+            Text(
+              'Trả hàng',
+              style: TextStyle(
+                color: toHexToColor(primaryTextColor),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
+            typeButton: 0,
           ),
-          typeButton: 0,
         );
       case OrderStatus.paying:
-        return customButton(
-          bloc.onCreateRate,
-          AppSize.w(0.4),
-          40,
-          Text(
-            'Thanh toán',
-            style: TextStyle(
-              color: toHexToColor(primaryTextColor),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+        return Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: customButton(
+            bloc.onCreateRate,
+            AppSize.w(0.4),
+            40,
+            Text(
+              'Thanh toán',
+              style: TextStyle(
+                color: toHexToColor(primaryTextColor),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
+            typeButton: 0,
           ),
-          typeButton: 0,
         );
       case OrderStatus.paid:
         return Container();
       case OrderStatus.delivering:
         return Container();
       case OrderStatus.shipped:
-        return _buildSuccess(bContext, bloc);
+        return Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: _buildSuccess(bContext, bloc),
+        );
       case OrderStatus.cancelling:
         return Container();
       case OrderStatus.cancelled:
         return Container();
       case OrderStatus.completed:
-        return _buildSuccess(bContext, bloc);
+        return Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: _buildSuccess(bContext, bloc),
+        );
       case OrderStatus.failed:
         return Container();
     }
@@ -540,6 +564,94 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
             typeButton: 0,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildListPromoCode(BuildContext bContext, OrderDetailBloc bloc) {
+    return StreamBuilder(
+      stream: bloc.streamListPromoCode,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return MediaQuery.removePadding(
+            context: bContext,
+            removeTop: true,
+            removeBottom: true,
+            child: ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: snapshot.data?.length,
+              itemBuilder: (context, index) {
+                return InkWell(
+                  onTap: () {
+                    _showPromoCodeSheet(
+                      context,
+                      '',
+                      Container(),
+                      snapshot.data?[index] ?? PromoCodeModel(),
+                    );
+                  },
+                  child: customItemPromoCode(
+                    snapshot.data?[index] ?? PromoCodeModel(),
+                    () {},
+                    () {},
+                  ),
+                );
+              },
+            ),
+          );
+        }
+        return SizedBox();
+      },
+    );
+  }
+
+  _showPromoCodeSheet(
+    BuildContext context,
+    String title,
+    Widget bodyWidget,
+    PromoCodeModel model,
+  ) {
+    showCustomBottomSheet(
+      context: context,
+      title: model.name ?? '',
+      bodyWidget: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _customTextSpan('Mã giảm giá: ', model.code ?? ''),
+          const SizedBox(height: 10),
+          _customTextSpan('Mô tả: ', model.description ?? ''),
+          const SizedBox(height: 10),
+          _customTextSpan(
+            'Hạn sử dụng: ',
+            '${model.startDate ?? ''} -- ${model.endDate ?? ''}',
+          ),
+          const SizedBox(height: 10),
+          _customTextSpan(
+            'Điều kiện áp dụng: ',
+            'Dành cho đơn hàng có giá trị trên ${model.minimumOrderValue ?? ''}đ',
+          ),
+          const SizedBox(height: 10),
+          _customTextSpan(
+            'Giảm giá: ',
+            '${model.discountPercentage.toString()}đ',
+          ),
+          const SizedBox(height: 50),
+        ],
+      ),
+    );
+  }
+
+  Widget _customTextSpan(String title, String body) {
+    return customTextSpan(
+      title,
+      body,
+      TextStyle(fontSize: 14, color: toHexToColor(secondaryTextColor)),
+      TextStyle(
+        fontSize: 15,
+        color: toHexToColor(primaryButtonColor),
+        fontWeight: FontWeight.bold,
       ),
     );
   }

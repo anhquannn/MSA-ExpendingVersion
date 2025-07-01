@@ -33,3 +33,55 @@ class UserAddressFilterRequest {
     };
   }
 }
+
+class UserAddressUpdateRequest {
+  final String? city;
+  final String? district;
+  final String? street;
+  final String? ward;
+  final String? cityCode;
+  final String? districtCode;
+  final String? wardCode;
+  bool? primary;
+  final int? userId;
+
+  UserAddressUpdateRequest({
+    this.city,
+    this.district,
+    this.street,
+    this.ward,
+    this.cityCode,
+    this.districtCode,
+    this.wardCode,
+    this.primary=true,
+    this.userId,
+  });
+
+  factory UserAddressUpdateRequest.fromJson(Map<String, dynamic> json) {
+    return UserAddressUpdateRequest(
+      city: json['city'],
+      district: json['district'],
+      street: json['street'],
+      ward: json['ward'],
+      cityCode: json['cityCode'],
+      districtCode: json['districtCode'],
+      wardCode: json['wardCode'],
+      primary: json['primary'] ?? false,
+      userId: json['userId'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'city': city,
+      'district': district,
+      'street': street,
+      'ward': ward,
+      'cityCode': cityCode,
+      'districtCode': districtCode,
+      'wardCode': wardCode,
+      'primary': primary,
+      'userId': userId,
+    };
+  }
+}

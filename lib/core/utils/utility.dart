@@ -59,19 +59,22 @@ String formatDateTime(DateTime dateTime) {
       "${dateTime.minute.toString().padLeft(2, '0')}:"
       "${dateTime.second.toString().padLeft(2, '0')}";
 }
+List<Color> generatePastelGradientFromId(int id) {
+  final baseHue = (id * 43) % 360;
+  final random = Random(id); 
 
-List<Color> generatePastelGradientForWhiteText() {
-  final random = Random();
+  Color pastelWithGoodContrast(double hueOffset) {
+    final hue = (baseHue + hueOffset) % 360;
+    final saturation = random.nextDouble() * 0.3 + 0.5; 
+    final lightness = random.nextDouble() * 0.2 + 0.25; 
 
-  Color pastelWithGoodContrast() {
-    final h = random.nextDouble() * 360;
-    final s = random.nextDouble() * 0.4 + 0.3; // Saturation: 30%–70%
-    final l = random.nextDouble() * 0.3 + 0.3; // Lightness: 30%–60%
-
-    return HSLColor.fromAHSL(1.0, h, s, l).toColor();
+    return HSLColor.fromAHSL(1.0, hue, saturation, lightness).toColor();
   }
 
-  return [pastelWithGoodContrast(), pastelWithGoodContrast()];
+  return [
+    pastelWithGoodContrast(0),
+    pastelWithGoodContrast(30),
+  ];
 }
 
 String formatCurrencyVN(double amount) {

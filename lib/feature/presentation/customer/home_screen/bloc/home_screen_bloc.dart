@@ -320,6 +320,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
         builder:
             (context) => ProductListScreen(
               // productList: listProducts,
+              title: 'Sản phẩm ${model.name}',
               listCartItemModel: listCartItemModel,
               isSale: true,
               category: model,
@@ -333,9 +334,11 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       viewContext,
       MaterialPageRoute(
         builder:
-            (context) =>
-                ProductListScreen(productList: listProducts, 
-              listCartItemModel: listCartItemModel,isSale: true),
+            (context) => ProductListScreen(
+              productList: listProducts,
+              listCartItemModel: listCartItemModel,
+              isSale: true,
+            ),
       ),
     );
   }
@@ -345,8 +348,11 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       viewContext,
       MaterialPageRoute(
         builder:
-            (context) =>
-                ProductListScreen(productList: listProducts, isSale: false, listCartItemModel: listCartItemModel,),
+            (context) => ProductListScreen(
+              productList: listProducts,
+              isSale: false,
+              listCartItemModel: listCartItemModel,
+            ),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:msa/core/utils/utility.dart';
@@ -15,8 +16,6 @@ import 'package:msa/feature/presentation/customer/product_list/ui/product_list_s
 import 'package:msa/widget/customBottomSheet.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:lottie/lottie.dart';
-
 import '../../../../../core/config/base_bloc.dart';
 import '../../../../../core/config/config.dart';
 import '../../../../../core/config/constant.dart';
@@ -145,7 +144,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                     }
                     return Expanded(
                       child: AutoSizeText(
-                        '${Storage.addressModel?.street} ${Storage.addressModel?.ward} ${Storage.addressModel?.district} ${Storage.addressModel?.city}',
+                        '${Storage.addressModel?.street ?? ''} ${Storage.addressModel?.ward ?? ''} ${Storage.addressModel?.district ?? ''} ${Storage.addressModel?.city ?? ''}',
                         minFontSize: 8,
                         maxFontSize: 12,
                         maxLines: 1,
@@ -198,10 +197,12 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
               );
             }
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: SizedBox(
-              height: 150,
-              child: Lottie.asset('assets/animations/loading.json'),
-            ),);
+              return Center(
+                child: SizedBox(
+                  height: 150,
+                  child: Lottie.asset('assets/animations/loading.json'),
+                ),
+              );
             }
 
             return buildBodyContent(
@@ -354,7 +355,11 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                         Navigator.push(
                           bContext,
                           MaterialPageRoute(
-                            builder: (_) => ProductListScreen(category: label, listCartItemModel: bloc.listCartItemModel,),
+                            builder:
+                                (_) => ProductListScreen(
+                                  category: label,
+                                  listCartItemModel: bloc.listCartItemModel,
+                                ),
                           ),
                         );
                       },
@@ -426,53 +431,48 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return const Center(child: Text('Không có mã giảm giá nào'));
               }
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: 170,
-                    child: PageView.builder(
-                      controller: promoPageController,
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        if (_isDisposed) return const SizedBox();
-                        return widgetCustomItemPromoCode(
-                          snapshot.data![index],
-                          () {
-                            if (!_isDisposed) {
-                              _showPromoCodeSheet(
-                                context,
-                                '',
-                                Container(),
-                                snapshot.data![index],
-                              );
-                            }
-                          },
-                        );
-                      },
+
+              final promoCodes = snapshot.data!;
+
+              return SizedBox(
+                height: 200,
+                child: Swiper(
+                  itemCount: promoCodes.length,
+                  scrollDirection: Axis.horizontal,
+                  autoplay: false,
+                  viewportFraction: 0.85,
+                  scale: 0.9,
+                  pagination: SwiperPagination(
+                    alignment: Alignment.bottomCenter,
+                    margin: const EdgeInsets.only(bottom: 0),
+                    builder: DotSwiperPaginationBuilder(
+                      activeColor: toHexToColor(primaryButtonColor),
+                      color: toHexToColor(borderColor),
+                      size: 8.0,
+                      activeSize: 10.0,
                     ),
                   ),
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: SmoothPageIndicator(
-                        controller: promoPageController,
-                        count: snapshot.data!.length,
-                        effect: SlideEffect(
-                          activeDotColor: toHexToColor(primaryButtonColor),
-                          dotColor: toHexToColor(borderColor),
-                          dotHeight: 10,
-                          dotWidth: 10,
-                          spacing: 4,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 15),
+                      child: widgetCustomItemPromoCode(promoCodes[index], () {
+                        if (!_isDisposed) {
+                          _showPromoCodeSheet(
+                            context,
+                            '',
+                            Container(),
+                            promoCodes[index],
+                          );
+                        }
+                      }),
+                    );
+                  },
+                ),
               );
             },
           ),
         ),
+
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -483,15 +483,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             ),
           ),
         ),
-        // SliverToBoxAdapter(
-        //   child: SizedBox(
-        //     width: width,
-        //     child: Padding(
-        //       padding: const EdgeInsets.all(0.0),
-        //       child: Wrap(children: dynamicChipList),
-        //     ),
-        //   ),
-        // ),
         buildCategoryChips(context, labels, (model) {
           bloc.onTapCategory(model);
         }),
@@ -505,6 +496,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             ),
           ),
         ),
+
         SliverToBoxAdapter(
           child: StreamBuilder(
             stream: bloc.streamProductModels,
@@ -522,6 +514,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               return MediaQuery.removePadding(
                 context: context,
                 removeTop: true,
+                removeBottom: true,
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -531,26 +524,36 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   ),
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: products!.length > 20 ? 20 : products.length,
+                  itemCount:
+                      (products?.length ?? 0) > 20 ? 20 : (products?.length),
                   itemBuilder: (context, index) {
                     final key = bloc.imageKeys.putIfAbsent(
-                      (products[index].productId ?? 0) + 99999,
+                      (products?[index].productId ?? 0) + 99999,
                       () => GlobalKey(),
                     );
                     return InkWell(
                       key: key,
                       onTap: () {
-                        bloc.onTapProductDetail(products[index]);
+                        bloc.onTapProductDetail(
+                          products?[index] ?? ProductModel(),
+                        );
                       },
                       child: customItemProductCustomer(
                         onBuy: () {
-                          bloc.onBuyNow(products[index], context);
+                          bloc.onBuyNow(
+                            products?[index] ?? ProductModel(),
+                            context,
+                          );
                         },
                         onAddToCart: () {
-                          bloc.onAddToCart(products[index], context, key);
+                          bloc.onAddToCart(
+                            products?[index] ?? ProductModel(),
+                            context,
+                            key,
+                          );
                         },
                         isDiscount: false,
-                        products[index],
+                        products?[index] ?? ProductModel(),
                         width * 0.4,
                       ),
                     );
@@ -597,26 +600,36 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   ),
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: products!.length > 20 ? 20 : products.length,
+                  itemCount:
+                      (products?.length ?? 0) > 20 ? 20 : products?.length,
                   itemBuilder: (context, index) {
                     final key = bloc.imageKeys.putIfAbsent(
-                      products[index].productId!,
+                      (products?[index].productId ?? 0),
                       () => GlobalKey(),
                     );
                     return InkWell(
                       key: key,
                       onTap: () {
-                        bloc.onTapProductDetail(products[index]);
+                        bloc.onTapProductDetail(
+                          products?[index] ?? ProductModel(),
+                        );
                       },
                       child: customItemProductCustomer(
                         onBuy: () {
-                          bloc.onBuyNow(products[index], context);
+                          bloc.onBuyNow(
+                            products?[index] ?? ProductModel(),
+                            context,
+                          );
                         },
                         onAddToCart: () {
-                          bloc.onAddToCart(products[index], context, key);
+                          bloc.onAddToCart(
+                            products?[index] ?? ProductModel(),
+                            context,
+                            key,
+                          );
                         },
                         isDiscount: false,
-                        products[index],
+                        products?[index] ?? ProductModel(),
                         width * 0.4,
                       ),
                     );
@@ -739,11 +752,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             return GestureDetector(
               onTap: () {
                 onTap(label);
-                // Navigator.of(context, rootNavigator: true).push(
-                //   MaterialPageRoute(
-                //     builder: (_) => ProductListScreen(category: label),
-                //   ),
-                // );
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -1266,7 +1274,7 @@ class CardTab extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      flex: 4,
+                      flex: 3,
                       child: Center(
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10),
@@ -1322,7 +1330,7 @@ class CardTab extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Padding(
-                                    padding: const EdgeInsets.only(right: 20),
+                                    padding: const EdgeInsets.only(right: 30),
                                     child: customAutoSizeText(
                                       14,
                                       18,

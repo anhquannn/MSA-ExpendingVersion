@@ -1,5 +1,6 @@
 import 'package:msa/feature/domain/entities/order_model.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
+
 class OrderDetailResponse {
   int? orderDetailId;
   int? quantity;
@@ -51,24 +52,3 @@ class OrderDetailResponse {
     };
   }
 }
-
-class OrderDetailListModel {
-  final List<OrderDetailResponse> items;
-
-  OrderDetailListModel({required this.items});
-
-  factory OrderDetailListModel.fromJson(Map<String, dynamic> json) {
-    return OrderDetailListModel(
-      items: (json['data'] as List<dynamic>)
-          .map((e) => OrderDetailResponse.fromJson(e))
-          .toList(),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'data': items.map((e) => e.toJson()).toList(),
-    };
-  }
-}
-

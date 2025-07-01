@@ -6,11 +6,13 @@ import 'package:msa/feature/data/model/request/change_password_request_model.dar
 import 'package:msa/feature/data/model/request/create_order_model_request.dart';
 import 'package:msa/feature/data/model/request/feedback_request_model.dart';
 import 'package:msa/feature/data/model/request/get_branch_request_model.dart';
+import 'package:msa/feature/data/model/request/login_request_model.dart';
 import 'package:msa/feature/data/model/request/order_paging_request_model.dart';
 import 'package:msa/feature/data/model/request/product_conbine_model_request.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/product_get_all_request_model.dart';
 import 'package:msa/feature/data/model/request/promocode_request_model.dart';
+import 'package:msa/feature/data/model/request/user_address_request.dart';
 import 'package:msa/feature/data/model/request/user_login_request.dart';
 import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:msa/feature/data/repositories/branch_connection.dart';
@@ -73,8 +75,10 @@ class Repository {
   static onChangePassword(UpdatePasswordRequest request, int userId) =>
       UserRepositoryImpl.onChangePassword(request, userId);
 
-  static onUpdateUserAddress(int userAdressId, UserAddressRequest model) =>
-      UserRepositoryImpl.onUpdateUserAddress(userAdressId, model);
+  static onUpdateUserAddress(
+    int userAdressId,
+    UserAddressUpdateRequest model,
+  ) => UserRepositoryImpl.onUpdateUserAddress(userAdressId, model);
 
   static onCreateOrder(CreateOrderRequestModel model) =>
       OrderRepositoryImpl.createOrderAPI(model);
@@ -115,4 +119,12 @@ class Repository {
     bool isSelected,
   ) =>
       CartItemRepositoryImpl.onUpdateCartItemsSelectionAPI(request, isSelected);
+
+  static onLoginFCM(LoginRequest request) =>
+      UserRepositoryImpl.onLoginFCM(request);
+
+  static loginWithGoogleToken(String accessToken) =>
+      UserRepositoryImpl.loginWithGoogleToken(accessToken);
+
+  static onGetUserInfo() => UserRepositoryImpl.onGetUserInfo();
 }

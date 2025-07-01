@@ -71,78 +71,126 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
           child: itemProductDetail(bloc.productModel ?? ProductModel()),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 5)),
-        // SliverToBoxAdapter(
-        //   child: itemDelivery(
-        //     'Nhận hàng 12/12/2024 - 13/12/2024',
-        //     '',
-        //     // 'Tặng voucher 20.000 đ nếu giao sau thời gian trên',
-        //   ),
-        // ),
-        // const SliverToBoxAdapter(child: SizedBox(height: 5)),
-        //_________________mock
-        // SliverToBoxAdapter(child: itemFeedBack('4.9', 100, () {}, bloc)),
-        // const SliverToBoxAdapter(child: SizedBox(height: 5)),
         SliverToBoxAdapter(
           child: itemDec(bloc, bloc.productModel?.description ?? ''),
         ),
-        SliverToBoxAdapter(
-          child: customDivider(
-            color: toHexToColor(primaryTextColor),
-            text: Text('Sản phẩm kết hợp'),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: MediaQuery.removePadding(
-            context: context,
-            child: _buildCategoryProduct(bloc),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: customDivider(
-            color: toHexToColor(primaryTextColor),
-            text: Text('Sản phẩm liên quan'),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: MediaQuery.removePadding(
-            context: context,
-            child: _buildbuildProductCombine(bloc),
-          ),
-        ),
+        SliverToBoxAdapter(child: buildProductSuggestionSection(bloc, context)),
+        SliverToBoxAdapter(child: buildProductPopular(bloc, context)),
         const SliverToBoxAdapter(child: SizedBox(height: 80)),
       ],
     );
   }
 
-  Widget _buildCategoryProduct(ProductDetailBloc bloc) {
+  Widget buildProductPopular(ProductDetailBloc bloc, BuildContext context) {
     return StreamBuilder(
-      stream: bloc.productModels,
+      stream: bloc.streamProductPopular,
       builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          final products = snapshot.data!.products!;
-          return buildProductSwiper(products: products, bloc: bloc);
-        } else if (snapshot.hasError) {
-          return const Center(child: Text('Lỗi dữ liệu'));
+        if (snapshot.hasData && snapshot.data != null) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: customTitleCategory(
+                  'Sản phẩm phổ biến',
+                  'Xem tất cả',
+                  () => bloc.onTapPopularProduct(context, snapshot.data ?? []),
+                ),
+              ),
+              MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                child: buildProductSwiper(
+                  products: snapshot.data ?? [],
+                  bloc: bloc,
+                ),
+              ),
+            ],
+          );
         } else {
-          return const Center(child: CircularProgressIndicator());
+          return const SizedBox.shrink();
         }
       },
     );
   }
 
-  Widget _buildbuildProductCombine(ProductDetailBloc bloc) {
-    return StreamBuilder(
-      stream: bloc.streamProductCombine,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          final products = snapshot.data!;
-          return buildProductSwiper(products: products, bloc: bloc);
-        } else if (snapshot.hasError) {
-          return const Center(child: Text('Lỗi dữ liệu'));
-        } else {
-          return const Center(child: CircularProgressIndicator());
-        }
-      },
+  Widget buildProductSuggestionSection(
+    ProductDetailBloc bloc,
+    BuildContext context,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        StreamBuilder(
+          stream: bloc.streamProductCombine,
+          builder: (context, snapshot) {
+            if (snapshot.hasData &&
+                snapshot.data != null &&
+                snapshot.data!.isNotEmpty) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: customTitleCategory(
+                      'Sản phẩm kết hợp',
+                      'Xem tất cả',
+                      () => bloc.onTapCombineProduct(
+                        context,
+                        snapshot.data ?? [],
+                      ),
+                    ),
+                  ),
+                  MediaQuery.removePadding(
+                    context: context,
+                    removeTop: true,
+                    child: buildProductSwiper(
+                      products: snapshot.data!,
+                      bloc: bloc,
+                    ),
+                  ),
+                ],
+              );
+            } else {
+              return const SizedBox.shrink();
+            }
+          },
+        ),
+        StreamBuilder(
+          stream: bloc.productModels,
+          builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data != null) {
+              final products = snapshot.data!;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: customTitleCategory(
+                      'Sản phẩm liên quan',
+                      'Xem tất cả',
+                      () => bloc.onTapSeeAllProduct(
+                        context,
+                        products.productsPage?.content ?? [],
+                      ),
+                    ),
+                  ),
+                  MediaQuery.removePadding(
+                    context: context,
+                    removeTop: true,
+                    child: buildProductSwiper(
+                      products: products.productsPage?.content ?? [],
+                      bloc: bloc,
+                    ),
+                  ),
+                ],
+              );
+            } else {
+              return const SizedBox.shrink();
+            }
+          },
+        ),
+      ],
     );
   }
 
@@ -223,86 +271,13 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     );
   }
 
-  // Widget _buildGridItems(ProductDetailBloc bloc) {
-  //   return SizedBox(
-  //     width: AppSize.width(),
-  //     child: MediaQuery.removePadding(
-  //       context: context,
-  //       child: SingleChildScrollView(
-  //         child: Column(
-  //           children: [
-  //             StreamBuilder(
-  //               stream: bloc.productModels,
-  //               builder: (context, snapshot) {
-  //                 if (snapshot.hasData && snapshot.data != null) {
-  //                   final product = snapshot.data?.products;
-  //                   return MediaQuery.removePadding(
-  //                     context: context,
-  //                     child: GridView.builder(
-  //                       gridDelegate:
-  //                           const SliverGridDelegateWithFixedCrossAxisCount(
-  //                             crossAxisCount: 2,
-  //                             crossAxisSpacing: 3,
-  //                             mainAxisSpacing: 3,
-  //                             mainAxisExtent: 300,
-  //                           ),
-  //                       physics: const NeverScrollableScrollPhysics(),
-  //                       shrinkWrap: true,
-  //                       itemCount: product?.length,
-  //                       itemBuilder: (context, index) {
-  //                         return InkWell(
-  //                           onTap: () {
-  //                             Navigator.push(
-  //                               context,
-  //                               MaterialPageRoute(
-  //                                 builder:
-  //                                     (context) => ProductDetailCustomerScreen(
-  //                                       productModel: product![index],
-  //                                     ),
-  //                               ),
-  //                             );
-  //                           },
-  //                           child: customItemProductCustomer(
-  //                             isDiscount:
-  //                                 (product![index].discountPercentage ?? 0) > 0,
-  //                             product[index],
-  //                             AppSize.width() * 0.4,
-  //                             onBuy: () {
-  //                               bloc.onBuy(product[index].productId ?? 0);
-  //                             },
-  //                             onAddToCart: () {
-  //                               bloc.onAddToCart(bloc.productModel??ProductModel(), context);
-  //                             },
-  //                           ),
-  //                         );
-  //                       },
-  //                     ),
-  //                   );
-  //                 } else if (snapshot.hasError) {
-  //                   return Center(child: Text('Lỗi dữ liệu'));
-  //                 } else {
-  //                   return Center(
-  //                     child: CircularProgressIndicator(
-  //                       backgroundColor: Colors.green,
-  //                     ),
-  //                   );
-  //                 }
-  //               },
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
   Widget itemDec(ProductDetailBloc bloc, String desc) {
     return Card(
       child: Container(
         width: AppSize.w(0.95),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: Colors.white,
+          color: Colors.white70,
         ),
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -810,6 +785,29 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget customTitleCategory(
+    String title,
+    String actionText,
+    VoidCallback onTap,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+        InkWell(
+          onTap: onTap,
+          child: Text(
+            actionText,
+            style: const TextStyle(fontSize: 12, color: Colors.blue),
+          ),
+        ),
+      ],
     );
   }
 }

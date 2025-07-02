@@ -43,4 +43,13 @@ public class RevenueStatisticsResponse {
 
   /** Combined branch and user yearly revenue (if both branchId and userId are provided) */
   private Double branchUserYearlyRevenue;
+
+  /** Top selling products list */
+  private java.util.List<TopSellingProductResponse> topSellingProducts;
+
+  /** List of monthly revenue data (within selected period) */
+  private java.util.List<MonthlyRevenueDataResponse> revenues;
+
+  /** Expiring and low stock products list */
+  private java.util.List<ExpiringProductResponse> expiringLowStockProducts;
 }

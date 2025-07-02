@@ -135,9 +135,12 @@ public class OrderController {
       @RequestParam int year,
       @RequestParam int month,
       @RequestParam(required = false) Long branchId,
-      @RequestParam(required = false) Long userId) {
+      @RequestParam(required = false) Long userId,
+      @RequestParam(defaultValue = "6") int topPeriod,
+      @RequestParam(defaultValue = "10") int topLimit,
+      @RequestParam(defaultValue = "3") int expiringDays) {
     return ApiResponse.<RevenueStatisticsResponse>builder()
-        .result(orderService.getRevenueStatistics(year, month, branchId, userId))
+        .result(orderService.getRevenueStatistics(year, month, branchId, userId, topPeriod, topLimit, expiringDays))
         .message(ApiMessage.REVENUE_STATISTICS_RETRIEVED.getMessage())
         .build();
   }

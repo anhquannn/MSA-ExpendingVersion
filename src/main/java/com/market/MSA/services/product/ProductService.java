@@ -11,13 +11,21 @@ import com.market.MSA.repositories.product.*;
 import com.market.MSA.requests.filters.ProductFilterRequest;
 import com.market.MSA.requests.product.ProductRequest;
 import com.market.MSA.responses.product.InventoryProductResponse;
+import com.market.MSA.responses.product.MonthlySalesData;
 import com.market.MSA.responses.product.ProductFilterResponse;
 import com.market.MSA.responses.product.ProductResponse;
+import com.market.MSA.responses.product.ProductSalesStatisticsResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import com.market.MSA.services.others.NotificationService;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +55,7 @@ public class ProductService {
   final InventoryRepository inventoryRepository;
   final InventoryProductRepository inventoryProductRepository;
   final InventoryProductMapper inventoryProductMapper;
+  final com.market.MSA.repositories.order.OrderDetailRepository orderDetailRepository;
   final InventoryProductService inventoryProductService;
   static final String DEFAULT_SORT_BY = "price";
   static final String DEFAULT_SORT_DIRECTION = "asc";
@@ -285,5 +294,70 @@ public class ProductService {
 
     // Convert to response DTOs
     return products.map(productMapper::toProductResponse);
+  }
+
+  @Transactional(readOnly = true)
+  public ProductSalesStatisticsResponse getProductSalesStatistics(
+      Long productId, Long branchId, int months) {
+    if (months != 12) {
+      months = 6; // default to 6 if not 12
+    }
+
+    LocalDate endDate = LocalDate.now().withDayOfMonth(1).with(TemporalAdjusters.lastDayOfMonth());
+    LocalDate startDate = endDate.minusMonths(months - 1).withDayOfMonth(1);
+
+    List<Object[]> rows =
+        orderDetailRepository.findMonthlySalesByProduct(
+            productId, branchId, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+
+    Map<YearMonth, Long> qtyMap = new HashMap<>();
+    for (Object[] row : rows) {
+      Integer year = (Integer) row[0];
+      Integer month = (Integer) row[1];
+      Long qty = (Long) row[2];
+      qtyMap.put(YearMonth.of(year, month), qty);
+    }
+
+    List<MonthlySalesData> salesData = new ArrayList<>();
+    YearMonth current = YearMonth.from(endDate);
+    for (int i = months - 1; i >= 0; i--) {
+      YearMonth ym = current.minusMonths(i);
+      long qty = qtyMap.getOrDefault(ym, 0L);
+      salesData.add(
+          MonthlySalesData.builder()
+              .year(ym.getYear())
+              .month(ym.getMonthValue())
+              .quantity(qty)
+              .build());
+    }
+
+    // Determine stock info (default branchId = 1 if not provided)
+  Long branchToUse = (branchId != null) ? branchId : 3L;
+  Integer totalStock =
+      inventoryProductRepository.getTotalStockByBranchAndProduct(branchToUse, productId);
+  int stockNumber = totalStock != null ? totalStock : 0;
+
+    // earliest expiration date in this branch for product
+    java.util.Optional<InventoryProduct> earliestInv =
+        inventoryProductRepository
+            .findFirstByInventory_Branch_BranchIdAndProduct_ProductIdOrderByExpDateAsc(branchToUse, productId);
+    java.time.LocalDateTime expDate = earliestInv.map(InventoryProduct::getExpDate).orElse(null);
+  String stockLevel;
+  if (stockNumber == 0) {
+    stockLevel = "OUT_OF_STOCK";
+  } else if (stockNumber < 50) {
+    stockLevel = "LOW";
+  } else if (stockNumber < 300) {
+    stockLevel = "MEDIUM";
+  } else {
+    stockLevel = "HIGH";
+  }
+
+  return ProductSalesStatisticsResponse.builder()
+      .sales(salesData)
+      .stockNumber(stockNumber)
+      .stockLevel(stockLevel)
+      .expDate(expDate)
+      .build();
   }
 }

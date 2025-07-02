@@ -343,13 +343,40 @@ public class UserService {
   public UserResponse updateUser(long userId, UpdateUserRequest request) {
     User user = getUserEntityByID(userId);
 
-    userMapper.updateUser(user, request);
-    user.setPassword(passwordEncoder.encode(request.getPassword()));
+    // Only update the fields that are not null in the request
+    if (request.getFullName() != null) {
+      user.setFullName(request.getFullName());
+    }
+    if (request.getEmail() != null) {
+      user.setEmail(request.getEmail());
+    }
+    if (request.getPhoneNumber() != null) {
+      user.setPhoneNumber(request.getPhoneNumber());
+    }
+    if (request.getBirthday() != null) {
+      user.setBirthday(request.getBirthday());
+    }
+    if (request.getPassword() != null) {
+      user.setPassword(passwordEncoder.encode(request.getPassword()));
+    }
+    if (request.getImage() != null) {
+      user.setImage(request.getImage());
+    }
+    if (request.getDeviceId() != null) {
+      user.setDeviceId(request.getDeviceId());
+    }
+    if (request.getGoogleId() != null) {
+      user.setGoogleId(request.getGoogleId());
+    }
 
-    var roles = roleRepository.findAllById(request.getRoles());
-    user.setRoles(new HashSet<>(roles));
+    if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+      var roles = roleRepository.findAllById(request.getRoles());
+      user.setRoles(new HashSet<>(roles));
+    }
 
+    // Save the updated user
     user = userRepository.save(user);
+
     return userMapper.toUserResponse(user);
   }
 

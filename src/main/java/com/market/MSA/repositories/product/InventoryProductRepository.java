@@ -3,6 +3,7 @@ package com.market.MSA.repositories.product;
 import com.market.MSA.models.product.InventoryProduct;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -71,25 +72,17 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
   Integer getTotalStockByBranchAndProduct(
       @Param("branchId") Long branchId, @Param("productId") Long productId);
 
-  /**
-   * Find all inventory products that expire on or after the given date and are not yet discounted.
-   *
-   * @param date The minimum expiration date to check
-   * @return List of matching inventory products
-   */
   @Query("SELECT ip FROM InventoryProduct ip WHERE ip.expDate >= :date AND ip.isDiscounted = false")
   List<InventoryProduct> findByExpDateGreaterThanEqualAndIsDiscountedFalse(
       @Param("date") java.time.LocalDate date);
 
-  /**
-   * Find paginated inventory products that are discounted for a specific inventory.
-   *
-   * @param inventoryId The ID of the inventory to search in
-   * @param pageable Pagination information
-   * @return Page of discounted inventory products
-   */
+  @Query("SELECT ip FROM InventoryProduct ip WHERE ip.expDate <= :date AND ip.stockLevel = 'LOW'")
+  List<InventoryProduct> findExpiringLowStock(@Param("date") java.time.LocalDateTime date);
+  
   @Query(
       "SELECT ip FROM InventoryProduct ip WHERE ip.inventory.inventoryId = :inventoryId AND ip.isDiscounted = true")
   Page<InventoryProduct> findByInventory_InventoryIdAndIsDiscountedTrue(
       @Param("inventoryId") Long inventoryId, Pageable pageable);
+
+  Optional<InventoryProduct> findFirstByInventory_Branch_BranchIdAndProduct_ProductIdOrderByExpDateAsc(Long branchId, Long productId);
 }

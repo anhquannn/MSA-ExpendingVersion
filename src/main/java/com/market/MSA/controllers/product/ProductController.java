@@ -6,6 +6,7 @@ import com.market.MSA.requests.product.ProductRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.ProductFilterResponse;
 import com.market.MSA.responses.product.ProductResponse;
+import com.market.MSA.responses.product.ProductSalesStatisticsResponse;
 import com.market.MSA.services.product.ProductService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -87,6 +88,17 @@ public class ProductController {
     return ApiResponse.<Page<ProductResponse>>builder()
         .result(productService.getAllProductsInBranch(branchId, page, size, sortBy, sortDirection))
         .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @GetMapping("/{productId}/sales-statistics")
+  public ApiResponse<ProductSalesStatisticsResponse> getProductSalesStatistics(
+      @PathVariable Long productId,
+      @RequestParam(defaultValue = "6") int months,
+      @RequestParam(required = false) Long branchId) {
+    return ApiResponse.<ProductSalesStatisticsResponse>builder()
+        .result(productService.getProductSalesStatistics(productId, branchId, months))
+        .message(ApiMessage.PRODUCT_SALES_STATISTICS_RETRIEVED.getMessage())
         .build();
   }
 

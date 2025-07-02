@@ -18,6 +18,7 @@ import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/domain/usecase/user_use_case.dart';
+import 'package:msa/feature/presentation/customer/createorder/ui/change_address_screen.dart';
 import 'package:msa/feature/presentation/customer/persional/ui/change_password.dart';
 import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
 import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
@@ -39,6 +40,7 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
   TextEditingController streetController = TextEditingController(); //duong
   TextEditingController birthDayController = TextEditingController(); //duong
   TextEditingController branchController = TextEditingController();
+  TextEditingController addressController = TextEditingController();
 
   bool? obscurePassword;
   bool? obscureValidPassword;
@@ -127,6 +129,9 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     phoneNumberController.text = '';
     passwordController.text = '';
     validPasswordController.text = '';
+
+    addressController.text =
+        '${Storage.addressModel?.street} ${Storage.addressModel?.ward} ${Storage.addressModel?.district} ${Storage.addressModel?.city}';
 
     initData();
   }
@@ -530,6 +535,19 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     setState(() {}); // Cập nhật lại UI
 
     return isValid;
+  }
+
+  onSelectAddress(BuildContext bcontext) async {
+    final data = await Navigator.push(
+      bcontext,
+      MaterialPageRoute(
+        builder:
+            (bcontext) => AddressListWidget(
+              isChangePrimary: true,
+              addresses: Storage.addressModel ?? UserAddressModel(),
+            ),
+      ),
+    );
   }
 
   @override

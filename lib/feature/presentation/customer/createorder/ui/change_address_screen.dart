@@ -12,14 +12,20 @@ import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
+import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
+import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
 import 'package:msa/widget/custom_dropdown.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 import 'package:rxdart/subjects.dart';
 
 class AddressListWidget extends StatefulWidget {
   final UserAddressModel addresses;
-  const AddressListWidget({Key? key, required this.addresses})
-    : super(key: key);
+  final bool isChangePrimary;
+  const AddressListWidget({
+    Key? key,
+    required this.addresses,
+    this.isChangePrimary = false,
+  }) : super(key: key);
 
   @override
   State<AddressListWidget> createState() => _AddressListWidgetState();
@@ -111,11 +117,19 @@ class _AddressListWidgetState extends State<AddressListWidget> {
       Storage.addressModel = model;
       Storage.saveAddress(model);
       print('[onSave] Address updated and saved locally');
-      Navigator.pushAndRemoveUntil(
-        bContext,
-        MaterialPageRoute(builder: (bContext) => CreateOrderScreen()),
-        (route) => false,
-      );
+      if (widget.isChangePrimary == true) {
+        Navigator.pushAndRemoveUntil(
+          bContext,
+          MaterialPageRoute(builder: (bContext) => PersionalScreen()),
+          (route) => false,
+        );
+      } else {
+        Navigator.pushAndRemoveUntil(
+          bContext,
+          MaterialPageRoute(builder: (bContext) => CreateOrderScreen()),
+          (route) => false,
+        );
+      }
     } else {
       print('[onSave] Update failed - show dialog');
       showCustomDialog(
@@ -139,10 +153,15 @@ class _AddressListWidgetState extends State<AddressListWidget> {
     return CustomScaffold(
       appBarLeading: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => CreateOrderScreen()),
-          );
+          widget.isChangePrimary == true
+              ? Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PersionalScreen()),
+              )
+              : Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CreateOrderScreen()),
+              );
         },
         child: Icon(Icons.arrow_back_ios, color: Colors.white, size: 24),
       ),
@@ -255,10 +274,12 @@ class _AddressListWidgetState extends State<AddressListWidget> {
                             ],
                           ),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
-                            'Chỉnh sửa',
-                            style: TextStyle(
+                            widget.isChangePrimary == true
+                                ? 'Đặt làm mặc định'
+                                : 'Chỉnh sửa',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.w600,

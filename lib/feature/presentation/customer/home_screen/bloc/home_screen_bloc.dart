@@ -17,6 +17,7 @@ import 'package:msa/feature/data/model/request/promocode_request_model.dart';
 import 'package:msa/feature/data/model/response/branch_response_response.dart';
 import 'package:msa/feature/data/model/response/get_order_response_model.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
+import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/domain/entities/branch_model.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/cart_model.dart';
@@ -28,11 +29,13 @@ import 'package:msa/feature/domain/usecase/cart_item_use_case.dart';
 import 'package:msa/feature/domain/usecase/cart_use_case.dart';
 import 'package:msa/feature/domain/usecase/user_use_case.dart';
 import 'package:msa/feature/presentation/customer/category_list/ui/category_list_screen.dart';
+import 'package:msa/feature/presentation/customer/createorder/ui/change_address_screen.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/selec_branch_screen.dart';
 import 'package:msa/feature/presentation/customer/order_detail/ui/order_detail_screen.dart';
 import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
 import 'package:msa/feature/presentation/customer/product_detail/ui/product_detail_screen.dart';
+import 'package:msa/feature/presentation/customer/product_filter/ui/product_filter_screen.dart';
 import 'package:msa/feature/presentation/customer/product_list/ui/product_list_screen.dart';
 import 'package:msa/feature/presentation/customer/promo_code_list/ui/promo_code_list_screen.dart';
 import 'package:msa/widget/animate_add_to_cart.dart';
@@ -289,7 +292,15 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   onSearch() {}
 
-  filter() {}
+  filter(BuildContext ctex) {
+    Navigator.push(
+      ctex,
+      MaterialPageRoute(
+        builder:
+            (ctex) => ProductFilterScreen(listCartItemModel: listCartItemModel),
+      ),
+    );
+  }
 
   onTapListPromoCode() {
     Navigator.push(
@@ -395,7 +406,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       AddToCartRequest(
         userId: Storage.userModelGlobal?.userId ?? 0,
         productId: model.productId ?? 0,
-        branchId: mockBranch.branchId ?? 0,
+        branchId: Storage.branchModelGlobal?.branchId ?? 0,
         quantity: 1,
       ),
     );
@@ -414,10 +425,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     }
   }
 
-  //- truyền cartID ->UpdateCartItemsSelection
-  // - addtoCart
-  // BE:
-  // - thêm list sp vào API orderDetail
   onGetOrCreateCart({BuildContext? bcontext}) async {
     final data = await _cartUseCase
         .create(Storage.userModelGlobal?.userId ?? 0)
@@ -496,7 +503,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       AddToCartRequest(
         userId: Storage.userModelGlobal?.userId ?? 0,
         productId: model.productId ?? 0,
-        branchId: mockBranch.branchId ?? 0,
+        branchId: Storage.branchModelGlobal?.branchId ?? 0,
         quantity: 1,
       ),
     );
@@ -655,50 +662,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     }
   }
 
-  _showSuccessDialog(BuildContext context, String message) async {
-    await showCustomDialog(
-      context,
-      AppSize.width(),
-      AppSize.width(),
-      'Thông báo',
-      Text(message, style: const TextStyle(color: Colors.black)),
-      true,
-      false,
-      Icon(
-        Icons.check_circle_outline_sharp,
-        size: 24,
-        color: toHexToColor(primaryColorGreen),
-      ),
-      onClose: () {
-        Navigator.pop(context);
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => HomeScreen()),
-        // );
-      },
-    );
-  }
-
-  _showErrorDialog(BuildContext context, String message) async {
-    await showCustomDialog(
-      context,
-      AppSize.width(),
-      AppSize.width(),
-      'Thông báo',
-      Text(message, style: const TextStyle(color: Colors.black)),
-      true,
-      false,
-      onClose: () {
-        Navigator.pop(context);
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => HomeScreen()),
-        // );
-      },
-      Icon(Icons.error_outline, size: 24, color: Colors.red),
-    );
-  }
-
   onTapOrderDetail(BuildContext bContext, OrderResponse model) {
     Navigator.push(
       bContext,
@@ -706,104 +669,16 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     );
   }
 
-  // onCreateRate({OrderResponse? model, int? rating, BuildContext? bContext}) async {
-  //   final rate = FeedbackRequest(
-  //     comments: rateController.text,
-  //     createAt: formatDateTime(DateTime.now()),
-  //     productId: productId,
-  //     rating: rating,
-  //     userId: Storage.userModelGlobal?.userId,
-  //   );
-
-  //   final response = await Repository.onCreateFeedBack(rate);
-
-  //   if (response != null) {
-  //     _showSuccessDialog(bContext!, 'Gửi đánh giá thành công');
-  //   } else {
-  //     _showErrorDialog(bContext!, 'Gửi đánh giá thất bại');
-  //   }
-  // }
-  // onTapRate()async{
-  //   await showRatingDialog(
-  //     context: context,
-  //     productId: productId!,
-  //     onSubmit: (rating, comment) {
-  //       rateController.text = comment;
-  //       onCreateRate(productId: productId, rating: rating, bContext: context);
-  //     },
-  //   );
-  // }
-
-  // Future<void> showRatingDialog({
-  //   required BuildContext bContext,
-  //   required int productId,
-  //   required Function(int rating, String comment) onSubmit,
-  // }) async {
-  //   final TextEditingController commentController = TextEditingController();
-  //   int selectedRating = 5;
-
-  //   await showDialog(
-  //     context: bContext,
-  //     builder: (bContext) {
-  //       return Dialog(
-  //         insetPadding: EdgeInsets.symmetric(horizontal: AppSize.w(0.05)),
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(12),
-  //         ),
-  //         child: Container(
-  //           padding: const EdgeInsets.all(20),
-  //           width: AppSize.w(0.9),
-  //           child: Column(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               const Text(
-  //                 'Gửi đánh giá sản phẩm',
-  //                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-  //               ),
-  //               const SizedBox(height: 20),
-  //               DropdownButtonFormField<int>(
-  //                 value: selectedRating,
-  //                 decoration: const InputDecoration(
-  //                   labelText: 'Chọn số sao đánh giá',
-  //                   border: OutlineInputBorder(),
-  //                 ),
-  //                 items: List.generate(
-  //                   5,
-  //                   (index) => DropdownMenuItem(
-  //                     value: index + 1,
-  //                     child: Text('${index + 1} sao'),
-  //                   ),
-  //                 ),
-  //                 onChanged: (value) {
-  //                   selectedRating = value ?? 5;
-  //                 },
-  //               ),
-  //               const SizedBox(height: 20),
-  //               TextField(
-  //                 controller: commentController,
-  //                 maxLines: 5,
-  //                 decoration: const InputDecoration(
-  //                   labelText: 'Nhập nhận xét',
-  //                   border: OutlineInputBorder(),
-  //                 ),
-  //               ),
-  //               const SizedBox(height: 20),
-  //               InkWell(
-  //                 onTap: () {
-  //                   Navigator.pop(bContext);
-  //                   onSubmit(selectedRating, commentController.text);
-  //                 },
-  //                 child: Container(
-  //                   decoration: BoxDecoration(
-  //                     borderRadius: BorderRadius.circular(8),
-  //                   ),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
+  onSelectBranch(BuildContext bcontext) async {
+    final data = await Navigator.push(
+      bcontext,
+      MaterialPageRoute(
+        builder:
+            (bcontext) => SelectBranchScreen(
+              isPrimary: true,
+              branchId: Storage.branchModelGlobal?.branchId,
+            ),
+      ),
+    );
+  }
 }

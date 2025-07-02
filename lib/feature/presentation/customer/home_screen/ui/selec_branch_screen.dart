@@ -8,13 +8,15 @@ import 'package:msa/feature/data/model/request/get_branch_request_model.dart';
 import 'package:msa/feature/domain/entities/branch_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/presentation/customer/home_screen/bloc/home_screen_bloc.dart';
+import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
 import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 import 'package:rxdart/rxdart.dart';
 
 class SelectBranchScreen extends StatefulWidget {
   final int? branchId;
-  const SelectBranchScreen({super.key, this.branchId});
+  final isPrimary;
+  const SelectBranchScreen({super.key, this.branchId, this.isPrimary = false});
 
   @override
   State<SelectBranchScreen> createState() => _SelectBranchScreenState();
@@ -52,11 +54,18 @@ class _SelectBranchScreenState extends State<SelectBranchScreen> {
     streamBranchModel.set(listBranchModels ?? []);
     Storage.branchModelGlobal = model;
     Storage.saveBranchModel(model);
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => PersionalScreen()),
-      (route) => false,
-    );
+    if (widget.isPrimary == true) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+    } else {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => PersionalScreen()),
+        (route) => false,
+      );
+    }
   }
 
   @override

@@ -3,45 +3,47 @@ library;
 
 import 'dart:convert';
 
-UserUpdateRequest userUpdateRequestFromJson(String str) => UserUpdateRequest.fromJson(json.decode(str));
+UserUpdateRequest userUpdateRequestFromJson(String str) =>
+    UserUpdateRequest.fromJson(json.decode(str));
 
-String userUpdateRequestToJson(UserUpdateRequest data) => json.encode(data.toJson());
+String userUpdateRequestToJson(UserUpdateRequest data) =>
+    json.encode(data.toJson());
 
 class UserUpdateRequest {
-    UserUpdateRequest({
-         this.birthday,
-         this.password,
-         this.phoneNumber,
-         this.roles,
-         this.fullName,
-         this.email,
-       this.userId
-    });
+  UserUpdateRequest({
+    this.birthday,
+    this.password,
+    this.phoneNumber,
+    this.roles,
+    this.fullName,
+    this.email,
+    this.userId,
+  });
 
-    int? userId;
-    String? birthday;
-    String? password;
-    String? phoneNumber;
-    String? address;
-    List<dynamic>? roles;
-    String? fullName;
-    String? email;
+  int? userId;
+  String? birthday;
+  String? password;
+  String? phoneNumber;
+  String? address;
+  List<dynamic>? roles;
+  String? fullName;
+  String? email;
 
-    factory UserUpdateRequest.fromJson(Map<dynamic, dynamic> json) => UserUpdateRequest(
-        birthday:json["birthday"],
+  factory UserUpdateRequest.fromJson(Map<dynamic, dynamic> json) =>
+      UserUpdateRequest(
+        birthday: json["birthday"],
         password: json["password"],
         phoneNumber: json["phoneNumber"],
         roles: List<dynamic>.from(json["roles"].map((x) => x)),
         fullName: json["fullName"],
         email: json["email"],
-    );
+      );
 
-    Map<String, dynamic> toJson() => {
-        "birthday": birthday,
-        "password": password,
-        "phoneNumber": phoneNumber,
-        "address": address,
-        "fullName": fullName,
-        "email": email,
-    };
+  Map<String, dynamic> toJson() => {
+    "birthday": birthday,
+    "password": password,
+    "phoneNumber": phoneNumber,
+    "fullName": fullName,
+    "email": email,
+  };
 }

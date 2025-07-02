@@ -33,7 +33,7 @@ class CategoryListScreen extends BaseView<CategoryListBloc> {
             categoryList.map((label) {
               return InkWell(
                 onTap: () {
-                  bloc.onTapCategory(label.categoryId ?? 0);
+                  bloc.onTapCategory(label, context);
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),

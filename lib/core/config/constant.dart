@@ -115,6 +115,8 @@ final String createFeedbackUrl = 'feedback';
 final String deleteFeedbackUrl = 'feedback/';
 final String filterFeedback = 'feedback/paging';
 
+final String getSupplier = 'supplier/paging';
+
 /// SECURE STORAGE
 final String accessTokenKey = 'ACCESS_TOKEN';
 final String refreshTokenKey = 'REFRESH_TOKEN';

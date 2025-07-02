@@ -165,17 +165,17 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           padding: const EdgeInsets.symmetric(horizontal: 5),
           child: InkWell(
             onTap: () {
-              // bloc.onSearch();
-              bloc.onRefresh();
+              bloc.onSelectBranch(context);
+              // bloc.onRefresh();
             },
-            child: const Icon(Icons.search, color: Colors.white),
+            child: const Icon(Icons.house, color: Colors.white),
           ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 5),
           child: InkWell(
             onTap: () {
-              bloc.filter();
+              bloc.filter(context);
             },
             child: const Icon(Icons.filter_list_alt, color: Colors.white),
           ),

@@ -174,6 +174,7 @@ class SupplierModel {
   final String? address;
   final String? contact;
   final String? image;
+  bool? selected;
 
   SupplierModel({
     this.supplierId,
@@ -181,6 +182,7 @@ class SupplierModel {
     this.address,
     this.contact,
     this.image,
+    this.selected=false
   });
 
   factory SupplierModel.fromJson(Map<String, dynamic> json) {
@@ -209,12 +211,14 @@ class CategoryModel {
   final String? name;
   final String? description;
   final CategoryModel? parentCategory;
+  bool selected;
 
   CategoryModel({
     this.categoryId,
     this.name,
     this.description,
     this.parentCategory,
+    this.selected = false,
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {

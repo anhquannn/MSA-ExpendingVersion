@@ -5,6 +5,8 @@ import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
+import 'package:msa/feature/domain/entities/address_model.dart';
+import 'package:msa/feature/presentation/customer/createorder/ui/change_address_screen.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/selec_branch_screen.dart';
 import 'package:msa/feature/presentation/customer/persional/bloc/persional_bloc.dart';
@@ -169,6 +171,29 @@ class PersionalScreen extends BaseView<PersionalBloc> {
                 enable: false,
                 bloc.branchController,
                 'Chọn chi nhánh',
+                '',
+                bloc.errorBranch,
+                bloc.errTextBranch,
+              ),
+            ),
+            SizedBox(height: 5),
+            InkWell(
+              onTap: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => AddressListWidget(
+                          addresses: Storage.addressModel ?? UserAddressModel(),
+                          isChangePrimary: true,
+                        ),
+                  ),
+                );
+              },
+              child: _buildField(
+                enable: false,
+                bloc.addressController,
+                'Chi nhánh mặc định',
                 '',
                 bloc.errorBranch,
                 bloc.errTextBranch,

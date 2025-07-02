@@ -78,11 +78,13 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
 
   @Query("SELECT ip FROM InventoryProduct ip WHERE ip.expDate <= :date AND ip.stockLevel = 'LOW'")
   List<InventoryProduct> findExpiringLowStock(@Param("date") java.time.LocalDateTime date);
-  
+
   @Query(
       "SELECT ip FROM InventoryProduct ip WHERE ip.inventory.inventoryId = :inventoryId AND ip.isDiscounted = true")
   Page<InventoryProduct> findByInventory_InventoryIdAndIsDiscountedTrue(
       @Param("inventoryId") Long inventoryId, Pageable pageable);
 
-  Optional<InventoryProduct> findFirstByInventory_Branch_BranchIdAndProduct_ProductIdOrderByExpDateAsc(Long branchId, Long productId);
+  Optional<InventoryProduct>
+      findFirstByInventory_Branch_BranchIdAndProduct_ProductIdOrderByExpDateAsc(
+          Long branchId, Long productId);
 }

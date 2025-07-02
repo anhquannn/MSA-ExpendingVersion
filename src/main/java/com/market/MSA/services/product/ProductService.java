@@ -332,32 +332,33 @@ public class ProductService {
     }
 
     // Determine stock info (default branchId = 1 if not provided)
-  Long branchToUse = (branchId != null) ? branchId : 3L;
-  Integer totalStock =
-      inventoryProductRepository.getTotalStockByBranchAndProduct(branchToUse, productId);
-  int stockNumber = totalStock != null ? totalStock : 0;
+    Long branchToUse = (branchId != null) ? branchId : 3L;
+    Integer totalStock =
+        inventoryProductRepository.getTotalStockByBranchAndProduct(branchToUse, productId);
+    int stockNumber = totalStock != null ? totalStock : 0;
 
     // earliest expiration date in this branch for product
     java.util.Optional<InventoryProduct> earliestInv =
         inventoryProductRepository
-            .findFirstByInventory_Branch_BranchIdAndProduct_ProductIdOrderByExpDateAsc(branchToUse, productId);
+            .findFirstByInventory_Branch_BranchIdAndProduct_ProductIdOrderByExpDateAsc(
+                branchToUse, productId);
     java.time.LocalDateTime expDate = earliestInv.map(InventoryProduct::getExpDate).orElse(null);
-  String stockLevel;
-  if (stockNumber == 0) {
-    stockLevel = "OUT_OF_STOCK";
-  } else if (stockNumber < 50) {
-    stockLevel = "LOW";
-  } else if (stockNumber < 300) {
-    stockLevel = "MEDIUM";
-  } else {
-    stockLevel = "HIGH";
-  }
+    String stockLevel;
+    if (stockNumber == 0) {
+      stockLevel = "OUT_OF_STOCK";
+    } else if (stockNumber < 50) {
+      stockLevel = "LOW";
+    } else if (stockNumber < 300) {
+      stockLevel = "MEDIUM";
+    } else {
+      stockLevel = "HIGH";
+    }
 
-  return ProductSalesStatisticsResponse.builder()
-      .sales(salesData)
-      .stockNumber(stockNumber)
-      .stockLevel(stockLevel)
-      .expDate(expDate)
-      .build();
+    return ProductSalesStatisticsResponse.builder()
+        .sales(salesData)
+        .stockNumber(stockNumber)
+        .stockLevel(stockLevel)
+        .expDate(expDate)
+        .build();
   }
 }

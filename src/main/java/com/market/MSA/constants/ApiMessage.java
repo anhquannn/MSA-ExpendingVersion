@@ -284,7 +284,14 @@ public enum ApiMessage {
   INVENTORY_CHECK_REQUEST_UPDATED("Inventory check request updated successfully"),
   INVENTORY_CHECK_REQUEST_DELETED("Inventory check request deleted successfully"),
   INVENTORY_CHECK_REQUEST_RETRIEVED("Inventory check request retrieved successfully"),
-  ALL_INVENTORY_CHECK_REQUESTS_RETRIEVED("All inventory check requests retrieved successfully");
+  ALL_INVENTORY_CHECK_REQUESTS_RETRIEVED("All inventory check requests retrieved successfully"),
+
+  // Product Combination messages
+  PRODUCT_COMBINATION_CREATED("Product combination created successfully"),
+  PRODUCT_COMBINATION_UPDATED("Product combination updated successfully"),
+  PRODUCT_COMBINATION_DELETED("Product combination deleted successfully"),
+  PRODUCT_COMBINATION_RETRIEVED("Product combination retrieved successfully"),
+  ALL_PRODUCT_COMBINATIONS_RETRIEVED("All product combinations retrieved successfully");
 
   private final String message;
 

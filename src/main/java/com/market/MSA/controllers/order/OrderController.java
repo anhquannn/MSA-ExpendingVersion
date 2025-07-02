@@ -140,7 +140,9 @@ public class OrderController {
       @RequestParam(defaultValue = "10") int topLimit,
       @RequestParam(defaultValue = "3") int expiringDays) {
     return ApiResponse.<RevenueStatisticsResponse>builder()
-        .result(orderService.getRevenueStatistics(year, month, branchId, userId, topPeriod, topLimit, expiringDays))
+        .result(
+            orderService.getRevenueStatistics(
+                year, month, branchId, userId, topPeriod, topLimit, expiringDays))
         .message(ApiMessage.REVENUE_STATISTICS_RETRIEVED.getMessage())
         .build();
   }

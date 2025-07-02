@@ -516,7 +516,13 @@ public class OrderService {
 
   @Transactional(readOnly = true)
   public RevenueStatisticsResponse getRevenueStatistics(
-      int year, int month, Long branchId, Long userId, int topPeriod, int topLimit, int expiringDays) {
+      int year,
+      int month,
+      Long branchId,
+      Long userId,
+      int topPeriod,
+      int topLimit,
+      int expiringDays) {
     // Calculate current month's data
     Double currentMonthRevenue =
         branchId != null
@@ -594,11 +600,13 @@ public class OrderService {
         orderDetailRepository.findTopSellingProducts(branchId, startDate, endDate, pageable);
     List<TopSellingProductResponse> topSellingProducts =
         topProductRows.stream()
-            .map(row -> TopSellingProductResponse.builder()
-                .productId((Long) row[0])
-                .name((String) row[1])
-                .totalQuantity((Long) row[2])
-                .build())
+            .map(
+                row ->
+                    TopSellingProductResponse.builder()
+                        .productId((Long) row[0])
+                        .name((String) row[1])
+                        .totalQuantity((Long) row[2])
+                        .build())
             .toList();
 
     LocalDateTime thresholdDate = endDate.plusDays(expiringDays);
@@ -606,21 +614,29 @@ public class OrderService {
         inventoryProductRepository.findExpiringLowStock(thresholdDate);
     List<ExpiringProductResponse> expiringProducts =
         inventoryProducts.stream()
-            .map(ip -> ExpiringProductResponse.builder()
-                .productId(ip.getProduct().getProductId())
-                .name(ip.getProduct().getName())
-                .quantity(ip.getStockNumber())
-                .expDate(ip.getExpDate())
-                .build())
+            .map(
+                ip ->
+                    ExpiringProductResponse.builder()
+                        .productId(ip.getProduct().getProductId())
+                        .name(ip.getProduct().getName())
+                        .quantity(ip.getStockNumber())
+                        .expDate(ip.getExpDate())
+                        .build())
             .toList();
 
     // Map monthly revenues
-      java.util.List<Object[]> revRows = orderDetailRepository.findMonthlyRevenue(branchId, startDate, endDate);
-    java.util.List<MonthlyRevenueDataResponse> revenues = revRows.stream()
-        .map(r -> new MonthlyRevenueDataResponse((Integer) r[0], (Integer) r[1], ((Number) r[2]).doubleValue()))
-        .toList();
+    java.util.List<Object[]> revRows =
+        orderDetailRepository.findMonthlyRevenue(branchId, startDate, endDate);
+    java.util.List<MonthlyRevenueDataResponse> revenues =
+        revRows.stream()
+            .map(
+                r ->
+                    new MonthlyRevenueDataResponse(
+                        (Integer) r[0], (Integer) r[1], ((Number) r[2]).doubleValue()))
+            .toList();
 
-    builder.revenues(revenues)
+    builder
+        .revenues(revenues)
         .topSellingProducts(topSellingProducts)
         .expiringLowStockProducts(expiringProducts);
 

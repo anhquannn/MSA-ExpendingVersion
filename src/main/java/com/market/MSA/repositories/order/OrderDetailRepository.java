@@ -25,27 +25,27 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> 
       @Param("startDate") LocalDateTime startDate,
       @Param("endDate") LocalDateTime endDate);
 
-
-  @Query("""
-    SELECT YEAR(o.orderDate) , MONTH(o.orderDate) , SUM(od.quantity * od.unitPrice)
-    FROM OrderDetail od JOIN od.order o
-    WHERE o.orderDate BETWEEN :start AND :end
-      AND (:branchId IS NULL OR o.branch.branchId = :branchId)
-    GROUP BY YEAR(o.orderDate), MONTH(o.orderDate)
-    ORDER BY YEAR(o.orderDate), MONTH(o.orderDate)
-    """)
+  @Query(
+      """
+	SELECT YEAR(o.orderDate) , MONTH(o.orderDate) , SUM(od.quantity * od.unitPrice)
+	FROM OrderDetail od JOIN od.order o
+	WHERE o.orderDate BETWEEN :start AND :end
+	AND (:branchId IS NULL OR o.branch.branchId = :branchId)
+	GROUP BY YEAR(o.orderDate), MONTH(o.orderDate)
+	ORDER BY YEAR(o.orderDate), MONTH(o.orderDate)
+	""")
   List<Object[]> findMonthlyRevenue(
       @Param("branchId") Long branchId,
       @Param("start") java.time.LocalDateTime start,
       @Param("end") java.time.LocalDateTime end);
 
   @Query(
-          "SELECT od.product.productId, od.product.name, SUM(od.quantity) AS qty " +
-                  "FROM OrderDetail od JOIN od.order o " +
-                  "WHERE o.orderDate BETWEEN :startDate AND :endDate " +
-                  "AND (:branchId IS NULL OR o.branch.branchId = :branchId) " +
-                  "GROUP BY od.product.productId, od.product.name " +
-                  "ORDER BY qty DESC")
+      "SELECT od.product.productId, od.product.name, SUM(od.quantity) AS qty "
+          + "FROM OrderDetail od JOIN od.order o "
+          + "WHERE o.orderDate BETWEEN :startDate AND :endDate "
+          + "AND (:branchId IS NULL OR o.branch.branchId = :branchId) "
+          + "GROUP BY od.product.productId, od.product.name "
+          + "ORDER BY qty DESC")
   List<Object[]> findTopSellingProducts(
       @Param("branchId") Long branchId,
       @Param("startDate") LocalDateTime startDate,

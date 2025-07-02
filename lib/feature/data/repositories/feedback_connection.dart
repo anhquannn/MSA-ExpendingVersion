@@ -1,7 +1,9 @@
 // SỬA: feedback_repository_impl.dart
 
 import 'package:msa/core/config/constant.dart';
+import 'package:msa/feature/data/model/request/feedback_filter_request_model.dart';
 import 'package:msa/feature/data/model/request/feedback_request_model.dart';
+import 'package:msa/feature/data/model/response/feedback_filter_response.dart';
 import 'package:msa/feature/domain/entities/feedback.dart';
 import 'package:msa/feature/domain/repositories/feedback_repository.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
@@ -57,7 +59,9 @@ class FeedbackRepositoryImpl extends IFeedbackRepository {
     return response.isSuccess;
   }
 
-  static Future<FeedbackModel?> createFeedbackApi(FeedbackRequest request) async {
+  static Future<FeedbackModel?> createFeedbackApi(
+    FeedbackRequest request,
+  ) async {
     final response = await HttpConnection.post<FeedbackModel>(
       createFeedbackUrl,
       body: request.toJson(),
@@ -66,4 +70,28 @@ class FeedbackRepositoryImpl extends IFeedbackRepository {
     return response.result;
   }
 
+  static createFeedbackAPI(FeedbackRequest request) async {
+    final response = await HttpConnection.post<FeedbackModel>(
+      createFeedbackUrl,
+      body: request.toJson(),
+      fromJsonT: (json) => FeedbackModel.fromJson(json),
+    );
+    return response.result;
+  }
+
+  static Future<List<FeedbacFilterkResponse>> getFeedback(
+    FeedbackFilterRequest request,
+  ) async {
+    final response =
+        await HttpConnection.post<PaginatedResult<FeedbacFilterkResponse>>(
+          filterFeedback,
+          body: request.toJson(),
+          fromJsonT:
+              (json) => PaginatedResult.fromJson(
+                json,
+                (itemJson) => FeedbacFilterkResponse.fromJson(itemJson),
+              ),
+        );
+    return response.result?.content ?? [];
+  }
 }

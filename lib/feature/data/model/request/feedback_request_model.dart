@@ -17,7 +17,7 @@ class FeedbackRequest {
     return FeedbackRequest(
       rating: json['rating'],
       comments: json['comments'],
-      createAt:json['createAt'],
+      createAt: json['createAt'],
       userId: json['userId'],
       productId: json['productId'],
     );
@@ -27,7 +27,7 @@ class FeedbackRequest {
     return {
       'rating': rating,
       'comments': comments,
-      'createAt': createAt,
+      'createdAt': createAt,
       'userId': userId,
       'productId': productId,
     };

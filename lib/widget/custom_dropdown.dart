@@ -44,7 +44,6 @@ Widget customDropdownButton({
   );
 }
 
-// TODO: Custom Dialog
 Future<void> showCustomDialog(
   BuildContext context,
   double width,
@@ -61,43 +60,41 @@ Future<void> showCustomDialog(
     context: context,
     barrierDismissible: false,
     builder: (BuildContext context) {
+      final screenWidth = MediaQuery.of(context).size.width;
+      final double dialogWidth = (width == 0) ? screenWidth * 0.9 : width;
+      final double dialogHeight = (height == 0) ? dialogWidth : height;
+
       return AlertDialog(
         backgroundColor: toHexToColor(backgroundColor),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        titlePadding:
-            EdgeInsets.zero, // bỏ padding mặc định của title để full width
-        contentPadding: EdgeInsets.fromLTRB(
-          24,
-          20,
-          24,
-          24,
-        ), // hoặc tuỳ chỉnh padding content
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: EdgeInsets.zero,
+        contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         title: Container(
-          // Bỏ width, height cố định
+          width: dialogWidth,
           decoration: BoxDecoration(
             color: toHexToColor(appBarColor),
-            borderRadius: BorderRadius.only(
-              topRight: Radius.circular(10),
-              topLeft: Radius.circular(10),
+            borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(20),
+              topLeft: Radius.circular(20),
             ),
           ),
-          padding: EdgeInsets.symmetric(
-            vertical: height * 0.05,
-          ), // hoặc padding theo ý bạn
+          padding: EdgeInsets.symmetric(vertical: 12),
           child: Center(
             child: Text(
               title,
               style: TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
         ),
         content: Container(
+          width: dialogWidth,
           decoration: BoxDecoration(
             color: toHexToColor(backgroundColor),
-            borderRadius: BorderRadius.only(
+            borderRadius: const BorderRadius.only(
               bottomRight: Radius.circular(10),
               bottomLeft: Radius.circular(10),
             ),
@@ -105,17 +102,17 @@ Future<void> showCustomDialog(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (icon != null) icon!,
-              SizedBox(height: 10),
-              Center(child: content),
+              if (icon != null) icon,
+              const SizedBox(height: 10),
+              if (content != null) Center(child: content),
             ],
           ),
         ),
-        actionsPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         actions: [
           Wrap(
             children: [
-              if (submit == true)
+              if (submit)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: InkWell(
@@ -125,13 +122,13 @@ Future<void> showCustomDialog(
                           : Navigator.of(context).pop(false);
                     },
                     child: Container(
-                      width: width * 0.3,
+                      width: dialogWidth * 0.3,
                       height: 40,
                       decoration: BoxDecoration(
                         color: toHexToColor(secondaryErrorColor),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Center(
+                      child: const Center(
                         child: Text(
                           'Đồng ý',
                           style: TextStyle(color: Colors.white),
@@ -140,30 +137,33 @@ Future<void> showCustomDialog(
                     ),
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: InkWell(
-                  onTap: () {
-                    onClose != null
-                        ? onClose()
-                        : Navigator.of(context).pop(false);
-                  },
-                  child: Container(
-                    width: width * 0.3,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: toHexToColor(borderColor),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Đóng',
-                        style: TextStyle(color: toHexToColor(primaryTextColor)),
+              if (close)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: InkWell(
+                    onTap: () {
+                      onClose != null
+                          ? onClose()
+                          : Navigator.of(context).pop(false);
+                    },
+                    child: Container(
+                      width: dialogWidth * 0.3,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: toHexToColor(borderColor),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Đóng',
+                          style: TextStyle(
+                            color: toHexToColor(primaryTextColor),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ],

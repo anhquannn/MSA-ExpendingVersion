@@ -289,16 +289,6 @@ class OrderRepositoryImpl extends IOrderRepository {
     return response.result?.content ?? [];
   }
 
-  // static Future<OrderDetailListModel?> onGetOrderDetail({int? orderId}) async {
-  //   final data = await HttpConnection.get<OrderDetailListModel>(
-  //     '$orderDetail$orderId',
-  //     fromJsonT: (json) => OrderDetailListModel.fromJson(json),
-  //   );
-
-  //   if (data.isSuccess) {
-  //     return data.result;
-  //   }
-  // }
   static Future<List<OrderDetailResponse>> onGetOrderDetail({
     int? orderId,
   }) async {

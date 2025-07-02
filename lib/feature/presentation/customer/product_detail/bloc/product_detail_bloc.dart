@@ -5,8 +5,10 @@ import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/add_to_cart_request_model.dart';
+import 'package:msa/feature/data/model/request/feedback_filter_request_model.dart';
 import 'package:msa/feature/data/model/request/product_conbine_model_request.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
+import 'package:msa/feature/data/model/response/feedback_filter_response.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
@@ -37,6 +39,9 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   List<ProductModel>? productCombine = [];
   final streamProductCombine = BehaviorSubject<List<ProductModel>?>();
 
+  List<FeedbacFilterkResponse> listFeedback = [];
+  final streamListFeedbak = BehaviorSubject<List<FeedbacFilterkResponse>>();
+
   @override
   String get contextKey => 'ProductDetailScreen';
 
@@ -62,6 +67,7 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
       onGetProducts(),
       onGetProductCombination(),
       onGetProductPopular(),
+      onGetFeedBack(),
     ]);
   }
 
@@ -214,5 +220,15 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
             ),
       ),
     );
+  }
+
+  onGetFeedBack() async {
+    final response = await Repository.getFeedback(
+      FeedbackFilterRequest(pageSize: 10, productId: widget.productId),
+    );
+    if (response.isNotEmpty && response != []) {
+      listFeedback = response;
+    }
+    streamListFeedbak.set(listFeedback);
   }
 }

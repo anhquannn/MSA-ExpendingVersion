@@ -115,7 +115,7 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
                               ) ??
                               OrderStatus.pending,
                         ),
-                        SizedBox(height: 30,)
+                        SizedBox(height: 30),
                       ],
                     ),
                   );
@@ -328,13 +328,7 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
       },
       child: SizedBox(
         width: AppSize.width(),
-        height:
-            (bloc?.onCheckStatus(
-                  OrderStatusExtension.fromString(order!.status ?? '') ??
-                      OrderStatus.failed,
-                ))
-                ? 180
-                : 140,
+        height: 140,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
           child: Card(
@@ -489,7 +483,9 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
         return Padding(
           padding: const EdgeInsets.only(top: 6),
           child: customButton(
-            bloc.onCreateRate,
+            () {
+              bloc.onReturnProducts(context: bContext);
+            },
             AppSize.w(0.4),
             40,
             Text(
@@ -507,7 +503,9 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
         return Padding(
           padding: const EdgeInsets.only(top: 6),
           child: customButton(
-            bloc.onCreateRate,
+            () {
+              // bloc.onCreateRatesForProducts(context: bContext);
+            },
             AppSize.w(0.4),
             40,
             Text(
@@ -548,20 +546,28 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
     return SizedBox(
       width: AppSize.width(),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           customButton(
-            bloc.onCreateRate,
+            () {
+              bloc.onCreateRatesForProducts(context: bContext);
+            },
             AppSize.w(0.4),
             40,
-            Text('Đánh giá', style: TextStyle(color: Colors.white)),
+            Text(
+              'Đánh giá',
+              style: TextStyle(color: toHexToColor(primaryTextColor)),
+            ),
             typeButton: 0,
           ),
           customButton(
-            bloc.onCreateRate,
+            () {
+              bloc.onReturnProducts(context: bContext);
+            },
             AppSize.w(0.4),
             40,
             Text('Trả hàng', style: TextStyle(color: Colors.white)),
-            typeButton: 0,
+            typeButton: 1,
           ),
         ],
       ),

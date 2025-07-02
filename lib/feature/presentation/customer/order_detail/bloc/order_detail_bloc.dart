@@ -1,12 +1,23 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:msa/core/config/base_bloc.dart';
+import 'package:msa/core/config/config.dart';
+import 'package:msa/core/config/constant.dart';
+import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/core/utils/utility.dart';
+import 'package:msa/feature/data/datasources/local/starage.dart';
+import 'package:msa/feature/data/model/request/cancel_order_requesr_model.dart';
+import 'package:msa/feature/data/model/request/feedback_request_model.dart';
 import 'package:msa/feature/data/model/response/get_order_response_model.dart';
 import 'package:msa/feature/data/model/response/order_detail_response_model.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
+import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
 import 'package:msa/feature/presentation/customer/order_detail/ui/order_detail_screen.dart';
+import 'package:msa/widget/custom_dropdown.dart';
+import 'package:msa/widget/custom_rating.dart';
 import 'package:rxdart/subjects.dart';
 
 class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
@@ -20,6 +31,11 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
   final streamListPromoCode = BehaviorSubject<List<PromoCodeModel>>();
 
   OrderResponse? model;
+
+  TextEditingController feedBackContoller = TextEditingController();
+
+  int _rating = 5;
+  String _comment = '';
 
   @override
   String get contextKey => 'OrderDetailScreen';
@@ -106,7 +122,187 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
     }
   }
 
-  onCreateRate() {}
+  Future<void> onCreateRatesForProducts({required BuildContext context}) async {
+    final List<Map<String, dynamic>> products =
+        orderDetail
+            ?.map(
+              (element) => {
+                'productId': element.product?.productId,
+                'productName': element.product?.name,
+              },
+            )
+            .toList() ??
+        [];
 
-  onRefund() {}
+    final userId = Storage.userModelGlobal?.userId;
+
+    await showRatingDialog(context, products: products, userId: userId);
+  }
+
+  Future<void> showRatingDialog(
+    BuildContext context, {
+    required List<Map<String, dynamic>> products,
+    required int? userId,
+  }) async {
+    final width = MediaQuery.of(context).size.width * 0.9;
+    final height = width;
+    final now = DateTime.now();
+    final GlobalKey<RatingContentState> contentKey = GlobalKey();
+
+    await showCustomDialog(
+      context,
+      width,
+      height,
+      'Đánh giá sản phẩm',
+      RatingContent(
+        key: contentKey,
+        onSubmit: (rating, comment) async {
+          Navigator.of(context).pop();
+
+          final List<Future<void>> requests = [];
+
+          for (var product in products) {
+            final productId = product['productId'];
+            final productName = product['productName'];
+
+            final model = FeedbackRequest(
+              comments: comment,
+              createAt: formatDateTime(now),
+              rating: rating,
+              productId: productId,
+              userId: userId,
+            );
+
+            final request = Repository.createFeedbackAPI(model).then((
+              response,
+            ) {
+              if (response == null) {
+                showCustomDialog(
+                  context,
+                  AppSize.width(),
+                  AppSize.width(),
+                  'Thông báo',
+                  Text('Không thể tạo đánh giá cho sản phẩm "$productName"'),
+                  true,
+                  false,
+                  Icon(
+                    Icons.warning,
+                    color: toHexToColor(primaryButtonColorRed),
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                );
+              }
+            });
+
+            requests.add(request);
+          }
+
+          await Future.wait(requests); // Gọi tất cả API
+        },
+      ),
+      false,
+      true,
+      null,
+      onSubmit: () {
+        contentKey.currentState?.callSubmit(); // Kích hoạt gọi onSubmit ở trên
+      },
+      onClose: () {
+        Navigator.of(context).pop(); // Không gửi nếu chỉ đóng dialog
+      },
+    );
+  }
+
+  Future<void> onReturnProducts({required BuildContext context}) async {
+    final List<Map<String, dynamic>> products =
+        orderDetail
+            ?.map(
+              (element) => {
+                'productId': element.product?.productId,
+                'productName': element.product?.name,
+              },
+            )
+            .toList() ??
+        [];
+
+    await showReturnDialog(context, products: products);
+  }
+
+  Future<void> showReturnDialog(
+    BuildContext context, {
+    required List<Map<String, dynamic>> products,
+  }) async {
+    final width = MediaQuery.of(context).size.width * 0.9;
+    final height = width;
+    final GlobalKey<ReturnContentState> contentKey = GlobalKey();
+
+    await showCustomDialog(
+      context,
+      width,
+      height,
+      'Yêu cầu trả hàng',
+      ReturnContent(
+        key: contentKey,
+        onSubmit: (reason) async {
+          Navigator.of(context).pop(); 
+
+          int quantity = 0;
+          for (OrderDetailResponse i in orderDetail ?? []) {
+            quantity += i.quantity ?? 0;
+          }
+          final model = CancelOrderRequest(
+            cancelDate: formatDateTime(DateTime.now()),
+            orderId: widget.order?.orderId,
+            status: OrderStatus.cancelled.name,
+            reason: reason,
+            refundAmount: quantity,
+          );
+
+          final response = await Repository.createCanceledOrder(model);
+
+          if (response == false) {
+            showCustomDialog(
+              context,
+              AppSize.width(),
+              AppSize.width(),
+              'Lỗi trả hàng',
+              const Text('Không thể gửi yêu cầu trả hàng.'),
+              true,
+              false,
+              Icon(Icons.error, color: toHexToColor(primaryButtonColorRed)),
+            );
+          } else {
+            showCustomDialog(
+              context,
+              AppSize.width(),
+              AppSize.width(),
+              'Thành công',
+              const Text('Yêu cầu trả hàng đã được gửi.'),
+              true,
+              false,
+              const Icon(Icons.check_circle, color: Colors.green),
+              onClose: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                );
+              },
+            );
+          }
+        },
+      ),
+      false,
+      true,
+      null,
+      onSubmit: () {
+        contentKey.currentState?.callSubmit();
+      },
+      onClose: () {
+        Navigator.of(context).pop();
+      },
+    );
+  }
 }

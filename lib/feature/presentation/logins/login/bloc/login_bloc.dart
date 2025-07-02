@@ -188,7 +188,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
       );
 
       final response = await Repository.onGetUserInfo();
-
+      final addressSuccess = await onGetAddress();
       if (isSuccess) {
         showCustomDialog(
           bContext,
@@ -239,6 +239,11 @@ class LoginBloc extends BaseBloc<LoginScreen> {
       print('📛 Stacktrace: $stack');
       return null;
     }
+  }
+
+  onGetAddress() async {
+    final response = await Repository.getUserAddresses();
+    Storage.saveAddress(response[0]);
   }
 
   @override

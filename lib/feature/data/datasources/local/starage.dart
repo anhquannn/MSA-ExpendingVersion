@@ -20,7 +20,7 @@ class Storage {
   static UserModel? userModelGlobal;
   static CartModel? cartModelGlobal;
   static BranchModel? branchModelGlobal;
-  static String email = '';//'mwang38203@gmail.com';
+  static String email = ''; //'mwang38203@gmail.com';
 
   // ===================== ĐỌC DỮ LIỆU =====================
   static Future<void> readFromLocalStorage() async {
@@ -79,6 +79,7 @@ class Storage {
 
   static Future<void> saveAddress(UserAddressModel model) async {
     addressModel = model;
+    print('save Address $model');
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(addressKey, jsonEncode(model.toJson()));
   }

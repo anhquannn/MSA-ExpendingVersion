@@ -3,6 +3,7 @@ import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/material.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/core/utils/utility.dart';
+import 'package:msa/feature/data/model/response/feedback_filter_response.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -73,6 +74,24 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
         const SliverToBoxAdapter(child: SizedBox(height: 5)),
         SliverToBoxAdapter(
           child: itemDec(bloc, bloc.productModel?.description ?? ''),
+        ),
+        SliverToBoxAdapter(
+          child: StreamBuilder<List<FeedbacFilterkResponse>>(
+            stream: bloc.streamListFeedbak.stream,
+            builder: (context, snapshot) {
+              final list = snapshot.data ?? [];
+
+              return itemFeedBack(
+                startCount: '4.5',
+                feedbackCount: list.length,
+                onSeeMore: () {
+                  // TODO: điều hướng sang màn feedback chi tiết
+                },
+                feedbackList: list,
+                bloc: bloc,
+              );
+            },
+          ),
         ),
         SliverToBoxAdapter(child: buildProductSuggestionSection(bloc, context)),
         SliverToBoxAdapter(child: buildProductPopular(bloc, context)),
@@ -553,122 +572,6 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     );
   }
 
-  Widget itemFeedBack(
-    String startCount,
-    int feedbackCount,
-    VoidCallback onSeeMore,
-    ProductDetailBloc? bloc,
-  ) {
-    return Card(
-      child: Container(
-        // padding: EdgeInsets.all(10),
-        width: AppSize.w(0.95),
-        decoration: BoxDecoration(
-          color: toHexToColor(secondaryActionColor),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 5,
-          children: [
-            Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: toHexToColor(secondaryButtonColor),
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(10),
-                  topLeft: Radius.circular(10),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    startCount,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(width: 2),
-                  Icon(Icons.star, color: Colors.amber),
-                  SizedBox(width: 2),
-                  Text(
-                    'Đánh giá sản phẩm ($feedbackCount)',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Spacer(),
-                  InkWell(
-                    onTap: () => onSeeMore(),
-                    child: Text(
-                      'Xem tất cả',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 10),
-
-            buildFeedBack(
-              bloc: bloc,
-              avt: avtWomen1,
-              name: 'NguyenVanA NguyenVanA NguyenVanA',
-              desc:
-                  'NguyenVanA NguyenVanA NguyenVanANguyenVanA NguyenVanA NguyenVanANguyenVanA NguyenVanA NguyenVanANguyenVanA NguyenVanA NguyenVanANguyenVanA NguyenVanA NguyenVanA',
-              rating: 3.8,
-              imgFeedback: [
-                imgCategoryBanhNgot,
-                imgAppBarIllustration,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-              ],
-            ),
-            buildFeedBack(
-              bloc: bloc,
-              avt: avtWomen1,
-              name: 'NguyenVanA NguyenVanA NguyenVanA',
-              desc:
-                  'NguyenVanA NguyenVanA NguyenVanANguyenVanA NguyenVanA NguyenVanANguyenVanA NguyenVanA NguyenVanANguyenVanA NguyenVanA NguyenVanANguyenVanA NguyenVanA NguyenVanA',
-              rating: 3.8,
-              imgFeedback: [
-                imgCategoryBanhNgot,
-                imgAppBarIllustration,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-                imgCategoryBotGiat,
-              ],
-            ),
-            SizedBox(height: 10),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget buildFeedBack({
     String? avt,
     String? name,
@@ -678,9 +581,21 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     ProductDetailBloc? bloc,
   }) {
     return Column(
-      spacing: 5,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         buildCircleAvatar(avt ?? avtWomen1, name ?? '', rating ?? 5),
+        // if (desc != null)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Text(
+            'desc',
+            style: const TextStyle(fontSize: 14),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            softWrap: true,
+          ),
+        ),
+        SizedBox(height: 3),
         if (imgFeedback != null && imgFeedback.isNotEmpty)
           SizedBox(
             width: AppSize.w(0.95),
@@ -712,7 +627,92 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
               },
             ),
           ),
+        SizedBox(height: 3),
       ],
+    );
+  }
+
+  Widget itemFeedBack({
+    required String startCount,
+    required int feedbackCount,
+    required VoidCallback onSeeMore,
+    required List<FeedbacFilterkResponse> feedbackList,
+    required ProductDetailBloc? bloc,
+  }) {
+    return Card(
+      child: Container(
+        width: AppSize.w(0.95),
+        decoration: BoxDecoration(
+
+          
+          color: Colors.white70,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: toHexToColor(secondaryButtonColor),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(10),
+                  topLeft: Radius.circular(10),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    startCount,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  const Icon(Icons.star, color: Colors.amber),
+                  const SizedBox(width: 2),
+                  Text(
+                    'Đánh giá sản phẩm ($feedbackCount)',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  InkWell(
+                    onTap: onSeeMore,
+                    child: const Text(
+                      'Xem tất cả',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            ...feedbackList.map((item) {
+              return buildFeedBack(
+                bloc: bloc,
+                avt: item.user?.image,
+                name: item.user?.fullName,
+                desc: item.comments,
+                rating: (item.rating ?? 0).toDouble(),
+                imgFeedback: [], // TODO: nếu có ảnh feedback, truyền vào đây
+              );
+            }).toList(),
+
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
     );
   }
 
@@ -723,8 +723,20 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
         Container(
           width: 35,
           height: 35,
-          decoration: BoxDecoration(shape: BoxShape.circle),
-          child: ClipOval(child: Image.asset(image, fit: BoxFit.contain)),
+          decoration: const BoxDecoration(shape: BoxShape.circle),
+          child: ClipOval(
+            child: Image.asset(
+              image,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                // Nếu ảnh lỗi thì hiển thị ảnh mặc định
+                return Image.asset(
+                  'assets/images/avt_men5.jpg',
+                  fit: BoxFit.cover,
+                );
+              },
+            ),
+          ),
         ),
         const SizedBox(width: 7),
         SizedBox(
@@ -738,8 +750,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
             softWrap: true,
           ),
         ),
-
-        Spacer(),
+        const Spacer(),
         buildStarRating(rating: rating),
         const SizedBox(width: 3),
       ],

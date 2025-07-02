@@ -100,6 +100,7 @@ final String getAllBranch = 'branch';
 final String getUrlVnPay = 'payment/vnpay/';
 final String getListOrder = 'order/paging';
 final String orderDetail = 'order-detail/order/';
+final String cancelOrder = 'return-order';
 
 //____________________________________GOSHIP____________________________________
 final String getCities = 'shipment/cities';
@@ -112,6 +113,7 @@ final String getAllFeedbacksByProductIdUrl = 'feedback/product/';
 final String updateFeedbackUrl = 'feedback/';
 final String createFeedbackUrl = 'feedback';
 final String deleteFeedbackUrl = 'feedback/';
+final String filterFeedback = 'feedback/paging';
 
 /// SECURE STORAGE
 final String accessTokenKey = 'ACCESS_TOKEN';

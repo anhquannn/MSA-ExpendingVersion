@@ -1,9 +1,11 @@
 import 'package:msa/feature/data/datasources/global/http_connection.dart'
     show ApiResponse;
+import 'package:msa/feature/data/model/request/cancel_order_requesr_model.dart';
 import 'package:msa/feature/data/model/request/cartitem_selection_request_model.dart';
 import 'package:msa/feature/data/model/request/category_filter_request.dart';
 import 'package:msa/feature/data/model/request/change_password_request_model.dart';
 import 'package:msa/feature/data/model/request/create_order_model_request.dart';
+import 'package:msa/feature/data/model/request/feedback_filter_request_model.dart';
 import 'package:msa/feature/data/model/request/feedback_request_model.dart';
 import 'package:msa/feature/data/model/request/get_branch_request_model.dart';
 import 'package:msa/feature/data/model/request/login_request_model.dart';
@@ -15,6 +17,7 @@ import 'package:msa/feature/data/model/request/promocode_request_model.dart';
 import 'package:msa/feature/data/model/request/user_address_request.dart';
 import 'package:msa/feature/data/model/request/user_login_request.dart';
 import 'package:msa/feature/data/model/request/user_update_request.dart';
+import 'package:msa/feature/data/model/response/feedback_filter_response.dart';
 import 'package:msa/feature/data/repositories/branch_connection.dart';
 import 'package:msa/feature/data/repositories/cart_item_connection.dart';
 import 'package:msa/feature/data/repositories/category_connection.dart';
@@ -22,6 +25,7 @@ import 'package:msa/feature/data/repositories/feedback_connection.dart';
 import 'package:msa/feature/data/repositories/order_connection.dart';
 import 'package:msa/feature/data/repositories/product_connection.dart';
 import 'package:msa/feature/data/repositories/promo_code_connection.dart';
+import 'package:msa/feature/data/repositories/return_order_connection.dart';
 import 'package:msa/feature/data/repositories/user_connection.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
 
@@ -127,4 +131,14 @@ class Repository {
       UserRepositoryImpl.loginWithGoogleToken(accessToken);
 
   static onGetUserInfo() => UserRepositoryImpl.onGetUserInfo();
+
+  static createFeedbackAPI(FeedbackRequest request) =>
+      FeedbackRepositoryImpl.createFeedbackAPI(request);
+
+  static createCanceledOrder(CancelOrderRequest request) =>
+      ReturnOrderConnection.createCanceledOrder(request);
+
+  static Future<List<FeedbacFilterkResponse>> getFeedback(
+    FeedbackFilterRequest request,
+  ) => FeedbackRepositoryImpl.getFeedback(request);
 }

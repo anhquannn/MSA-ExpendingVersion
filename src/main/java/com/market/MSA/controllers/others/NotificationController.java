@@ -32,7 +32,7 @@ public class NotificationController {
   @PostMapping("/register-token")
   public ApiResponse<Void> registerToken(
       @RequestBody RegisterTokenRequest request,
-      @AuthenticationPrincipal(expression = "userId") Long userId) {
+      @AuthenticationPrincipal(expression = "claims['userId']") Long userId) {
     fcmService.registerToken(userId, request.token(), request.platform());
     return ApiResponse.<Void>builder().message("Token registered").build();
   }

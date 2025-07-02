@@ -199,6 +199,7 @@ public class PaymentService {
             .status(OrderStatus.PAYING)
             .transactionId(String.valueOf(orderId))
             .paymentDate(new Date().toString())
+            .expiryAt(java.time.LocalDateTime.now().plusMinutes(15))
             .build();
     paymentRepository.save(payment);
 

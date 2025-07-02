@@ -3,6 +3,7 @@ package com.market.MSA.services.product;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.product.FeedbackMapper;
+import com.market.MSA.models.order.OrderDetail;
 import com.market.MSA.models.product.Feedback;
 import com.market.MSA.repositories.product.FeedbackRepository;
 import com.market.MSA.repositories.product.ProductRepository;
@@ -34,6 +35,7 @@ public class FeedbackService {
   final FeedbackRepository feedbackRepository;
   final UserRepository userRepository;
   final ProductRepository productRepository;
+  final com.market.MSA.repositories.order.OrderDetailRepository orderDetailRepository;
 
   final FeedbackMapper feedbackMapper;
 
@@ -47,6 +49,16 @@ public class FeedbackService {
     feedback.setUser(
         entityFinderService.findByIdOrThrow(
             userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
+
+    // Link to order detail and mark rated
+    if (request.getOrderDetailId() != null) {
+      OrderDetail od =
+          entityFinderService.findByIdOrThrow(
+              orderDetailRepository, request.getOrderDetailId(), ErrorCode.ORDER_DETAIL_NOT_FOUND);
+      od.setRated(true);
+      feedback.setOrderDetail(od);
+      // save orderDetail later by cascade if needed
+    }
 
     Feedback savedFeedback = feedbackRepository.save(feedback);
     return feedbackMapper.toFeedbackResponse(savedFeedback);

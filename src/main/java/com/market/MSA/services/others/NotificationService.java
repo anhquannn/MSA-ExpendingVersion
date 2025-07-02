@@ -20,6 +20,7 @@ import com.market.MSA.requests.others.NotificationRequest;
 import com.market.MSA.responses.others.NotificationResponse;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class NotificationService {
   final ProductRepository productRepository;
   final InventoryRepository inventoryRepository;
   final InventoryProductRepository inventoryProductRepository;
+  final FcmService fcmService;
 
   @Transactional
   public NotificationResponse createNotification(NotificationRequest notificationRequest) {
@@ -85,6 +87,9 @@ public class NotificationService {
     }
 
     notification = notificationRepository.save(notification);
+
+    // Push via FCM
+    pushToUser(notification);
     return notificationMapper.toNotificationResponse(notification);
   }
 
@@ -389,5 +394,28 @@ public class NotificationService {
         }
       }
     }
+  }
+
+  private void pushToUser(Notification notification) {
+    if (notification.getUser() == null) {
+      return;
+    }
+    String type = notification.getNotificationType();
+    String title =
+        switch (type == null ? "" : type) {
+          case "order_created" -> "Đơn hàng mới";
+          case "order_cancelled" -> "Đơn hàng bị huỷ";
+          case "low_stock" -> "Cảnh báo tồn kho";
+          case "product_new" -> "Sản phẩm mới";
+          default -> "Thông báo";
+        };
+    Map<String, String> data =
+        Map.of(
+            "notificationId",
+            String.valueOf(notification.getNotificationId()),
+            "type",
+            type == null ? "" : type);
+    fcmService.pushNotification(
+        notification.getUser().getUserId(), title, notification.getMessage(), data);
   }
 }

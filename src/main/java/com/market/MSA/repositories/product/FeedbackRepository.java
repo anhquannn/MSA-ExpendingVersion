@@ -45,4 +45,6 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
   @Query("SELECT f.product.productId, AVG(f.rating) from Feedback f GROUP BY f.product.productId")
   List<Object[]> findAverageRatingsByProduct();
+
+  boolean existsByOrderDetail_OrderDetailId(Long orderDetailId);
 }

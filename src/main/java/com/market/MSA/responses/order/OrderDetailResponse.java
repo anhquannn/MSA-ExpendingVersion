@@ -24,6 +24,8 @@ public class OrderDetailResponse {
   String name;
   OrderStatus status;
 
+  boolean rated;
+
   ProductResponse product;
   OrderResponse order;
 }

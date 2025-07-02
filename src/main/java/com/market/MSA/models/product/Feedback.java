@@ -1,16 +1,10 @@
 package com.market.MSA.models.product;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.market.MSA.models.order.OrderDetail;
 import com.market.MSA.models.user.User;
 import com.market.MSA.validators.RatingConstraint;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -54,4 +48,9 @@ public class Feedback {
   @JoinColumn(name = "productId", nullable = false)
   @JsonBackReference("product-feedbacks")
   Product product;
+
+  @OneToOne
+  @JoinColumn(name = "orderDetailId", nullable = true, unique = true)
+  @JsonBackReference("orderDetail-feedback")
+  OrderDetail orderDetail;
 }

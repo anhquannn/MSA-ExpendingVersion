@@ -3,6 +3,7 @@ package com.market.MSA.services.order;
 import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.constants.PromocodeStatus;
 import com.market.MSA.constants.RewardPointTransactionType;
+import com.market.MSA.dtos.order.OrderItemDto;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.order.OrderMapper;
@@ -14,6 +15,7 @@ import com.market.MSA.models.product.Branch;
 import com.market.MSA.models.product.Product;
 import com.market.MSA.models.user.RewardPointTransaction;
 import com.market.MSA.models.user.User;
+import com.market.MSA.repositories.order.CartItemRepository;
 import com.market.MSA.repositories.order.CartRepository;
 import com.market.MSA.repositories.order.OrderDetailRepository;
 import com.market.MSA.repositories.order.OrderRepository;
@@ -23,11 +25,10 @@ import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.OrderFilterRequest;
 import com.market.MSA.requests.order.OrderRequest;
 import com.market.MSA.requests.order.PromoCodeUsageRequest;
-import com.market.MSA.responses.goship.RatesResponse;
 import com.market.MSA.responses.order.*;
 import com.market.MSA.services.others.EmailService;
-import com.market.MSA.services.others.GoshipService;
 import com.market.MSA.services.others.NotificationService;
+import com.market.MSA.services.others.PricingService;
 import com.market.MSA.services.product.InventoryProductService;
 import com.market.MSA.services.product.ProductService;
 import com.market.MSA.services.user.RewardPointService;
@@ -61,6 +62,7 @@ public class OrderService {
   final CartRepository cartRepository;
   final BranchRepository branchRepository;
   final CartItemService cartItemService;
+  final CartItemRepository cartItemRepository;
   final PromoCodeService promoCodeService;
   final UserRepository userRepository;
   final EmailService emailService;
@@ -73,7 +75,7 @@ public class OrderService {
   final NotificationService notificationService;
   final PromoCodeUsageService promoCodeUsageService;
   final RewardPointService rewardPointService;
-  private final GoshipService goshipService;
+  final PricingService pricingService;
 
   @Transactional
   public OrderResponse createOrder(
@@ -146,7 +148,8 @@ public class OrderService {
     List<CartItemResponse> cartItems = cartItemService.getCartItemsByCartId(cartId);
 
     for (CartItemResponse cartItem : cartItems) {
-      Product product = productService.findProductById(cartItem.getProduct().getProductId());
+      Product product =
+          productService.findProductById(cartItem.getProduct().getProductId()); // Fixed method call
 
       // Tạo chi tiết đơn hàng
       OrderDetail orderDetail =
@@ -180,48 +183,16 @@ public class OrderService {
   @Transactional
   public OrderSummaryResponse calculateOrderSummary(
       Long branchId, Long userAddressId, Long userId, Long cartId, List<String> promoCodes) {
+    // Convert current cart to list of items then delegate to PricingService
     CartResponse cart = cartService.getCartById(cartId);
-
     if (cart == null || !cart.getUser().getUserId().equals(userId)) {
       throw new AppException(ErrorCode.CART_NOT_FOUND);
     }
-
-    double totalCost = cartItemService.calculateCartTotal(cartId);
-    double discount = 0.0;
-    double grandTotal = totalCost;
-
-    if (promoCodes != null && !promoCodes.isEmpty()) {
-      for (String promoCode : promoCodes) {
-        // Pass userId to check if promo code has been used
-        PromoCodeResponse promo = promoCodeService.getPromoCodeByCode(promoCode, userId);
-        if (totalCost >= promo.getMinimumOrderValue()
-            && !promo.getStatus().equals(PromocodeStatus.EXPIRED)) {
-          double currentDiscount = totalCost * (promo.getDiscountPercentage() / 100);
-          discount += currentDiscount;
-          grandTotal -= currentDiscount;
-        }
-      }
-    }
-
-    if (grandTotal < 0) {
-      throw new AppException(ErrorCode.WRONG_PROMO_CODE);
-    }
-
-    List<RatesResponse> rates = goshipService.createRates(branchId, userAddressId, grandTotal);
-    if (rates == null || rates.isEmpty()) {
-      throw new AppException(ErrorCode.RATES_NOT_FOUND);
-    }
-
-    // Get the first rate
-    RatesResponse firstRate = rates.getFirst();
-    grandTotal += firstRate.getTotalAmount();
-
-    return OrderSummaryResponse.builder()
-        .totalCost(totalCost)
-        .discount(discount)
-        .grandTotal(grandTotal)
-        .rates(firstRate)
-        .build();
+    List<OrderItemDto> items =
+        cartItemService.getCartItemsByCartId(cartId).stream()
+            .map(ci -> new OrderItemDto(ci.getProduct().getProductId(), ci.getQuantity()))
+            .toList();
+    return pricingService.calculateSummary(branchId, userAddressId, userId, items, promoCodes);
   }
 
   @Transactional
@@ -641,6 +612,79 @@ public class OrderService {
         .expiringLowStockProducts(expiringProducts);
 
     return builder.build();
+  }
+
+  @Transactional(readOnly = true)
+  public OrderSummaryResponse previewBuyAgain(Long oldOrderId, Long userAddressId, List<String> promoCodes) {
+    Order oldOrder =
+        orderRepository
+            .findById(oldOrderId)
+            .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+    if (oldOrder.getStatus() != OrderStatus.COMPLETED) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+
+    Long userId = oldOrder.getUser().getUserId();
+    Long branchId = oldOrder.getBranch().getBranchId();
+
+    List<OrderItemDto> items =
+        oldOrder.getOrderDetails().stream()
+            .map(od -> new OrderItemDto(od.getProduct().getProductId(), od.getQuantity()))
+            .toList();
+
+    List<String> effectivePromoCodes;
+    if (promoCodes != null && !promoCodes.isEmpty()) {
+      effectivePromoCodes = promoCodes;
+    } else {
+      effectivePromoCodes =
+          oldOrder.getPromoCodes() == null
+              ? List.of()
+              : oldOrder.getPromoCodes().stream().map(PromoCode::getCode).toList();
+    }
+
+    return pricingService.calculateSummary(branchId, userAddressId, userId, items, effectivePromoCodes);
+  }
+
+  @Transactional
+  public OrderResponse buyAgain(Long oldOrderId, Long userAddressId, List<String> promoCodes) {
+    Order oldOrder =
+        orderRepository
+            .findById(oldOrderId)
+            .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+    if (oldOrder.getStatus() != OrderStatus.COMPLETED) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+
+    Long userId = oldOrder.getUser().getUserId();
+    Long branchId = oldOrder.getBranch().getBranchId();
+
+    // Prepare temporary cart with items from old order
+    CartResponse cartResponse = cartService.getOrCreateCartForUser(userId);
+    Long cartId = cartResponse.getCartId();
+
+    // Merge items from old order into existing cart (keep current items)
+    for (OrderDetail detail : oldOrder.getOrderDetails()) {
+      Long productId = detail.getProduct().getProductId();
+      if (cartItemRepository.findByCart_CartIdAndProduct_ProductId(cartId, productId).isEmpty()) {
+        cartItemService.addToCart(userId, productId, branchId, detail.getQuantity());
+      }
+    }
+
+    // Determine promo codes to apply
+    List<String> effectivePromoCodes;
+    if (promoCodes != null && !promoCodes.isEmpty()) {
+      effectivePromoCodes = promoCodes;
+    } else {
+      effectivePromoCodes =
+          oldOrder.getPromoCodes() == null
+              ? List.of()
+              : oldOrder.getPromoCodes().stream().map(PromoCode::getCode).toList();
+    }
+
+    // Create new order using existing createOrder flow (handles inventory, discounts, etc.)
+    return createOrder(userId, branchId, userAddressId, cartId, effectivePromoCodes);
   }
 
   @Transactional

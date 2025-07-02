@@ -6,6 +6,7 @@ import com.market.MSA.mappers.order.OrderDetailMapper;
 import com.market.MSA.models.order.OrderDetail;
 import com.market.MSA.repositories.order.OrderDetailRepository;
 import com.market.MSA.repositories.order.OrderRepository;
+import com.market.MSA.repositories.product.FeedbackRepository;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.requests.order.OrderDetailRequest;
 import com.market.MSA.responses.order.OrderDetailResponse;
@@ -29,6 +30,7 @@ public class OrderDetailService {
   final OrderDetailRepository orderDetailRepository;
   final OrderRepository orderRepository;
   final ProductRepository productRepository;
+  final FeedbackRepository feedbackRepository;
 
   final OrderDetailMapper orderDetailMapper;
 
@@ -82,14 +84,21 @@ public class OrderDetailService {
         orderDetailRepository
             .findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.ORDER_DETAIL_NOT_FOUND));
-    return orderDetailMapper.toOrderDetailResponse(orderDetail);
+    OrderDetailResponse res = orderDetailMapper.toOrderDetailResponse(orderDetail);
+    res.setRated(feedbackRepository.existsByOrderDetail_OrderDetailId(id));
+    return res;
   }
 
   // Lấy danh sách chi tiết đơn hàng theo Order ID
   public List<OrderDetailResponse> getOrderDetailsByOrderId(Long orderId) {
-    return orderDetailRepository.findAll().stream()
-        .filter(od -> od.getOrder().getOrderId().equals(orderId))
-        .map(orderDetailMapper::toOrderDetailResponse)
+    return orderDetailRepository.findByOrder_OrderId(orderId).stream()
+        .map(
+            od -> {
+              OrderDetailResponse r = orderDetailMapper.toOrderDetailResponse(od);
+              r.setRated(
+                  feedbackRepository.existsByOrderDetail_OrderDetailId(od.getOrderDetailId()));
+              return r;
+            })
         .collect(Collectors.toList());
   }
 

@@ -53,6 +53,56 @@ public class OrderController {
         .build();
   }
 
+  @GetMapping("/preview")
+  public ApiResponse<OrderSummaryResponse> previewOrder(
+          @RequestParam Long branchId,
+          @RequestParam Long userAddressId,
+          @RequestParam Long userId,
+          @RequestParam Long cartId,
+          @RequestParam(required = false) List<String> promoCodes) {
+
+    OrderSummaryResponse orderSummary =
+            orderService.calculateOrderSummary(branchId, userAddressId, userId, cartId, promoCodes);
+
+    OrderSummaryResponse response =
+            OrderSummaryResponse.builder()
+                    .totalCost(orderSummary.getTotalCost())
+                    .discount(orderSummary.getDiscount())
+                    .grandTotal(orderSummary.getGrandTotal())
+                    .rates(orderSummary.getRates())
+                    .build();
+
+    return ApiResponse.<OrderSummaryResponse>builder()
+            .result(response)
+            .message(ApiMessage.ORDER_SUMMARY_RETRIEVED.getMessage())
+            .build();
+  }
+
+
+  @GetMapping("/{orderId}/preview-buy-again")
+  public ApiResponse<OrderSummaryResponse> previewBuyAgain(
+          @PathVariable Long orderId,
+          @RequestParam Long userAddressId,
+          @RequestParam(required = false) List<String> promoCodes) {
+    OrderSummaryResponse summary = orderService.previewBuyAgain(orderId, userAddressId, promoCodes);
+    return ApiResponse.<OrderSummaryResponse>builder()
+            .result(summary)
+            .message(ApiMessage.ORDER_SUMMARY_RETRIEVED.getMessage())
+            .build();
+  }
+
+  @PostMapping("/{orderId}/buy-again")
+  public ApiResponse<OrderResponse> buyAgain(
+          @PathVariable Long orderId,
+          @RequestParam Long userAddressId,
+          @RequestParam(required = false) List<String> promoCodes) {
+    OrderResponse response = orderService.buyAgain(orderId, userAddressId, promoCodes);
+    return ApiResponse.<OrderResponse>builder()
+            .result(response)
+            .message(ApiMessage.ORDER_CREATED.getMessage())
+            .build();
+  }
+
   @PutMapping("/{orderId}")
   public ApiResponse<OrderResponse> updateOrder(
       @PathVariable Long orderId, @RequestBody(required = false) @Valid OrderRequest request) {
@@ -76,31 +126,6 @@ public class OrderController {
     return ApiResponse.<OrderResponse>builder()
         .result(orderService.getOrderById(orderId))
         .message(ApiMessage.ORDER_RETRIEVED.getMessage())
-        .build();
-  }
-
-  @GetMapping("/preview")
-  public ApiResponse<OrderSummaryResponse> previewOrder(
-      @RequestParam Long branchId,
-      @RequestParam Long userAddressId,
-      @RequestParam Long userId,
-      @RequestParam Long cartId,
-      @RequestParam(required = false) List<String> promoCodes) {
-
-    OrderSummaryResponse orderSummary =
-        orderService.calculateOrderSummary(branchId, userAddressId, userId, cartId, promoCodes);
-
-    OrderSummaryResponse response =
-        OrderSummaryResponse.builder()
-            .totalCost(orderSummary.getTotalCost())
-            .discount(orderSummary.getDiscount())
-            .grandTotal(orderSummary.getGrandTotal())
-            .rates(orderSummary.getRates())
-            .build();
-
-    return ApiResponse.<OrderSummaryResponse>builder()
-        .result(response)
-        .message(ApiMessage.ORDER_SUMMARY_RETRIEVED.getMessage())
         .build();
   }
 

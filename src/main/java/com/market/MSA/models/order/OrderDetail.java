@@ -35,6 +35,7 @@ public class OrderDetail {
   double unitPrice;
   double totalPrice;
   String image;
+  boolean rated;
 
   @ManyToOne
   @JoinColumn(name = "orderId", nullable = false)

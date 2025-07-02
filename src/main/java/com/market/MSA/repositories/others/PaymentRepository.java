@@ -50,4 +50,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
       Sort sort);
 
   Optional<Payment> findByTransactionId(String transactionId);
+
+  List<Payment> findAllByStatusAndPaymentMethodAndExpiryAtBefore(
+      OrderStatus status, String paymentMethod, LocalDateTime time);
 }

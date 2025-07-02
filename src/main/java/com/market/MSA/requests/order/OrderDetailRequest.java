@@ -20,6 +20,7 @@ public class OrderDetailRequest {
   String image;
   String name;
   OrderStatus status;
+  boolean rated;
 
   Long orderId;
   Long productId;

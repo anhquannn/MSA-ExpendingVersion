@@ -615,7 +615,8 @@ public class OrderService {
   }
 
   @Transactional(readOnly = true)
-  public OrderSummaryResponse previewBuyAgain(Long oldOrderId, Long userAddressId, List<String> promoCodes) {
+  public OrderSummaryResponse previewBuyAgain(
+      Long oldOrderId, Long userAddressId, List<String> promoCodes) {
     Order oldOrder =
         orderRepository
             .findById(oldOrderId)
@@ -643,7 +644,8 @@ public class OrderService {
               : oldOrder.getPromoCodes().stream().map(PromoCode::getCode).toList();
     }
 
-    return pricingService.calculateSummary(branchId, userAddressId, userId, items, effectivePromoCodes);
+    return pricingService.calculateSummary(
+        branchId, userAddressId, userId, items, effectivePromoCodes);
   }
 
   @Transactional

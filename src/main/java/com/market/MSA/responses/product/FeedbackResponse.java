@@ -17,9 +17,6 @@ import lombok.experimental.FieldDefaults;
 public class FeedbackResponse {
   Long feedbackId;
 
-  Long orderDetailId;
-  Boolean rated;
-
   int rating;
   String comments;
   LocalDateTime createdAt;

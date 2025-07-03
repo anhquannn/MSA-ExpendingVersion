@@ -1,16 +1,16 @@
 spring:
   application:
     name: msa
-    datasource:
-      url: jdbc:mysql://mainline.proxy.rlwy.net:18642/railway
-      username: root
-      password: VNXekQYydopKJmBmaEghRggVmqmdzEAy
-      driver-class-name: com.mysql.cj.jdbc.Driver
 #  datasource:
-#    url: jdbc:mysql://localhost:3306/msa_2
+#    url: jdbc:mysql://mainline.proxy.rlwy.net:18642/railway
 #    username: root
-#    password:
+#    password: VNXekQYydopKJmBmaEghRggVmqmdzEAy
 #    driver-class-name: com.mysql.cj.jdbc.Driver
+  datasource:
+    url: jdbc:mysql://localhost:3306/msa
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update

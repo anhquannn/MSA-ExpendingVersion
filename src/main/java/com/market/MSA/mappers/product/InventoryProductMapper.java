@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 public interface InventoryProductMapper {
   InventoryProduct toInventoryProduct(InventoryProductRequest request);
 
+  @Mapping(source = "currentPrice", target = "branchCurrentPrice")
   InventoryProductResponse toInventoryProductResponse(InventoryProduct inventoryProduct);
 
   @Mapping(target = "inventoryProductId", ignore = true)

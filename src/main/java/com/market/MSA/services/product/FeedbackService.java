@@ -49,6 +49,7 @@ public class FeedbackService {
     feedback.setUser(
         entityFinderService.findByIdOrThrow(
             userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
+    feedback.setComments(request.getComments());
 
     // Link to order detail and mark rated
     if (request.getOrderDetailId() != null) {

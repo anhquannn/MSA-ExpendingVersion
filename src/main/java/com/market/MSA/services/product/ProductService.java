@@ -34,10 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -162,14 +159,12 @@ public class ProductService {
         .collect(Collectors.toList());
   }
 
-  //  @Cacheable(
-  //      value = "filtered_products",
-  //      key =
-  //          "{#request.branchId, #request.categoryId, #request.supplierId, #request.unit,
-  // #request.netWeight,
-  // #request.minPrice, #request.maxPrice, #request.keyword, #request.page, #request.pageSize,
-  // #request.sortBy,
-  // #request.sortDirection}")
+  @Cacheable(
+      value = "filtered_products",
+      key =
+          "{#request.branchId, #request.categoryId, #request.supplierId, #request.unit, "
+              + "#request.netWeight, #request.minPrice, #request.maxPrice, #request.keyword, "
+              + "#request.page, #request.pageSize, #request.sortBy, #request.sortDirection}")
   public ProductFilterResponse filterProducts(ProductFilterRequest request) {
     // Set default values for pagination and sorting
     String sortBy =
@@ -242,8 +237,8 @@ public class ProductService {
               discountedProductIds, // Pass the list of discounted product IDs to exclude
               pageable);
 
-      // Return both regular and discounted products with pagination
-      return ProductFilterResponse.fromPages(
+      // Map and enrich regular products with branch price
+      Page<ProductResponse> mappedProductsPage =
           products.map(
               prod -> {
                 ProductResponse resp = productMapper.toProductResponse(prod);
@@ -252,8 +247,36 @@ public class ProductService {
                         request.getBranchId(), prod.getProductId());
                 resp.setBranchCurrentPrice(curPrice);
                 return resp;
-              }),
-          discountedProductsPage);
+              });
+
+      // Apply min/max price on branchCurrentPrice if provided
+      double minPrice =
+          request.getMinPrice() != null ? request.getMinPrice() : Double.NEGATIVE_INFINITY;
+      double maxPrice =
+          request.getMaxPrice() != null ? request.getMaxPrice() : Double.POSITIVE_INFINITY;
+      List<ProductResponse> filteredProducts =
+          mappedProductsPage.getContent().stream()
+              .filter(
+                  p ->
+                      p.getBranchCurrentPrice() >= minPrice
+                          && p.getBranchCurrentPrice() <= maxPrice)
+              .collect(Collectors.toList());
+      Page<ProductResponse> filteredProductsPage =
+          new PageImpl<>(filteredProducts, pageable, filteredProducts.size());
+
+      // Map discounted inventory products already have currentPrice set
+      Page<InventoryProductResponse> mappedDiscountedPage = discountedProductsPage;
+      if (request.getMinPrice() != null || request.getMaxPrice() != null) {
+        List<InventoryProductResponse> filteredDisc =
+            discountedProductsPage.getContent().stream()
+                .filter(p -> p.getCurrentPrice() >= minPrice && p.getCurrentPrice() <= maxPrice)
+                .collect(Collectors.toList());
+        mappedDiscountedPage =
+            new PageImpl<>(filteredDisc, discountedPageable, filteredDisc.size());
+      }
+
+      // Return both regular and discounted products with pagination
+      return ProductFilterResponse.fromPages(filteredProductsPage, mappedDiscountedPage);
     } else {
       // If no branchId is provided, just return the regular filtered products
       Page<Product> products =

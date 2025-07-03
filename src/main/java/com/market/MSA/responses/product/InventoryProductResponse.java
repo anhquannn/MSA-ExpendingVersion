@@ -20,6 +20,9 @@ public class InventoryProductResponse implements Serializable {
   int stockNumberDifferent;
   double currentPrice;
 
+  // giá hiện tại tại chi nhánh (để đồng bộ với ProductResponse)
+  double branchCurrentPrice;
+
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime expDate;
 

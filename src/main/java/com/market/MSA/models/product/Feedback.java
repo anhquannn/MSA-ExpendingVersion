@@ -33,7 +33,7 @@ public class Feedback {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long feedbackId;
 
-  String comment;
+  String comments;
 
   @RatingConstraint int rating;
 

@@ -42,6 +42,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+import java.net.URI;
 
 @Service
 @RequiredArgsConstructor
@@ -200,9 +202,13 @@ public class UserService {
   public AuthenticationResponse loginWithGoogle(String accessToken) {
     // Gọi API Google để lấy thông tin người dùng
     RestTemplate restTemplate = new RestTemplate();
-    String googleUrl = "https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + accessToken;
+    URI uri = UriComponentsBuilder
+            .fromHttpUrl("https://www.googleapis.com/oauth2/v3/tokeninfo")
+            .queryParam("access_token", accessToken)
+            .build(true)
+            .toUri();
 
-    ResponseEntity<String> response = restTemplate.getForEntity(googleUrl, String.class);
+    ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
 
     if (response.getStatusCode() != HttpStatus.OK) {
       throw new AppException(ErrorCode.INVALID_GOOGLE_TOKEN);

@@ -116,9 +116,9 @@ public class UserController {
   }
 
   @PostMapping("/login/google")
-  ApiResponse<AuthenticationResponse> loginWithGoogle(@RequestParam String accessToken) {
+  ApiResponse<AuthenticationResponse> loginWithGoogle(@RequestBody @Valid GoogleLoginRequest request) {
     return ApiResponse.<AuthenticationResponse>builder()
-        .result(userService.loginWithGoogle(accessToken))
+        .result(userService.loginWithGoogle(request.getAccessToken()))
         .message(ApiMessage.GOOGLE_LOGIN_SUCCESSFUL.getMessage())
         .build();
   }

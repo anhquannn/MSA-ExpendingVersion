@@ -11,6 +11,7 @@ import 'package:msa/feature/data/model/request/user_address_request.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
+import 'package:msa/feature/presentation/customer/createorder/ui/add_address.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
 import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
@@ -59,6 +60,8 @@ class _AddressListWidgetState extends State<AddressListWidget> {
       for (UserAddressModel model in address) {
         if (widget.addresses.userAddressId == model.userAddressId) {
           model.primary = true;
+          Storage.addressModel = model;
+          Storage.saveAddress(model);
         } else {
           model.primary = false;
         }
@@ -147,6 +150,8 @@ class _AddressListWidgetState extends State<AddressListWidget> {
       );
     }
   }
+
+  onAdd(BuildContext bContext) {}
 
   @override
   Widget build(BuildContext context) {
@@ -256,39 +261,88 @@ class _AddressListWidgetState extends State<AddressListWidget> {
                   }),
                 ),
 
-                InkWell(
-                  onTap: () {
-                    onSave(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Card(
-                      child: Container(
-                        height: 45,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          gradient: LinearGradient(
-                            colors: [
-                              toHexToColor(primaryButtonColor),
-                              Colors.blueGrey,
-                            ],
-                          ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => AddAddress()),
+                        ).then((value) {
+                          if (value == true) {
+                            onGetUserAddress();
+                          }
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 8,
                         ),
-                        child: Center(
-                          child: Text(
-                            widget.isChangePrimary == true
-                                ? 'Đặt làm mặc định'
-                                : 'Chỉnh sửa',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
+                        child: Card(
+                          child: Container(
+                            width: 150,
+                            height: 45,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              gradient: LinearGradient(
+                                colors: [
+                                  toHexToColor(primaryButtonColor),
+                                  Colors.blueGrey,
+                                ],
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Thêm mới',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                    InkWell(
+                      onTap: () {
+                        onSave(context);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Card(
+                          child: Container(
+                            height: 45,
+                            width: 150,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              gradient: LinearGradient(
+                                colors: [
+                                  toHexToColor(primaryButtonColor),
+                                  Colors.blueGrey,
+                                ],
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                widget.isChangePrimary == true
+                                    ? 'Đặt làm mặc định'
+                                    : 'Chỉnh sửa',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             );

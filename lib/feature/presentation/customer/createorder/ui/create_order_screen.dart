@@ -349,140 +349,95 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
                       padding: const EdgeInsets.only(left: 10),
                       child: SizedBox(
                         height: 100,
-                        child: Stack(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.max,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            model?.product?.discountPercentage != 0
-                                ? Positioned(
-                                  top: 1,
-                                  right: 1,
+                            customAutoSizeText(
+                              14,
+                              18,
+                              model?.product?.name ?? '',
+                              isBold: true,
+                              textColor: toHexToColor(primaryTextColor),
+                            ),
+                            customAutoSizeText(
+                              12,
+                              16,
+                              formatCurrencyVN(model?.product?.price ?? 0.0),
+                              isBold: true,
+                              // isLine: true,
+                              textColor: toHexToColor(primaryButtonColor),
+                            ),
+                            Spacer(),
+                            Row(
+                              children: [
+                                Spacer(),
+                                Card(
+                                  color: Colors.white,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: toHexToColor(primaryErrorColor),
-                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.grey[300],
+                                      borderRadius: BorderRadius.circular(5),
                                     ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 2,
-                                        horizontal: 8,
-                                      ),
-                                      child: Text(
-                                        '${model?.product?.discountPercentage}%',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                                : SizedBox(),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.max,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                customAutoSizeText(
-                                  14,
-                                  18,
-                                  model?.product?.name ?? '',
-                                  isBold: true,
-                                  textColor: toHexToColor(primaryTextColor),
-                                ),
-                                // customAutoSizeText(8, 12, '100.000đ', isLine: true),
-                                customAutoSizeText(
-                                  12,
-                                  16,
-                                  formatCurrencyVN(
-                                    model?.product?.price ?? 0.0,
-                                  ),
-                                  isBold: true,
-                                  // isLine: true,
-                                  textColor: toHexToColor(primaryButtonColor),
-                                ),
-                                // customAutoSizeText(
-                                //   12,
-                                //   16,
-                                //   '${model?.product?.currentPrice.toString() ?? ''}đ',
-                                //   isBold: true,
-                                //   textColor: toHexToColor(primaryButtonColor),
-                                // ),
-                                Spacer(),
-                                Row(
-                                  children: [
-                                    Spacer(),
-                                    Card(
-                                      color: Colors.white,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey[300],
-                                          borderRadius: BorderRadius.circular(
-                                            5,
+                                    child: Row(
+                                      children: [
+                                        InkWell(
+                                          onTap: () {
+                                            bloc?.onCaculate(
+                                              model ?? CartItemModel(),
+                                              true,
+                                            );
+                                          },
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.only(
+                                                topLeft: Radius.circular(5),
+                                                bottomLeft: Radius.circular(5),
+                                              ),
+                                            ),
+                                            child: Text(' - '),
                                           ),
                                         ),
-                                        child: Row(
-                                          children: [
-                                            InkWell(
-                                              onTap: () {
-                                                bloc?.onCaculate(
-                                                  model ?? CartItemModel(),
-                                                  true,
-                                                );
-                                              },
-                                              child: Container(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal: 10,
-                                                  vertical: 3,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.only(
-                                                        topLeft:
-                                                            Radius.circular(5),
-                                                        bottomLeft:
-                                                            Radius.circular(5),
-                                                      ),
-                                                ),
-                                                child: Text(' - '),
-                                              ),
-                                            ),
-                                            Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 3,
-                                              ),
-                                              color: Colors.white,
-                                              child: Text(
-                                                model?.quantity.toString() ??
-                                                    '0',
-                                              ),
-                                            ),
-                                            InkWell(
-                                              onTap: () {
-                                                bloc?.onCaculate(
-                                                  model ?? CartItemModel(),
-                                                  false,
-                                                );
-                                              },
-                                              child: Container(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal: 8,
-                                                  vertical: 3,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.only(
-                                                        bottomRight:
-                                                            Radius.circular(5),
-                                                        topRight:
-                                                            Radius.circular(5),
-                                                      ),
-                                                  // color: Colors.white,
-                                                ),
-                                                child: Text(' + '),
-                                              ),
-                                            ),
-                                          ],
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 3,
+                                          ),
+                                          color: Colors.white,
+                                          child: Text(
+                                            model?.quantity.toString() ?? '0',
+                                          ),
                                         ),
-                                      ),
+                                        InkWell(
+                                          onTap: () {
+                                            bloc?.onCaculate(
+                                              model ?? CartItemModel(),
+                                              false,
+                                            );
+                                          },
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.only(
+                                                bottomRight: Radius.circular(5),
+                                                topRight: Radius.circular(5),
+                                              ),
+                                              // color: Colors.white,
+                                            ),
+                                            child: Text(' + '),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -1068,7 +1023,6 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
       },
     );
   }
-
 }
 
 class _RateDetailWidget extends StatelessWidget {

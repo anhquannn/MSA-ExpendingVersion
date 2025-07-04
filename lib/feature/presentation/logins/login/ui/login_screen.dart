@@ -211,7 +211,7 @@ class LoginScreen extends BaseView<LoginBloc> {
             );
 
             final success = await bloc.login();
-            // await bloc.logoutFromGoogle();
+            await bloc.logoutFromGoogle();
             CustomLoadingDialog.hide(bloc.viewContext);
 
             if (success) {

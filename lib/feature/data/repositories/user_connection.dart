@@ -271,7 +271,8 @@ class UserRepositoryImpl implements IUserRepository {
   static loginWithGoogleToken(String accessToken) async {
     try {
       final response = await HttpConnection.post(
-        '$loginGoogle?accessToken=$accessToken',
+        loginGoogle,
+        body: {'accessToken': accessToken},
         isToken: false,
         fromJsonT: (json) => AuthenticationResponse.fromJson(json),
       );

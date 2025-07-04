@@ -1306,7 +1306,7 @@ class CardTab extends StatelessWidget {
                                 (context, url, error) =>
                                     Image.asset(imgBranch, fit: BoxFit.cover),
                             width: 100,
-                            height: 100,
+                            height: 120,
                             fit: BoxFit.contain,
                           ),
                         ),
@@ -1317,155 +1317,107 @@ class CardTab extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.only(left: 10),
                         child: SizedBox(
-                          height: 100,
-                          child: Stack(
+                          height: 120,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.max,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 30),
+                                child: customAutoSizeText(
+                                  14,
+                                  18,
+                                  model?.product?.name ?? '',
+                                  isBold: true,
+                                  textColor: toHexToColor(primaryTextColor),
+                                ),
+                              ),
+                              // customAutoSizeText(8, 12, '100.000đ', isLine: true),
                               model?.product?.discountPercentage != 0
-                                  ? Positioned(
-                                    top: 1,
-                                    right: 1,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: toHexToColor(primaryErrorColor),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 2,
-                                          horizontal: 8,
-                                        ),
-                                        child: Text(
-                                          '${model?.product?.discountPercentage}%',
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                  : SizedBox(),
-
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.max,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 30),
-                                    child: customAutoSizeText(
-                                      14,
-                                      18,
-                                      model?.product?.name ?? '',
-                                      isBold: true,
-                                      textColor: toHexToColor(primaryTextColor),
-                                    ),
-                                  ),
-                                  // customAutoSizeText(8, 12, '100.000đ', isLine: true),
-                                  model?.product?.discountPercentage != 0
-                                      ? customAutoSizeText(
-                                        12,
-                                        16,
-                                        '${formatCurrencyVN((model?.product?.price ?? 0) * (model?.product?.discountPercentage ?? 0))}',
-                                        isBold: true,
-                                        isLine: true,
-                                        textColor: toHexToColor(
-                                          primaryButtonColor,
-                                        ),
-                                      )
-                                      : SizedBox(),
-                                  customAutoSizeText(
+                                  ? customAutoSizeText(
                                     12,
                                     16,
-                                    '${formatCurrencyVN(model?.price ?? 0)}',
+                                    '${formatCurrencyVN((model?.product?.price ?? 0) * (model?.product?.discountPercentage ?? 0))}',
                                     isBold: true,
+                                    isLine: true,
                                     textColor: toHexToColor(primaryButtonColor),
-                                  ),
+                                  )
+                                  : SizedBox(),
+                              customAutoSizeText(
+                                12,
+                                16,
+                                '${formatCurrencyVN(model?.price ?? 0)}',
+                                isBold: true,
+                                textColor: toHexToColor(primaryButtonColor),
+                              ),
+                              Spacer(),
+                              Row(
+                                children: [
                                   Spacer(),
-                                  Row(
-                                    children: [
-                                      Spacer(),
-                                      Card(
-                                        color: Colors.white,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey[300],
-                                            borderRadius: BorderRadius.circular(
-                                              5,
+                                  Card(
+                                    color: Colors.white,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[300],
+                                        borderRadius: BorderRadius.circular(5),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          InkWell(
+                                            onTap: () {
+                                              bloc?.onCaculate(model!, true);
+                                            },
+                                            child: Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 10,
+                                                vertical: 3,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(5),
+                                                  bottomLeft: Radius.circular(
+                                                    5,
+                                                  ),
+                                                ),
+                                              ),
+                                              child: Text(' - '),
                                             ),
                                           ),
-                                          child: Row(
-                                            children: [
-                                              InkWell(
-                                                onTap: () {
-                                                  bloc?.onCaculate(
-                                                    model!,
-                                                    true,
-                                                  );
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                    horizontal: 10,
-                                                    vertical: 3,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.only(
-                                                          topLeft:
-                                                              Radius.circular(
-                                                                5,
-                                                              ),
-                                                          bottomLeft:
-                                                              Radius.circular(
-                                                                5,
-                                                              ),
-                                                        ),
-                                                  ),
-                                                  child: Text(' - '),
-                                                ),
-                                              ),
-                                              Container(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal: 8,
-                                                  vertical: 3,
-                                                ),
-                                                color: Colors.white,
-                                                child: Text(
-                                                  model?.quantity.toString() ??
-                                                      '0',
-                                                ),
-                                              ),
-                                              InkWell(
-                                                onTap: () {
-                                                  bloc?.onCaculate(
-                                                    model!,
-                                                    false,
-                                                  );
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 3,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.only(
-                                                          bottomRight:
-                                                              Radius.circular(
-                                                                5,
-                                                              ),
-                                                          topRight:
-                                                              Radius.circular(
-                                                                5,
-                                                              ),
-                                                        ),
-                                                    // color: Colors.white,
-                                                  ),
-                                                  child: Text(' + '),
-                                                ),
-                                              ),
-                                            ],
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            color: Colors.white,
+                                            child: Text(
+                                              model?.quantity.toString() ?? '0',
+                                            ),
                                           ),
-                                        ),
+                                          InkWell(
+                                            onTap: () {
+                                              bloc?.onCaculate(model!, false);
+                                            },
+                                            child: Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 3,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.only(
+                                                  bottomRight: Radius.circular(
+                                                    5,
+                                                  ),
+                                                  topRight: Radius.circular(5),
+                                                ),
+                                                // color: Colors.white,
+                                              ),
+                                              child: Text(' + '),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1476,9 +1428,32 @@ class CardTab extends StatelessWidget {
                     ),
                   ],
                 ),
+                model?.product?.discountPercentage != 0
+                    ? Positioned(
+                      top: 1,
+                      left: 65,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: toHexToColor(primaryErrorColor),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 2,
+                            horizontal: 8,
+                          ),
+                          child: Text(
+                            '${model?.product?.discountPercentage}%',
+
+                            style: TextStyle(color: Colors.white, fontSize: 10),
+                          ),
+                        ),
+                      ),
+                    )
+                    : SizedBox(),
                 Positioned(
-                  top: 1,
-                  right: 1,
+                  top: -1,
+                  right: -1,
                   child: InkWell(
                     onTap: () {
                       // bloc?.onUpdateSelected(
@@ -1519,17 +1494,40 @@ class NotificationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: TabBarView(
+      child: Column(
         children: [
-          NotificationListTab(
-            stream: bloc.streamListNotificationUnRead,
-            emptyMessage: 'Không có thông báo mới',
-            icon: Icons.notifications_active,
+          Container(
+            color: toHexToColor(backgroundColor),
+            child: TabBar(
+              isScrollable: false,
+              dividerHeight: 0,
+              labelColor: Colors.blueGrey,
+              unselectedLabelColor: Colors.black,
+              indicatorColor: Colors.blueGrey,
+              tabs: const [
+                Tab(text: 'Thông báo chưa đọc'),
+                Tab(text: 'Thông báo đã đọc'),
+              ],
+            ),
           ),
-          NotificationListTab(
-            stream: bloc.streamListNotificationRead,
-            emptyMessage: 'Không có thông báo đã đọc',
-            icon: Icons.notifications,
+          const SizedBox(height: 10),
+          Expanded(
+            child: TabBarView(
+              children: [
+                NotificationListTab(
+                  bloc: bloc,
+                  stream: bloc.streamListNotificationUnRead,
+                  emptyMessage: 'Không có thông báo mới',
+                  icon: Icons.notifications_active,
+                ),
+                NotificationListTab(
+                  bloc: bloc,
+                  stream: bloc.streamListNotificationRead,
+                  emptyMessage: 'Không có thông báo đã đọc',
+                  icon: Icons.notifications,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -1538,6 +1536,7 @@ class NotificationScreen extends StatelessWidget {
 }
 
 class NotificationListTab extends StatelessWidget {
+  final HomeScreenBloc bloc;
   final BehaviorSubject<List<NotificationModel>> stream;
   final String emptyMessage;
   final IconData icon;
@@ -1547,6 +1546,7 @@ class NotificationListTab extends StatelessWidget {
     required this.emptyMessage,
     required this.icon,
     super.key,
+    required this.bloc,
   });
 
   @override
@@ -1563,6 +1563,7 @@ class NotificationListTab extends StatelessWidget {
         }
 
         return ListView.separated(
+          padding: const EdgeInsets.only(bottom: 80),
           itemCount: data.length,
           separatorBuilder: (_, __) => const Divider(height: 0),
           itemBuilder: (context, index) {
@@ -1582,6 +1583,7 @@ class NotificationListTab extends StatelessWidget {
                 style: const TextStyle(fontSize: 12),
               ),
               onTap: () {
+                bloc.onUpdateNotification(n.notificationId ?? 0);
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,

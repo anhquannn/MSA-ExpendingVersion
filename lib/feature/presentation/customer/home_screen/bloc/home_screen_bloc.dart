@@ -14,6 +14,7 @@ import 'package:msa/feature/data/model/request/get_branch_request_model.dart';
 import 'package:msa/feature/data/model/request/order_paging_request_model.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/promocode_request_model.dart';
+import 'package:msa/feature/data/model/request/update_notification_request.dart';
 import 'package:msa/feature/data/model/response/branch_response_response.dart';
 import 'package:msa/feature/data/model/response/get_order_response_model.dart';
 import 'package:msa/feature/data/model/response/notification_request_model.dart';
@@ -206,13 +207,14 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   onRefresh() async {
     print("onRefresh started");
-    await onGetProfile().catchError((e) => print('Lỗi profile: $e'));
+    // await onGetProfile().catchError((e) => print('Lỗi profile: $e'));
     final List<Future<void>> futures = [
+      onGetProfile().catchError((e) => print('Lỗi profile: $e')),
       onGetPromoCode().catchError((e) => print('Lỗi promo code: $e')),
       onGetCategory().catchError((e) => print('Lỗi category: $e')),
       onGetProduct().catchError((e) => print('Lỗi product: $e')),
       // onGetUserCart().catchError((e) => print('Lỗi product: $e')),
-      onCaculateCart().catchError((e) => print('Lỗi onCaculateCart: $e')),
+      // onCaculateCart().catchError((e) => print('Lỗi onCaculateCart: $e')),
       onGetAddress().catchError((e) => print('Lỗi onGetAddress: $e')),
       onCheckBranch(),
       onGetUserCart(),
@@ -398,7 +400,11 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     Navigator.push(
       viewContext,
       MaterialPageRoute(
-        builder: (context) => ProductDetailCustomerScreen(productModel: model),
+        builder:
+            (context) => ProductDetailCustomerScreen(
+              productModel: model,
+              productId: model.productId,
+            ),
       ),
     );
   }
@@ -783,5 +789,17 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   onGetNotification() async {
     Future.wait<void>([onGetNotificationRead(), onGetNotificationUnRead()]);
+  }
+
+  onUpdateNotification(int notificationId) async {
+    final response = await Repository.updateNotification(
+      UpdateNotificationRequest(isRead: true),
+      notificationId,
+    );
+    if (response) {
+      await onGetNotification();
+    } else {
+      print('❌ Cập nhật thông báo thất bại');
+    }
   }
 }

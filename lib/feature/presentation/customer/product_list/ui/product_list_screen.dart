@@ -133,6 +133,28 @@ class ProductListScreen extends BaseView<ProductListBloc> {
               ),
             ),
             // Thêm các Sliver khác nếu có
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 15,
+                  horizontal: 20,
+                ),
+                child: InkWell(
+                  onTap: () {
+                    bloc.onGetProduct(isLoadMore: true, pagei: bloc.page + 1);
+                  },
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'Tải thêm sản phẩm',
+                        style: TextStyle(color: Colors.blue, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         );
       },

@@ -279,7 +279,9 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
       branchId: Storage.branchModelGlobal?.branchId,
       cartId: Storage.cartModelGlobal?.cartId,
       grandTotal: previewOrder?.grandTotal,
-      orderDate: formatDateTime(DateTime.now()),
+      // orderDate: formatDateTime(DateTime.now()),
+      orderDate: formatDateTime(DateTime.now().add(Duration(days: 1))),
+
       promoCodes:
           listPromocode
               ?.where((e) => e.selected == true)

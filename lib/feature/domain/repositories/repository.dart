@@ -15,6 +15,7 @@ import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/product_get_all_request_model.dart';
 import 'package:msa/feature/data/model/request/promocode_request_model.dart';
 import 'package:msa/feature/data/model/request/supplier_filter_request.dart';
+import 'package:msa/feature/data/model/request/update_notification_request.dart';
 import 'package:msa/feature/data/model/request/user_address_request.dart';
 import 'package:msa/feature/data/model/request/user_login_request.dart';
 import 'package:msa/feature/data/model/request/user_update_request.dart';
@@ -171,4 +172,7 @@ class Repository {
 
   static getNotification(NotificationFilterRequest request) =>
       NotificationConnection.getNotification(request);
+
+      static updateNotification(UpdateNotificationRequest request, int notificationId) =>
+          NotificationConnection.updateNotification(request, notificationId);
 }

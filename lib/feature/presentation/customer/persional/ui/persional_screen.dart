@@ -222,7 +222,10 @@ class PersionalScreen extends BaseView<PersionalBloc> {
                   child: _buildButton(
                     buttonColor: toHexToColor(primaryButtonColor),
                     isBorderType: true,
-                    onTap: () => bloc.onLogout(context),
+                    onTap: () {
+                      bloc.logoutFromGoogle();
+                      bloc.onLogout(context);
+                    },
                     text: 'Đăng xuất',
                   ),
                 ),
@@ -239,7 +242,7 @@ class PersionalScreen extends BaseView<PersionalBloc> {
                 ),
               ],
             ),
-            SizedBox(width: 10),
+            SizedBox(height: 20),
           ],
         ),
       ),
@@ -295,23 +298,49 @@ class PersionalScreen extends BaseView<PersionalBloc> {
   }
 
   Widget _buildAvatar(PersionalBloc bloc, BuildContext cont) {
-    return Column(
-      children: [
-        AvatarDisplay(avatarPath: bloc.image),
-        const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: () {
-            showAvatarPicker(
-              cont,
-              currentAvatar: Storage.userModelGlobal?.image ?? avtMen1,
-              onSelected: (avatar) {
-                bloc.onChangeAvatar(avatar);
-              },
-            );
-          },
-          child: const Text('Chọn avatar'),
-        ),
-      ],
+    final image = bloc.image;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+      child: Column(
+        children: [
+          image == null || image.isEmpty
+              ? const Icon(Icons.image, size: 100, color: Colors.grey)
+              : AvatarDisplay(avatarPath: image),
+          const SizedBox(height: 20),
+          InkWell(
+            onTap: () {
+              showAvatarPicker(
+                cont,
+                currentAvatar: Storage.userModelGlobal?.image ?? avtMen1,
+                onSelected: (avatar) {
+                  bloc.onChangeAvatar(avatar);
+                },
+              );
+            },
+            child: Container(
+              width: 200,
+              height: 45,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              decoration: BoxDecoration(
+                color: toHexToColor(primaryButtonColor),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Text(
+                  'Chọn ảnh đại diện',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Icon(Icons.change_circle_outlined, color: Colors.white, size: 24),
+        ],
+      ),
     );
   }
 

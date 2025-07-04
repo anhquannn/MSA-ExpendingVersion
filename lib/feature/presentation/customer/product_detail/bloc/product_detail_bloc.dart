@@ -42,6 +42,7 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   List<FeedbacFilterkResponse> listFeedback = [];
   final streamListFeedbak = BehaviorSubject<List<FeedbacFilterkResponse>>();
 
+  double starCount = 0;
   @override
   String get contextKey => 'ProductDetailScreen';
 
@@ -226,9 +227,22 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
     final response = await Repository.getFeedback(
       FeedbackFilterRequest(pageSize: 10, productId: widget.productId),
     );
+
+    int count = 0;
+    response.forEach((element) {
+      count += element.rating ?? 0;
+    });
+
+    if (count > 0) {
+      starCount = count / response.length;
+    } else {
+      starCount = 0;
+    }
+
     if (response.isNotEmpty && response != []) {
       listFeedback = response;
     }
     streamListFeedbak.set(listFeedback);
+    setState(() {});
   }
 }

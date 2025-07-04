@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:get_it/get_it.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/config.dart';
@@ -41,7 +42,7 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
   TextEditingController birthDayController = TextEditingController(); //duong
   TextEditingController branchController = TextEditingController();
   TextEditingController addressController = TextEditingController();
-  String image = avtMen1;
+  String image = Storage.userModelGlobal?.image ?? '';
 
   bool? obscurePassword;
   bool? obscureValidPassword;
@@ -225,6 +226,22 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
         false,
         Icon(Icons.check_circle, color: toHexToColor(primaryColorGreen)),
       );
+    }
+  }
+
+    logoutFromGoogle() async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    try {
+      // Nếu đã đăng nhập thì mới signOut
+      final isSignedIn = await googleSignIn.isSignedIn();
+      if (isSignedIn) {
+        await googleSignIn.signOut();
+        print('✅ Đã đăng xuất Google thành công');
+      } else {
+        print('⚠️ Người dùng chưa đăng nhập bằng Google');
+      }
+    } catch (e) {
+      print('❌ Lỗi khi đăng xuất Google: $e');
     }
   }
 

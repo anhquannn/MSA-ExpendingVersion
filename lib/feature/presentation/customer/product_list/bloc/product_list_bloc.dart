@@ -22,6 +22,7 @@ class ProductListBloc extends BaseBloc<ProductListScreen> {
   ProductFilterResult? listProducts;
   final streamProductModels = BehaviorSubject<ProductFilterResult>();
   final CartItemUseCase _cartItemUseCase = GetIt.I<CartItemUseCase>();
+  int page = 1;
 
   @override
   String get contextKey => 'ProductListScreen';
@@ -36,9 +37,7 @@ class ProductListBloc extends BaseBloc<ProductListScreen> {
 
   @override
   void onReady() async {
-    if (widget.category != null) {
-      await onGetProduct();
-    }
+    await onGetProduct();
   }
 
   @override
@@ -47,18 +46,36 @@ class ProductListBloc extends BaseBloc<ProductListScreen> {
   @override
   Widget build(BuildContext context) => widget.build(context);
 
-  onGetProduct() async {
+  onGetProduct({bool isLoadMore = false, int? pagei}) async {
+    if (isLoadMore) {
+      page = pagei ?? page + 1;
+    } else {
+      page = page;
+    }
     try {
       ProductFilterRequest filter = ProductFilterRequest(
-        page: 1,
+        page: page,
         pageSize: 10,
         categoryId: widget.category?.categoryId,
         branchId: Storage.branchModelGlobal?.branchId,
       );
 
       ProductFilterResult product = await Repository.onFilterProducts(filter);
-      listProducts = product;
-      streamProductModels.add(product);
+      if (isLoadMore) {
+        listProducts?.products?.addAll(product.products ?? []);
+        listProducts?.discountedProductsPage?.content.addAll(
+          product.discountedProductsPage?.content ?? [],
+        );
+        listProducts?.productsPage?.content.addAll(
+          product.productsPage?.content ?? [],
+        );
+        listProducts?.discountedProducts?.addAll(
+          product.discountedProducts ?? [],
+        );
+      } else {
+        listProducts = product;
+      }
+      streamProductModels.add(listProducts ?? ProductFilterResult());
       setState(() {});
     } catch (e, stack) {
       print('❌ Lỗi khi lấy danh sách sản phẩm: $e');

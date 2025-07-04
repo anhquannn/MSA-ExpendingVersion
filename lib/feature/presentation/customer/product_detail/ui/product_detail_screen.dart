@@ -6,6 +6,7 @@ import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/model/response/feedback_filter_response.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
+import 'package:msa/feature/presentation/customer/product_detail/ui/rating_screen.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../../../core/config/base_bloc.dart';
@@ -82,10 +83,18 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
               final list = snapshot.data ?? [];
 
               return itemFeedBack(
-                startCount: '4.5',
+                startCount: bloc.starCount.toStringAsFixed(1),
                 feedbackCount: list.length,
                 onSeeMore: () {
-                  // TODO: điều hướng sang màn feedback chi tiết
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => RatingScreen(
+                            productId: bloc.productModel?.productId ?? 0,
+                          ),
+                    ),
+                  );
                 },
                 feedbackList: list,
                 bloc: bloc,
@@ -588,7 +597,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: Text(
-            'desc',
+            desc ?? 'Chưa có mô tả đánh giá...',
             style: const TextStyle(fontSize: 14),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -643,8 +652,6 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
       child: Container(
         width: AppSize.w(0.95),
         decoration: BoxDecoration(
-
-          
           color: Colors.white70,
           borderRadius: BorderRadius.circular(10),
         ),

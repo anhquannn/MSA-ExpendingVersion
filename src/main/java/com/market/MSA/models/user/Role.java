@@ -32,8 +32,12 @@ public class Role {
   @ManyToMany(fetch = FetchType.EAGER)
   @JoinTable(
       name = "role_permissions",
-      joinColumns = @JoinColumn(name = "role_id"),
-      inverseJoinColumns = @JoinColumn(name = "permission_id"))
+      joinColumns =
+          @JoinColumn(name = "role_id", foreignKey = @ForeignKey(name = "fk_role_permission_role")),
+      inverseJoinColumns =
+          @JoinColumn(
+              name = "permission_id",
+              foreignKey = @ForeignKey(name = "fk_role_permission_permission")))
   @JsonManagedReference("role-permissions")
   Set<Permission> permissions = new HashSet<>();
 

@@ -27,7 +27,10 @@ public class ProductImage {
   int sortOrder;
 
   @ManyToOne
-  @JoinColumn(name = "productId", nullable = false)
+  @JoinColumn(
+      name = "product_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_product_image_product"))
   @JsonBackReference("product-images")
   Product product;
 }

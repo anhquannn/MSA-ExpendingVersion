@@ -19,6 +19,7 @@ import com.market.MSA.responses.user.AuthenticationResponse;
 import com.market.MSA.responses.user.GoogleUser;
 import com.market.MSA.responses.user.UserResponse;
 import com.market.MSA.services.others.EmailService;
+import java.net.URI;
 import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.List;
@@ -43,7 +44,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import java.net.URI;
 
 @Service
 @RequiredArgsConstructor
@@ -202,8 +202,8 @@ public class UserService {
   public AuthenticationResponse loginWithGoogle(String accessToken) {
     // Gọi API Google để lấy thông tin người dùng
     RestTemplate restTemplate = new RestTemplate();
-    URI uri = UriComponentsBuilder
-            .fromHttpUrl("https://www.googleapis.com/oauth2/v3/tokeninfo")
+    URI uri =
+        UriComponentsBuilder.fromHttpUrl("https://www.googleapis.com/oauth2/v3/tokeninfo")
             .queryParam("access_token", accessToken)
             .build(true)
             .toUri();

@@ -6,7 +6,6 @@ import com.market.MSA.constants.PromocodeStatus;
 import com.market.MSA.validators.CampaignDateRangeConstraint;
 import com.market.MSA.validators.DateRangeConstraint;
 import com.market.MSA.validators.DiscountPercentageConstraint;
-import com.market.MSA.validators.PositiveAmountConstraint;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -50,10 +49,11 @@ public class PromoCode {
 
   @DiscountPercentageConstraint double discountPercentage;
 
-  @PositiveAmountConstraint double minimumOrderValue;
-
   @ManyToOne
-  @JoinColumn(name = "campaignId", nullable = false)
+  @JoinColumn(
+      name = "campaign_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_promo_code_campaign"))
   @JsonBackReference("campaign-promoCodes")
   Campaign campaign;
 

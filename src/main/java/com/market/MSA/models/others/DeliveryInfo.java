@@ -46,7 +46,11 @@ public class DeliveryInfo {
   LocalDateTime deliveryDate;
 
   @OneToOne
-  @JoinColumn(name = "orderId", nullable = false, unique = true)
+  @JoinColumn(
+      name = "order_id",
+      nullable = false,
+      unique = true,
+      foreignKey = @ForeignKey(name = "fk_delivery_info_order"))
   @JsonBackReference("order-delivery-info")
   Order order;
 }

@@ -24,12 +24,18 @@ public class CheckedHistory {
   String note;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_checked_history_user"))
   @JsonBackReference("user-checked-histories")
   User user;
 
   @ManyToOne
-  @JoinColumn(name = "inventoryId", nullable = false)
+  @JoinColumn(
+      name = "inventory_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_checked_history_inventory"))
   @JsonBackReference("inventory-checked-histories")
   Inventory inventory;
 }

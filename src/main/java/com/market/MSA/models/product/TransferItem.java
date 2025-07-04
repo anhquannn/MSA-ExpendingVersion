@@ -26,12 +26,18 @@ public class TransferItem {
   Long transferRequestItemId;
 
   @ManyToOne
-  @JoinColumn(name = "transferRequestId", nullable = false)
+  @JoinColumn(
+      name = "transfer_request_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_transfer_item_transfer"))
   @JsonBackReference("transfer-details")
   Transfer transfer;
 
   @ManyToOne
-  @JoinColumn(name = "productId", nullable = false)
+  @JoinColumn(
+      name = "product_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_transfer_item_product"))
   @JsonBackReference("product-transfer-items")
   Product product;
 

@@ -25,7 +25,10 @@ public class RewardPoint {
   LocalDateTime updatedAt;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_reward_point_user"))
   @JsonBackReference("user-reward-points")
   User user;
 }

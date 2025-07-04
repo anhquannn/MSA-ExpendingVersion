@@ -30,12 +30,18 @@ public class RewardPointTransaction {
   LocalDateTime createdAt;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_reward_point_transaction_user"))
   @JsonBackReference("user-reward-transactions")
   User user;
 
   @ManyToOne
-  @JoinColumn(name = "orderId", nullable = false)
+  @JoinColumn(
+      name = "order_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_reward_point_transaction_order"))
   @JsonBackReference("order-reward-transactions")
   Order order;
 }

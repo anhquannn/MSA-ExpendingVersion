@@ -23,7 +23,10 @@ public class TrendingProduct {
   LocalDateTime timestamp;
 
   @ManyToOne
-  @JoinColumn(name = "productId", nullable = false)
+  @JoinColumn(
+      name = "product_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_trending_product"))
   @JsonBackReference("product-trending")
   Product product;
 }

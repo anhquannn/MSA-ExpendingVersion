@@ -40,22 +40,22 @@ public class Notification {
   String message;
 
   @ManyToOne
-  @JoinColumn(name = "productId")
+  @JoinColumn(name = "product_id", foreignKey = @ForeignKey(name = "fk_notification_product"))
   @JsonBackReference("product-notifications")
   Product product;
 
   @ManyToOne
-  @JoinColumn(name = "orderId")
+  @JoinColumn(name = "order_id", foreignKey = @ForeignKey(name = "fk_notification_order"))
   @JsonBackReference("order-notifications")
   Order order;
 
   @ManyToOne
-  @JoinColumn(name = "inventoryId")
+  @JoinColumn(name = "inventory_id", foreignKey = @ForeignKey(name = "fk_notification_inventory"))
   @JsonBackReference("inventory-notifications")
   Inventory inventory;
 
   @ManyToOne
-  @JoinColumn(name = "userId")
+  @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_notification_user"))
   @JsonBackReference("user-notifications")
   User user;
 }

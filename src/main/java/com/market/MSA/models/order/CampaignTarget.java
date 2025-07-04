@@ -22,10 +22,14 @@ public class CampaignTarget {
 
   @Enumerated(EnumType.STRING)
   PromoScopeType targetType;
+
   Long targetId;
 
   @ManyToOne
-  @JoinColumn(name = "campaignId", nullable = false)
+  @JoinColumn(
+      name = "campaign_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_campaign_target_campaign"))
   @JsonBackReference("campaign-targets")
   Campaign campaign;
 }

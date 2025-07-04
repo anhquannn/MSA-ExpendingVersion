@@ -63,16 +63,20 @@ public class User {
   @ManyToMany
   @JoinTable(
       name = "user_roles",
-      joinColumns = @JoinColumn(name = "user_id"),
-      inverseJoinColumns = @JoinColumn(name = "role_id"))
+      joinColumns =
+          @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_user_role_user")),
+      inverseJoinColumns =
+          @JoinColumn(name = "role_id", foreignKey = @ForeignKey(name = "fk_user_role_role")))
   @JsonManagedReference("user-roles")
   Set<Role> roles = new HashSet<>();
 
   @ManyToMany
   @JoinTable(
       name = "user_branches",
-      joinColumns = @JoinColumn(name = "user_id"),
-      inverseJoinColumns = @JoinColumn(name = "branch_id"))
+      joinColumns =
+          @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_user_branch_user")),
+      inverseJoinColumns =
+          @JoinColumn(name = "branch_id", foreignKey = @ForeignKey(name = "fk_user_branch_branch")))
   @JsonManagedReference("user-branches")
   List<Branch> branches = new ArrayList<>();
 

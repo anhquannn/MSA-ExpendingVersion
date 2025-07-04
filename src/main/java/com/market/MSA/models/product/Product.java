@@ -53,12 +53,18 @@ public class Product {
   @Positive double totalRevenue;
 
   @ManyToOne
-  @JoinColumn(name = "supplierId", nullable = false)
+  @JoinColumn(
+      name = "supplier_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_product_supplier"))
   @JsonBackReference("supplier-products")
   Supplier supplier;
 
   @ManyToOne
-  @JoinColumn(name = "categoryId", nullable = false)
+  @JoinColumn(
+      name = "category_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_product_category"))
   @JsonBackReference("product-categories")
   Category category;
 

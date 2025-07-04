@@ -55,14 +55,17 @@ public class Payment {
   LocalDateTime expiryAt;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "userId", nullable = false, foreignKey = @ForeignKey(name = "fk_payment_user"))
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_payment_user"))
   @JsonBackReference("user-payments")
   @NotNull(message = "User is required")
   User user;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(
-      name = "orderId",
+      name = "order_id",
       nullable = false,
       unique = true,
       foreignKey = @ForeignKey(name = "fk_payment_order"))

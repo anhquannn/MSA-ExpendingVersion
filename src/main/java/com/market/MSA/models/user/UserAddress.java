@@ -30,7 +30,10 @@ public class UserAddress {
   LocalDateTime createdAt;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_user_address_user"))
   @JsonBackReference("user-addresses")
   User user;
 }

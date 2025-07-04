@@ -40,7 +40,10 @@ public class CancelOrder {
   double refundAmount;
 
   @ManyToOne
-  @JoinColumn(name = "orderId", nullable = false)
+  @JoinColumn(
+      name = "order_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_cancel_order_order"))
   @JsonBackReference("order-cancel-orders")
   Order order;
 }

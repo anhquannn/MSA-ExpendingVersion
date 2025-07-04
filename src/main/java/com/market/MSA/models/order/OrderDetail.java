@@ -38,12 +38,18 @@ public class OrderDetail {
   boolean rated;
 
   @ManyToOne
-  @JoinColumn(name = "orderId", nullable = false)
+  @JoinColumn(
+      name = "order_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_order_detail_order"))
   @JsonBackReference("order-details")
   Order order;
 
   @ManyToOne
-  @JoinColumn(name = "productId", nullable = false)
+  @JoinColumn(
+      name = "product_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_order_detail_product"))
   @JsonBackReference("product-order-details")
   Product product;
 }

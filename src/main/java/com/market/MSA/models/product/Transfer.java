@@ -32,22 +32,31 @@ public class Transfer {
   Long transferRequestId;
 
   @ManyToOne
-  @JoinColumn(name = "fromInventoryId", nullable = false)
+  @JoinColumn(
+      name = "from_inventory_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_transfer_from_inventory"))
   @JsonBackReference("inventory-from-transfers")
   Inventory fromInventory;
 
   @ManyToOne
-  @JoinColumn(name = "toInventoryId", nullable = false)
+  @JoinColumn(
+      name = "to_inventory_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_transfer_to_inventory"))
   @JsonBackReference("inventory-to-transfers")
   Inventory toInventory;
 
   @ManyToOne
-  @JoinColumn(name = "requesterId", nullable = false)
+  @JoinColumn(
+      name = "requester_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_transfer_requester"))
   @JsonBackReference("user-requested-transfers")
   User requester;
 
   @ManyToOne
-  @JoinColumn(name = "approverId")
+  @JoinColumn(name = "approver_id", foreignKey = @ForeignKey(name = "fk_transfer_approver"))
   @JsonBackReference("user-approved-transfers")
   User approver;
 

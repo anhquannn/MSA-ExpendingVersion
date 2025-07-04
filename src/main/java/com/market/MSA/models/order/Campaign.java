@@ -1,6 +1,7 @@
 package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.PromoScopeType;
 import com.market.MSA.constants.PromocodeStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -35,6 +36,15 @@ public class Campaign {
 
   LocalDateTime startDate;
   LocalDateTime endDate;
+
+  @Enumerated(EnumType.STRING)
+  PromoScopeType scopeType = PromoScopeType.ALL;
+
+  @jakarta.validation.constraints.PositiveOrZero double minOrderValue;
+
+  @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("campaign-targets")
+  List<CampaignTarget> targets = new ArrayList<>();
 
   @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("campaign-promoCodes")

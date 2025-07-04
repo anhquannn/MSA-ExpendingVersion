@@ -23,17 +23,26 @@ public class PromoCodeUsage {
   LocalDateTime usedAt;
 
   @ManyToOne
-  @JoinColumn(name = "promoCodeId", nullable = false)
+  @JoinColumn(
+      name = "promo_code_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_promo_code_usage_promocode"))
   @JsonBackReference("promoCode-usages")
   PromoCode promoCode;
 
   @ManyToOne
-  @JoinColumn(name = "orderId", nullable = false)
+  @JoinColumn(
+      name = "order_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_promo_code_usage_order"))
   @JsonBackReference("order-promo-usages")
   Order order;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_promo_code_usage_user"))
   @JsonBackReference("user-promo-usages")
   User user;
 }

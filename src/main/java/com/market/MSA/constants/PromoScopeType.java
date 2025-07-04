@@ -5,5 +5,4 @@ public enum PromoScopeType {
   CATEGORY,
   SUPPLIER,
   BATCH_NUMBER,
-
 }

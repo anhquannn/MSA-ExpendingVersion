@@ -31,17 +31,23 @@ public class InventoryCheckRequest {
 
   // relationships
   @ManyToOne
-  @JoinColumn(name = "inventoryId", nullable = false)
+  @JoinColumn(
+      name = "inventory_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_icr_inventory"))
   @JsonBackReference("icr-inventory")
   Inventory inventory;
 
   @ManyToOne
-  @JoinColumn(name = "surveyorId", nullable = false)
+  @JoinColumn(
+      name = "surveyor_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_icr_surveyor"))
   @JsonBackReference("icr-surveyor")
   User surveyor;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_icr_user"))
   @JsonBackReference("icr-user")
   User user;
 }

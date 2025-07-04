@@ -20,5 +20,8 @@ public class CampaignResponse {
   LocalDateTime startDate;
   LocalDateTime endDate;
 
+  com.market.MSA.constants.PromoScopeType scopeType;
+  double minOrderValue;
+
   List<PromoCodeResponse> promoCodes;
 }

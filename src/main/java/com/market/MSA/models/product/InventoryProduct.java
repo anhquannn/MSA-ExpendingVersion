@@ -58,14 +58,17 @@ public class InventoryProduct {
   int stockNumberDifferent;
 
   @ManyToOne
-  @JoinColumn(name = "inventoryId", nullable = false)
+  @JoinColumn(
+      name = "inventory_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_invproduct_inventory"))
   @JsonBackReference("inventory-products")
   @NotNull(message = "Inventory is required")
   Inventory inventory;
 
   @ManyToOne
   @JoinColumn(
-      name = "productId",
+      name = "product_id",
       nullable = false,
       foreignKey = @ForeignKey(name = "fk_invproduct_product"))
   @JsonBackReference("product-inventories")

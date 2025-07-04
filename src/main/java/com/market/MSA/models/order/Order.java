@@ -49,17 +49,20 @@ public class Order {
   OrderStatus status;
 
   @ManyToOne
-  @JoinColumn(name = "branchId", nullable = false)
+  @JoinColumn(
+      name = "branch_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_order_branch"))
   @JsonBackReference("order-branches")
   Branch branch;
 
   @ManyToOne
-  @JoinColumn(name = "cartId", nullable = false)
+  @JoinColumn(name = "cart_id", nullable = false, foreignKey = @ForeignKey(name = "fk_order_cart"))
   @JsonBackReference("order-carts")
   Cart cart;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_order_user"))
   @JsonBackReference("user-orders")
   User user;
 

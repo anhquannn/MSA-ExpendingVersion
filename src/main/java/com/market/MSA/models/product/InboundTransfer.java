@@ -27,17 +27,26 @@ public class InboundTransfer {
   LocalDateTime inboundTransferDate;
 
   @ManyToOne
-  @JoinColumn(name = "transferRequestId", nullable = false)
+  @JoinColumn(
+      name = "transfer_request_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_inbound_transfer_request"))
   @JsonBackReference("transfer-inbounds")
   Transfer transfer;
 
   @ManyToOne
-  @JoinColumn(name = "inventoryId", nullable = false)
+  @JoinColumn(
+      name = "inventory_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_inbound_transfer_inventory"))
   @JsonBackReference("inventory-inbounds")
   Inventory inventory;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_inbound_transfer_user"))
   @JsonBackReference("user-requested-inbounds")
   User user;
 }

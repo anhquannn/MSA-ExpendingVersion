@@ -2,13 +2,7 @@ package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.market.MSA.models.product.Product;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,12 +29,18 @@ public class CartItem {
   int quantity;
 
   @ManyToOne
-  @JoinColumn(name = "productId", nullable = false)
+  @JoinColumn(
+      name = "product_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_cart_item_product"))
   @JsonBackReference("product-cart-items")
   Product product;
 
   @ManyToOne
-  @JoinColumn(name = "cartId", nullable = false)
+  @JoinColumn(
+      name = "cart_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_cart_item_cart"))
   @JsonBackReference("cart-items")
   Cart cart;
 }

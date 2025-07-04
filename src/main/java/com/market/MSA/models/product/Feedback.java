@@ -40,17 +40,26 @@ public class Feedback {
   LocalDateTime createdAt;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_feedback_user"))
   @JsonBackReference("user-feedbacks")
   User user;
 
   @ManyToOne
-  @JoinColumn(name = "productId", nullable = false)
+  @JoinColumn(
+      name = "product_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_feedback_product"))
   @JsonBackReference("product-feedbacks")
   Product product;
 
   @OneToOne
-  @JoinColumn(name = "orderDetailId", nullable = true, unique = true)
+  @JoinColumn(
+      name = "order_detail_id",
+      unique = true,
+      foreignKey = @ForeignKey(name = "fk_feedback_order_detail"))
   @JsonBackReference("orderDetail-feedback")
   OrderDetail orderDetail;
 }

@@ -20,12 +20,12 @@ public class ProductCombination {
   Long combinationId;
 
   @ManyToOne
-  @JoinColumn(name = "productId1")
+  @JoinColumn(name = "product_id1", foreignKey = @ForeignKey(name = "fk_comb_product1"))
   @JsonBackReference("comb-product1")
   Product product1;
 
   @ManyToOne
-  @JoinColumn(name = "productId2")
+  @JoinColumn(name = "product_id2", foreignKey = @ForeignKey(name = "fk_comb_product2"))
   @JsonBackReference("comb-product2")
   Product product2;
 }

@@ -32,7 +32,7 @@ public class Cart {
   CartStatus status;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_cart_user"))
   @JsonBackReference("user-carts")
   User user;
 

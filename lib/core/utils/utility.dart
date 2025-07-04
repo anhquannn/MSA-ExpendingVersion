@@ -186,3 +186,25 @@ extension PromoCodeStatusExtension on PromoCodeStatusEnum {
     }
   }
 }
+
+final List<String> maleAvatars = [
+  'assets/images/avt_men1.jpg',
+  'assets/images/avt_men2.jpg',
+  'assets/images/avt_men3.jpg',
+  'assets/images/avt_men4.jpg',
+  'assets/images/avt_men5.jpg',
+  'assets/images/avt_men6.jpg',
+];
+
+final List<String> femaleAvatars = [
+  'assets/images/avt_women1.jpg',
+  'assets/images/avt_women2.jpg',
+  'assets/images/avt_women3.jpg',
+  'assets/images/avt_women4.jpg',
+  'assets/images/avt_women5.jpg',
+  'assets/images/avt_women6.jpg',
+  'assets/images/avt_women7.jpg',
+  'assets/images/avt_women8.jpg',
+  'assets/images/avt_women9.jpg',
+];
+

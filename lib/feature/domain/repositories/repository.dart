@@ -19,10 +19,12 @@ import 'package:msa/feature/data/model/request/user_address_request.dart';
 import 'package:msa/feature/data/model/request/user_login_request.dart';
 import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:msa/feature/data/model/response/feedback_filter_response.dart';
+import 'package:msa/feature/data/model/response/notification_request_model.dart';
 import 'package:msa/feature/data/repositories/branch_connection.dart';
 import 'package:msa/feature/data/repositories/cart_item_connection.dart';
 import 'package:msa/feature/data/repositories/category_connection.dart';
 import 'package:msa/feature/data/repositories/feedback_connection.dart';
+import 'package:msa/feature/data/repositories/notification_connection.dart';
 import 'package:msa/feature/data/repositories/order_connection.dart';
 import 'package:msa/feature/data/repositories/product_connection.dart';
 import 'package:msa/feature/data/repositories/promo_code_connection.dart';
@@ -146,4 +148,27 @@ class Repository {
 
   static getAllSupply(SupplierFilterRequest request) =>
       SupplierConnection.getAll(request);
+
+  static buyAgain({
+    required int orderId,
+    required int userAddressId,
+    List<String>? promoCodes,
+  }) => OrderRepositoryImpl.buyAgain(
+    orderId: orderId,
+    userAddressId: userAddressId,
+    promoCodes: promoCodes,
+  );
+
+  static onGetPreviewOrderAgain({
+    required int orderOldId,
+    required int userAddressId,
+    List<String>? promoCodes,
+  }) => OrderRepositoryImpl.onGetPreviewOrderAgain(
+    orderOldId: orderOldId,
+    userAddressId: userAddressId,
+    promoCodes: promoCodes,
+  );
+
+  static getNotification(NotificationFilterRequest request) =>
+      NotificationConnection.getNotification(request);
 }

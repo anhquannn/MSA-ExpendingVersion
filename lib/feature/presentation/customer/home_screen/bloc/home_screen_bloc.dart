@@ -16,11 +16,13 @@ import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/promocode_request_model.dart';
 import 'package:msa/feature/data/model/response/branch_response_response.dart';
 import 'package:msa/feature/data/model/response/get_order_response_model.dart';
+import 'package:msa/feature/data/model/response/notification_request_model.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/domain/entities/branch_model.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/cart_model.dart';
+import 'package:msa/feature/domain/entities/notification_model.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
@@ -105,6 +107,12 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   final Map<int, Debouncer> _debouncers = {};
 
   final TextEditingController rateController = TextEditingController();
+
+  List<NotificationModel>? listNotificattionRead;
+  final streamListNotificationRead = BehaviorSubject<List<NotificationModel>>();
+  List<NotificationModel>? listNotificattionUnRead;
+  final streamListNotificationUnRead =
+      BehaviorSubject<List<NotificationModel>>();
 
   @override
   String get contextKey => 'HomeScreen';
@@ -208,6 +216,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       onGetAddress().catchError((e) => print('Lỗi onGetAddress: $e')),
       onCheckBranch(),
       onGetUserCart(),
+      onGetNotification(),
     ];
 
     await Future.wait(futures);
@@ -237,15 +246,12 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   onGetProfile({BuildContext? bcontext}) async {
     try {
-      UserModel? user = await _userUseCases.getUserByEmail().timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          showCustomMessageError(viewContext);
-          return null;
-        },
-      );
+      UserModel? user = await Repository.onGetUserInfo();
       if (user != null) {
+        print('###########user.image######${user.image}');
         streamUserModel.add(user);
+        Storage.userModelGlobal = user;
+        Storage.saveUserModel(user);
         userModelGlobal = user;
         userModel = user;
         await onGetOrCreateCart(bcontext: bcontext);
@@ -259,22 +265,42 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onGetProduct() async {
+    setState(() {}); // Có thể gọi setState ở đây để hiện loading indicator
+
     try {
       ProductFilterRequest filter = ProductFilterRequest(
         page: 1,
-        pageSize: 10,
+        pageSize: 50,
         branchId: Storage.branchModelGlobal?.branchId,
       );
 
-      ProductFilterResult product = await Repository.onFilterProducts(filter);
-      listProducts = product;
-      streamProductModels.add(product);
+      // ✅ SỬA ĐỔI: Cho phép biến 'product' nhận giá trị null
+      final ProductFilterResult? product = await Repository.onFilterProducts(
+        filter,
+      );
+
+      // ✅ SỬA ĐỔI: Kiểm tra nếu product không phải là null trước khi sử dụng
+      if (product != null) {
+        listProducts = product;
+        streamProductModels.add(product);
+      } else {
+        // Xử lý trường hợp không lấy được dữ liệu, có thể hiển thị thông báo
+        print('⚠️ Không nhận được dữ liệu sản phẩm từ repository.');
+        // Bạn có thể thêm một trạng thái lỗi vào stream nếu cần
+        // streamProductModels.addError('Failed to load products');
+      }
     } catch (e, stack) {
       print('❌ Lỗi khi lấy danh sách sản phẩm: $e');
       print('📛 Stacktrace: $stack');
+      // Vẫn có thể thêm một đối tượng rỗng hoặc trạng thái lỗi vào stream
       streamProductModels.add(ProductFilterResult());
     }
-    setState(() {});
+
+    // Cuối cùng, gọi setState để cập nhật UI sau khi có kết quả
+    if (mounted) {
+      // Thêm kiểm tra `mounted` nếu đây là StatefulWidget
+      setState(() {});
+    }
   }
 
   onGetCategory() async {
@@ -421,7 +447,26 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       );
     } else {
       hideFullScreenLoading(bContext);
+      buildCheck(bContext);
       print('❌ Không thể thêm sản phẩm vào giỏ hàng.');
+    }
+  }
+
+  buildCheck(BuildContext bContext) {
+    if (Storage.branchModelGlobal == null) {
+      showCustomDialog(
+        bContext,
+        AppSize.width(),
+        AppSize.width(),
+        'Thông báo',
+        Text('Bạn chưa chọn chi nhánh'),
+        true,
+        false,
+        Icon(Icons.warning, color: Colors.yellow),
+        onClose: () {
+          Navigator.pop(bContext);
+        },
+      );
     }
   }
 
@@ -518,6 +563,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       return;
     }
     showCustomMessageError(bcontext);
+
+    buildCheck(bcontext);
   }
 
   runAddToCartAnimation({
@@ -680,5 +727,61 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
             ),
       ),
     );
+  }
+
+  onGetNotificationRead() async {
+    final model = NotificationFilterRequest(
+      page: 1,
+      pageSize: 20,
+      isRead: true,
+      userId: Storage.userModelGlobal?.userId,
+    );
+
+    print('[READ] Request: ${model.toJson()}');
+
+    final List<NotificationModel>? response = await Repository.getNotification(
+      model,
+    );
+
+    if (response != null) {
+      print('[READ] Response length: ${response.length}');
+      for (var i = 0; i < response.length; i++) {
+        print('[READ] Notification ${i + 1}: ${response[i].message}');
+      }
+      listNotificattionRead = response;
+      streamListNotificationRead.set(listNotificattionRead ?? []);
+    } else {
+      print('[READ] Response is null');
+    }
+  }
+
+  onGetNotificationUnRead() async {
+    final model = NotificationFilterRequest(
+      page: 1,
+      pageSize: 20,
+      isRead: false,
+      userId: Storage.userModelGlobal?.userId,
+    );
+
+    print('[UNREAD] Request: ${model.toJson()}');
+
+    final List<NotificationModel>? response = await Repository.getNotification(
+      model,
+    );
+
+    if (response != null) {
+      print('[UNREAD] Response length: ${response.length}');
+      for (var i = 0; i < response.length; i++) {
+        print('[UNREAD] Notification ${i + 1}: ${response[i].message}');
+      }
+      listNotificattionUnRead = response;
+      streamListNotificationUnRead.set(listNotificattionUnRead ?? []);
+    } else {
+      print('[UNREAD] Response is null');
+    }
+  }
+
+  onGetNotification() async {
+    Future.wait<void>([onGetNotificationRead(), onGetNotificationUnRead()]);
   }
 }

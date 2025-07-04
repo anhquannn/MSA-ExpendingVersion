@@ -41,6 +41,7 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
   TextEditingController birthDayController = TextEditingController(); //duong
   TextEditingController branchController = TextEditingController();
   TextEditingController addressController = TextEditingController();
+  String image = avtMen1;
 
   bool? obscurePassword;
   bool? obscureValidPassword;
@@ -149,6 +150,7 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
       birthday: birthDayController.text,
       fullName: nameController.text,
       phoneNumber: phoneNumberController.text,
+      image: image,
     );
 
     final addressRequest = UserAddressUpdateRequest(
@@ -171,6 +173,8 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     final userResponse = await Repository.onUpdateInfo(request);
 
     if (addressResponse && userResponse) {
+      
+      await onGetUser();
       showCustomDialog(
         bContext,
         AppSize.w(0.9),
@@ -238,7 +242,19 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     branchController.text = Storage.branchModelGlobal?.name ?? '';
   }
 
-  onUpdateUser() {}
+  onGetUser() async {
+    UserModel? user = await _userUseCases.getUserByEmail().timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        showCustomMessageError(viewContext);
+        return null;
+      },
+    );
+    if (user != null) {
+      Storage.userModelGlobal = user;
+      Storage.saveUserModel(user);
+    }
+  }
 
   onLogout(BuildContext context) async {
     Navigator.push(
@@ -548,6 +564,11 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
             ),
       ),
     );
+  }
+
+  onChangeAvatar(String img) {
+    image = img;
+    setState(() {});
   }
 
   @override

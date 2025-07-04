@@ -7,6 +7,7 @@ import 'package:msa/core/config/constant.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
+import 'package:msa/feature/presentation/logins/login/ui/login_screen.dart';
 import 'package:msa/locator/locator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -22,8 +23,8 @@ void main() async {
 
   setupLocator();
   await Storage.readFromLocalStorage();
-  // final isLoggedIn = await Storage.checkLoginStatus();
-  final isLoggedIn = true;
+  final isLoggedIn = await Storage.checkLoginStatus();
+  // final isLoggedIn = true;
   print('[main] isLoggedIn = $isLoggedIn');
 
   runApp(MyApp(isLoggedIn: isLoggedIn));
@@ -44,8 +45,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       color: Colors.white,
       debugShowCheckedModeBanner: false,
-      // home: isLoggedIn ? HomeScreen() : LoginScreen(),
-      home: HomeScreen(),
+      home: isLoggedIn ? HomeScreen() : LoginScreen(),
+      // home: HomeScreen(),
     );
   }
 }
@@ -68,3 +69,4 @@ Future<void> getFcmToken() async {
     print(stack);
   }
 }
+//Notification, Sửa orderDetail, API cho mua lại Order

@@ -66,6 +66,8 @@ class UserRepositoryImpl implements IUserRepository {
       debugPrint('Access Token: ${data.accessToken}');
       debugPrint('Refresh Token: ${data.refreshToken}');
 
+      Storage.token = data.accessToken;
+      Storage.refreshToken = data.refreshToken;
       await Storage.saveToken(data.accessToken);
       await Storage.saveRefreshToken(data.refreshToken);
       return true;
@@ -185,6 +187,7 @@ class UserRepositoryImpl implements IUserRepository {
   static onResendOtp(UserLoginRequest request) async {
     final response = await HttpConnection.post(
       resentOtp,
+      isToken: false,
       body: request.toJson(),
       fromJsonT: (json) => UserModel.fromJson(json),
     );
@@ -269,6 +272,7 @@ class UserRepositoryImpl implements IUserRepository {
     try {
       final response = await HttpConnection.post(
         '$loginGoogle?accessToken=$accessToken',
+        isToken: false,
         fromJsonT: (json) => AuthenticationResponse.fromJson(json),
       );
 

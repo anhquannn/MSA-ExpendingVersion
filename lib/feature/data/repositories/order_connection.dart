@@ -306,4 +306,55 @@ class OrderRepositoryImpl extends IOrderRepository {
     }
     return [];
   }
+
+  static buyAgain({
+    required int orderId,
+    required int userAddressId,
+    List<String>? promoCodes,
+  }) async {
+    // Tạo query string
+    final queryParams = <String>[
+      'userAddressId=$userAddressId',
+      if (promoCodes != null && promoCodes.isNotEmpty)
+        ...promoCodes.map((code) => 'promoCodes=$code'),
+    ];
+
+    final queryString = queryParams.join('&');
+    final String path = 'order/$orderId/buy-again?$queryString';
+
+    final response = await HttpConnection.post(
+      path,
+      fromJsonT: (json) => OrderModel.fromJson(json),
+    );
+
+    if (response.isSuccess) {
+      return response.result ?? OrderModel();
+    }
+    return null;
+  }
+
+  static Future<OrderPreviewModel?> onGetPreviewOrderAgain({
+    required int orderOldId,
+    required int userAddressId,
+    List<String>? promoCodes,
+  }) async {
+    final queryParameters = {
+      'userAddressId': userAddressId.toString(),
+      if (promoCodes != null)
+        for (var code in promoCodes) 'promoCodes': code,
+    };
+
+    final uri = Uri(
+      path: 'order/$orderOldId/preview-buy-again',
+      queryParameters: queryParameters,
+    );
+
+    final response = await HttpConnection.get<OrderPreviewModel>(
+      uri.toString(),
+      fromJsonT: (json) => OrderPreviewModel.fromJson(json),
+    );
+
+    if (!response.isSuccess) messageError = response.message;
+    return response.result;
+  }
 }

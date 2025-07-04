@@ -239,18 +239,34 @@ class ProductRepositoryImpl extends IProductRepository {
   }) async {
     const String endpoint = 'product/filter';
 
-    final response = await HttpConnection.post<ProductFilterResult>(
-      endpoint,
-      context: context,
-      body: request.toJson(),
-      isToken: true,
-      fromJsonT: (json) => ProductFilterResult.fromJson(json),
-    );
+    try {
+      final response = await HttpConnection.post<ProductFilterResult>(
+        endpoint,
+        context: context,
+        body: request.toJson(),
+        isToken: true,
+        fromJsonT: (json) => ProductFilterResult.fromJson(json),
+      );
 
-    if (response.isSuccess) {
-      return response.result;
+      print('📥 Phản hồi từ API: ${response}');
+
+      if (response.isSuccess) {
+        if (response.result != null) {
+          print('✅ Lấy dữ liệu sản phẩm thành công');
+          return response.result;
+        } else {
+          print('⚠️ response.result = null dù isSuccess = true');
+          return null;
+        }
+      } else {
+        print('❌ API trả về lỗi: ${response.message}');
+        return null;
+      }
+    } catch (e, stack) {
+      print('❌ Exception trong onFilterProducts: $e');
+      print('📛 Stacktrace: $stack');
+      return null;
     }
-    return null;
   }
 
   static getProductByIdApi(int productId) async {

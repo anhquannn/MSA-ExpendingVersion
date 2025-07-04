@@ -4,6 +4,7 @@ import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/utils/prarse_color.dart';
+import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/change_address_screen.dart';
@@ -61,6 +62,7 @@ class PersionalScreen extends BaseView<PersionalBloc> {
         padding: EdgeInsets.symmetric(horizontal: 12),
         child: Column(
           children: [
+            _buildAvatar(bloc, context),
             _buildField(
               bloc.nameController,
               'Họ và tên',
@@ -244,6 +246,75 @@ class PersionalScreen extends BaseView<PersionalBloc> {
     );
   }
 
+  showAvatarPicker(
+    BuildContext context, {
+    required String currentAvatar,
+    required Function(String selectedAvatar) onSelected,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Chọn ảnh đại diện',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Nam',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                AvatarGrid(
+                  avatars: maleAvatars,
+                  currentAvatar: currentAvatar,
+                  onSelected: onSelected,
+                ),
+                const SizedBox(height: 16),
+                const Text('Nữ', style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                AvatarGrid(
+                  avatars: femaleAvatars,
+                  currentAvatar: currentAvatar,
+                  onSelected: onSelected,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAvatar(PersionalBloc bloc, BuildContext cont) {
+    return Column(
+      children: [
+        AvatarDisplay(avatarPath: bloc.image),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () {
+            showAvatarPicker(
+              cont,
+              currentAvatar: Storage.userModelGlobal?.image ?? avtMen1,
+              onSelected: (avatar) {
+                bloc.onChangeAvatar(avatar);
+              },
+            );
+          },
+          child: const Text('Chọn avatar'),
+        ),
+      ],
+    );
+  }
+
   Widget _buildButton({
     String? text,
     bool isBorderType = false,
@@ -378,6 +449,68 @@ class PersionalScreen extends BaseView<PersionalBloc> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class AvatarGrid extends StatelessWidget {
+  final List<String> avatars;
+  final String currentAvatar;
+  final Function(String selectedAvatar) onSelected;
+
+  const AvatarGrid({
+    super.key,
+    required this.avatars,
+    required this.currentAvatar,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      crossAxisCount: 4,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      children:
+          avatars.map((avatarPath) {
+            final isSelected = avatarPath == currentAvatar;
+            return GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+                onSelected(avatarPath);
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border:
+                      isSelected
+                          ? Border.all(color: Colors.blueAccent, width: 3)
+                          : null,
+                ),
+                child: CircleAvatar(
+                  backgroundImage: AssetImage(avatarPath),
+                  radius: 30,
+                ),
+              ),
+            );
+          }).toList(),
+    );
+  }
+}
+
+class AvatarDisplay extends StatelessWidget {
+  final String avatarPath;
+  final double size;
+
+  const AvatarDisplay({super.key, required this.avatarPath, this.size = 80});
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      radius: size / 2,
+      backgroundImage: AssetImage(avatarPath),
     );
   }
 }

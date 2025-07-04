@@ -16,59 +16,62 @@ class ProductFilterResult {
     this.discountedProducts,
   });
 
-  // factory ProductFilterResult.fromJson(Map<String, dynamic> json) {
-  //   List<ProductModel> parseProducts(dynamic productList) {
-  //     if (productList is List) {
-  //       return productList.map((item) => ProductModel.fromJson(item)).toList();
-  //     }
-  //     return [];
-  //   }
-
-  //   return ProductFilterResult(
-  //     productsPage: PaginatedResult.fromJson(
-  //       json['productsPage'] ?? {},
-  //       (item) => ProductModel.fromJson(item),
-  //     ),
-  //     discountedProductsPage: PaginatedResult.fromJson(
-  //       json['discountedProductsPage'] ?? {},
-  //       (item) => ProductModel.fromJson(item),
-  //     ),
-  //     products: parseProducts(json['products']),
-  //     discountedProducts: parseProducts(json['discountedProducts']),
-  //   );
-  // }
   factory ProductFilterResult.fromJson(Map<String, dynamic> json) {
-    List<ProductModel> parseProducts(dynamic productList) {
+    // Helper function để parse danh sách sản phẩm (dạng phẳng)
+    List<ProductModel> _parseProductList(dynamic productList) {
       if (productList is List) {
-        return productList.map((item) => ProductModel.fromJson(item)).toList();
+        return productList
+            .whereType<Map<String, dynamic>>() // Chỉ lấy các item là Map
+            .map((item) => ProductModel.fromJson(item))
+            .toList();
       }
       return [];
     }
 
-    // ✅ parse productsPage bình thường
-    final productsPage = PaginatedResult.fromJson(
+    // ✅ Parse `productsPage` (đã đúng)
+    final productsPage = PaginatedResult<ProductModel>.fromJson(
       json['productsPage'] ?? {},
-      (item) => ProductModel.fromJson(item),
+      (item) => ProductModel.fromJson(item as Map<String, dynamic>),
     );
 
-    // ✅ parse discountedProductsPage: lấy product từ mỗi item
-    final discountedPageJson = json['discountedProductsPage'];
-    final discountedPage =
-        discountedPageJson != null
-            ? PaginatedResult.fromJson(
-              discountedPageJson,
-              (item) => ProductModel.fromJson(
-                item['product'] ?? {},
-              ), // ⚠ Lấy từ item['product']
+    // ✅ Parse `discountedProductsPage` (sửa lại)
+    final discountedProductsPageJson = json['discountedProductsPage'];
+    final PaginatedResult<ProductModel>? discountedPage =
+        discountedProductsPageJson != null
+            ? PaginatedResult<ProductModel>.fromJson(
+              discountedProductsPageJson,
+              // Sửa đổi callback để lấy đúng dữ liệu từ key 'product'
+              (item) {
+                final productData = (item as Map<String, dynamic>)['product'];
+                if (productData != null) {
+                  return ProductModel.fromJson(
+                    productData as Map<String, dynamic>,
+                  );
+                }
+                // Trả về một đối tượng rỗng nếu cấu trúc không đúng,
+                // và sẽ được lọc ra ở bước sau.
+                return ProductModel();
+              },
             )
             : null;
+
+    // Lọc ra các sản phẩm rỗng có thể đã được tạo ra do lỗi parse
+    discountedPage?.content.removeWhere((product) => product.productId == null);
 
     return ProductFilterResult(
       productsPage: productsPage,
       discountedProductsPage: discountedPage,
-      products: parseProducts(json['products']),
-      discountedProducts: parseProducts(json['discountedProducts']),
+      products: _parseProductList(json['products']),
+      discountedProducts: _parseProductList(json['discountedProducts']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'products': products?.map((item) => item.toJson()).toList(),
+      'discountedProducts':
+          discountedProducts?.map((item) => item.toJson()).toList(),
+    };
   }
 }
 

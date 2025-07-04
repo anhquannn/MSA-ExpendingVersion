@@ -18,6 +18,7 @@ class UserUpdateRequest {
     this.fullName,
     this.email,
     this.userId,
+    this.image
   });
 
   int? userId;
@@ -28,6 +29,7 @@ class UserUpdateRequest {
   List<dynamic>? roles;
   String? fullName;
   String? email;
+  String? image;
 
   factory UserUpdateRequest.fromJson(Map<dynamic, dynamic> json) =>
       UserUpdateRequest(
@@ -45,5 +47,6 @@ class UserUpdateRequest {
     "phoneNumber": phoneNumber,
     "fullName": fullName,
     "email": email,
+    "image":image
   };
 }

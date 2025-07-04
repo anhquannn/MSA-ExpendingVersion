@@ -3,7 +3,7 @@ import 'package:msa/feature/domain/entities/branch_model.dart';
 
 class BranchFilterRequest {
   final String? keyword;
-  final int? productId;
+  final int? userId;
   final String? sortBy;
   final String? sortDirection;
   final int page;
@@ -11,7 +11,7 @@ class BranchFilterRequest {
 
   BranchFilterRequest({
     this.keyword,
-    this.productId,
+    this.userId,
     this.sortBy = 'branchId',
     this.sortDirection = 'ASC',
     this.page = 1,
@@ -21,7 +21,7 @@ class BranchFilterRequest {
   factory BranchFilterRequest.fromJson(Map<String, dynamic> json) {
     return BranchFilterRequest(
       keyword: json['keyword'] ?? '',
-      productId: json['productId'],
+      userId: json['userId'],
       sortBy: json['sortBy'] ?? 'branchId',
       sortDirection: json['sortDirection'] ?? 'ASC',
       page: json['page'] ?? 1,
@@ -32,7 +32,7 @@ class BranchFilterRequest {
   Map<String, dynamic> toJson() {
     return {
       'keyword': keyword,
-      'productId': productId,
+      'userId': userId,
       'sortBy': sortBy,
       'sortDirection': sortDirection,
       'page': page,
@@ -40,7 +40,6 @@ class BranchFilterRequest {
     };
   }
 }
-
 
 class BranchFilterResponse {
   final PaginatedResult<BranchModel> paginatedResult;

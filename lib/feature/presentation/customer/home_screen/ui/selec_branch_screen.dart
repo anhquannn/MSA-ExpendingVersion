@@ -28,12 +28,16 @@ class _SelectBranchScreenState extends State<SelectBranchScreen> {
   onGetAllBranch() async {
     print('🔍 Bắt đầu gọi API lấy danh sách chi nhánh...');
 
-    final BranchFilterResponse response = await Repository.onGetAllBranch(
-      BranchFilterRequest(),
+    final BranchFilterResponse? response = await Repository.onGetAllBranch(
+      BranchFilterRequest(
+        page: 1,
+        pageSize: 100,
+        userId: Storage.userModelGlobal?.userId,
+      ),
     );
-    final list = response.paginatedResult.content;
+    final list = response?.paginatedResult.content;
 
-    for (var i in list) {
+    for (var i in list ?? []) {
       if (i.branchId == widget.branchId) {
         i.isSelect = true;
       }

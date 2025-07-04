@@ -328,7 +328,7 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
       },
       child: SizedBox(
         width: AppSize.width(),
-        height: 140,
+        height: 160,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
           child: Card(
@@ -369,70 +369,36 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
                           padding: const EdgeInsets.only(left: 10),
                           child: SizedBox(
                             height: 100,
-                            child: Stack(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.max,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                product?.discountPercentage != 0
-                                    ? Positioned(
-                                      top: 1,
-                                      right: 1,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: toHexToColor(
-                                            primaryErrorColor,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 2,
-                                            horizontal: 8,
-                                          ),
-                                          child: Text(
-                                            '${product?.discountPercentage}%',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                    : SizedBox(),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.max,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    customAutoSizeText(
-                                      14,
-                                      18,
-                                      product?.name ?? '',
-                                      isBold: true,
-                                      textColor: toHexToColor(primaryTextColor),
-                                    ),
-                                    // customAutoSizeText(8, 12, '100.000đ', isLine: true),
-                                    customAutoSizeText(
-                                      12,
-                                      16,
-                                      formatCurrencyVN(
-                                        orderModel?.totalPrice ?? 0.0,
-                                      ),
-                                      isBold: true,
-                                      // isLine: true,
-                                      textColor: toHexToColor(
-                                        primaryButtonColor,
-                                      ),
-                                    ),
-                                    customAutoSizeText(
-                                      10,
-                                      12,
-                                      '${orderModel?.quantity} x ${formatCurrencyVN(product?.price ?? 0.0)}',
-                                      isBold: true,
-                                      // isLine: true,
-                                      textColor: toHexToColor(primaryTextColor),
-                                    ),
-                                  ],
+                                customAutoSizeText(
+                                  14,
+                                  18,
+                                  product?.name ?? '',
+                                  isBold: true,
+                                  textColor: toHexToColor(primaryTextColor),
+                                ),
+                                // customAutoSizeText(8, 12, '100.000đ', isLine: true),
+                                customAutoSizeText(
+                                  12,
+                                  16,
+                                  formatCurrencyVN(
+                                    orderModel?.totalPrice ?? 0.0,
+                                  ),
+                                  isBold: true,
+                                  // isLine: true,
+                                  textColor: toHexToColor(primaryButtonColor),
+                                ),
+                                customAutoSizeText(
+                                  10,
+                                  12,
+                                  '${orderModel?.quantity} x ${formatCurrencyVN(product?.price ?? 0.0)}',
+                                  isBold: true,
+                                  // isLine: true,
+                                  textColor: toHexToColor(primaryTextColor),
                                 ),
                               ],
                             ),

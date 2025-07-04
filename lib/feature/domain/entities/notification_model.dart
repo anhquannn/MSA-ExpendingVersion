@@ -3,41 +3,42 @@ import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/user_model.dart';
 
 class NotificationModel {
-  final int notificationId;
-  final String notificationType;
-  final int notificationDate;
-  final String message;
-  final UserModel user;
+  final int? notificationId;
+  final String? notificationType;
+  final String? notificationDate;
+  final String? message;
+  final UserModel? user;
   final ProductModel? product;
   final OrderModel? order;
-  final dynamic inventory;
-  final bool read;
+  final dynamic? inventory;
+  final bool? read;
 
   NotificationModel({
-    required this.notificationId,
-    required this.notificationType,
-    required this.notificationDate,
-    required this.message,
-    required this.user,
+     this.notificationId,
+     this.notificationType,
+     this.notificationDate,
+     this.message,
+     this.user,
     this.product,
     this.order,
     this.inventory,
-    required this.read,
+     this.read,
   });
 
-  factory NotificationModel.fromJson(Map<String, dynamic> json) {
-    return NotificationModel(
-      notificationId: json['notificationId'],
-      notificationType: json['notificationType'],
-      notificationDate: json['notificationDate'],
-      message: json['message'],
-      user: UserModel.fromJson(json['user']),
-      product: ProductModel.fromJson(json['product']),
-      order: json['order'] != null ? OrderModel.fromJson(json['order']) : null,
-      inventory: json['inventory'],
-      read: json['read'],
-    );
-  }
+factory NotificationModel.fromJson(Map<String, dynamic> json) {
+  return NotificationModel(
+    notificationId: json['notificationId'],
+    notificationType: json['notificationType'],
+    notificationDate: json['notificationDate'],
+    message: json['message'],
+    user: json['user'] != null ? UserModel.fromJson(json['user']) : null,
+    product: json['product'] != null ? ProductModel.fromJson(json['product']) : null,
+    order: json['order'] != null ? OrderModel.fromJson(json['order']) : null,
+    inventory: json['inventory'],
+    read: json['read'],
+  );
+}
+
 
   Map<String, dynamic> toJson() {
     return {
@@ -45,7 +46,7 @@ class NotificationModel {
       'notificationType': notificationType,
       'notificationDate': notificationDate,
       'message': message,
-      'user': user.toJson(),
+      'user': user?.toJson(),
       'product': product,
       'order': order?.toJson(),
       'inventory': inventory,

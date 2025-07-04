@@ -30,7 +30,7 @@ class Storage {
     deviceId = prefs.getString(deviceIdKey) ?? '';
     email = prefs.getString(emailKey) ?? ''; //'mwang38203@gmail.com';
     // refreshToken=prefs.getString(refreshTokenKey) ?? '';
-    refreshToken = '';
+    refreshToken = prefs.getString(refreshTokenKey) ?? '';
 
     final userJson = prefs.getString(userModelKey);
     if (userJson != null) {
@@ -130,13 +130,14 @@ class Storage {
       isLogin = true;
     } else {
       final prefs = await SharedPreferences.getInstance();
+
       final tokenKey = refreshTokenKey;
       final storedRefreshToken = prefs.getString(tokenKey);
       if (storedRefreshToken == null || storedRefreshToken.isEmpty) {
         return false;
       }
     }
-    isLogin = await Repository.onRefresh(Storage.refreshToken ?? '');
+    isLogin = await Repository.onRefresh(Storage.refreshToken ?? refreshToken!);
     return isLogin;
   }
 }

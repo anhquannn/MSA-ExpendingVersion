@@ -8,12 +8,15 @@ import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
 import 'package:msa/feature/data/model/response/get_order_response_model.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
+import 'package:msa/feature/domain/entities/notification_model.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
 import 'package:msa/feature/presentation/customer/product_list/ui/product_list_screen.dart';
 import 'package:msa/widget/customBottomSheet.dart';
+import 'package:msa/widget/custom_notification_bottomsheet.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../core/config/base_bloc.dart';
@@ -69,13 +72,29 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                   if (!snapshot.hasData) {
                     return const Icon(Icons.person, color: Colors.grey);
                   }
+
+                  String? imagePath = snapshot.data?.image;
+                  bool isValidImage =
+                      imagePath != null && imagePath.trim().isNotEmpty;
+
+                  String finalImagePath =
+                      isValidImage
+                          ? imagePath!
+                          : (Storage.userModelGlobal?.image
+                                      ?.trim()
+                                      .isNotEmpty ==
+                                  true
+                              ? Storage.userModelGlobal!.image
+                              : 'assets/images/default_avatar.jpg');
+
                   return Image.asset(
-                    (snapshot.data?.image != '')
-                        ? snapshot.data!.image
-                        : avtWomen1,
+                    finalImagePath,
                     fit: BoxFit.cover,
                     width: 40,
                     height: 40,
+                    errorBuilder:
+                        (context, error, stackTrace) =>
+                            const Icon(Icons.broken_image, size: 40),
                   );
                 },
               ),
@@ -283,7 +302,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
             HomeTab(bloc, width, labels),
             OrderTab(bloc: bloc),
             CardTab(bloc: bloc),
-            NotificationTab(bloc),
+            NotificationScreen(bloc),
           ],
         );
       },
@@ -1492,38 +1511,93 @@ class CardTab extends StatelessWidget {
   }
 }
 
-class NotificationTab extends StatelessWidget {
+class NotificationScreen extends StatelessWidget {
   final HomeScreenBloc bloc;
-  const NotificationTab(this.bloc, {super.key});
+  const NotificationScreen(this.bloc, {super.key});
+
   @override
   Widget build(BuildContext context) {
-    return notificationScreen();
+    return DefaultTabController(
+      length: 2,
+      child: TabBarView(
+        children: [
+          NotificationListTab(
+            stream: bloc.streamListNotificationUnRead,
+            emptyMessage: 'Không có thông báo mới',
+            icon: Icons.notifications_active,
+          ),
+          NotificationListTab(
+            stream: bloc.streamListNotificationRead,
+            emptyMessage: 'Không có thông báo đã đọc',
+            icon: Icons.notifications,
+          ),
+        ],
+      ),
+    );
   }
+}
 
-  Widget notificationScreen() {
-    return ListView(
-      children: [
-        buildItemNotification(
-          'Bạn có đơn hàng mới',
-          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
-          isRead: false,
-        ),
-        buildItemNotification(
-          'Bạn có đơn hàng mới',
-          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
-          isRead: false,
-        ),
-        buildItemNotification(
-          'Bạn có đơn hàng mới',
-          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
-          isRead: false,
-        ),
-        buildItemNotification(
-          'Bạn có đơn hàng mới',
-          'Đơn hàng của bạn sẽ được giao sau 2 ngày. Vui lòng chú ý điện thoại.',
-          isRead: false,
-        ),
-      ],
+class NotificationListTab extends StatelessWidget {
+  final BehaviorSubject<List<NotificationModel>> stream;
+  final String emptyMessage;
+  final IconData icon;
+
+  const NotificationListTab({
+    required this.stream,
+    required this.emptyMessage,
+    required this.icon,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<NotificationModel>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final data = snapshot.data!;
+        if (data.isEmpty) {
+          return Center(child: Text(emptyMessage));
+        }
+
+        return ListView.separated(
+          itemCount: data.length,
+          separatorBuilder: (_, __) => const Divider(height: 0),
+          itemBuilder: (context, index) {
+            final n = data[index];
+            return ListTile(
+              leading: Icon(icon, color: toHexToColor(primaryColorPurple)),
+              title: Text(n.message ?? ''),
+              subtitle: Text(
+                n.message ?? '',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: Text(
+                formatDateString(
+                  n.notificationDate ?? formatDateTime(DateTime.now()),
+                ),
+                style: const TextStyle(fontSize: 12),
+              ),
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                  ),
+                  builder:
+                      (_) => NotificationDetailBottomSheet(notification: n),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

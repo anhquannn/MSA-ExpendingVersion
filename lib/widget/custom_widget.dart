@@ -204,7 +204,7 @@ Widget customItemProductCustomer(
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child:
-                              model.discountPercentage == 0
+                              model.discountPercentage != 0
                                   ? Text(
                                     '${model.discountPercentage}%',
 
@@ -237,12 +237,9 @@ Widget customItemProductCustomer(
                   maxFontSize: 18,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                model.discountPercentage != 0.0
-                    // ? model.price != 0
+                (model.branchCurrentPrice != 0&& model.branchCurrentPrice !=null)
                     ? AutoSizeText(
-                      formatCurrencyVN(
-                        (model.price ?? 0) * (model.discountPercentage ?? 0),
-                      ),
+                      formatCurrencyVN((model.branchCurrentPrice ?? 0)),
                       minFontSize: 10,
                       maxFontSize: 14,
                       style: TextStyle(

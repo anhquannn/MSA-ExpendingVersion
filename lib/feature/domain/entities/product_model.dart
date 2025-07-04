@@ -12,6 +12,7 @@ class ProductModel {
   final String? color;
   final String? specification;
   final String? description;
+  final double? branchCurrentPrice;
   final int? expiry;
   final double? totalRevenue;
 
@@ -47,6 +48,7 @@ class ProductModel {
     this.discountPercentage,
     this.discountTriggerDays,
     this.createdAt,
+    this.branchCurrentPrice,
     this.supplier,
     this.category,
     this.productImages,
@@ -59,34 +61,41 @@ class ProductModel {
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
-    final imagesJson = json['productImageResponses'] as List<dynamic>?;
-    final images = imagesJson?.map((e) => ProductImage.fromJson(e)).toList();
+    // 1. Parse danh sách ảnh một cách an toàn
+    final images =
+        (json['productImageResponses'] as List<dynamic>?)
+            ?.map((e) => ProductImage.fromJson(e as Map<String, dynamic>))
+            .toList();
 
-    // Lấy ảnh chính hoặc ảnh đầu tiên
-    final mainImage = images?.firstWhere(
-      (img) => img.isPrimary ?? false,
-      orElse: () => images.isNotEmpty ? images.first : images[0],
-    );
+    // 2. Lấy ảnh chính (mainImage) một cách an toàn
+    ProductImage? mainImage;
+    if (images != null && images.isNotEmpty) {
+      // Ưu tiên tìm ảnh có isPrimary = true
+      final primaryImage = images.where((img) => img.isPrimary ?? false);
+      if (primaryImage.isNotEmpty) {
+        mainImage = primaryImage.first;
+      } else {
+        // Nếu không có, lấy ảnh đầu tiên trong danh sách
+        mainImage = images.first;
+      }
+    }
 
     return ProductModel(
-      productId: int.tryParse(json['productId'].toString()),
+      // Sử dụng (json['key'] as num?)?.toInt() cho an toàn và gọn gàng
+      productId: (json['productId'] as num?)?.toInt(),
       name: json['name'] ?? '',
       image: mainImage?.imageUrl,
-      price:
-          json['price'] is num ? double.tryParse(json['price'].toString()) : 0,
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
       currentPrice: (json['currentPrice'] as num?)?.toDouble(),
       unit: json['unit'] ?? '',
       color: json['color'] ?? '',
       specification: json['specification'] ?? '',
       description: json['description'] ?? '',
-      expiry:
-          json['expiry'] != null
-              ? int.tryParse(json['expiry'].toString())
-              : null,
+      expiry: (json['expiry'] as num?)?.toInt(),
       totalRevenue: (json['totalRevenue'] as num?)?.toDouble(),
       netWeight: json['netWeight'],
       discountPercentage: (json['discountPercentage'] as num?)?.toDouble(),
-      discountTriggerDays: json['discountTriggerDays'],
+      discountTriggerDays: (json['discountTriggerDays'] as num?)?.toInt(),
       createdAt: json['createdAt'],
       supplier:
           json['supplier'] != null
@@ -97,12 +106,14 @@ class ProductModel {
               ? CategoryModel.fromJson(json['category'])
               : null,
       productImages: images,
+      // Các trường còn lại giữ nguyên
       inventoryProductResponses: json['inventoryProductResponses'],
       orderDetails: json['orderDetails'],
       feedbackResponses: json['feedbackResponses'],
       userBehaviorResponses: json['userBehaviorResponses'],
       notificationResponses: json['notificationResponses'],
       trendingProductResponses: json['trendingProductResponses'],
+      branchCurrentPrice: (json['branchCurrentPrice'] as num?)?.toDouble(),
     );
   }
 
@@ -182,7 +193,7 @@ class SupplierModel {
     this.address,
     this.contact,
     this.image,
-    this.selected=false
+    this.selected = false,
   });
 
   factory SupplierModel.fromJson(Map<String, dynamic> json) {

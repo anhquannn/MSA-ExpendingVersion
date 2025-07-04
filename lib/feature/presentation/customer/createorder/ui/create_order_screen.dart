@@ -25,7 +25,8 @@ import '../../../../../widget/custom_widget.dart';
 import '../../../../../widget/reuseable_screen_hide_appbar.dart';
 
 class CreateOrderScreen extends BaseView<CreateOrderBloc> {
-  CreateOrderScreen({super.key});
+  final int? orderId;
+  CreateOrderScreen({super.key, this.orderId});
 
   @override
   CreateOrderBloc createState() => CreateOrderBloc();
@@ -947,7 +948,7 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
     );
   }
 
-  void showPromoCodeBottomSheet({
+  showPromoCodeBottomSheet({
     CreateOrderBloc? bloc,
     required BuildContext bcontext,
     required List<PromoCodeModel> promoCodes,
@@ -1005,7 +1006,7 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
     );
   }
 
-  void showRateDetailBottomSheet({
+  showRateDetailBottomSheet({
     required BuildContext context,
     required RateModel rate,
   }) {
@@ -1068,69 +1069,6 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
     );
   }
 
-  void _showPromoCodeSheet(
-    BuildContext bContext,
-    String title,
-    // Widget bodyWidget,
-    PromoCodeModel model,
-  ) {
-    showCustomBottomSheet(
-      context: bContext,
-      title: model.name ?? '',
-      bodyWidget: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _customTextSpan('Mã giảm giá: ', model.code ?? ''),
-          const SizedBox(height: 10),
-          _customTextSpan('Mô tả: ', model.description ?? ''),
-          const SizedBox(height: 10),
-          _customTextSpan(
-            'Hạn sử dụng: ',
-            '${model.startDate ?? ''} -- ${model.endDate ?? ''}',
-          ),
-          const SizedBox(height: 10),
-          _customTextSpan(
-            'Điều kiện áp dụng: ',
-            'Dành cho đơn hàng có giá trị trên ${model.minimumOrderValue ?? ''}đ',
-          ),
-          const SizedBox(height: 10),
-          _customTextSpan(
-            'Giảm giá: ',
-            '${model.discountPercentage.toString()}đ',
-          ),
-          const SizedBox(height: 50),
-        ],
-      ),
-    );
-  }
-
-  // Widget _customTextSpan(String title, String body) {
-  //   return customTextSpan(
-  //     title,
-  //     body,
-  //     TextStyle(fontSize: 14, color: toHexToColor(secondaryTextColor)),
-  //     TextStyle(
-  //       fontSize: 15,
-  //       color: toHexToColor(primaryButtonColor),
-  //       fontWeight: FontWeight.bold,
-  //     ),
-  //   );
-  // }
-  Widget _customTextSpan(String label, String content) {
-    return RichText(
-      text: TextSpan(
-        style: const TextStyle(color: Colors.black),
-        children: [
-          TextSpan(
-            text: label,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          TextSpan(text: content),
-        ],
-      ),
-    );
-  }
 }
 
 class _RateDetailWidget extends StatelessWidget {

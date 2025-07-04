@@ -169,81 +169,98 @@ class LoginBloc extends BaseBloc<LoginScreen> {
   }
 
   loginWithGoogle(BuildContext bContext) async {
-    try {
-      final googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) {
-        print('❌ Người dùng đã hủy đăng nhập');
-        return null;
-      }
-
-      final googleAuth = await googleUser.authentication;
-      final accessToken = googleAuth.accessToken;
-      final idToken = googleAuth.idToken;
-
-      print('❌ Người dùng đã hủy đăng nhập $idToken');
-      print('❌ Người dùng đã hủy đăng nhập $accessToken');
-
-      final isSuccess = await Repository.loginWithGoogleToken(
-        accessToken ?? '',
-      );
-
-      final response = await Repository.onGetUserInfo();
-      final addressSuccess = await onGetAddress();
-      if (isSuccess) {
-        showCustomDialog(
-          bContext,
-          AppSize.w(0.9),
-          AppSize.w(0.9),
-          'Thông báo',
-          Text('Đăng nhập thành công !!!'),
-          true,
-          false,
-          Icon(
-            Icons.check_circle_outline,
-            color: toHexToColor(primaryColorGreen),
-          ),
-          onClose: () {
-            Navigator.push(
-              bContext,
-              MaterialPageRoute(builder: (context) => HomeScreen()),
-            );
-          },
-        );
-      } else {
-        showCustomDialog(
-          bContext,
-          AppSize.w(0.9),
-          AppSize.w(0.9),
-          'Thông báo',
-          Text('Đăng nhập không thành công !!!'),
-          true,
-          false,
-          Icon(
-            Icons.warning_amber_rounded,
-            color: toHexToColor(primaryColorGreen),
-          ),
-          onClose: () {
-            Navigator.push(
-              bContext,
-              MaterialPageRoute(builder: (context) => HomeScreen()),
-            );
-          },
-        );
-      }
-
-      print('🔑 Access Token Google: $accessToken');
-
-      return accessToken;
-    } catch (e, stack) {
-      print('❌ Lỗi khi đăng nhập bằng Google: $e');
-      print('📛 Stacktrace: $stack');
+    // try {
+    final googleUser = await GoogleSignIn().signIn();
+    if (googleUser == null) {
+      print('❌ Người dùng đã hủy đăng nhập');
       return null;
     }
+
+    final googleAuth = await googleUser.authentication;
+    final accessToken = googleAuth.accessToken;
+    final idToken = googleAuth.idToken;
+
+    print('❌ Người dùng đã hủy đăng nhập ___ $idToken');
+    print('❌ Người dùng đã hủy đăng nhập ___ $accessToken');
+
+    // final isSuccess = await Repository.loginWithGoogleToken(accessToken ?? '');
+    print('👉 Gọi loginWithGoogleToken...');
+    final isSuccess = await Repository.loginWithGoogleToken(accessToken ?? '');
+    print('✅ Kết quả loginWithGoogleToken: $isSuccess');
+    if (isSuccess) {
+      final response = await Repository.onGetUserInfo();
+      final addressSuccess = await onGetAddress();
+      showCustomDialog(
+        bContext,
+        AppSize.w(0.9),
+        AppSize.w(0.9),
+        'Thông báo',
+        Text('Đăng nhập thành công !!!'),
+        true,
+        false,
+        Icon(
+          Icons.check_circle_outline,
+          color: toHexToColor(primaryColorGreen),
+        ),
+        onClose: () {
+          Navigator.push(
+            bContext,
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+          );
+        },
+      );
+    } else {
+      showCustomDialog(
+        bContext,
+        AppSize.w(0.9),
+        AppSize.w(0.9),
+        'Thông báo',
+        Text('Đăng nhập không thành công !!!'),
+        true,
+        false,
+        Icon(
+          Icons.warning_amber_rounded,
+          color: toHexToColor(primaryColorGreen),
+        ),
+        onClose: () {
+          Navigator.pop(bContext);
+          // Navigator.push(
+          //   bContext,
+          //   MaterialPageRoute(builder: (context) => HomeScreen()),
+          // );
+        },
+      );
+    }
+
+    print('🔑 Access Token Google: $accessToken');
+
+    return accessToken;
+    // } catch (e, stack) {
+    //   print('❌ Lỗi khi đăng nhập bằng Google: $e');
+    //   print('📛 Stacktrace: $stack');
+    //   return null;
+    // }
   }
 
   onGetAddress() async {
     final response = await Repository.getUserAddresses();
     Storage.saveAddress(response[0]);
+  }
+
+  logoutFromGoogle() async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    try {
+      // Nếu đã đăng nhập thì mới signOut
+      final isSignedIn = await googleSignIn.isSignedIn();
+      if (isSignedIn) {
+        await googleSignIn.signOut();
+        print('✅ Đã đăng xuất Google thành công');
+      } else {
+        print('⚠️ Người dùng chưa đăng nhập bằng Google');
+      }
+    } catch (e) {
+      print('❌ Lỗi khi đăng xuất Google: $e');
+    }
   }
 
   @override

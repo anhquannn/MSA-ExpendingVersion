@@ -1,14 +1,17 @@
 package com.market.MSA.responses.order;
 
 import com.market.MSA.constants.PromoScopeType;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CampaignTargetResponse {
-    private Long id;
-    private PromoScopeType targetType;
-    private Long targetId;
-    private Long campaignId;
+  Long campaignTargetId;
+  PromoScopeType targetType;
+  Long targetId;
+  CampaignResponse campaign;
 }

@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /** Response DTO for revenue statistics */
 @Data
 @Builder
@@ -45,11 +47,11 @@ public class RevenueStatisticsResponse {
   private Double branchUserYearlyRevenue;
 
   /** Top selling products list */
-  private java.util.List<TopSellingProductResponse> topSellingProducts;
+  private List<TopSellingProductResponse> topSellingProducts;
 
   /** List of monthly revenue data (within selected period) */
-  private java.util.List<MonthlyRevenueDataResponse> revenues;
+  private List<MonthlyRevenueDataResponse> revenues;
 
   /** Expiring and low stock products list */
-  private java.util.List<ExpiringProductResponse> expiringLowStockProducts;
+  private List<ExpiringProductResponse> expiringLowStockProducts;
 }

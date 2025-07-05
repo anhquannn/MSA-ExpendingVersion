@@ -100,28 +100,24 @@ public class NotificationService {
         notificationRepository
             .findById(notificationId)
             .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_FOUND));
+            
+    // Only update relationships if the corresponding ID is provided in the request
     if (notificationRequest.getUserId() != null) {
       notification.setUser(
           entityFinderService.findByIdOrThrow(
               userRepository, notificationRequest.getUserId(), ErrorCode.USER_NOT_EXISTED));
-    } else {
-      notification.setUser(null);
     }
 
     if (notificationRequest.getOrderId() != null) {
       notification.setOrder(
           entityFinderService.findByIdOrThrow(
               orderRepository, notificationRequest.getOrderId(), ErrorCode.ORDER_NOT_FOUND));
-    } else {
-      notification.setOrder(null);
     }
 
     if (notificationRequest.getProductId() != null) {
       notification.setProduct(
           entityFinderService.findByIdOrThrow(
               productRepository, notificationRequest.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
-    } else {
-      notification.setProduct(null);
     }
 
     if (notificationRequest.getInventoryId() != null) {
@@ -130,13 +126,27 @@ public class NotificationService {
               inventoryRepository,
               notificationRequest.getInventoryId(),
               ErrorCode.INVENTORY_NOT_FOUND));
-    } else {
-      notification.setInventory(null);
     }
 
-    notificationMapper.updateNotification(notificationRequest, notification);
-    Notification updatedNotification = notificationRepository.save(notification);
+    // Map non-null fields from request to existing notification
+    if (notificationRequest.getNotificationType() != null) {
+      notification.setNotificationType(notificationRequest.getNotificationType());
+    }
+    if (notificationRequest.getDeviceTokens() != null) {
+      notification.setDeviceTokens(notificationRequest.getDeviceTokens());
+    }
+    if (notificationRequest.getDeviceIds() != null) {
+      notification.setDeviceIds(notificationRequest.getDeviceIds());
+    }
+    if (notificationRequest.getNotificationDate() != null) {
+      notification.setNotificationDate(notificationRequest.getNotificationDate());
+    }
+    if (notificationRequest.getMessage() != null) {
+      notification.setMessage(notificationRequest.getMessage());
+    }
+    notification.setRead(notificationRequest.isRead());
 
+    Notification updatedNotification = notificationRepository.save(notification);
     return notificationMapper.toNotificationResponse(updatedNotification);
   }
 

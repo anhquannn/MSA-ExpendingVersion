@@ -1,16 +1,24 @@
 package com.market.MSA.requests.filters;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.market.MSA.constants.PromoScopeType;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CampaignTargetFilterRequest {
-    private Long campaignId;
-    private String targetType;
-    private Long targetId;
-    private Integer page;
-    private Integer pageSize;
-    private String sortBy;
-    private String sortDirection;
+  Long campaignId;
+  PromoScopeType targetType;
+  Long targetId;
+
+  @Builder.Default Integer page = 1;
+
+  @Builder.Default Integer pageSize = 10;
+
+  @Builder.Default String sortBy = "campaignTargetId";
+
+  @Builder.Default String sortDirection = "DESC";
 }

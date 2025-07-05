@@ -20,10 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -176,6 +173,82 @@ public class PromoCodeService {
     }
 
     return promoCodePage;
+  }
+
+  @Transactional(readOnly = true)
+  @Cacheable("promo_codes_cart_paging")
+  public Page<PromoCodeResponse> filterPromoCodesWithPagingAndCart(
+          String keyword,
+          PromocodeStatus status,
+          Long campaignId,
+          LocalDateTime fromDate,
+          LocalDateTime toDate,
+          Long cartId,
+          Long userId,
+          Pageable pageable) {
+
+    Page<PromoCode> promoCodePage = promoCodeRepository.filterWithPagingAndCart(
+            keyword, status, campaignId, fromDate, toDate, cartId, pageable);
+
+    Page<PromoCodeResponse> responsePage = promoCodePage.map(promoCodeMapper::toPromoCodeResponse);
+
+    // Lọc mã đã dùng
+    if (userId != null) {
+      List<PromoCodeResponse> filtered = filterUsedPromoCodes(responsePage.getContent(), userId);
+      return new PageImpl<>(filtered, pageable, promoCodePage.getTotalElements());
+    }
+
+    return responsePage;
+  }
+
+  @Transactional(readOnly = true)
+  @Cacheable("promo_codes_cart_list")
+  public List<PromoCodeResponse> filterPromoCodesWithCart(
+          String keyword,
+          PromocodeStatus status,
+          Long campaignId,
+          LocalDateTime fromDate,
+          LocalDateTime toDate,
+          Long cartId,
+          Long userId,
+          Sort sort) {
+
+    List<PromoCode> promoCodes = promoCodeRepository.filterWithCart(
+            keyword, status, campaignId, fromDate, toDate, cartId, sort);
+
+    List<PromoCodeResponse> responses = promoCodes.stream()
+            .map(promoCodeMapper::toPromoCodeResponse)
+            .collect(Collectors.toList());
+
+    return filterUsedPromoCodes(responses, userId);
+  }
+
+  @Transactional(readOnly = true)
+  @Cacheable("promo_codes_applicable")
+  public List<PromoCodeResponse> getApplicablePromoCodesForCart(
+          Long cartId,
+          PromocodeStatus status,
+          Long userId) {
+
+    List<PromoCode> promoCodes = promoCodeRepository.findApplicablePromoCodesForCart(cartId, status);
+
+    List<PromoCodeResponse> responses = promoCodes.stream()
+            .map(promoCodeMapper::toPromoCodeResponse)
+            .collect(Collectors.toList());
+
+    return filterUsedPromoCodes(responses, userId);
+  }
+
+  @Transactional(readOnly = true)
+  @Cacheable("promo_codes_cart_active")
+  public List<PromoCodeResponse> getActivePromoCodesForCart(Long cartId, Long userId) {
+    List<PromoCode> promoCodes = promoCodeRepository.findActivePromoCodesForCart(cartId);
+
+    List<PromoCodeResponse> responses = promoCodes.stream()
+            .map(promoCodeMapper::toPromoCodeResponse)
+            .collect(Collectors.toList());
+
+    return filterUsedPromoCodes(responses, userId);
   }
 
   void validatePromoCode(PromoCode promoCode) {

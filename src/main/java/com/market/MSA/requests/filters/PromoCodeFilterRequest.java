@@ -18,6 +18,7 @@ public class PromoCodeFilterRequest {
   LocalDateTime toDate;
   Long campaignId;
   Long userId;
+  Long cartId;
 
   // Sorting
   @Builder.Default String sortBy = "startDate";

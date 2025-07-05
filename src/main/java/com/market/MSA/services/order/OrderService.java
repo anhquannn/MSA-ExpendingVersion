@@ -26,6 +26,7 @@ import com.market.MSA.requests.filters.OrderFilterRequest;
 import com.market.MSA.requests.order.OrderRequest;
 import com.market.MSA.requests.order.PromoCodeUsageRequest;
 import com.market.MSA.responses.order.*;
+import com.market.MSA.responses.order.BranchRevenueResponse;
 import com.market.MSA.services.others.EmailService;
 import com.market.MSA.services.others.NotificationService;
 import com.market.MSA.services.others.PricingService;
@@ -79,31 +80,39 @@ public class OrderService {
 
   @Transactional
   public OrderResponse createOrder(
-      Long userId, Long branchId, Long userAddressId, Long cartId, List<String> promoCodes) {
-    // Tính toán tổng tiền và giảm giá
-    OrderSummaryResponse orderSummary =
-        calculateOrderSummary(branchId, userAddressId, userId, cartId, promoCodes);
+          Long userId, Long branchId, Long userAddressId, Long cartId, List<String> promoCodes) {
+
+    // Get cart items and convert to OrderItemDto for validation
+    List<CartItemResponse> cartItems = cartItemService.getCartItemsByCartId(cartId);
+    List<OrderItemDto> orderItems = cartItems.stream()
+            .map(ci -> new OrderItemDto(ci.getProduct().getProductId(), ci.getQuantity()))
+            .toList();
+
+    // Calculate total cost for validation
+    double totalCost = cartItems.stream()
+            .mapToDouble(ci -> ci.getQuantity() * ci.getProduct().getPrice())
+            .sum();
+
+    // VALIDATE PROMO CODES FIRST - This is the key addition
+    double discount = pricingService.validateAndCalculateDiscount(
+            orderItems, promoCodes, userId, totalCost);
+
+    // If validation passes, proceed with existing logic
+    OrderSummaryResponse orderSummary = calculateOrderSummary(
+            branchId, userAddressId, userId, cartId, promoCodes);
     double grandTotal = orderSummary.getGrandTotal();
 
-    // Lấy thông tin user, cart, branch
-    User user =
-        userRepository
-            .findById(userId)
+    // Rest of the existing createOrder logic...
+    User user = userRepository.findById(userId)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-    Cart cart =
-        cartRepository
-            .findById(cartId)
+    Cart cart = cartRepository.findById(cartId)
             .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
 
-    Branch branch =
-        branchRepository
-            .findById(branchId)
+    Branch branch = branchRepository.findById(branchId)
             .orElseThrow(() -> new AppException(ErrorCode.BRANCH_NOT_FOUND));
 
-    // Tạo đơn hàng mới
-    Order order =
-        Order.builder()
+    Order order = Order.builder()
             .user(user)
             .cart(cart)
             .orderDate(LocalDateTime.now())
@@ -114,16 +123,15 @@ public class OrderService {
 
     order = orderRepository.save(order);
 
-    // Nếu có mã giảm giá, lưu vào bảng OrderPromoCode và ghi nhận sử dụng
+    // Handle promo codes (existing logic)
     if (promoCodes != null && !promoCodes.isEmpty()) {
       if (order.getPromoCodes() == null) {
-        order.setPromoCodes(new ArrayList<>()); // Khởi tạo nếu bị null
+        order.setPromoCodes(new ArrayList<>());
       }
 
       for (String promoCode : promoCodes) {
-        // Check if user has already used this promo code
         if (promoCodeService.hasUserUsedPromoCode(
-            userId, promoCodeService.findPromoCodeByCode(promoCode).getPromoCodeId())) {
+                userId, promoCodeService.findPromoCodeByCode(promoCode).getPromoCodeId())) {
           throw new AppException(ErrorCode.PROMO_CODE_ALREADY_USED);
         }
 
@@ -131,9 +139,7 @@ public class OrderService {
         if (!promo.getStatus().equals(PromocodeStatus.EXPIRED)) {
           order.getPromoCodes().add(promo);
 
-          // Record promo code usage
-          PromoCodeUsageRequest usageRequest =
-              PromoCodeUsageRequest.builder()
+          PromoCodeUsageRequest usageRequest = PromoCodeUsageRequest.builder()
                   .usedAt(LocalDateTime.now())
                   .promoCodeId(promo.getPromoCodeId())
                   .orderId(order.getOrderId())
@@ -144,16 +150,11 @@ public class OrderService {
       }
     }
 
-    // Lấy danh sách sản phẩm từ giỏ hàng
-    List<CartItemResponse> cartItems = cartItemService.getCartItemsByCartId(cartId);
-
+    // Rest of existing logic for order details, inventory updates, etc.
     for (CartItemResponse cartItem : cartItems) {
-      Product product =
-          productService.findProductById(cartItem.getProduct().getProductId()); // Fixed method call
+      Product product = productService.findProductById(cartItem.getProduct().getProductId());
 
-      // Tạo chi tiết đơn hàng
-      OrderDetail orderDetail =
-          OrderDetail.builder()
+      OrderDetail orderDetail = OrderDetail.builder()
               .order(order)
               .product(product)
               .quantity(cartItem.getQuantity())
@@ -162,19 +163,12 @@ public class OrderService {
               .build();
 
       orderDetailRepository.save(orderDetail);
-
-      // Cập nhật số lượng tồn kho sản phẩm
       inventoryProductService.updateInventoryProduct(
-          branchId, product.getProductId(), cartItem.getQuantity());
-
-      // Cập nhật doanh số sản phẩm
+              branchId, product.getProductId(), cartItem.getQuantity());
       productService.updateTotalRevenue(product.getProductId(), cartItem.getQuantity());
     }
 
-    // Xóa giỏ hàng sau khi đặt hàng
     cartItemService.clearCart(cartId);
-
-    // Send notification
     notificationService.sendOrderCreatedNotification(order.getOrderId());
 
     return orderMapper.toOrderResponse(order);
@@ -193,6 +187,91 @@ public class OrderService {
             .map(ci -> new OrderItemDto(ci.getProduct().getProductId(), ci.getQuantity()))
             .toList();
     return pricingService.calculateSummary(branchId, userAddressId, userId, items, promoCodes);
+  }
+
+  @Transactional(readOnly = true)
+  public OrderSummaryResponse previewBuyAgain(
+          Long oldOrderId, Long userAddressId, List<String> promoCodes) {
+
+    Order oldOrder = orderRepository.findById(oldOrderId)
+            .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+    if (oldOrder.getStatus() != OrderStatus.COMPLETED) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+
+    Long userId = oldOrder.getUser().getUserId();
+    Long branchId = oldOrder.getBranch().getBranchId();
+
+    // Convert order details to OrderItemDto for validation
+    List<OrderItemDto> items = oldOrder.getOrderDetails().stream()
+            .map(od -> new OrderItemDto(od.getProduct().getProductId(), od.getQuantity()))
+            .toList();
+
+    // Determine effective promo codes
+    List<String> effectivePromoCodes;
+    if (promoCodes != null && !promoCodes.isEmpty()) {
+      effectivePromoCodes = promoCodes;
+    } else {
+      effectivePromoCodes = oldOrder.getPromoCodes() == null ? List.of()
+              : oldOrder.getPromoCodes().stream().map(PromoCode::getCode).toList();
+    }
+
+    return pricingService.calculateSummary(
+            branchId, userAddressId, userId, items, effectivePromoCodes);
+  }
+
+  @Transactional
+  public OrderResponse buyAgain(Long oldOrderId, Long userAddressId, List<String> promoCodes) {
+    Order oldOrder = orderRepository.findById(oldOrderId)
+            .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+    if (oldOrder.getStatus() != OrderStatus.COMPLETED) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+
+    Long userId = oldOrder.getUser().getUserId();
+    Long branchId = oldOrder.getBranch().getBranchId();
+
+    // Prepare items for validation
+    List<OrderItemDto> orderItems = oldOrder.getOrderDetails().stream()
+            .map(detail -> new OrderItemDto(detail.getProduct().getProductId(), detail.getQuantity()))
+            .toList();
+
+    // Calculate total cost for validation
+    double totalCost = oldOrder.getOrderDetails().stream()
+            .mapToDouble(detail -> detail.getQuantity() * detail.getProduct().getPrice())
+            .sum();
+
+    // Determine promo codes to apply
+    List<String> effectivePromoCodes;
+    if (promoCodes != null && !promoCodes.isEmpty()) {
+      effectivePromoCodes = promoCodes;
+    } else {
+      effectivePromoCodes = oldOrder.getPromoCodes() == null ? List.of()
+              : oldOrder.getPromoCodes().stream().map(PromoCode::getCode).toList();
+    }
+
+    // VALIDATE PROMO CODES FIRST - This is the key addition
+    if (!effectivePromoCodes.isEmpty()) {
+      pricingService.validateAndCalculateDiscount(
+              orderItems, effectivePromoCodes, userId, totalCost);
+    }
+
+    // If validation passes, proceed with existing logic
+    CartResponse cartResponse = cartService.getOrCreateCartForUser(userId);
+    Long cartId = cartResponse.getCartId();
+
+    // Merge items from old order into existing cart
+    for (OrderDetail detail : oldOrder.getOrderDetails()) {
+      Long productId = detail.getProduct().getProductId();
+      if (cartItemRepository.findByCart_CartIdAndProduct_ProductId(cartId, productId).isEmpty()) {
+        cartItemService.addToCart(userId, productId, branchId, detail.getQuantity());
+      }
+    }
+
+    // Create new order using existing createOrder flow
+    return createOrder(userId, branchId, userAddressId, cartId, effectivePromoCodes);
   }
 
   @Transactional
@@ -486,6 +565,19 @@ public class OrderService {
   }
 
   @Transactional(readOnly = true)
+  public List<BranchRevenueResponse> getBranchRevenueComparison(int year, int month, int periodMonths) {
+    java.time.LocalDateTime end = java.time.LocalDateTime.of(year, month, 1, 0, 0).plusMonths(1);
+    java.time.LocalDateTime start = end.minusMonths(periodMonths);
+    List<Object[]> rows = orderDetailRepository.findRevenueByBranch(start, end);
+    return rows.stream()
+        .map(r -> BranchRevenueResponse.builder()
+            .branchId((Long) r[0])
+            .name((String) r[1])
+            .totalRevenue(((Number) r[2]).doubleValue())
+            .build())
+        .toList();
+  }
+
   public RevenueStatisticsResponse getRevenueStatistics(
       int year,
       int month,
@@ -614,81 +706,6 @@ public class OrderService {
     return builder.build();
   }
 
-  @Transactional(readOnly = true)
-  public OrderSummaryResponse previewBuyAgain(
-      Long oldOrderId, Long userAddressId, List<String> promoCodes) {
-    Order oldOrder =
-        orderRepository
-            .findById(oldOrderId)
-            .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-
-    if (oldOrder.getStatus() != OrderStatus.COMPLETED) {
-      throw new AppException(ErrorCode.INVALID_INPUT);
-    }
-
-    Long userId = oldOrder.getUser().getUserId();
-    Long branchId = oldOrder.getBranch().getBranchId();
-
-    List<OrderItemDto> items =
-        oldOrder.getOrderDetails().stream()
-            .map(od -> new OrderItemDto(od.getProduct().getProductId(), od.getQuantity()))
-            .toList();
-
-    List<String> effectivePromoCodes;
-    if (promoCodes != null && !promoCodes.isEmpty()) {
-      effectivePromoCodes = promoCodes;
-    } else {
-      effectivePromoCodes =
-          oldOrder.getPromoCodes() == null
-              ? List.of()
-              : oldOrder.getPromoCodes().stream().map(PromoCode::getCode).toList();
-    }
-
-    return pricingService.calculateSummary(
-        branchId, userAddressId, userId, items, effectivePromoCodes);
-  }
-
-  @Transactional
-  public OrderResponse buyAgain(Long oldOrderId, Long userAddressId, List<String> promoCodes) {
-    Order oldOrder =
-        orderRepository
-            .findById(oldOrderId)
-            .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-
-    if (oldOrder.getStatus() != OrderStatus.COMPLETED) {
-      throw new AppException(ErrorCode.INVALID_INPUT);
-    }
-
-    Long userId = oldOrder.getUser().getUserId();
-    Long branchId = oldOrder.getBranch().getBranchId();
-
-    // Prepare temporary cart with items from old order
-    CartResponse cartResponse = cartService.getOrCreateCartForUser(userId);
-    Long cartId = cartResponse.getCartId();
-
-    // Merge items from old order into existing cart (keep current items)
-    for (OrderDetail detail : oldOrder.getOrderDetails()) {
-      Long productId = detail.getProduct().getProductId();
-      if (cartItemRepository.findByCart_CartIdAndProduct_ProductId(cartId, productId).isEmpty()) {
-        cartItemService.addToCart(userId, productId, branchId, detail.getQuantity());
-      }
-    }
-
-    // Determine promo codes to apply
-    List<String> effectivePromoCodes;
-    if (promoCodes != null && !promoCodes.isEmpty()) {
-      effectivePromoCodes = promoCodes;
-    } else {
-      effectivePromoCodes =
-          oldOrder.getPromoCodes() == null
-              ? List.of()
-              : oldOrder.getPromoCodes().stream().map(PromoCode::getCode).toList();
-    }
-
-    // Create new order using existing createOrder flow (handles inventory, discounts, etc.)
-    return createOrder(userId, branchId, userAddressId, cartId, effectivePromoCodes);
-  }
-
   @Transactional
   public OrderResponse updateOrderStatus(Long orderId, String newStatus) {
     // Validate status string
@@ -732,6 +749,26 @@ public class OrderService {
     }
 
     // Add more specific rules if needed
+  }
+
+  @Transactional(readOnly = true)
+  public List<TopCustomerResponse> getTopCustomers(
+      int year,
+      int month,
+      Long branchId,
+      int topPeriod,
+      int topLimit) {
+    java.time.LocalDateTime end = java.time.LocalDateTime.of(year, month, 1, 0, 0).plusMonths(1);
+    java.time.LocalDateTime start = end.minusMonths(topPeriod);
+    org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, topLimit);
+    List<Object[]> rows = orderRepository.findTopCustomers(branchId, start, end, pageable);
+    return rows.stream()
+        .map(r -> TopCustomerResponse.builder()
+            .customerId((Long) r[0])
+            .name((String) r[1])
+            .totalSpent(((Number) r[2]).doubleValue())
+            .build())
+        .toList();
   }
 
   private boolean isPointsAwarded(Order order) {

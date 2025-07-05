@@ -11,7 +11,8 @@ import org.springframework.stereotype.Component;
 
 @Mapper(
     componentModel = "spring",
-    uses = {InventoryMapper.class})
+    uses = {InventoryMapper.class},
+    nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface NotificationMapper {
   Notification toNotification(NotificationRequest request);

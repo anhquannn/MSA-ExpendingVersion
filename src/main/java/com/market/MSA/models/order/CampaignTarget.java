@@ -18,7 +18,7 @@ public class CampaignTarget {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  Long id;
+  Long campaignTargetId;
 
   @Enumerated(EnumType.STRING)
   PromoScopeType targetType;

@@ -238,6 +238,14 @@ public class UserController {
     return ApiResponse.<Void>builder().build();
   }
 
+  @PostMapping("/surveyors")
+  public ApiResponse<UserResponse> createSurveyor(@RequestBody @Valid SurveyorCreateRequest request) {
+    return ApiResponse.<UserResponse>builder()
+        .result(userService.createSurveyor(request))
+        .message(ApiMessage.USER_CREATED.getMessage())
+        .build();
+  }
+
   @PostMapping("/refresh")
   ApiResponse<AuthenticationResponse> refresh(@RequestBody @Valid RefreshRequest request)
       throws JOSEException, ParseException {

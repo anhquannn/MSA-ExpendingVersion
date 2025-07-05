@@ -25,7 +25,6 @@ public class PromoCodeResponse {
   LocalDateTime endDate;
   PromocodeStatus status;
   double discountPercentage;
-  double minimumOrderValue;
 
   CampaignResponse campaignResponse;
   List<PromoCodeUsageResponse> promoCodeUsages;

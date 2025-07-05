@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.constants.PromoScopeType;
 import com.market.MSA.constants.PromocodeStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +41,7 @@ public class Campaign {
   @Enumerated(EnumType.STRING)
   PromoScopeType scopeType = PromoScopeType.ALL;
 
-  @jakarta.validation.constraints.PositiveOrZero double minOrderValue;
+  @PositiveOrZero double minOrderValue;
 
   @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("campaign-targets")

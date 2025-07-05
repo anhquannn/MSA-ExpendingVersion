@@ -183,6 +183,12 @@ public enum ApiMessage {
   CAMPAIGN_RETRIEVED("Campaign retrieved successfully"),
   ALL_CAMPAIGNS_RETRIEVED("All campaigns retrieved successfully"),
 
+  CAMPAIGN_TARGET_CREATED("Campaign target created successfully"),
+  CAMPAIGN_TARGET_UPDATED("Campaign target updated successfully"),
+  CAMPAIGN_TARGET_DELETED("Campaign target deleted successfully"),
+  CAMPAIGN_TARGET_RETRIEVED("Campaign target retrieved successfully"),
+  ALL_CAMPAIGN_TARGETS_RETRIEVED("All campaign targets retrieved successfully"),
+
   // Return Order messages
   RETURN_ORDER_CREATED("Return order created successfully"),
   RETURN_ORDER_UPDATED("Return order updated successfully"),

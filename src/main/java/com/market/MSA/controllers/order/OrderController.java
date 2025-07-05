@@ -6,6 +6,8 @@ import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.requests.filters.OrderFilterRequest;
 import com.market.MSA.requests.order.OrderRequest;
+import com.market.MSA.responses.order.BranchRevenueResponse;
+import com.market.MSA.responses.order.TopCustomerResponse;
 import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.OrderSummaryResponse;
 import com.market.MSA.responses.order.RevenueStatisticsResponse;
@@ -151,6 +153,30 @@ public class OrderController {
     return ApiResponse.<Page<OrderResponse>>builder()
         .result(orderService.getAllOrdersWithPaging(request))
         .message(ApiMessage.ALL_ORDERS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @GetMapping("/revenue/branches")
+  public ApiResponse<List<BranchRevenueResponse>> getBranchRevenues(
+      @RequestParam int year,
+      @RequestParam int month,
+      @RequestParam(defaultValue = "6") int periodMonths) {
+    return ApiResponse.<List<BranchRevenueResponse>>builder()
+        .result(orderService.getBranchRevenueComparison(year, month, periodMonths))
+        .message("Branch revenue comparison retrieved")
+        .build();
+  }
+
+  @GetMapping("/revenue/top-customers")
+  public ApiResponse<List<TopCustomerResponse>> getTopCustomers(
+      @RequestParam int year,
+      @RequestParam int month,
+      @RequestParam(required = false) Long branchId,
+      @RequestParam(defaultValue = "6") int topPeriod,
+      @RequestParam(defaultValue = "10") int topLimit) {
+    return ApiResponse.<List<TopCustomerResponse>>builder()
+        .result(orderService.getTopCustomers(year, month, branchId, topPeriod, topLimit))
+        .message("Top customers retrieved")
         .build();
   }
 

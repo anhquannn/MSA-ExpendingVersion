@@ -95,4 +95,21 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       @Param("year") int year, @Param("branchId") Long branchId, @Param("userId") Long userId);
 
   Long branch(Branch branch);
+
+  @Query(
+      """
+      SELECT o.user.userId, o.user.fullName, SUM(o.grandTotal) AS total
+      FROM Order o
+      WHERE o.status = com.market.MSA.constants.OrderStatus.COMPLETED
+      AND o.orderDate BETWEEN :start AND :end
+      AND (:branchId IS NULL OR o.branch.branchId = :branchId)
+      GROUP BY o.user.userId, o.user.fullName
+      ORDER BY total DESC
+      """)
+  List<Object[]> findTopCustomers(
+      @Param("branchId") Long branchId,
+      @Param("start") java.time.LocalDateTime start,
+      @Param("end") java.time.LocalDateTime end,
+      org.springframework.data.domain.Pageable pageable);
+
 }

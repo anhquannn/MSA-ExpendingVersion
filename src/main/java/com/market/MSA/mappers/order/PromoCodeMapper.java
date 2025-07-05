@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public interface PromoCodeMapper {
   PromoCode toPromoCode(PromoCodeRequest request);
 
+  @Mapping(source = "campaign", target = "campaignResponse")
   PromoCodeResponse toPromoCodeResponse(PromoCode promoCode);
 
   @Mapping(target = "promoCodeId", ignore = true)

@@ -13,6 +13,7 @@ import com.market.MSA.repositories.others.DeviceTokenRepository;
 import com.market.MSA.repositories.user.RoleRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.user.AuthenticationRequest;
+import com.market.MSA.requests.user.SurveyorCreateRequest;
 import com.market.MSA.requests.user.UpdateUserRequest;
 import com.market.MSA.requests.user.UserRequest;
 import com.market.MSA.responses.user.AuthenticationResponse;
@@ -436,6 +437,28 @@ public class UserService {
     }
     userRepository.deleteById(userId);
     return true;
+  }
+
+  public UserResponse createSurveyor(SurveyorCreateRequest request) {
+    if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+      throw new AppException(ErrorCode.USER_EXISTED);
+    }
+    Role surveyorRole =
+        roleRepository
+            .findByName("SURVEYOR")
+            .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+
+    User user =
+        User.builder()
+            .email(request.getEmail())
+            .fullName(request.getFullName())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .phoneNumber(request.getPhoneNumber())
+            .roles(Set.of(surveyorRole))
+            .build();
+
+    user = userRepository.save(user);
+    return userMapper.toUserResponse(user);
   }
 
   static String generateRandomPassword() {

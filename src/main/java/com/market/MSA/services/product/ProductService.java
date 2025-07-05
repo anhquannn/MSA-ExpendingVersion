@@ -355,7 +355,7 @@ public class ProductService {
     }
 
     // Determine stock info (default branchId = 1 if not provided)
-    Long branchToUse = (branchId != null) ? branchId : 3L;
+    Long branchToUse = (branchId != null) ? branchId : 1L;
     Integer totalStock =
         inventoryProductRepository.getTotalStockByBranchAndProduct(branchToUse, productId);
     int stockNumber = totalStock != null ? totalStock : 0;

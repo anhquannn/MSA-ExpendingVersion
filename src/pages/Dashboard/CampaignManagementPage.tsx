@@ -111,6 +111,8 @@ const CampaignManagementPage: React.FC = () => {
               <th className="py-3 px-6 text-left">Trạng thái</th>
               <th className="py-3 px-6 text-left">Ngày bắt đầu</th>
               <th className="py-3 px-6 text-left">Ngày kết thúc</th>
+              <th className="py-3 px-6 text-left">Phạm vi</th>
+              <th className="py-3 px-6 text-left">Giá trị tối thiểu</th>
               <th className="py-3 px-6 text-center">Hành động</th>
             </tr>
           </thead>
@@ -129,6 +131,8 @@ const CampaignManagementPage: React.FC = () => {
                 <td className="py-3 px-6">{c.status}</td>
                 <td className="py-3 px-6">{c.startDate}</td>
                 <td className="py-3 px-6">{c.endDate}</td>
+                <td className="py-3 px-6">{c.scopeType}</td>
+                <td className="py-3 px-6">{c.minOrderValue}</td>
                 <td className="py-3 px-6 text-center">
                   <button onClick={() => handleOpenEditModal(c)} className="text-yellow-600 hover:underline mr-4">Sửa</button>
                   <button onClick={() => handleDelete(c)} disabled={deleteMutation.isPending} className="text-red-600 hover:underline disabled:text-gray-400">

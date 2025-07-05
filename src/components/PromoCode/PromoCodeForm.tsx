@@ -20,7 +20,6 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialData, onSuccess, u
     endDate: '',
     status: 'ACTIVE',
     discountPercentage: 0,
-    minimumOrderValue: 0,
     campaignId: 0,
   });
 
@@ -37,7 +36,6 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialData, onSuccess, u
   fetchCampaigns();
 }, []);
 
-
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -48,7 +46,6 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialData, onSuccess, u
         endDate: initialData.endDate.split('T')[0],
         status: initialData.status,
         discountPercentage: initialData.discountPercentage,
-        minimumOrderValue: initialData.minimumOrderValue,
         campaignId: initialData.campaignId,
       });
     }
@@ -73,7 +70,7 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialData, onSuccess, u
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: ['discountPercentage', 'minimumOrderValue', 'campaignId'].includes(name)
+      [name]: ['discountPercentage', 'campaignId'].includes(name)
         ? Number(value)
         : value,
     }));
@@ -83,7 +80,7 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialData, onSuccess, u
     e.preventDefault();
 
     const {
-      name, code, startDate, endDate, discountPercentage, minimumOrderValue, campaignId
+      name, code, startDate, endDate, discountPercentage, campaignId
     } = formData;
 
     if (!name || !code || !startDate || !endDate || !campaignId) {
@@ -98,11 +95,6 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialData, onSuccess, u
 
     if (discountPercentage! < 0 || discountPercentage! > 100) {
       alert('Giá trị giảm phải nằm trong khoảng 0 đến 100%.');
-      return;
-    }
-
-    if (minimumOrderValue! < 0) {
-      alert('Giá trị đơn hàng tối thiểu không hợp lệ.');
       return;
     }
 
@@ -193,36 +185,53 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialData, onSuccess, u
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium">Giá trị đơn hàng tối thiểu</label>
-        <input
-          name="minimumOrderValue"
-          type="number"
-          min={0}
-          value={formData.minimumOrderValue}
-          onChange={handleChange}
-          className="mt-1 w-full p-2 border rounded-md"
-        />
-      </div>
-
       <div className="md:col-span-2">
         <label className="block text-sm font-medium">Chiến dịch</label>
         <select
-            name="campaignId"
-            value={formData.campaignId}
-            onChange={handleChange}
-            className="mt-1 w-full p-2 border rounded-md"
+          name="campaignId"
+          value={formData.campaignId}
+          onChange={handleChange}
+          className="mt-1 w-full p-2 border rounded-md"
+          required
         >
-            <option value={0}>-- Chọn chiến dịch --</option>
-            {campaigns.map((campaign) => (
+          <option value={0}>-- Chọn chiến dịch --</option>
+          {campaigns.map((campaign) => (
             <option key={campaign.campaignId} value={campaign.campaignId}>
-                {campaign.name}
+              {campaign.name}
+              {campaign.scopeType !== 'ALL' && (
+                <span className="ml-2 text-sm text-gray-500">
+                  ({campaign.scopeType === 'CATEGORY' ? 'Danh mục' : 'Nhà cung cấp'})
+                </span>
+              )}
             </option>
-            ))}
+          ))}
         </select>
-    </div>
+      </div>
 
-      <div className="md:col-span-2 flex justify-end pt-2">
+      {formData.campaignId && formData.campaignId > 0 && (
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium">Chi tiết chiến dịch</label>
+          <div className="mt-1 p-4 bg-gray-50 rounded-md">
+            <div className="flex justify-between text-sm">
+              <div>
+                <span className="font-medium">Phạm vi áp dụng:</span>
+                <span className="ml-2">
+                  {campaigns.find(c => c.campaignId === formData.campaignId)?.scopeType === 'ALL' ? 'Toàn bộ' : 
+                  (campaigns.find(c => c.campaignId === formData.campaignId)?.scopeType === 'CATEGORY' ? 'Danh mục' : 'Nhà cung cấp')}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium">Giá trị tối thiểu:</span>
+                <span className="ml-2">
+                  {campaigns.find(c => c.campaignId === formData.campaignId)?.minOrderValue} đ
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="md:col-span-2 flex justify-end pt-4">
         <button
           type="submit"
           disabled={mutation.isPending}

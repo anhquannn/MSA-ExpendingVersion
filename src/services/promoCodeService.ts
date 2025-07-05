@@ -12,8 +12,13 @@ export interface PromoCode {
   endDate: string;
   status: string;
   discountPercentage: number;
-  minimumOrderValue: number;
   campaignId: number;
+  campaignResponse?: {
+    campaignId: number;
+    name: string;
+    minOrderValue: number;
+    scopeType: 'ALL' | 'CATEGORY' | 'SUPPLIER' | 'BATCH_NUMBER';
+  };
   campaign?: {
     campaignId: number;
     name: string;
@@ -43,7 +48,6 @@ export interface PromoCodePayload {
   endDate: string;
   status: string;
   discountPercentage: number;
-  minimumOrderValue: number;
   campaignId: number;
 }
 

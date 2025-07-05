@@ -491,7 +491,7 @@ const OrdersPage = () => {
                     return (
                       <tr key={order.orderId} className="hover:bg-gray-50">
                         <td className="py-3 px-4 border-b">#{order.orderId}</td>
-                        <td className="py-3 px-4 border-b">{order.branchName || 'N/A'}</td>
+                        <td className="py-3 px-4 border-b">{(order as any).branch?.name || order.branchName || 'N/A'}</td>
                         <td className="py-3 px-4 border-b">{formatDate(order.orderDate)}</td>
                         <td className="py-3 px-4 border-b">{formatCurrency(order.grandTotal)}</td>
                         <td className="py-3 px-4 border-b">

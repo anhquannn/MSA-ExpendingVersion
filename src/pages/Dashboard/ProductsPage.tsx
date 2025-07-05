@@ -154,10 +154,10 @@ const ProductsPage: React.FC = () => {
         />
       </div>
 
-      {/* --- NÚT THÊM SẢN PHẨM --- */}
-      <div className="text-right">
+      {/* --- CÁC NÚT THÊM --- */}
+      <div className="flex flex-wrap gap-2 justify-end">
         <button
-          onClick={() => navigate('/dashboard/products/add')} // Điều hướng đến trang thêm sản phẩm
+          onClick={() => navigate('/dashboard/products/add')}
           className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
         >
           + Thêm Sản Phẩm

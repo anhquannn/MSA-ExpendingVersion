@@ -1,8 +1,9 @@
 // src/components/common/Dashboard/Layout.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Outlet } from 'react-router-dom';
 import AppBar from './AppBar';
 import Sidebar from './Sidebar'; // Vẫn import Sidebar
+import { NotificationCtx, NotificationContextType } from '../../../contexts/NotificationContext';
 
 interface DashboardLayoutProps {
   userName: string;
@@ -13,7 +14,7 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ userName, userAvatar, onLogout }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); 
   const [isMobile, setIsMobile] = useState(false); 
-  const [unreadCount, setUnreadCount] = useState(3); 
+  const { unread: unreadCount } = useContext(NotificationCtx) as NotificationContextType; 
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);

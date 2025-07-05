@@ -5,12 +5,15 @@ import axios from 'axios';
 // Giả định các component này đã được tạo và nằm trong thư mục tương ứng
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
- import  { AuthTokenManager, ApiConfig,api } from '../../services/apiService'; // <-- Sửa đường dẫn và import đúng cách
+import { AuthTokenManager, ApiConfig, api } from '../../services/apiService'; // <-- Sửa đường dẫn và import đúng cách
 // Đảm bảo đường dẫn đến logo là chính xác
 import logo from '../../assets/images/icon_app.png';
 import { routeConstants } from '../../constants/routeConstants';
 import { LoginApiResponse, LoginCredentials, UserProfileApiResponse } from '../../interfaces/auth.interface';
 import { LocalStorageManager, User } from '../../utils/app_storage';
+import { getFCMToken } from '../../config/firebaseConfig';
+import { NotificationService } from '../../services/notificationService';
+import { decodeJwt} from '../../utils/jwt';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -19,40 +22,60 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const credentials: LoginCredentials = { email, password };
+      // Lấy FCM token trước khi đăng nhập
+      const fcmToken = await getFCMToken();
+      
+      const credentials: LoginCredentials = { 
+        email, 
+        password,
+        fcmToken: fcmToken ?? undefined // Convert null to undefined
+      };
+
       const loginResponse = await api.post<LoginApiResponse>('user/admin/login', credentials, undefined);
 
       if (loginResponse.code === 200 && loginResponse.result.authenticated) {
         AuthTokenManager.setAccessToken(loginResponse.result.access_token);
         AuthTokenManager.setRefreshToken(loginResponse.result.refresh_token);
 
-        const userProfileResponse = await api.get<UserProfileApiResponse>(`user/email/${email}`);
-
-        if (userProfileResponse.code === 200 && userProfileResponse.result) {
-          const apiUser = userProfileResponse.result;
-          const userToSave: User = {
-            User_Id: apiUser.userId, 
-            Fullname: apiUser.fullName,
-            Email: apiUser.email,
-            PhoneNumber: apiUser.phoneNumber || '', 
-            Address: apiUser.address || '', 
-            Role: 'admin',  
-            Brithday: String(apiUser.birthday) || '', 
-          };
-          
-          LocalStorageManager.saveUser(userToSave);
-
-          navigate(routeConstants.dashboard); // Chuyển hướng đến Dashboard
-        } else {
-          setError(userProfileResponse.message || "Đăng nhập thành công nhưng không tải được thông tin người dùng.");
+        const payload = decodeJwt(loginResponse.result.access_token);
+        const scopeStr = payload?.scope as string | undefined;
+        if (!scopeStr || !scopeStr.includes('ROLE_ADMIN')) {
+          setError('Bạn không có quyền ADMIN.');
           AuthTokenManager.clearTokens();
+          return;
         }
+
+        // Lưu thông tin người dùng vào localStorage
+        if (loginResponse.result.user) {
+          const userToSave: User = {
+            User_Id: loginResponse.result.user.userId,
+            Fullname: loginResponse.result.user.fullName,
+            Email: loginResponse.result.user.email,
+            PhoneNumber: loginResponse.result.user.phoneNumber || '',
+            Address: loginResponse.result.user.address || '',
+            Role: loginResponse.result.user.roles?.[0] as 'admin' | 'customer' || 'admin',
+            Brithday: loginResponse.result.user.birthday || '',
+          };
+          LocalStorageManager.saveUser(userToSave);
+        }
+
+        // Chuyển hướng đến trang dashboard
+        // Đăng ký FCM token cho user
+        if (fcmToken) {
+          try {
+            await NotificationService.registerToken(fcmToken, 'WEB');
+          } catch (e) {
+            console.warn('Không thể đăng ký FCM token:', e);
+          }
+        }
+
+        navigate(routeConstants.dashboard);
       } else {
         setError(loginResponse.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
       }

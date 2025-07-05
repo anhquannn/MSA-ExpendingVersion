@@ -103,7 +103,15 @@ export const orderService = {
     }
 
     const response = await api.post<FullApiResponse>('order/paging', payload);
-    return response.result;
+    // Ensure branchName is populated for each order
+    const mappedResult: PagedResponse<SimpleOrder & { branch?: { name: string } }> = {
+      ...response.result,
+      content: (response.result.content || []).map((order: any) => ({
+        ...order,
+        branchName: order.branchName || order.branch?.name || '',
+      })),
+    } as any;
+    return mappedResult as unknown as PagedResponse<SimpleOrder>;
   },
 
   // Cập nhật trạng thái đơn hàng

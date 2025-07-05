@@ -90,6 +90,13 @@ export interface ProductCombinationResponse {
   productId2: number;
 }
 
+export interface ProductSalesStatistics {
+  monthlySales: { monthLabel: string; quantity: number }[];
+  stockNumber: number;
+  stockLevel: string;
+  earliestExpDate?: string;
+}
+
 export const productService = {
   getProducts: async (params: ProductFilterParams): Promise<FilteredProductsResult> => {
     type FullApiResponse = {
@@ -167,6 +174,33 @@ export const productService = {
     return api.delete<void>(`product/${productId}`);
   },
 
+  getProductSalesStatistics: async (productId: number, params?: {branchId?:number; months?:number;}): Promise<ProductSalesStatistics> => {
+    type RawStatistic = {
+      sales: { year: number; month: number; quantity: number }[];
+      stockNumber: number;
+      stockLevel: string;
+      expDate?: string;
+    };
+    type ApiResp = { result: RawStatistic; message: string; code:number };
+    const res = await api.get<ApiResp>(`product/${productId}/sales-statistics`, {
+      branchId: params?.branchId,
+      months: params?.months ?? 6,
+    });
+
+    const raw = res.result;
+    const monthlySales = (raw.sales || []).map((s) => ({
+      ...s,
+      monthLabel: `${s.month}/${String(s.year).slice(2)}`,
+    }));
+
+    return {
+      monthlySales,
+      stockNumber: raw.stockNumber,
+      stockLevel: raw.stockLevel,
+      earliestExpDate: raw.expDate,
+    };
+  },
+  
   getProductById: async (productId: number): Promise<Product> => {
     type FullApiResponse = {
       code: number;

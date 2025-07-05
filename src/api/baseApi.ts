@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import { storage } from '../utils/storage';
 
-const supabaseClient = axios.create({
+export const supabaseClient = axios.create({
   baseURL: process.env.REACT_APP_SUPABASE_URL, 
 });
 

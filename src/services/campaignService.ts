@@ -2,12 +2,25 @@ import { api } from './apiService';
 import { PagedResponse } from './categoryService';
 
 export interface Campaign {
+  
   campaignId?: number;
   name: string;
   description: string;
   status: string;
+  scopeType: 'ALL' | 'CATEGORY' | 'SUPPLIER';
+  minOrderValue: number;
   startDate: string;
   endDate: string;
+  createdAt?: string;
+  updatedAt?: string;
+  targets?: CampaignTarget[];
+}
+
+export interface CampaignTarget {
+  campaignTargetId?: number;
+  campaignId: number;
+  targetType: 'CATEGORY' | 'SUPPLIER';
+  targetId: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -24,13 +37,7 @@ export interface CampaignFilter {
   pageSize: number;
 }
 
-export interface CampaignPayload {
-  name: string;
-  description: string;
-  status: string;
-  startDate: string;
-  endDate: string;
-}
+export type CampaignPayload = Omit<Campaign, 'campaignId' | 'createdAt' | 'updatedAt'>;
 
 // ✅ Hàm format ngày với giờ chỉ định
 export const formatDateWithTime = (dateInput: Date | string, hour: number, minute: number, second: number): string => {
@@ -51,15 +58,16 @@ export const getTodayEndDate = (): string => {
 };
 
 export const campaignService = {
+  // Campaign endpoints
   getCampaigns: async (): Promise<Campaign[]> => {
     type FullApiResponse = {
-    code: number;
-    message: string;
-    result: Campaign[];
-  };
+      code: number;
+      message: string;
+      result: Campaign[];
+    };
 
-  const response = await api.post<FullApiResponse>('campaign', {}); // Không có filter
-  return Array.isArray(response.result) ? response.result : [];
+    const response = await api.post<FullApiResponse>('campaign', {}); // Không có filter
+    return Array.isArray(response.result) ? response.result : [];
   },
 
   getCampaignsWithPaging: async (filter: CampaignFilter): Promise<PagedResponse<Campaign>> => {
@@ -137,4 +145,54 @@ export const campaignService = {
   deleteCampaign: async (campaignId: number): Promise<void> => {
     await api.delete<void>(`campaign/${campaignId}`);
   },
-};
+
+  // Campaign Target endpoints
+  createCampaignTarget: async (target: CampaignTarget): Promise<CampaignTarget> => {
+    type FullApiResponse = {
+      code: number;
+      message: string;
+      result: CampaignTarget;
+    };
+
+    const cleanedTarget = {
+      ...target,
+      campaignTargetId: undefined // id sẽ được sinh ở backend
+    };
+
+    // Backend dùng endpoint /campaign-target
+    const response = await api.post<FullApiResponse>('campaign-target', cleanedTarget);
+    return response.result;
+  },
+
+  updateCampaignTarget: async (campaignTargetId: number, target: CampaignTarget): Promise<CampaignTarget> => {
+    type FullApiResponse = {
+      code: number;
+      message: string;
+      result: CampaignTarget;
+    };
+
+    const cleanedTarget = {
+      ...target,
+      campaignTargetId: campaignTargetId,
+      campaignId: target.campaignId!
+    };
+
+    const response = await api.put<FullApiResponse>(`campaign-target/${campaignTargetId}`, cleanedTarget);
+    return response.result;
+  },
+
+  deleteCampaignTarget: async (campaignTargetId: number): Promise<void> => {
+    await api.delete<void>(`campaign-target/${campaignTargetId}`);
+  },
+
+  getCampaignTargets: async (campaignId: number): Promise<CampaignTarget[]> => {
+    type FullApiResponse = {
+      code: number;
+      message: string;
+      result: CampaignTarget[];
+    };
+
+    const response = await api.get<FullApiResponse>(`campaign/${campaignId}/targets`);
+    return response.result;
+  },
+} as const;

@@ -1,67 +1,29 @@
 // src/components/NotificationScreen.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
+import { NotificationCtx } from '../contexts/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 
-// Định nghĩa kiểu dữ liệu cho sản phẩm
+// Import NotificationPayload to reuse the type defined in context
+import type { NotificationPayload, NotificationContextType } from '../contexts/NotificationContext';
+
 interface Product {
   id: string;
   name: string;
   quantity: number;
 }
 
-// Định nghĩa kiểu dữ liệu cho thông báo yêu cầu nhập kho
-interface WarehouseRequestNotification {
-  id: string;
-  branchName: string;
-  date: string;
-  products: Product[];
-  isRead: boolean;
-}
-
-const DUMMY_NOTIFICATIONS: WarehouseRequestNotification[] = [
-  {
-    id: 'notif-1',
-    branchName: 'Chi nhánh Hà Nội',
-    date: '2025-06-15 10:00',
-    products: [
-      { id: 'prod-001', name: 'Laptop Dell XPS 15', quantity: 5 },
-      { id: 'prod-002', name: 'Màn hình LG 27 inch', quantity: 10 },
-    ],
-    isRead: false,
-  },
-  {
-    id: 'notif-2',
-    branchName: 'Chi nhánh TP. Hồ Chí Minh',
-    date: '2025-06-14 14:30',
-    products: [
-      { id: 'prod-003', name: 'Bàn phím cơ Logitech', quantity: 20 },
-      { id: 'prod-004', name: 'Chuột gaming Razer', quantity: 15 },
-      { id: 'prod-005', name: 'Tai nghe Sony WH-1000XM5', quantity: 8 },
-    ],
-    isRead: false,
-  },
-  {
-    id: 'notif-3',
-    branchName: 'Chi nhánh Đà Nẵng',
-    date: '2025-06-13 09:00',
-    products: [
-      { id: 'prod-006', name: 'Ổ cứng SSD Samsung 1TB', quantity: 12 },
-    ],
-    isRead: true, // Thông báo đã đọc
-  },
-];
-
 const NotificationScreen: React.FC = () => {
-  const [notifications, setNotifications] = useState<WarehouseRequestNotification[]>(DUMMY_NOTIFICATIONS);
-  const [selectedNotification, setSelectedNotification] = useState<WarehouseRequestNotification | null>(null);
+  const { list: notifications, markAllRead } = useContext(NotificationCtx) as NotificationContextType;
+  const [selectedNotification, setSelectedNotification] = useState<NotificationPayload | null>(null);
   const navigate = useNavigate();
 
   // Đánh dấu thông báo là đã đọc khi người dùng nhấp vào
   const handleNotificationClick = (id: string) => {
-    const updatedNotifications = notifications.map(notif =>
+    const updatedNotifications = notifications.map((notif: NotificationPayload) =>
       notif.id === id ? { ...notif, isRead: true } : notif
     );
-    setNotifications(updatedNotifications);
+    // mark single read is optional; currently markAllRead
+    markAllRead();
     setSelectedNotification(updatedNotifications.find(notif => notif.id === id) || null);
   };
 
@@ -101,7 +63,7 @@ const NotificationScreen: React.FC = () => {
               <p className="text-gray-600 mb-4">Ngày yêu cầu: {selectedNotification.date}</p>
               <h4 className="text-xl font-medium text-gray-700 mb-2">Danh sách sản phẩm:</h4>
               <ul className="space-y-2">
-                {selectedNotification.products.map(product => (
+                {selectedNotification.products?.map((product: Product) => (
                   <li key={product.id} className="flex justify-between items-center bg-white p-3 rounded-md shadow-sm">
                     <span className="text-gray-800 font-medium">{product.name}</span>
                     <span className="text-gray-600">Số lượng: <strong className="text-green-700">{product.quantity}</strong></span>
@@ -115,7 +77,7 @@ const NotificationScreen: React.FC = () => {
             {notifications.length === 0 ? (
               <p className="text-gray-600 text-center text-lg mt-10">Không có thông báo nào.</p>
             ) : (
-              notifications.map(notification => (
+              notifications.map((notification: NotificationPayload) => (
                 <div
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification.id)}

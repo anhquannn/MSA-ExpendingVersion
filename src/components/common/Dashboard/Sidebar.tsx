@@ -22,6 +22,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { name: 'Đơn Hàng', icon: '📦', path: '/dashboard/orders' },
     { name: 'Người Dùng', icon: '👤', path: '/dashboard/users' },
     { name: 'Kho Hàng', icon: '📝', path: '/dashboard/inventory' },
+    { name: 'Lịch Kiểm Kho', icon: '📋', path: '/dashboard/inventory-checks' },
     { name: 'Tất Cả Sản Phẩm', icon: '🍎', path: '/dashboard/products' },
     { name: 'Quản Lý Chi Nhánh', icon: '🏪', path: '/dashboard/branches' },
     { name: 'Loại Sản Phẩm', icon: '🏷️', path: '/dashboard/categories' },
@@ -75,6 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             key={item.path}
             to={item.path}
             onClick={() => { if (isMobileOverlay) onToggleSidebar(); }} 
+            end={item.path === '/dashboard'}
             className={({ isActive }) =>
               `flex items-center space-x-3 p-3 rounded-xl 
               hover:bg-green-100 hover:text-green-800 

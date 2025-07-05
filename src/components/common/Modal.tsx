@@ -6,7 +6,7 @@ type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  children: React.ReactNode; // `children` để chứa nội dung bất kỳ (form, text,...)
+  children?: React.ReactNode; // `children` là optional để có thể hiển thị modal trống khi cần
 };
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {

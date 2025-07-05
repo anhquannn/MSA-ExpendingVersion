@@ -1,8 +1,15 @@
 // src/interfaces/auth.interface.ts
 
+export enum Platform {
+  WEB = 'WEB',
+  MOBILE = 'MOBILE'
+}
+
 export interface LoginCredentials {
   email: string; 
   password: string;
+  fcmToken?: string;
+  platform?: Platform; // Make platform optional
 }
 
 // Kiểu dữ liệu cho phản hồi đăng nhập từ API của bạn
@@ -15,6 +22,15 @@ export interface LoginCredentials {
     refresh_token: string;
     token_type: string;
     expires_in: number;
+    user?: {
+      userId: number;
+      fullName: string;
+      email: string;
+      phoneNumber: string | null;
+      birthday: string | null;
+      address: string | null;
+      roles: string[];
+    };
   };
 }
 

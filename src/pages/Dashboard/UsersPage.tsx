@@ -5,7 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 
 // --- Import các service và types thật ---
-import { userService, User, PagingParams, UserUpdatePayload } from '../../services/userService';
+import { userService, User, PagingParams, UserUpdatePayload, SurveyorCreatePayload } from '../../services/userService';
 
 // --- Component Popup/Modal để sửa thông tin User ---
 const EditUserModal = ({ user, onClose, onSave, isSaving }: {
@@ -17,7 +17,8 @@ const EditUserModal = ({ user, onClose, onSave, isSaving }: {
   const [formData, setFormData] = useState<Partial<UserUpdatePayload>>({
     fullName: user.fullName || '',
     phoneNumber: user.phoneNumber || '',
-    address: user.address || '',
+    email: user.email || '',
+    password: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,12 +40,16 @@ const EditUserModal = ({ user, onClose, onSave, isSaving }: {
             <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full p-2 border rounded-md" />
           </div>
           <div>
-            <label className="block text-sm font-bold mb-1">Số điện thoại:</label>
-            <input type="tel" name="phoneNumber" value={formData.phoneNumber || ''} onChange={handleChange} className="w-full p-2 border rounded-md" />
+            <label className="block text-sm font-bold mb-1">Email:</label>
+            <input type="email" name="email" value={formData.email || ''} onChange={handleChange} className="w-full p-2 border rounded-md" />
           </div>
           <div>
-            <label className="block text-sm font-bold mb-1">Địa chỉ:</label>
-            <input type="text" name="address" value={formData.address || ''} onChange={handleChange} className="w-full p-2 border rounded-md" />
+            <label className="block text-sm font-bold mb-1">Mật khẩu mới:</label>
+            <input type="password" name="password" value={formData.password || ''} onChange={handleChange} className="w-full p-2 border rounded-md" placeholder="Để trống nếu không đổi" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold mb-1">Số điện thoại:</label>
+            <input type="tel" name="phoneNumber" value={formData.phoneNumber || ''} onChange={handleChange} className="w-full p-2 border rounded-md" />
           </div>
         </div>
         <div className="flex justify-end mt-6 space-x-3">
@@ -64,9 +69,17 @@ const UsersPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   // --- STATE CHO UI: TAB, BỘ LỌC, VÀ MODAL ---
-  const [activeTab, setActiveTab] = useState<'customer' | 'manager_2' | 'admin'>('customer');
+  const tabList = [
+    { key: 'customer', label: 'Khách hàng' },
+    { key: 'manager', label: 'Quản lý' }, // sẽ match manager_*
+    { key: 'admin', label: 'Admin' },
+    { key: 'surveyor', label: 'NV Kiểm kho' },
+  ] as const;
+  type UserTab = typeof tabList[number]['key'];
+  const [activeTab, setActiveTab] = useState<UserTab>('customer');
   const [filters, setFilters] = useState<PagingParams>({ page: 0, size: 10 });
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [creating, setCreating] = useState<boolean>(false);
 
   // --- DATA FETCHING VỚI useQuery ---
   const {
@@ -76,7 +89,7 @@ const UsersPage: React.FC = () => {
     error
   } = useQuery({
     queryKey: ['users', activeTab, filters],
-    queryFn: () => userService.getUsersByRole(activeTab, filters),
+    queryFn: () => userService.getUsersByRole(activeTab === 'manager' ? 'manager_' : activeTab, filters),
     placeholderData: keepPreviousData,
   });
 
@@ -104,8 +117,18 @@ const UsersPage: React.FC = () => {
     onError: (err: Error) => alert(`Lỗi: ${err.message}`),
   });
 
+  const createSurveyorMutation = useMutation({
+    mutationFn: (payload: SurveyorCreatePayload) => userService.createSurveyor(payload),
+    onSuccess: () => {
+      alert('Tạo người dùng thành công!');
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setCreating(false);
+    },
+    onError: (err: Error) => alert(`Lỗi: ${err.message}`),
+  });
+
   // --- EVENT HANDLERS ---
-  const handleTabChange = (tab: 'customer' | 'manager_2' | 'admin') => {
+  const handleTabChange = (tab: UserTab) => {
     setActiveTab(tab);
     setFilters({ page: 0, size: 10 }); // Reset phân trang khi chuyển tab
   };
@@ -129,16 +152,17 @@ const UsersPage: React.FC = () => {
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">Quản Lý Người Dùng</h2>
 
-      <div className="flex border-b mb-6">
-        <button onClick={() => handleTabChange('customer')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'customer' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
-          Khách hàng
+      <div className="flex border-b mb-6 space-x-2">
+        {tabList.map(t => (
+        <button
+          key={t.key}
+          onClick={() => handleTabChange(t.key)}
+          className={`px-4 py-2 text-sm font-medium ${activeTab === t.key ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          {t.label}
         </button>
-        <button onClick={() => handleTabChange('manager_2')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'manager_2' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
-          Quản lý
-        </button>
-        <button onClick={() => handleTabChange('admin')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'admin' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
-          Admin
-        </button>
+      ))}
+
       </div>
 
       {/* TODO: Thêm khu vực Filter/Search ở đây nếu cần */}
@@ -155,7 +179,19 @@ const UsersPage: React.FC = () => {
               <th className="py-3 px-6 text-left">Email</th>
               <th className="py-3 px-6 text-left">Số điện thoại</th>
               <th className="py-3 px-6 text-left">Vai trò</th>
-              <th className="py-3 px-6 text-center">Hành Động</th>
+              <th className="py-3 px-6 text-center">
+                Hành Động
+                {activeTab === 'surveyor' && (
+                  <div className="mt-2 flex justify-center">
+                    <button
+                      className="px-3 py-1 rounded-md text-xs bg-green-600 text-white hover:bg-green-700"
+                      onClick={() => setCreating(true)}
+                    >
+                      Thêm NV Kiểm kho
+                    </button>
+                  </div>
+                )}
+              </th>
             </tr>
           </thead>
           <tbody className="text-gray-600 text-sm font-light">
@@ -174,7 +210,14 @@ const UsersPage: React.FC = () => {
                 </td>
                 <td className="py-3 px-6 text-center whitespace-nowrap">
                   <div className="flex items-center justify-center space-x-2">
-                    {/* <button onClick={() => setEditingUser(user)} className="px-3 py-1 rounded-md text-xs bg-yellow-500 text-white hover:bg-yellow-600 transition">Sửa</button> */}
+                    {(activeTab === 'manager' || activeTab === 'surveyor') && (
+                      <button
+                        onClick={() => setEditingUser(user)}
+                        className="px-3 py-1 rounded-md text-xs bg-yellow-500 text-white hover:bg-yellow-600 transition"
+                      >
+                        Sửa
+                      </button>
+                    )}
                     <button onClick={() => navigate(`/dashboard/users/${user.userId}`)} className="px-3 py-1 rounded-md text-xs bg-blue-500 text-white hover:bg-blue-600 transition">Chi tiết</button>
                     <button onClick={() => handleDelete(user)} disabled={deleteUserMutation.isPending} className="px-3 py-1 rounded-md text-xs bg-red-500 text-white hover:bg-red-600 disabled:bg-gray-400 transition">
                       {deleteUserMutation.isPending ? '...' : 'Xóa'}
@@ -217,6 +260,30 @@ const UsersPage: React.FC = () => {
       </div>
 
       {/* Modal chỉnh sửa sẽ được render ở đây khi `editingUser` có giá trị */}
+      {/* Create surveyor modal */}
+      {creating && (
+        <EditUserModal
+          user={{
+            userId: 0,
+            fullName: '',
+            email: '',
+            phoneNumber: '',
+            birthday: null,
+            address: '',
+            image: null,
+            deviceId: null,
+            googleId: null,
+            roles: null,
+            branches: null,
+          } as any}
+          onClose={() => setCreating(false)}
+          onSave={(payload) => {
+            createSurveyorMutation.mutate(payload as any);
+          }}
+          isSaving={createSurveyorMutation.isPending}
+        />
+      )}
+
       {editingUser && (
         <EditUserModal
           user={editingUser}

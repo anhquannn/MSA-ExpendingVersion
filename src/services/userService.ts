@@ -22,7 +22,6 @@ export interface User {
   phoneNumber: string | null;
   birthday: string | null;
   password?: string;
-  address: string | null;
   image: string | null;
   deviceId: string | null;
   googleId: string | null;
@@ -41,9 +40,15 @@ export interface UserUpdatePayload {
   phoneNumber?: string;
   birthday?: string | null;
   password?: string; 
-  address?: string;
   googleId?: string | null;
   roles?: number[];
+}
+
+export interface SurveyorCreatePayload {
+  email: string;
+  fullName: string;
+  password: string;
+  phoneNumber?: string;
 }
 
 export const userService = {
@@ -59,7 +64,7 @@ export const userService = {
   },
 
    getUsersByRole: async (
-    role: 'admin' | 'customer' | 'manager_2', 
+    role: string,
     params: PagingParams
   ): Promise<PagedResponse<User>> => {
     type FullApiResponse = { result: PagedResponse<User> };
@@ -78,7 +83,13 @@ export const userService = {
     return response.result;
   },
 
-    getInfoUsers: async (): Promise<User[]> => {
+    createSurveyor: async (payload: SurveyorCreatePayload): Promise<User> => {
+    type FullApiResponse = { result: User };
+    const response = await api.post<FullApiResponse>('user/surveyors', payload);
+    return response.result;
+  },
+
+  getInfoUsers: async (): Promise<User[]> => {
     type FullApiResponse = { result: User[] };
     const response = await api.get<FullApiResponse>('user');
     return response.result;

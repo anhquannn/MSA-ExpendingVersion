@@ -105,7 +105,8 @@ const PromoCodeManagementPage: React.FC = () => {
               <th className="py-3 px-6 text-left">Mã</th>
               <th className="py-3 px-6 text-left">Tên</th>
               <th className="py-3 px-6 text-left">Giảm (%)</th>
-              <th className="py-3 px-6 text-left">Tối thiểu</th>
+              <th className="py-3 px-6 text-left">Phạm vi</th>
+            <th className="py-3 px-6 text-left">Giá trị tối thiểu</th>
             <th className="py-3 px-6 text-left">Bắt đầu</th>
             <th className="py-3 px-6 text-left">Kết thúc</th>
             <th className="py-3 px-6 text-left">Trạng thái</th>
@@ -120,7 +121,8 @@ const PromoCodeManagementPage: React.FC = () => {
                 <td className="py-3 px-6 font-medium">{pc.code}</td>
                 <td className="py-3 px-6">{pc.name}</td>
                 <td className="py-3 px-6">{pc.discountPercentage}</td>
-                <td className="py-3 px-6">{pc.minimumOrderValue}</td>
+                <td className="py-3 px-6">{pc.campaignResponse?.scopeType || '---'}</td>
+            <td className="py-3 px-6">{pc.campaignResponse?.minOrderValue || '---'}</td>
                 <td className="py-3 px-6">{pc.startDate}</td>
                 <td className="py-3 px-6">{pc.endDate}</td>
                 <td className="py-3 px-6">{pc.status || '---'}</td>

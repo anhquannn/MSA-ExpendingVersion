@@ -83,13 +83,13 @@ Future<bool> createInventoryCheckRequest({required int inventoryId, required Str
 
   int managerId = inv.managerId;
   if (managerId == 0) {
-    // fetch via api
-    final fetched = await _api.fetchFirstManagerId(inventoryId: inventoryId, token: _auth.token!);
-    if (fetched == null) {
-      debugPrint('[InventoryCheck] Cannot fetch managerId for inventoryId=$inventoryId');
-      return false;
+    // Try fetch via API, else fallback to admin (id = 1)
+    final fetched = await _api.fetchFirstManagerId(
+        inventoryId: inventoryId, token: _auth.token!);
+    managerId = fetched ?? 1;
+    if (managerId == 1) {
+      debugPrint('[InventoryCheck] Fallback to admin userId=1 for inventoryId=$inventoryId');
     }
-    managerId = fetched;
   }
 
   final res = await _api.createInventoryCheckRequest(

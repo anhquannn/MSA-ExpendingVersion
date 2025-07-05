@@ -11,7 +11,7 @@ import 'services/api_service.dart';
 import 'theme/app_theme.dart';
 
 void main() {
-  final api = ApiService(baseUrl: 'http://192.168.100.43:1081/msa/api');
+  final api = ApiService(baseUrl: 'http://192.168.192.1:1081/msa/api');
   runApp(MyApp(api: api));
 }
 

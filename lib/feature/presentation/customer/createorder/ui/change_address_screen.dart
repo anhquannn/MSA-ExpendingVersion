@@ -8,6 +8,7 @@ import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
 import 'package:msa/feature/data/model/request/user_address_request.dart';
+import 'package:msa/feature/data/model/response/order_detail_response_model.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/domain/entities/goship_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
@@ -22,10 +23,16 @@ import 'package:rxdart/subjects.dart';
 class AddressListWidget extends StatefulWidget {
   final UserAddressModel addresses;
   final bool isChangePrimary;
+  final bool isBuyAgain;
+  final List<OrderDetailResponse>? orderDetail;
+  final int orderId;
   const AddressListWidget({
     Key? key,
     required this.addresses,
     this.isChangePrimary = false,
+    this.isBuyAgain = false,
+    this.orderDetail,
+    this.orderId = 0,
   }) : super(key: key);
 
   @override
@@ -114,8 +121,14 @@ class _AddressListWidgetState extends State<AddressListWidget> {
     );
 
     // In kết quả từ API
-    print('[onSave] Response2: $data');
-
+    print('AddressListWidget[onSave] Response2: $data');
+    print(
+      '=AddressListWidget========= [DEBUG] isChangePrimary == false ==========',
+    );
+    print('[AddressListWidget] Điều hướng đến màn hình CreateOrderScreen');
+    print('[AddressListWidget] orderId: ${widget.orderId}');
+    print('[AddressListWidget] isBuyAgain: ${widget.isBuyAgain}');
+    print('[AddressListWidget] orderDetail: ${widget.orderDetail?.toString()}');
     if (data) {
       Storage.addressModel = model;
       Storage.saveAddress(model);
@@ -129,7 +142,14 @@ class _AddressListWidgetState extends State<AddressListWidget> {
       } else {
         Navigator.pushAndRemoveUntil(
           bContext,
-          MaterialPageRoute(builder: (bContext) => CreateOrderScreen()),
+          MaterialPageRoute(
+            builder:
+                (bContext) => CreateOrderScreen(
+                  isBuyAgain: widget.isBuyAgain,
+                  orderDetail: widget.orderDetail,
+                  orderId: widget.orderId,
+                ),
+          ),
           (route) => false,
         );
       }
@@ -158,15 +178,37 @@ class _AddressListWidgetState extends State<AddressListWidget> {
     return CustomScaffold(
       appBarLeading: InkWell(
         onTap: () {
-          widget.isChangePrimary == true
-              ? Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => PersionalScreen()),
-              )
-              : Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CreateOrderScreen()),
-              );
+          if (widget.isChangePrimary == true) {
+            print('========== [DEBUG] isChangePrimary == true ==========');
+            print('[DEBUG] Điều hướng đến màn hình PersionalScreen');
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => PersionalScreen()),
+            );
+
+            print('[DEBUG] Quay về từ màn hình PersionalScreen');
+          } else {
+            print('========== [DEBUG] isChangePrimary == false ==========');
+            print('[DEBUG] Điều hướng đến màn hình CreateOrderScreen');
+            print('[DEBUG] orderId: ${widget.orderId}');
+            print('[DEBUG] isBuyAgain: ${widget.isBuyAgain}');
+            print('[DEBUG] orderDetail: ${widget.orderDetail?.toString()}');
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => CreateOrderScreen(
+                      orderId: widget.orderId,
+                      isBuyAgain: widget.isBuyAgain,
+                      orderDetail: widget.orderDetail,
+                    ),
+              ),
+            );
+
+            print('[DEBUG] Quay về từ màn hình CreateOrderScreen');
+          }
         },
         child: Icon(Icons.arrow_back_ios, color: Colors.white, size: 24),
       ),

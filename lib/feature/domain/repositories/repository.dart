@@ -173,6 +173,11 @@ class Repository {
   static getNotification(NotificationFilterRequest request) =>
       NotificationConnection.getNotification(request);
 
-      static updateNotification(UpdateNotificationRequest request, int notificationId) =>
-          NotificationConnection.updateNotification(request, notificationId);
+  static updateNotification(
+    UpdateNotificationRequest request,
+    int notificationId,
+  ) => NotificationConnection.updateNotification(request, notificationId);
+
+  static getActivePromoCodesForCart(int cartId) =>
+      PromoCodeRepositoryImpl.getActivePromoCodesForCart(cartId);
 }

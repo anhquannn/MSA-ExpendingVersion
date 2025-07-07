@@ -78,7 +78,27 @@ class PromoCodeRepositoryImpl extends IPromoCodeRepository {
       final response = await HttpConnection.post(
         'promo-code/list',
         body: model.toJson(),
-        fromJsonT: (json) => json, 
+        fromJsonT: (json) => json,
+      );
+
+      if (response.result is List) {
+        return (response.result as List<dynamic>)
+            .map((e) => PromoCodeModel.fromJson(e))
+            .toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print('Lỗi lấy danh sách promo code: $e');
+      return [];
+    }
+  }
+
+  static Future<List<PromoCodeModel>> getActivePromoCodesForCart(int cartId) async {
+    try {
+      final response = await HttpConnection.get<List<PromoCodeModel>>(
+        'promo-code/cart/active?cartId=$cartId&userId=${userModelGlobal?.userId}',
+        fromJsonT: (json) => json,
       );
 
       if (response.result is List) {

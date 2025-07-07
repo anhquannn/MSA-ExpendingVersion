@@ -1065,33 +1065,14 @@ class _OrderTabState extends State<OrderTab>
         return _buildTapText('Thanh toán', bContext, model ?? OrderResponse());
       case OrderStatus.delivering:
         return _buildText('Đơn hàng của bạn đang được vận chuyển');
-      // return _buildTapText(
-      //   'Đơn hàng của bạn đang được vận chuyển',
-      //   bContext,
-      //   model ?? OrderResponse(),
-      //   isIcon: false,
-      // );
       case OrderStatus.completed:
         return _buildText('Đơn hàng đã giao thành công');
       case OrderStatus.shipped:
         return _buildText('Đơn hàng đã giao thành công');
-      // return _buildSuccessButtons(bContext, bloc!, model!);
       case OrderStatus.cancelling:
         return _buildText('Đơn hàng đang được hủy');
-      // return _buildTapText(
-      //   'Đơn hàng đang được hủy',
-      //   bContext,
-      //   model ?? OrderResponse(),
-      //   isIcon: false,
-      // );
       case OrderStatus.cancelled:
         return _buildText('Đơn hàng đã được hủy');
-      // return _buildTapText(
-      //   'Đơn hàng đã được hủy',
-      //   bContext,
-      //   model ?? OrderResponse(),
-      //   isIcon: false,
-      // );
       case OrderStatus.paid:
         return _buildText('Đơn hàng đang được xử lí');
       case OrderStatus.failed:

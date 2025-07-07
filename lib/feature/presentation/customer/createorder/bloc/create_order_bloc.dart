@@ -11,6 +11,7 @@ import 'package:msa/feature/data/datasources/local/starage.dart';
 import 'package:msa/feature/data/model/request/create_order_model_request.dart';
 import 'package:msa/feature/data/model/request/promocode_request_model.dart';
 import 'package:msa/feature/data/model/response/create_order_response_model.dart';
+import 'package:msa/feature/data/model/response/order_detail_response_model.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/order_preview_model.dart';
@@ -42,7 +43,13 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
 
   final streamCanBuy = BehaviorSubject<bool>();
 
+  List<OrderDetailResponse>? orderDetail;
+  final streamOrderDetail = BehaviorSubject<List<OrderDetailResponse>>();
+
   String vnPayurl = '';
+
+  int orderId = 0;
+  List<OrderDetailResponse>? orderDetails = [];
 
   final Map<int, Debouncer> _debouncers = {};
   bool isZaloPaySelected = false;
@@ -51,7 +58,18 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
 
   @override
   void onInit() {
+    print('CreateOrderScreen########### isBuyAgain: ${widget.isBuyAgain}');
+    print('CreateOrderScreen########### orderId: ${widget.orderId}');
+    print('CreateOrderScreen########### orderDetail: ${widget.orderDetail}');
+
     initPaymentMethod();
+    if (widget.isBuyAgain == true) {
+      orderDetail = widget.orderDetail;
+      streamOrderDetail.set(orderDetail!);
+      orderId = widget.orderId ?? 0;
+      print('########### orderId: $orderId');
+      orderDetails = widget.orderDetail;
+    }
   }
 
   @override
@@ -60,7 +78,15 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
   @override
   void onReady() {
     onInitData();
-    Future.wait<void>([onGetCartItem(), onGetPreviewOrder(), onGetPromoCode()]);
+    if (widget.isBuyAgain == true) {
+      Future.wait<void>([onPreviewOrderAgain(), onGetPromoCode()]);
+    } else {
+      Future.wait<void>([
+        onGetCartItem(),
+        onGetPreviewOrder(),
+        onGetPromoCode(),
+      ]);
+    }
   }
 
   @override
@@ -103,25 +129,49 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
   }
 
   onChangeAddress(BuildContext bcontext) async {
-    print('####################### ${Storage.addressModel?.ward}');
+    // ✅ In log trước khi chuyển màn hình
+    print('========== [DEBUG] Trước khi mở AddressListWidget ==========');
+    print(
+      '[DEBUG] Storage.addressModel hiện tại: ${Storage.addressModel?.toJson()}',
+    );
+    print('[DEBUG] Ward hiện tại: ${Storage.addressModel?.ward}');
+
+    // ✅ Mở màn hình chọn địa chỉ
     final data = await Navigator.push(
       bcontext,
       MaterialPageRoute(
         builder:
             (bcontext) => AddressListWidget(
               addresses: Storage.addressModel ?? UserAddressModel(),
+              isBuyAgain: widget.isBuyAgain ?? false,
+              orderDetail: orderDetails,
+              orderId: orderId,
             ),
       ),
     );
 
+    // ✅ Sau khi chọn xong và quay về màn trước
+    print('========== [DEBUG] Quay về từ AddressListWidget ==========');
     if (data != null) {
-      print('Địa chỉ đã chọn: ${data.toJson()}');
+      print('[DEBUG] Địa chỉ được chọn từ AddressListWidget: ${data.toJson()}');
 
       model = data;
-      print('####################### ${Storage.addressModel?.ward}');
+      Storage.addressModel = data; // Nếu bạn gán lại vào Storage
+
+      print('[DEBUG] model mới: ${model.toString()}');
+      print(
+        '[DEBUG] Storage.addressModel mới: ${Storage.addressModel?.toJson()}',
+      );
+      print('[DEBUG] Ward mới: ${Storage.addressModel?.ward}');
+
       setState(() {});
-    } else {}
-    print('####################### ${Storage.addressModel?.ward}');
+    } else {
+      print(
+        '[DEBUG] Không có địa chỉ nào được chọn (user bấm back hoặc cancel)',
+      );
+    }
+
+    print('========== [DEBUG] Kết thúc onChangeAddress ==========');
   }
 
   onGetCartItem() async {
@@ -189,7 +239,11 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
         quantity: quantity,
         select: model.selected ?? true,
       );
-      await onGetPreviewOrder();
+      if (widget.isBuyAgain == true) {
+        await onPreviewOrderAgain();
+      } else {
+        await onGetPreviewOrder();
+      }
       // if (response) {
       //   await onGetCartItem();
       // }
@@ -227,12 +281,10 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
 
   onGetPromoCode() async {
     try {
-      List<PromoCodeModel>? promoCode = await Repository.onGetAllPromoCode(
-        PromoCodeRequestModel(
-          userId: Storage.userModelGlobal?.userId ?? 0,
-          status: PromoCodeStatusEnum.active,
-        ),
-      );
+      List<PromoCodeModel>? promoCode =
+          await Repository.getActivePromoCodesForCart(
+            Storage.cartModelGlobal?.cartId ?? 0,
+          );
 
       streamPromoCodeModels.add(promoCode ?? []);
       listPromocode = promoCode;
@@ -248,7 +300,12 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
         element.selected = !(model.selected ?? false);
       }
     });
-    final isSuccess = await onGetPreviewOrder();
+    final bool isSuccess;
+    if (widget.isBuyAgain == true) {
+      isSuccess = await onPreviewOrderAgain();
+    } else {
+      isSuccess = await onGetPreviewOrder();
+    }
     if (isSuccess) {
       streamPromoCodeModels.set(listPromocode!);
     } else {
@@ -294,6 +351,77 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
 
     final OrderCreateResponseModel? data = await Repository.onCreateOrder(
       model,
+    );
+
+    if (data == null) return;
+
+    final shipmentResponse = await Repository.createShipment(
+      addressId: Storage.addressModel?.userAddressId,
+      orderId: data.orderId,
+      rateId: previewOrder?.rates?.id,
+    );
+
+    final typePayment =
+        paymentMethods?.firstWhere((element) => element.selected == true).id;
+
+    if (typePayment == 'cod') {
+      await _handleCodPayment(bContext, model, data.orderId);
+    } else if (typePayment == 'vnpay' || typePayment == 'zalopay') {
+      await _handleOnlinePayment(bContext, model, data.orderId);
+    }
+  }
+
+  onPreviewOrderAgain() async {
+    List<String> promo = [];
+    listPromocode?.forEach((element) {
+      if (element.selected == true) {
+        promo.add(element.code ?? '');
+      }
+    });
+    final data = await Repository.onGetPreviewOrderAgain(
+      promoCodes: promo,
+      orderOldId: widget.orderId ?? 0,
+      userAddressId: Storage.addressModel?.userAddressId ?? 0,
+    );
+
+    if (data != null) {
+      previewOrder = data;
+      streamPreviewOrder.set(previewOrder ?? OrderPreviewModel());
+      return true;
+    } else {
+      print('###################');
+      return false;
+    }
+  }
+
+  onBuyAgain(BuildContext bContext) async {
+    print('###################onBuyAgain Mua lai');
+    showFullScreenLoading(bContext);
+    final CreateOrderRequestModel model = CreateOrderRequestModel(
+      branchId: Storage.branchModelGlobal?.branchId,
+      cartId: Storage.cartModelGlobal?.cartId,
+      grandTotal: previewOrder?.grandTotal,
+      // orderDate: formatDateTime(DateTime.now()),
+      orderDate: formatDateTime(DateTime.now().add(Duration(days: 1))),
+
+      promoCodes:
+          listPromocode
+              ?.where((e) => e.selected == true)
+              .map((e) => e.code ?? '')
+              .toList(),
+      status: OrderStatus.pending,
+      userAddressId: Storage.addressModel?.userAddressId,
+      userId: Storage.userModelGlobal?.userId,
+    );
+
+    final data = await Repository.buyAgain(
+      orderId: widget.orderId ?? 0,
+      userAddressId: Storage.addressModel?.userAddressId ?? 0,
+      promoCodes:
+          listPromocode
+              ?.where((e) => e.selected == true)
+              .map((e) => e.code ?? '')
+              .toList(),
     );
 
     if (data == null) return;

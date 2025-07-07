@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
+import 'package:msa/feature/data/model/response/order_detail_response_model.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
 import 'package:msa/feature/domain/entities/cart_item.dart';
 import 'package:msa/feature/domain/entities/order_preview_model.dart';
@@ -10,12 +11,8 @@ import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/feature/presentation/customer/createorder/bloc/create_order_bloc.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/change_address_screen.dart';
-import 'package:msa/feature/presentation/customer/createorder/ui/select_promocode.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
-import 'package:msa/feature/presentation/customer/promo_code_list/ui/promo_code_list_screen.dart';
-import 'package:msa/widget/customBottomSheet.dart';
 import 'package:msa/widget/custom_item_promocode.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../../../core/config/base_bloc.dart';
 import '../../../../../core/config/config.dart';
@@ -26,7 +23,14 @@ import '../../../../../widget/reuseable_screen_hide_appbar.dart';
 
 class CreateOrderScreen extends BaseView<CreateOrderBloc> {
   final int? orderId;
-  CreateOrderScreen({super.key, this.orderId});
+  final bool? isBuyAgain;
+  final List<OrderDetailResponse>? orderDetail;
+  const CreateOrderScreen({
+    super.key,
+    this.orderId,
+    this.isBuyAgain = false,
+    this.orderDetail,
+  });
 
   @override
   CreateOrderBloc createState() => CreateOrderBloc();
@@ -53,22 +57,9 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
       bodyBuilder: (controller) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          child: buildBodyContent(
-            bloc: bloc,
-            // controller: controller,
-            bcontext: context,
-          ),
+          child: buildBodyContent(bloc: bloc, bcontext: context),
         );
       },
-
-      // bottomBarItems: [
-      //   BottomBarItem(
-      //     label: 'Đặt hàng',
-      //     onTap: (index) {
-      //       bloc.onBuy(context);
-      //     },
-      //   ),
-      // ],
       hideBottomBarOnScroll: true,
     );
   }
@@ -211,7 +202,7 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
                             fit: BoxFit.cover,
                           )
                           : Image.asset(
-                            avtWomen3,
+                            imgBranch,
                             width: 60,
                             height: 60,
                             fit: BoxFit.cover,
@@ -259,6 +250,9 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
                           (bContext) => AddressListWidget(
                             addresses:
                                 Storage.addressModel ?? UserAddressModel(),
+                            isBuyAgain: isBuyAgain ?? false,
+                            orderDetail: orderDetail,
+                            orderId: orderId ?? 0,
                           ),
                     ),
                   );
@@ -273,34 +267,218 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
   }
 
   Widget listItemOrder(CreateOrderBloc bloc) {
-    return StreamBuilder(
-      stream: bloc.streamListCartItem.output,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data == null) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return isBuyAgain == false
+        ? StreamBuilder(
+          stream: bloc.streamListCartItem.output,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-        final list = snapshot.data as List<CartItemModel>;
-        if (list.isEmpty) {
-          return const Center(
-            child: Text('Không có sản phẩm nào trong giỏ hàng.'),
-          );
-        }
-        return MediaQuery.removePadding(
-          removeTop: true,
-          removeBottom: true,
-          context: context,
-          child: ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: list.length,
-            itemBuilder: (context, index) {
-              final data = list[index];
-              return _itemCard(bloc: bloc, model: data);
-            },
-          ),
+            final list = snapshot.data as List<CartItemModel>;
+            if (list.isEmpty) {
+              return const Center(
+                child: Text('Không có sản phẩm nào trong giỏ hàng.'),
+              );
+            }
+            return MediaQuery.removePadding(
+              removeTop: true,
+              removeBottom: true,
+              context: context,
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: list.length,
+                itemBuilder: (context, index) {
+                  final data = list[index];
+                  return _itemCard(bloc: bloc, model: data);
+                },
+              ),
+            );
+          },
+        )
+        : StreamBuilder(
+          stream: bloc.streamOrderDetail.output,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final list = snapshot.data as List<OrderDetailResponse>;
+            if (list.isEmpty) {
+              return const Center(
+                child: Text('Không có sản phẩm nào trong giỏ hàng.'),
+              );
+            }
+            return MediaQuery.removePadding(
+              removeTop: true,
+              removeBottom: true,
+              context: context,
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: list.length,
+                itemBuilder: (context, index) {
+                  final data = list[index];
+                  return _itemCardBuyAgain(model: data, bloc: bloc);
+                },
+              ),
+            );
+          },
         );
-      },
+  }
+
+  Widget _itemCardBuyAgain({
+    OrderDetailResponse? model,
+    CreateOrderBloc? bloc,
+  }) {
+    final ProductModel? product = model?.product;
+    return SizedBox(
+      width: AppSize.width(),
+      height: 150,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+        child: Card(
+          color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: SizedBox(
+              height: 100,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      // child: Image.asset(avtWomen6, fit: BoxFit.cover),
+                      child:
+                          (product?.image != null)
+                              ? CachedNetworkImage(
+                                imageUrl: product!.image!,
+                                placeholder:
+                                    (context, url) =>
+                                        CircularProgressIndicator(),
+                                errorWidget:
+                                    (context, url, error) => Image.asset(
+                                      imgBranch,
+                                      fit: BoxFit.cover,
+                                    ),
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              )
+                              : Image.asset(imgBranch, fit: BoxFit.cover),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 6,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: SizedBox(
+                        height: 100,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.max,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            customAutoSizeText(
+                              14,
+                              18,
+                              model?.product?.name ?? '',
+                              isBold: true,
+                              textColor: toHexToColor(primaryTextColor),
+                            ),
+                            customAutoSizeText(
+                              12,
+                              16,
+                              formatCurrencyVN(model?.product?.price ?? 0.0),
+                              isBold: true,
+                              // isLine: true,
+                              textColor: toHexToColor(primaryButtonColor),
+                            ),
+                            Spacer(),
+                            // Row(
+                            //   children: [
+                            //     Spacer(),
+                            //     Card(
+                            //       color: Colors.white,
+                            //       child: Container(
+                            //         decoration: BoxDecoration(
+                            //           color: Colors.grey[300],
+                            //           borderRadius: BorderRadius.circular(5),
+                            //         ),
+                            //         child: Row(
+                            //           children: [
+                            //             InkWell(
+                            //               onTap: () {
+                            //                 bloc?.onCaculate(
+                            //                   model ?? CartItemModel(),
+                            //                   true,
+                            //                 );
+                            //               },
+                            //               child: Container(
+                            //                 padding: EdgeInsets.symmetric(
+                            //                   horizontal: 10,
+                            //                   vertical: 3,
+                            //                 ),
+                            //                 decoration: BoxDecoration(
+                            //                   borderRadius: BorderRadius.only(
+                            //                     topLeft: Radius.circular(5),
+                            //                     bottomLeft: Radius.circular(5),
+                            //                   ),
+                            //                 ),
+                            //                 child: Text(' - '),
+                            //               ),
+                            //             ),
+                            //             Container(
+                            //               padding: EdgeInsets.symmetric(
+                            //                 horizontal: 8,
+                            //                 vertical: 3,
+                            //               ),
+                            //               color: Colors.white,
+                            //               child: Text(
+                            //                 model?.quantity.toString() ?? '0',
+                            //               ),
+                            //             ),
+                            //             InkWell(
+                            //               onTap: () {
+                            //                 bloc?.onCaculate(
+                            //                   model ?? CartItemModel(),
+                            //                   false,
+                            //                 );
+                            //               },
+                            //               child: Container(
+                            //                 padding: EdgeInsets.symmetric(
+                            //                   horizontal: 8,
+                            //                   vertical: 3,
+                            //                 ),
+                            //                 decoration: BoxDecoration(
+                            //                   borderRadius: BorderRadius.only(
+                            //                     bottomRight: Radius.circular(5),
+                            //                     topRight: Radius.circular(5),
+                            //                   ),
+                            //                   // color: Colors.white,
+                            //                 ),
+                            //                 child: Text(' + '),
+                            //               ),
+                            //             ),
+                            //           ],
+                            //         ),
+                            //       ),
+                            //     ),
+                            //   ],
+                            // ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -340,7 +518,7 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
                                 height: 100,
                                 fit: BoxFit.cover,
                               )
-                              : Image.asset(avtWomen6, fit: BoxFit.cover),
+                              : Image.asset(imgBranch, fit: BoxFit.cover),
                     ),
                   ),
                   Expanded(
@@ -859,9 +1037,14 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
       stream: bloc.streamCanBuy,
       builder: (context, snapshot) {
         final isEnabled = snapshot.data == true;
-
         return InkWell(
-          onTap: isEnabled ? () => bloc.onBuy(bContext) : null,
+          onTap:
+              isEnabled
+                  ? () =>
+                      isBuyAgain == false
+                          ? bloc.onBuy(bContext)
+                          : bloc.onBuyAgain(bContext)
+                  : null,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Card(

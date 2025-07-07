@@ -666,7 +666,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   onGetListOrderByStatus(OrderStatus status) async {
     final model = OrderFilterRequest(
-      branchId: Storage.branchModelGlobal?.branchId,
+      // branchId: Storage.branchModelGlobal?.branchId,
       page: 1,
       pageSize: 20,
       userId: Storage.userModelGlobal?.userId,

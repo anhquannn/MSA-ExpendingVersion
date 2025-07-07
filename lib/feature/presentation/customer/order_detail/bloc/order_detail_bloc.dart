@@ -14,6 +14,7 @@ import 'package:msa/feature/data/model/response/order_detail_response_model.dart
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
+import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
 import 'package:msa/feature/presentation/customer/order_detail/ui/order_detail_screen.dart';
 import 'package:msa/widget/custom_dropdown.dart';
@@ -87,6 +88,20 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
     }
   }
 
+  onBuyAgain(BuildContext bContext) async {
+    Navigator.push(
+      bContext,
+      MaterialPageRoute(
+        builder:
+            (bContext) => CreateOrderScreen(
+              isBuyAgain: true,
+              orderDetail: orderDetail,
+              orderId: widget.order?.orderId,
+            ),
+      ),
+    );
+  }
+
   getTotalProduct() {
     double data = 0;
     orderDetail?.forEach((element) {
@@ -122,7 +137,7 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
     }
   }
 
-  Future<void> onCreateRatesForProducts({required BuildContext context}) async {
+  onCreateRatesForProducts({required BuildContext context}) async {
     final List<Map<String, dynamic>> products =
         orderDetail
             ?.map(
@@ -139,7 +154,7 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
     await showRatingDialog(context, products: products, userId: userId);
   }
 
-  Future<void> showRatingDialog(
+  showRatingDialog(
     BuildContext context, {
     required List<Map<String, dynamic>> products,
     required int? userId,
@@ -216,7 +231,7 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
     );
   }
 
-  Future<void> onReturnProducts({required BuildContext context}) async {
+  onReturnProducts({required BuildContext context}) async {
     final List<Map<String, dynamic>> products =
         orderDetail
             ?.map(
@@ -231,7 +246,7 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
     await showReturnDialog(context, products: products);
   }
 
-  Future<void> showReturnDialog(
+  showReturnDialog(
     BuildContext context, {
     required List<Map<String, dynamic>> products,
   }) async {
@@ -247,7 +262,7 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
       ReturnContent(
         key: contentKey,
         onSubmit: (reason) async {
-          Navigator.of(context).pop(); 
+          Navigator.of(context).pop();
 
           int quantity = 0;
           for (OrderDetailResponse i in orderDetail ?? []) {

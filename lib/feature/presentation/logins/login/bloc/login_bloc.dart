@@ -72,12 +72,11 @@ class LoginBloc extends BaseBloc<LoginScreen> {
       ),
     );
 
-    // isSuccess = await _userUseCases.login.call(
-    //   UserLoginRequest(email: email, password: password),
-    // );
     Storage.email = email;
     if (isSuccess == false) {
       showLoginError('Sai mật khẩu!!!');
+    } else {
+      await Repository.onUpdateDeviceId();
     }
     viewSetState(() {});
     return isSuccess == true;
@@ -183,13 +182,13 @@ class LoginBloc extends BaseBloc<LoginScreen> {
     print('❌ Người dùng đã hủy đăng nhập ___ $idToken');
     print('❌ Người dùng đã hủy đăng nhập ___ $accessToken');
 
-    // final isSuccess = await Repository.loginWithGoogleToken(accessToken ?? '');
     print('👉 Gọi loginWithGoogleToken...');
     final isSuccess = await Repository.loginWithGoogleToken(accessToken ?? '');
     print('✅ Kết quả loginWithGoogleToken: $isSuccess');
     if (isSuccess) {
       final response = await Repository.onGetUserInfo();
       final addressSuccess = await onGetAddress();
+      await Repository.onUpdateDeviceId();
       showCustomDialog(
         bContext,
         AppSize.w(0.9),
@@ -250,7 +249,6 @@ class LoginBloc extends BaseBloc<LoginScreen> {
   logoutFromGoogle() async {
     final GoogleSignIn googleSignIn = GoogleSignIn();
     try {
-      // Nếu đã đăng nhập thì mới signOut
       final isSignedIn = await googleSignIn.isSignedIn();
       if (isSignedIn) {
         await googleSignIn.signOut();

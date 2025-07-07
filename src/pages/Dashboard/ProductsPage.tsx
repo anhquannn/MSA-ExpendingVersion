@@ -23,6 +23,19 @@ function useDebounce(value: string, delay: number) {
   return debouncedValue;
 }
 
+// Component hiển thị danh sách tên sản phẩm đính kèm
+const AttachedProductsCell: React.FC<{ productId: number }> = ({ productId }) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['attachedProducts', productId],
+    queryFn: () => productService.getAttachedProductsPaged(productId, { page: 1, pageSize: 100 }),
+  });
+
+  if (isLoading) return <span>...</span>;
+
+  const names = (data?.content || []).map((p) => p.name).join(', ');
+  return <span>{names || '-'}</span>;
+};
+
 
 const ProductsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -175,6 +188,7 @@ const ProductsPage: React.FC = () => {
               <th className="py-3 px-4 text-left">Giá</th>
               <th className="py-3 px-4 text-left">Danh mục</th>
               <th className="py-3 px-4 text-left">Nhà cung cấp</th>
+              <th className="py-3 px-4 text-left">SP đính kèm</th>
               <th className="py-3 px-4 text-left">Hành động</th>
             </tr>
           </thead>
@@ -193,6 +207,7 @@ const ProductsPage: React.FC = () => {
                 <td className="py-3 px-4">{new Intl.NumberFormat('vi-VN').format(product.price)}đ</td>
                 <td className="py-3 px-4">{product.category.name}</td>
                 <td className="py-3 px-4">{product.supplier.name}</td>
+                <td className="py-3 px-4"><AttachedProductsCell productId={product.productId} /></td>
                 <td className="py-3 px-4 space-x-2">
                   <button
                     onClick={() => navigate(`/dashboard/products/edit/${product.productId}`)}

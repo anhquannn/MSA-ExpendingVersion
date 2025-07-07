@@ -1,4 +1,3 @@
-// export default ProductAddPage;
 // File: src/pages/Dashboard/ProductUpsertPage.tsx
 
 import React, { useState, useEffect } from 'react';
@@ -23,6 +22,38 @@ import Select, { MultiValue } from 'react-select';
 
 interface OptionType { value: number; label: string; }
 
+// Component để hiển thị tag sản phẩm đính kèm
+const ProductTag: React.FC<{
+  productId: number;
+  productName: string;
+  combinationId: number;
+  onRemove: (combinationId: number) => void;
+  isRemoving: boolean;
+}> = ({ productId, productName, combinationId, onRemove, isRemoving }) => {
+  return (
+    <div className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-2">
+      <span className="mr-2">
+        {productName} (ID: {productId})
+      </span>
+      <button
+        type="button"
+        onClick={() => onRemove(combinationId)}
+        disabled={isRemoving}
+        className="text-blue-600 hover:text-blue-800 hover:bg-blue-200 rounded-full p-1 transition-colors"
+        title="Xóa sản phẩm đính kèm"
+      >
+        {isRemoving ? (
+          <div className="w-4 h-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+        ) : (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
+};
+
 const ProductUpsertPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const isEditMode = !!productId;
@@ -41,8 +72,11 @@ const ProductUpsertPage: React.FC = () => {
   });
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [relatedProductIds, setRelatedProductIds] = useState<number[]>([]);
+  const [currentCombinations, setCurrentCombinations] = useState<any[]>([]); // Lưu các combination hiện tại
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  // State để quản lý modal (chưa xây dựng UI modal, chỉ là logic)
+  const [removingCombinationId, setRemovingCombinationId] = useState<number | null>(null);
+  
+  // State để quản lý modal
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [showAddSupplierModal, setShowAddSupplierModal] = useState(false);
   const [showAddInventoryModal, setShowAddInventoryModal] = useState(false);
@@ -52,14 +86,28 @@ const ProductUpsertPage: React.FC = () => {
 
   const { data: allProductsForSelect } = useQuery({
     queryKey: ['allProductsForSelect'],
-    queryFn: () => productService.getProducts({ page: 1, pageSize: 100 }),
+    queryFn: () => productService.getProducts({ page: 1, pageSize: 1000 }),
+  });
+
+  // Lấy danh sách sản phẩm đính kèm (chỉ khi chỉnh sửa)
+  const { data: attachedProductsPage } = useQuery({
+    queryKey: ['attachedProductsEdit', currentProductIdNum],
+    enabled: isEditMode && !isNaN(currentProductIdNum),
+    queryFn: () => productService.getAttachedProductsPaged(currentProductIdNum, { page: 1, pageSize: 100 }),
+  });
+
+  // Lấy danh sách combinations hiện tại (chỉ khi chỉnh sửa)
+  const { data: currentCombinationsData } = useQuery({
+    queryKey: ['currentCombinations', currentProductIdNum],
+    enabled: isEditMode && !isNaN(currentProductIdNum),
+    queryFn: () => productService.getProductCombinations(currentProductIdNum, { page: 1, pageSize: 100 }),
   });
 
   // Tải dữ liệu sản phẩm CẦN SỬA
   const { data: existingProduct, isLoading: isLoadingProductDetails } = useQuery({
     queryKey: ['product', productId],
-    queryFn: () => productService.getProductById(Number(productId)), // Cần thêm hàm này vào service
-    enabled: isEditMode,
+    queryFn: () => productService.getProductById(Number(productId)),
+    enabled: isEditMode && !!productId,
   });
 
   // Điền dữ liệu vào form khi ở chế độ sửa
@@ -77,38 +125,26 @@ const ProductUpsertPage: React.FC = () => {
         categoryId: existingProduct.category.categoryId,
         supplierId: existingProduct.supplier.supplierId,
       });
-      // Giả định ảnh và kho không chỉnh sửa ở đây, hoặc cần logic phức tạp hơn
       const existingImages = existingProduct.productImageResponses?.map(img => img.imageUrl) || [];
       setImagePreviews(existingImages);
-      // fetch related products
-      productService.getRelatedProductIds(existingProduct.productId).then(setRelatedProductIds);
     }
   }, [isEditMode, existingProduct]);
 
-  type CreateProductFlowVariables = {
-    productData: ProductCreatePayload;
-    imageUrls: string[];
-    inventoryData: Omit<InventoryProductCreatePayload, 'productId'>;
-    totalRevenue: 1
-  };
+  // Cập nhật relatedProductIds và currentCombinations khi data tải xong
+  useEffect(() => {
+    if (currentCombinationsData) {
+      // Một số API có thể trả về dữ liệu dạng PagedResponse (có field `content`),
+      // một số khác trả về mảng thuần. Chuẩn hoá để luôn lấy được mảng combinations
+      const combos: any[] = (currentCombinationsData as any).content ?? (currentCombinationsData as any);
 
-  const addProductMutation = useMutation({
-    mutationFn: (variables: CreateProductFlowVariables) =>
-      productService.createProduct(
-        variables.productData,
-        variables.imageUrls,
-        variables.inventoryData,
+      console.log('currentCombinationsData loaded:', currentCombinationsData);
+      setCurrentCombinations(combos);
 
-      ),
-    onSuccess: () => {
-      alert('Thêm sản phẩm mới và nhập kho thành công!');
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      navigate('/dashboard/products');
-    },
-    onError: (error: Error) => {
-      alert(`Đã có lỗi xảy ra trong quy trình: ${error.message}`);
-    },
-  });
+      // Lấy danh sách ID sản phẩm đính kèm hiện tại
+      const currentRelatedIds = combos.map((combo: any) => (typeof combo.productId2 === 'object' ? combo.productId2.productId : combo.productId2));
+      setRelatedProductIds(currentRelatedIds);
+    }
+  }, [currentCombinationsData]);
 
   // Lấy danh sách cho các dropdown
   const { data: categoriesResponse } = useQuery({
@@ -129,7 +165,6 @@ const ProductUpsertPage: React.FC = () => {
   });
 
   // --- MUTATIONS ---
-
   const mutationOptions = {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -151,8 +186,8 @@ const ProductUpsertPage: React.FC = () => {
   });
 
   const updateProductMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number, payload: ProductUpdatePayload & { combinationProductIds?: number[] } }) =>
-      productService.updateProduct(id, { ...payload, combinationProductIds: relatedProductIds }),
+    mutationFn: ({ id, payload }: { id: number, payload: ProductUpdatePayload }) =>
+      productService.updateProduct(id, payload),
     ...mutationOptions,
     onSuccess: () => {
       alert('Cập nhật sản phẩm thành công!');
@@ -161,10 +196,38 @@ const ProductUpsertPage: React.FC = () => {
     }
   });
 
+  // Mutation để xóa product combination
+  const deleteCombinationMutation = useMutation({
+    mutationFn: (combinationId: number) => productService.deleteProductCombination(combinationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentCombinations', currentProductIdNum] });
+      queryClient.invalidateQueries({ queryKey: ['attachedProductsEdit', currentProductIdNum] });
+      setRemovingCombinationId(null);
+      alert('Xóa sản phẩm đính kèm thành công!');
+    },
+    onError: (error: Error) => {
+      setRemovingCombinationId(null);
+      alert(`Lỗi khi xóa: ${error.message}`);
+    }
+  });
+
+  // Mutation để thêm product combination
+  const addCombinationMutation = useMutation({
+    mutationFn: (payload: { productId1: number; productId2: number }) => 
+      productService.createProductCombination(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentCombinations', currentProductIdNum] });
+      queryClient.invalidateQueries({ queryKey: ['attachedProductsEdit', currentProductIdNum] });
+      alert('Thêm sản phẩm đính kèm thành công!');
+    },
+    onError: (error: Error) => {
+      alert(`Lỗi khi thêm: ${error.message}`);
+    }
+  });
+
   const isSubmitting = createProductMutation.isPending || updateProductMutation.isPending;
 
   // --- EVENT HANDLERS ---
-
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setProductForm(prev => ({ ...prev, [name]: value }));
@@ -182,6 +245,45 @@ const ProductUpsertPage: React.FC = () => {
       const newPreviewUrls = newFiles.map(file => URL.createObjectURL(file));
       setImagePreviews(prevUrls => [...prevUrls, ...newPreviewUrls]);
     }
+  };
+
+  // Xử lý xóa combination
+  const handleDeleteCombination = (combinationId: number) => {
+    if (window.confirm('Bạn có chắc muốn xóa sản phẩm đính kèm này?')) {
+      setRemovingCombinationId(combinationId);
+      deleteCombinationMutation.mutate(combinationId);
+    }
+  };
+
+  // Xử lý thêm combination mới
+  const handleAddCombinations = () => {
+    if (!isEditMode) return;
+    
+    const currentProductId2s = currentCombinations.map(combo => combo.productId2);
+    const newProductIds = relatedProductIds.filter(id => !currentProductId2s.includes(id));
+    
+    if (newProductIds.length === 0) {
+      alert('Không có sản phẩm mới để thêm');
+      return;
+    }
+
+    // Thêm từng sản phẩm một cách tuần tự
+    const addNext = async (index: number) => {
+      if (index >= newProductIds.length) return;
+      
+      try {
+        await addCombinationMutation.mutateAsync({
+          productId1: currentProductIdNum,
+          productId2: newProductIds[index]
+        });
+        // Tiếp tục thêm sản phẩm tiếp theo
+        await addNext(index + 1);
+      } catch (error) {
+        console.error('Error adding combination:', error);
+      }
+    };
+
+    addNext(0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -209,9 +311,8 @@ const ProductUpsertPage: React.FC = () => {
       }
     }
 
-    // --- Logic upload và gọi mutation ---
     try {
-      // Chỉ upload ảnh nếu có file mới được chọn (cho cả thêm và sửa)
+      // Chỉ upload ảnh nếu có file mới được chọn
       const imageUrls = imageFiles.length > 0 ? await uploadMultipleImages(imageFiles, 'msa') : [];
 
       const discountPercentageValue = productForm.discountPercentage === undefined || String(productForm.discountPercentage).trim() === '' ? undefined : Number(productForm.discountPercentage);
@@ -233,7 +334,6 @@ const ProductUpsertPage: React.FC = () => {
 
       if (isEditMode) {
         // Logic SỬA: chỉ cập nhật thông tin sản phẩm
-        // Việc sửa ảnh và kho có thể là một quy trình phức tạp hơn
         updateProductMutation.mutate({ id: Number(productId), payload: productPayload });
       } else {
         // Logic THÊM: quy trình 3 bước
@@ -284,17 +384,14 @@ const ProductUpsertPage: React.FC = () => {
                <label htmlFor="netWeight">Khối lượng tịnh</label>
                <input type="text" name="netWeight" id="netWeight" value={productForm.netWeight || ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border rounded-md" />
              </div>
-            {/* SỬ DỤNG COMPONENT DROPDOWN MỚI */}
+            
             <SelectWithAddNew
               label="Danh mục"
               name="categoryId"
               value={productForm.categoryId}
               onChange={handleFormChange}
               options={categories.map(c => ({ value: c.categoryId, label: c.name }))}
-              onAddNew={() => {
-                console.log("Mở popup thêm Category!");
-                setShowAddCategoryModal(true);
-              }}
+              onAddNew={() => setShowAddCategoryModal(true)}
               required
             />
             <SelectWithAddNew
@@ -303,10 +400,7 @@ const ProductUpsertPage: React.FC = () => {
               value={productForm.supplierId}
               onChange={handleFormChange}
               options={suppliers.map(s => ({ value: s.supplierId, label: s.name }))}
-              onAddNew={() => {
-                console.log("Mở popup thêm Supplier!");
-                setShowAddSupplierModal(true);
-              }}
+              onAddNew={() => setShowAddSupplierModal(true)}
               required
             />
             <div className="md:col-span-2">
@@ -327,31 +421,82 @@ const ProductUpsertPage: React.FC = () => {
         {/* SẢN PHẨM ĐI KÈM */}
         <fieldset className="border p-4 rounded-md">
           <legend className="text-lg font-semibold px-2">Sản phẩm đi kèm</legend>
-          <select
-            multiple
-            className="mt-1 block w-full p-2 border rounded-md h-40"
-            value={relatedProductIds.map(String)}
-            onChange={(e) => {
-              const opts = Array.from(e.target.selectedOptions).map((o) => Number(o.value));
-              setRelatedProductIds(opts);
-            }}
-          >
+          
+          {/* Hiển thị danh sách sản phẩm đính kèm hiện tại (chỉ trong chế độ sửa) */}
+          {isEditMode && (
+            <div className="mb-6">
+              <h4 className="text-md font-medium mb-3">
+                Sản phẩm đính kèm hiện tại: 
+                <span className="text-sm text-gray-600 ml-2">
+                  ({currentCombinations.length} sản phẩm)
+                </span>
+              </h4>
+              
+              {currentCombinations.length > 0 ? (
+                <div className="min-h-[60px] p-3 border rounded-md bg-gray-50">
+                  {currentCombinations.map((combo) => {
+                    const product = allProductsForSelect?.productsPage.content.find(p => p.productId === combo.productId2);
+                    return (
+                      <ProductTag
+                        key={combo.combinationId}
+                        productId={typeof combo.productId2 === 'object' ? combo.productId2.productId : combo.productId2}
+                        productName={product ? product.name : (typeof combo.productId2 === 'object' ? combo.productId2.name : 'Không tìm thấy sản phẩm')}
+                        combinationId={combo.combinationId}
+                        onRemove={handleDeleteCombination}
+                        isRemoving={removingCombinationId === combo.combinationId}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-gray-500 text-sm bg-gray-50 p-3 rounded border">
+                  Chưa có sản phẩm đính kèm nào
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Selector để chọn sản phẩm đính kèm */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">
+              {isEditMode ? 'Thêm sản phẩm đính kèm mới:' : 'Chọn sản phẩm đi kèm:'}
+            </label>
             <Select
-            isMulti
-            options={(allProductsForSelect?.productsPage.content ?? [])
-              .filter((p) => !isEditMode || p.productId !== currentProductIdNum)
-              .map((p) => ({ value: p.productId, label: p.name }))}
-            value={(allProductsForSelect?.productsPage.content ?? [])
-              .filter((p) => relatedProductIds.includes(p.productId))
-              .map((p) => ({ value: p.productId, label: p.name }))}
-            onChange={(vals: MultiValue<OptionType>) => {
-              const selected = vals;
-              setRelatedProductIds(selected.map((v) => v.value));
-            }}
-            placeholder="Chọn sản phẩm liên quan..."
-            classNamePrefix="react-select"
-          />
-          </select>
+              isMulti
+              options={allProductsForSelect?.productsPage.content
+                .filter((p: Product) => !isEditMode || p.productId !== currentProductIdNum)
+                .map((p) => ({ value: p.productId, label: `${p.name} (ID: ${p.productId})` })) || []}
+              value={allProductsForSelect?.productsPage.content
+                .filter((p: Product) => relatedProductIds.includes(p.productId))
+                .map((p) => ({ value: p.productId, label: `${p.name} (ID: ${p.productId})` })) || []}
+              onChange={(vals: MultiValue<OptionType>) => {
+                const selectedIds = vals.map((v) => v.value);
+                console.log('Selected product IDs:', selectedIds);
+                setRelatedProductIds(selectedIds);
+              }}
+              placeholder="Chọn sản phẩm liên quan..."
+              classNamePrefix="react-select"
+            />
+          </div>
+
+          {/* Nút thêm sản phẩm đính kèm (chỉ hiển thị trong chế độ sửa) */}
+          {isEditMode && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={handleAddCombinations}
+                disabled={addCombinationMutation.isPending || relatedProductIds.length === 0}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                {addCombinationMutation.isPending ? 'Đang thêm...' : 'Thêm sản phẩm đính kèm'}
+              </button>
+              {relatedProductIds.length === 0 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Vui lòng chọn ít nhất một sản phẩm để thêm
+                </p>
+              )}
+            </div>
+          )}
         </fieldset>
 
         {/* Chỉ hiển thị phần nhập kho khi THÊM MỚI */}
@@ -365,10 +510,7 @@ const ProductUpsertPage: React.FC = () => {
                 value={inventoryForm.inventoryId}
                 onChange={handleInventoryFormChange}
                 options={inventories.map(i => ({ value: i.inventoryId, label: i.name }))}
-                onAddNew={() => {
-                  console.log("Mở popup thêm Kho!");
-                  setShowAddInventoryModal(true);
-                }}
+                onAddNew={() => setShowAddInventoryModal(true)}
                 required
               />
               <div>
@@ -378,9 +520,9 @@ const ProductUpsertPage: React.FC = () => {
               <div>
                 <label htmlFor="stockLevel">Tình trạng tồn kho (*)</label>
                 <select name="stockLevel" id="stockLevel" value={inventoryForm.stockLevel} required onChange={handleInventoryFormChange} className="mt-1 block w-full p-2 border rounded-md">
-                  <option value="medium">Trung bình</option>
-                  <option value="high">Cao</option>
-                  <option value="low">Thấp</option>
+                  <option value="MEDIUM">Trung bình</option>
+                  <option value="HIGH">Cao</option>
+                  <option value="LOW">Thấp</option>
                 </select>
               </div>
             </div>
@@ -421,12 +563,14 @@ const ProductUpsertPage: React.FC = () => {
           </button>
         </div>
       </form>
+      
       {isSubmitting && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-500"></div>
         </div>
       )}
 
+      {/* Modals */}
       <Modal
         title="Thêm Danh Mục Mới"
         isOpen={showAddCategoryModal}
@@ -460,4 +604,5 @@ const ProductUpsertPage: React.FC = () => {
     </div>
   );
 };
+
 export default ProductUpsertPage;

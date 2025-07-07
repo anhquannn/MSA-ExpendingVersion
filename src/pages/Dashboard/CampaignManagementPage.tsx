@@ -1,6 +1,8 @@
 // src/pages/Dashboard/CampaignManagementPage.tsx
 
 import React, { useState, useEffect } from 'react';
+import { categoryService } from '../../services/categoryService';
+import { supplierService } from '../../services/supplierService';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { Campaign, CampaignFilter, campaignService } from '../../services/campaignService';
 import CampaignForm from '../../components/Campaign/CampaignForm';
@@ -19,6 +21,11 @@ function useDebounce(value: string, delay: number) {
 const CampaignManagementPage: React.FC = () => {
   const queryClient = useQueryClient();
 
+  // Lưu map id -> name để hiển thị tên target nhanh chóng
+  const [categoryMap, setCategoryMap] = useState<Record<number, string>>({});
+  const [supplierMap, setSupplierMap] = useState<Record<number, string>>({});
+  const [targetNameMap, setTargetNameMap] = useState<Record<number, string>>({}); // campaignId -> target names
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [filters, setFilters] = useState<CampaignFilter>({
@@ -30,6 +37,27 @@ const CampaignManagementPage: React.FC = () => {
   });
 
   const debouncedKeyword = useDebounce(filters.keyword || '', 500);
+
+  // Fetch category & supplier data once on mount to build lookup maps
+  useEffect(() => {
+    const fetchLookupData = async () => {
+      try {
+        const [catRes, supRes] = await Promise.all([
+          categoryService.getCategories({ page: 1, pageSize: 500 }),
+          supplierService.getSuppliers({ page: 1, pageSize: 500 }),
+        ]);
+        const catMap: Record<number, string> = {};
+        catRes.content.forEach(c => (catMap[c.categoryId] = c.name));
+        setCategoryMap(catMap);
+        const supMap: Record<number, string> = {};
+        supRes.content.forEach(s => (supMap[s.supplierId] = s.name));
+        setSupplierMap(supMap);
+      } catch (err) {
+        console.error('Lỗi khi tải danh mục/nhà cung cấp:', err);
+      }
+    };
+    fetchLookupData();
+  }, []);
 
   const navigate = useNavigate();
 
@@ -78,6 +106,42 @@ const CampaignManagementPage: React.FC = () => {
   };
 
   const campaigns = pagedData?.content || [];
+
+  // Khi campaigns thay đổi, lấy target name cho từng campaign (chỉ khi cần)
+  useEffect(() => {
+    const fetchTargetsForCampaigns = async () => {
+      const promises = campaigns
+        .filter(c => c.scopeType !== 'ALL' && !(c.campaignId! in targetNameMap))
+        .map(async c => {
+          try {
+            const targets = await campaignService.getCampaignTargets(c.campaignId!);
+            const names = targets.map(t => {
+              if (t.targetType === 'CATEGORY') return categoryMap[t.targetId] || `Danh mục #${t.targetId}`;
+              if (t.targetType === 'SUPPLIER') return supplierMap[t.targetId] || `NCC #${t.targetId}`;
+              return `${t.targetType} #${t.targetId}`;
+            });
+            return { campaignId: c.campaignId!, names: names.join(', ') };
+          } catch (err) {
+            console.error('Lỗi khi lấy target của campaign', c.campaignId, err);
+            return { campaignId: c.campaignId!, names: '' };
+          }
+        });
+
+      const results = await Promise.all(promises);
+      setTargetNameMap(prev => {
+        const updated = { ...prev };
+        results.forEach(r => {
+          updated[r.campaignId] = r.names;
+        });
+        return updated;
+      });
+    };
+
+    if (campaigns.length > 0) {
+      fetchTargetsForCampaigns();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaigns, categoryMap, supplierMap]);
   const totalPages = pagedData?.totalPages || 1;
 
   return (
@@ -112,6 +176,7 @@ const CampaignManagementPage: React.FC = () => {
               <th className="py-3 px-6 text-left">Ngày bắt đầu</th>
               <th className="py-3 px-6 text-left">Ngày kết thúc</th>
               <th className="py-3 px-6 text-left">Phạm vi</th>
+              <th className="py-3 px-6 text-left">Tên mục tiêu</th>
               <th className="py-3 px-6 text-left">Giá trị tối thiểu</th>
               <th className="py-3 px-6 text-center">Hành động</th>
             </tr>
@@ -121,17 +186,20 @@ const CampaignManagementPage: React.FC = () => {
               <tr key={c.campaignId} className="border-b hover:bg-gray-50">
                 <td className="py-3 px-6">{c.campaignId}</td>
                 <td className="py-3 px-6 font-medium">
-                    <button
-                        onClick={() => navigate(`/dashboard/campaigns/${c.campaignId}/promocodes`)}
-                        className="text-blue-600 hover:underline"
-                    >
-                        {c.name}
-                    </button>
+                  <button
+                    onClick={() => navigate(`/dashboard/campaigns/${c.campaignId}/promocodes`)}
+                    className="text-blue-600 hover:underline"
+                  >
+                    {c.name}
+                  </button>
                 </td>
                 <td className="py-3 px-6">{c.status}</td>
                 <td className="py-3 px-6">{c.startDate}</td>
                 <td className="py-3 px-6">{c.endDate}</td>
                 <td className="py-3 px-6">{c.scopeType}</td>
+                <td className="py-3 px-6">
+                  {c.scopeType === 'ALL' ? '—' : (targetNameMap[c.campaignId!] || 'Đang tải...')}
+                </td>
                 <td className="py-3 px-6">{c.minOrderValue}</td>
                 <td className="py-3 px-6 text-center">
                   <button onClick={() => handleOpenEditModal(c)} className="text-yellow-600 hover:underline mr-4">Sửa</button>

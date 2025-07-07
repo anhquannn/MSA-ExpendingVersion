@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { productService } from '../../services/productService';
 import { useParams, useNavigate } from 'react-router-dom';
 
 // Định nghĩa kiểu dữ liệu cho Product (tương tự như ProductsPage)
@@ -40,7 +42,14 @@ const ProductDetailPage: React.FC = () => {
   }, [productId]);
 
   const [product, setProduct] = useState<Product | undefined>(initialProduct); // State để có thể chỉnh sửa product
-  const [isEditing, setIsEditing] = useState(false); // State để bật/tắt chế độ chỉnh sửa
+  const [isEditing, setIsEditing] = useState(false);
+  // Danh sách sản phẩm đính kèm
+  const { data: attachedProductsPage, isLoading: isLoadingAttached } = useQuery({
+    queryKey: ['attachedProducts-detail', productId],
+    enabled: !!productId,
+    queryFn: () => productService.getAttachedProductsPaged(Number(productId), { page: 1, pageSize: 100 }),
+  });
+  const attachedProducts = attachedProductsPage?.content || []; // State để bật/tắt chế độ chỉnh sửa
   const [editFormData, setEditFormData] = useState<Partial<Product>>({}); // Dữ liệu form chỉnh sửa
 
   // Cập nhật state product khi initialProduct thay đổi (ví dụ: khi chuyển giữa các trang chi tiết sản phẩm)

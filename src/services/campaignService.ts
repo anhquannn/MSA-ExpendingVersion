@@ -171,13 +171,14 @@ export const campaignService = {
       result: CampaignTarget;
     };
 
-    const cleanedTarget = {
-      ...target,
-      campaignTargetId: campaignTargetId,
-      campaignId: target.campaignId!
+    // Backend chỉ mong đợi campaignId, targetType, targetId trong body
+    const payload = {
+      campaignId: target.campaignId,
+      targetType: target.targetType,
+      targetId: target.targetId,
     };
 
-    const response = await api.put<FullApiResponse>(`campaign-target/${campaignTargetId}`, cleanedTarget);
+    const response = await api.put<FullApiResponse>(`campaign-target/${campaignTargetId}`, payload);
     return response.result;
   },
 
@@ -185,6 +186,11 @@ export const campaignService = {
     await api.delete<void>(`campaign-target/${campaignTargetId}`);
   },
 
+  /**
+   * Lấy danh sách campaign target của một campaign.
+   * Backend hiện tại không có endpoint GET /campaign/{id}/targets.
+   * Thay vào đó, chúng ta gọi POST /campaign-target/list với body filter { campaignId }.
+   */
   getCampaignTargets: async (campaignId: number): Promise<CampaignTarget[]> => {
     type FullApiResponse = {
       code: number;
@@ -192,7 +198,13 @@ export const campaignService = {
       result: CampaignTarget[];
     };
 
-    const response = await api.get<FullApiResponse>(`campaign/${campaignId}/targets`);
+    const filterPayload = {
+      campaignId,
+      page: 1,
+      pageSize: 1000, // lấy tối đa 1000 target, đủ cho hầu hết các trường hợp
+    };
+
+    const response = await api.post<FullApiResponse>('campaign-target/list', filterPayload);
     return response.result;
   },
 } as const;

@@ -155,12 +155,75 @@ export const productService = {
     }
     return newProduct;
   },
+  
+  // Lấy danh sách combinations (ProductCombinationResponse) dưới dạng phân trang
+  getProductCombinations: async (
+    productId: number,
+    params?: { page?: number; pageSize?: number; sortBy?: string; sortDirection?: 'ASC' | 'DESC' }
+  ): Promise<PagedResponse<ProductCombinationResponse>> => {
+    type FullApiResponse = { result: PagedResponse<ProductCombinationResponse> };
+    const payload = {
+      productId1: productId,
+      page: params?.page ?? 1,
+      pageSize: params?.pageSize ?? 100,
+      sortBy: params?.sortBy ?? 'combinationId',
+      sortDirection: params?.sortDirection ?? 'ASC',
+    };
+    const response = await api.post<FullApiResponse>('product-combinations/list', payload);
+    return response.result;
+  },
+
+  // Tạo product combination
+  createProductCombination: async (payload: ProductCombinationCreatePayload): Promise<ProductCombinationResponse> => {
+    type ApiResponse = { result: ProductCombinationResponse };
+    const response = await api.post<ApiResponse>('product-combinations', payload);
+    return response.result;
+  },
+
+  // Cập nhật product combination
+  updateProductCombination: async (id: number, payload: ProductCombinationCreatePayload): Promise<ProductCombinationResponse> => {
+    type ApiResponse = { result: ProductCombinationResponse };
+    const response = await api.put<ApiResponse>(`product-combinations/${id}`, payload);
+    return response.result;
+  },
+
+  // Xóa product combination
+  deleteProductCombination: async (id: number): Promise<boolean> => {
+    type ApiResponse = { result: boolean };
+    const response = await api.delete<ApiResponse>(`product-combinations/${id}`);
+    return response.result;
+  },
+
+  // Lấy product combination theo ID
+  getProductCombinationById: async (id: number): Promise<ProductCombinationResponse> => {
+    type ApiResponse = { result: ProductCombinationResponse };
+    const response = await api.get<ApiResponse>(`product-combinations/${id}`);
+    return response.result;
+  },
+  // Lấy danh sách ID sản phẩm đính kèm (legacy)
   getRelatedProductIds: async (productId: number): Promise<number[]> => {
     type ListResp = { result: ProductCombinationResponse[] };
     const filterPayload = { productId1: productId, page: 1, pageSize: 100 };
     const resp = await api.post<ListResp>('product-combinations/list', filterPayload);
     const combos = resp.result || [];
     return combos.map(c => (c.productId1 === productId ? c.productId2 : c.productId1));
+  },
+
+  // Lấy danh sách sản phẩm đính kèm (ProductCombination) dưới dạng phân trang
+  getAttachedProductsPaged: async (
+    productId: number,
+    params?: { page?: number; pageSize?: number; sortBy?: string; sortDirection?: 'ASC' | 'DESC' }
+  ): Promise<PagedResponse<Product>> => {
+    type FullApiResponse = { result: PagedResponse<Product> };
+    const payload = {
+      productId1: productId,
+      page: params?.page ?? 1,
+      pageSize: params?.pageSize ?? 100,
+      sortBy: params?.sortBy ?? 'combinationId',
+      sortDirection: params?.sortDirection ?? 'ASC',
+    };
+    const response = await api.post<FullApiResponse>('product-combinations/paging-products', payload);
+    return response.result;
   },
 
   updateProduct: async (productId: number, payload: ProductUpdatePayload & { combinationProductIds?: number[] }): Promise<Product> => {

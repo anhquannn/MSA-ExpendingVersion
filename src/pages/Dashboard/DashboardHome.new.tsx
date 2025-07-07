@@ -481,7 +481,8 @@ const DashboardHomeNew: React.FC<DashboardHomeNewProps> = ({ branchId }) => {
           </div>
         </div>
 
-        {/* Top Selling Products */}
+        {/* Top Selling Products & Top Customers side-by-side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -523,8 +524,6 @@ const DashboardHomeNew: React.FC<DashboardHomeNewProps> = ({ branchId }) => {
             )}
           </div>
         </div>
-
-        {/* Top Customers */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -566,6 +565,7 @@ const DashboardHomeNew: React.FC<DashboardHomeNewProps> = ({ branchId }) => {
             )}
           </div>
         </div>
+      </div>
       {/* Product statistics modal */}
       {productModalId !== null && (
         <ProductStatsModal productId={productModalId} branchId={selectedBranchId} onClose={() => setProductModalId(null)} />

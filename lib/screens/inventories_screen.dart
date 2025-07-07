@@ -13,16 +13,23 @@ class InventoriesScreen extends StatefulWidget {
 }
 
 class _InventoriesScreenState extends State<InventoriesScreen> {
+  final TextEditingController _searchCtrl = TextEditingController();
+  late final ScrollController _scrollCtrl;
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
+    _scrollCtrl = ScrollController()..addListener(_onScroll);
     _load();
+    _searchCtrl.addListener(() {
+      // Live search when text changes (debounce could be added)
+      context.read<InventoryProvider>().fetchInventories(refresh: true, keyword: _searchCtrl.text.trim());
+    });
   }
 
   Future<void> _load() async {
-    await context.read<InventoryProvider>().fetchInventories();
+    await context.read<InventoryProvider>().fetchInventories(keyword: _searchCtrl.text.trim());
     if (mounted) setState(() => _loading = false);
   }
 
@@ -54,18 +61,35 @@ class _InventoriesScreenState extends State<InventoriesScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.separated(
-              itemBuilder: (_, i) => InventoryTile(
-                inventory: inventories[i],
-                onTap: () {
-                  Navigator.of(context).pushNamed(
-                    '/products',
-                    arguments: inventories[i],
-                  );
-                },
-              ),
-              separatorBuilder: (_, __) => const Divider(),
-              itemCount: inventories.length,
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: _searchCtrl,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.search),
+                      hintText: 'Tìm kho...',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.separated(
+                    controller: _scrollCtrl,
+                    itemBuilder: (_, i) => InventoryTile(
+                      inventory: inventories[i],
+                      onTap: () => Navigator.of(context).pushNamed(
+                        '/products',
+                        arguments: inventories[i],
+                      ),
+                    ),
+                    separatorBuilder: (_, __) => const Divider(),
+                    itemCount: inventories.length,
+                  ),
+                ),
+              ],
             ),
     );
   }
@@ -157,4 +181,20 @@ class _InventoriesScreenState extends State<InventoriesScreen> {
       },
     );
   }
+
+  void _onScroll() {
+    if (!_scrollCtrl.hasClients) return;
+    final max = _scrollCtrl.position.maxScrollExtent;
+    if (_scrollCtrl.offset >= max - 200) {
+      context.read<InventoryProvider>().fetchInventories();
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
 }
+

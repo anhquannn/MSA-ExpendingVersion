@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FiSearch, FiFilter, FiCalendar, FiChevronDown, FiX, FiLoader } from 'react-icons/fi';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { paymentService } from '../../services/paymentService';
 import { orderService, OrderFilterRequest, OrderStatus, SimpleOrder} from '../../services/orderService';
 
 // Helper function to format date
@@ -129,8 +130,11 @@ const OrdersPage = () => {
   // State for cancel order dialog
   const [showCancelDialog, setShowCancelDialog] = useState<boolean>(false);
   const [orderToCancel, setOrderToCancel] = useState<SimpleOrder | null>(null);
-  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [cancelReason, setCancelReason] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Map orderId -> payment status
+  const [paymentStatuses, setPaymentStatuses] = useState<Record<number, OrderStatus | null>>({});
 
   // Calculate pagination values
   const { totalPages, totalItems, currentPage, pageSize } = pagination;
@@ -142,6 +146,22 @@ const OrdersPage = () => {
       currency: 'VND',
     }).format(amount);
   };
+
+    // Fetch orders from API
+  const fetchPaymentStatuses = useCallback(async (ordersList: SimpleOrder[]) => {
+    const map: Record<number, OrderStatus | null> = {};
+    await Promise.all(
+      ordersList.map(async (o) => {
+        try {
+          const status = await paymentService.getLatestPaymentStatusForOrder(o.orderId);
+          map[o.orderId] = status;
+        } catch (e) {
+          map[o.orderId] = null;
+        }
+      })
+    );
+    setPaymentStatuses(map);
+  }, []);
 
   // Fetch orders from API
   const fetchOrders = useCallback(async () => {
@@ -157,7 +177,9 @@ const OrdersPage = () => {
         pageSize: pagination.pageSize,
       });
 
-      setOrders(response.content || []);
+      const orderList = response.content || [];
+      setOrders(orderList);
+      fetchPaymentStatuses(orderList);
       setPagination(prev => ({
         ...prev,
         totalPages: response.totalPages || 1,
@@ -186,6 +208,20 @@ const OrdersPage = () => {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+    // Hiển thị nhãn tình trạng thanh toán
+  const renderPaymentStatus = (status?: OrderStatus | null): string => {
+    switch (status) {
+      case OrderStatus.PAID:
+        return 'Đã thanh toán';
+      case OrderStatus.PAYING:
+        return 'Đang thanh toán';
+      case OrderStatus.FAILED:
+        return 'Thanh toán thất bại';
+      default:
+        return 'Chưa thanh toán';
+    }
   };
 
   // Lấy dữ liệu đơn hàng
@@ -334,12 +370,15 @@ const OrdersPage = () => {
   };
 
   // Handle cancel order
-  const handleCancelOrder = async (orderId: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) return;
-
+    const handleConfirmCancelOrder = async () => {
+    if (!orderToCancel) return;
+    if (!cancelReason.trim()) {
+      alert('Vui lòng nhập lý do hủy');
+      return;
+    }
     try {
       setIsLoading(true);
-      await orderService.updateOrderStatus(orderId, OrderStatus.CANCELLED);
+      await orderService.createCancelOrder(orderToCancel.orderId, cancelReason.trim());
       await fetchOrders();
       // TODO: Show success toast
     } catch (error) {
@@ -347,8 +386,9 @@ const OrdersPage = () => {
       // TODO: Show error toast
     } finally {
       setIsLoading(false);
-      setSelectedOrderId(null);
+      setOrderToCancel(null);
       setShowCancelDialog(false);
+      setCancelReason('');
     }
   };
 
@@ -480,6 +520,7 @@ const OrdersPage = () => {
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Chi nhánh</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Ngày đặt</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Tổng tiền</th>
+                  <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Thanh toán</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Trạng thái</th>
                   <th className="py-3 px-4 border-b text-right text-sm font-medium text-gray-700">Thao tác</th>
                 </tr>
@@ -494,6 +535,7 @@ const OrdersPage = () => {
                         <td className="py-3 px-4 border-b">{(order as any).branch?.name || order.branchName || 'N/A'}</td>
                         <td className="py-3 px-4 border-b">{formatDate(order.orderDate)}</td>
                         <td className="py-3 px-4 border-b">{formatCurrency(order.grandTotal)}</td>
+                         <td className="py-3 px-4 border-b">{renderPaymentStatus(paymentStatuses[order.orderId])}</td>
                         <td className="py-3 px-4 border-b">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusClasses(order.status)}`}>
                             {getStatusLabel(order.status)}
@@ -518,7 +560,8 @@ const OrdersPage = () => {
                             {canUpdateStatus(order.status) && (
                               <button
                                 onClick={() => {
-                                  setSelectedOrderId(order.orderId);
+                                  setOrderToCancel(order);
+                                  setCancelReason('');
                                   setShowCancelDialog(true);
                                 }}
                                 className="px-2 py-1 text-xs text-white bg-red-600 rounded hover:bg-red-700 mr-2"
@@ -582,6 +625,41 @@ const OrdersPage = () => {
               </div>
             )}
 
+            {/* Cancel Order Dialog */}
+            {showCancelDialog && orderToCancel && (
+              <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 w-96">
+                  <h3 className="text-lg font-semibold mb-4">Hủy đơn hàng #{orderToCancel.orderId}</h3>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Lý do hủy:</label>
+                    <textarea
+                      value={cancelReason}
+                      onChange={(e) => setCancelReason(e.target.value)}
+                      className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      rows={3}
+                      placeholder="Nhập lý do hủy..."
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => {
+                        setShowCancelDialog(false);
+                        setOrderToCancel(null);
+                      }}
+                      className="px-3 py-1 rounded-md border"
+                    >
+                      Đóng
+                    </button>
+                    <button
+                      onClick={handleConfirmCancelOrder}
+                      className="px-3 py-1 rounded-md bg-red-600 text-white"
+                    >
+                      Xác nhận hủy
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Phân trang */}
             {pagination.totalPages > 1 && (

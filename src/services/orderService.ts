@@ -121,4 +121,13 @@ export const orderService = {
   ): Promise<void> => {
     await api.put<void>(`order/${orderId}/status?status=${status}`, undefined);
   },
+
+    // Hủy đơn hàng (tạo yêu cầu trả/hủy)
+  createCancelOrder: async (
+    orderId: number,
+    reason: string
+  ): Promise<void> => {
+    const payload = { orderId, reason };
+    await api.post<void>('return-order', payload);
+  },
 };

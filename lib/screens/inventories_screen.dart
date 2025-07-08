@@ -41,6 +41,11 @@ class _InventoriesScreenState extends State<InventoriesScreen> {
         title: const Text('Kho'),
         actions: [
           IconButton(
+            tooltip: 'ICR',
+            icon: const Icon(Icons.content_paste_search_outlined),
+            onPressed: () => Navigator.of(context).pushNamed('/icrs'),
+          ),
+          IconButton(
             tooltip: 'Đăng xuất',
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -52,13 +57,7 @@ class _InventoriesScreenState extends State<InventoriesScreen> {
           ),
         ],
       ),
-      floatingActionButton: _loading ? null : FloatingActionButton.extended(
-        icon: const Icon(Icons.add_task_outlined),
-        label: const Text('Tạo ICR'),
-        onPressed: () async {
-          await _showCreateICRDialog(context);
-        },
-      ),
+      floatingActionButton: null,
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Column(

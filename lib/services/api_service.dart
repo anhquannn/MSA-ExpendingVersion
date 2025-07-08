@@ -46,6 +46,14 @@ class ApiService {
     return http.get(uri, headers: headers);
   }
 
+  Future<http.Response> delete(String path, {String? token}) async {
+    final uri = Uri.parse('$baseUrl$path');
+    final headers = <String, String>{
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+    return http.delete(uri, headers: headers);
+  }
+
   Future<int?> fetchFirstManagerId({required int inventoryId, required String token}) async {
     final path = '/user/inventory/$inventoryId/managers/all';
     if (kDebugMode) {
@@ -88,7 +96,7 @@ class ApiService {
         'inventoryId': inventoryId,
         'surveyorId': surveyorId,
         'userId': userId,
-        'requestedDate': '${requestedDate.year.toString().padLeft(4,'0')}-${requestedDate.month.toString().padLeft(2,'0')}-${requestedDate.day.toString().padLeft(2,'0')} 00:00:00'.split('T').first,
+        'requestedDate': '${requestedDate.year.toString().padLeft(4,'0')}-${requestedDate.month.toString().padLeft(2,'0')}-${requestedDate.day.toString().padLeft(2,'0')} ${requestedDate.hour.toString().padLeft(2,'0')}:${requestedDate.minute.toString().padLeft(2,'0')}:${requestedDate.second.toString().padLeft(2,'0')}',
         'note': note,
       },
       token: token,

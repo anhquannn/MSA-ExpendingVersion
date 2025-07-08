@@ -9,6 +9,7 @@ import 'package:msa/core/utils/prarse_color.dart';
 import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/login_request_model.dart';
 import 'package:msa/feature/data/model/request/user_login_request.dart';
+import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
 import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
 import 'package:msa/feature/presentation/logins/forgot_pasword/ui/forgot_password_screen.dart';
@@ -62,12 +63,11 @@ class LoginBloc extends BaseBloc<LoginScreen> {
       viewSetState(() {});
       return false;
     }
-
     isSuccess = await Repository.onLoginFCM(
       LoginRequest(
         email: email,
         password: password,
-        fcmToken: Storage.deviceId,
+        fcmToken: Storage.deviceId??'',
         platform: PlatformType.ANDROID,
       ),
     );
@@ -76,7 +76,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
     if (isSuccess == false) {
       showLoginError('Sai mật khẩu!!!');
     } else {
-      await Repository.onUpdateDeviceId();
+      // await Repository.onUpdateDeviceId();
     }
     viewSetState(() {});
     return isSuccess == true;
@@ -168,6 +168,9 @@ class LoginBloc extends BaseBloc<LoginScreen> {
   }
 
   loginWithGoogle(BuildContext bContext) async {
+    if (Storage.deviceId == null) {
+      await getFcmToken();
+    }
     // try {
     final googleUser = await GoogleSignIn().signIn();
     if (googleUser == null) {
@@ -186,9 +189,9 @@ class LoginBloc extends BaseBloc<LoginScreen> {
     final isSuccess = await Repository.loginWithGoogleToken(accessToken ?? '');
     print('✅ Kết quả loginWithGoogleToken: $isSuccess');
     if (isSuccess) {
-      final response = await Repository.onGetUserInfo();
+      final UserModel response = await Repository.onGetUserInfo();
       final addressSuccess = await onGetAddress();
-      await Repository.onUpdateDeviceId();
+      await Repository.onUpdateDeviceId(response.userId ?? 0);
       showCustomDialog(
         bContext,
         AppSize.w(0.9),

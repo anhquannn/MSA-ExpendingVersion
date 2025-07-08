@@ -51,23 +51,22 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
   int orderId = 0;
   List<OrderDetailResponse>? orderDetails = [];
 
+  double reward = 0;
+  final streamReward = BehaviorSubject<double>();
+  bool isUseReward = false;
+
   final Map<int, Debouncer> _debouncers = {};
-  bool isZaloPaySelected = false;
+  bool isZaloPaySelected = true;
   @override
   String get contextKey => 'CreateOrderScreen';
 
   @override
   void onInit() {
-    print('CreateOrderScreen########### isBuyAgain: ${widget.isBuyAgain}');
-    print('CreateOrderScreen########### orderId: ${widget.orderId}');
-    print('CreateOrderScreen########### orderDetail: ${widget.orderDetail}');
-
     initPaymentMethod();
     if (widget.isBuyAgain == true) {
       orderDetail = widget.orderDetail;
       streamOrderDetail.set(orderDetail!);
       orderId = widget.orderId ?? 0;
-      print('########### orderId: $orderId');
       orderDetails = widget.orderDetail;
     }
   }
@@ -79,12 +78,17 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
   void onReady() {
     onInitData();
     if (widget.isBuyAgain == true) {
-      Future.wait<void>([onPreviewOrderAgain(), onGetPromoCode()]);
+      Future.wait<void>([
+        onPreviewOrderAgain(),
+        onGetPromoCode(),
+        onGetReward(),
+      ]);
     } else {
       Future.wait<void>([
         onGetCartItem(),
         onGetPreviewOrder(),
         onGetPromoCode(),
+        onGetReward(),
       ]);
     }
   }
@@ -111,13 +115,6 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
         selected: false,
         color: Colors.blue,
       ),
-      // PaymentMethod(
-      //   id: 'zalopay',
-      //   name: 'ZALO PAY',
-      //   iconUrl: iconZaloPay,
-      //   selected: false,
-      //   color: Colors.green,
-      // ),
     ];
     paymentMethods = paymentMethod;
     streamPaymentMethod.set(paymentMethod);
@@ -129,14 +126,6 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
   }
 
   onChangeAddress(BuildContext bcontext) async {
-    // ✅ In log trước khi chuyển màn hình
-    print('========== [DEBUG] Trước khi mở AddressListWidget ==========');
-    print(
-      '[DEBUG] Storage.addressModel hiện tại: ${Storage.addressModel?.toJson()}',
-    );
-    print('[DEBUG] Ward hiện tại: ${Storage.addressModel?.ward}');
-
-    // ✅ Mở màn hình chọn địa chỉ
     final data = await Navigator.push(
       bcontext,
       MaterialPageRoute(
@@ -150,28 +139,12 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
       ),
     );
 
-    // ✅ Sau khi chọn xong và quay về màn trước
-    print('========== [DEBUG] Quay về từ AddressListWidget ==========');
     if (data != null) {
-      print('[DEBUG] Địa chỉ được chọn từ AddressListWidget: ${data.toJson()}');
-
       model = data;
-      Storage.addressModel = data; // Nếu bạn gán lại vào Storage
-
-      print('[DEBUG] model mới: ${model.toString()}');
-      print(
-        '[DEBUG] Storage.addressModel mới: ${Storage.addressModel?.toJson()}',
-      );
-      print('[DEBUG] Ward mới: ${Storage.addressModel?.ward}');
+      Storage.addressModel = data;
 
       setState(() {});
-    } else {
-      print(
-        '[DEBUG] Không có địa chỉ nào được chọn (user bấm back hoặc cancel)',
-      );
     }
-
-    print('========== [DEBUG] Kết thúc onChangeAddress ==========');
   }
 
   onGetCartItem() async {
@@ -184,7 +157,7 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
   }
 
   onCreateOrder(BuildContext bContext) async {
-    final data = await Repository.onCreateOrder(CreateOrderRequestModel());
+    final data = await Repository.onCreateOrder(CreateOrderRequestModel(usePoints:isUseReward? reward:0));
     if (data != null) {
       await showCustomDialog(
         bContext,
@@ -257,13 +230,12 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
         promo.add(element.code ?? '');
       }
     });
-    final data = await Repository.onGetPreviewOrder(promoCode: promo);
+    final data = await Repository.onGetPreviewOrder(promoCode: promo, usePoints: isUseReward? reward:0);
     if (data != null) {
       previewOrder = data;
       streamPreviewOrder.set(previewOrder ?? OrderPreviewModel());
       return true;
     } else {
-      print('###################');
       return false;
     }
   }
@@ -289,7 +261,6 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
       streamPromoCodeModels.add(promoCode ?? []);
       listPromocode = promoCode;
     } catch (e) {
-      print('Lỗi khi lấy danh sách mã giảm giá: $e');
       streamPromoCodeModels.add([]);
     }
   }
@@ -314,7 +285,6 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
           element.selected = !(model.selected ?? false);
         }
       });
-      print('########################');
       showCustomDialog(
         bContext!,
         AppSize.width(),
@@ -333,6 +303,7 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
   onBuy(BuildContext bContext) async {
     showFullScreenLoading(bContext);
     final CreateOrderRequestModel model = CreateOrderRequestModel(
+      usePoints: isUseReward? reward:0,
       branchId: Storage.branchModelGlobal?.branchId,
       cartId: Storage.cartModelGlobal?.cartId,
       grandTotal: previewOrder?.grandTotal,
@@ -382,6 +353,7 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
       promoCodes: promo,
       orderOldId: widget.orderId ?? 0,
       userAddressId: Storage.addressModel?.userAddressId ?? 0,
+      usePoints: isUseReward? reward:0
     );
 
     if (data != null) {
@@ -389,13 +361,11 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
       streamPreviewOrder.set(previewOrder ?? OrderPreviewModel());
       return true;
     } else {
-      print('###################');
       return false;
     }
   }
 
   onBuyAgain(BuildContext bContext) async {
-    print('###################onBuyAgain Mua lai');
     showFullScreenLoading(bContext);
     final CreateOrderRequestModel model = CreateOrderRequestModel(
       branchId: Storage.branchModelGlobal?.branchId,
@@ -415,6 +385,7 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
     );
 
     final data = await Repository.buyAgain(
+      usePoints: isUseReward? reward:0,
       orderId: widget.orderId ?? 0,
       userAddressId: Storage.addressModel?.userAddressId ?? 0,
       promoCodes:
@@ -455,8 +426,6 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
 
     final orderUpdate = await Repository.onUpdateOrderAPI(model, orderId);
 
-    print('############ COD orderId: ${orderUpdate?.orderId}');
-
     if (orderUpdate?.orderId != null) {
       hideFullScreenLoading(context);
       await _showSuccessDialog(context, 'Đặt hàng thành công');
@@ -489,15 +458,8 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
                   model.status = OrderStatus.paid;
                   await Repository.onUpdateOrderAPI(model, orderId);
                   await _showSuccessDialog(context, 'Đặt hàng thành công');
-                  // Navigator.pop(context);
-                  // ScaffoldMessenger.of(context).showSnackBar(
-                  //   const SnackBar(content: Text("Thanh toán thành công!")),
-                  // );
                 } else {
                   _showErrorDialog(context, 'Đặt hàng không thành công');
-                  // ScaffoldMessenger.of(context).showSnackBar(
-                  //   const SnackBar(content: Text("Thanh toán thất bại!")),
-                  // );
                 }
               },
             ),
@@ -506,8 +468,6 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
 
     model.status = OrderStatus.paid;
     final updatePaying = await Repository.onUpdateOrderAPI(model, orderId);
-
-    print('########### updatePaying: $updatePaying');
 
     if (updatePaying != null) {
       await _showSuccessDialog(context, 'Đặt hàng thành công');
@@ -532,7 +492,6 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
         color: toHexToColor(primaryColorGreen),
       ),
       onClose: () {
-        print('############12311');
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen()),
@@ -551,7 +510,6 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
       true,
       false,
       onClose: () {
-        print('############12311');
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen()),
@@ -598,15 +556,11 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
         query: uri.query,
       );
 
-      print('🚀 Đang mở bằng Chrome: $chromeUri');
       await launchUrl(chromeUri);
     } else {
-      print('⚠️ Chrome không cài hoặc không hỗ trợ. Đang fallback...');
-      // ✅ fallback nếu không có Chrome (mở bằng mặc định)
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        print('❌ Không thể mở liên kết: $url');
         throw 'Không thể mở liên kết: $url';
       }
     }
@@ -614,6 +568,19 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
 
   onRefresh() {
     setState(() {});
+  }
+
+  onGetReward() async {
+    final response = await Repository.getReward();
+    reward = response;
+    streamReward.set(response);
+  }
+
+  onChangeReward(bool value) {
+    isUseReward = value;
+    setState(() {
+      
+    });
   }
 }
 

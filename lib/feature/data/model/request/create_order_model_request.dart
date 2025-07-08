@@ -10,6 +10,7 @@ class CreateOrderRequestModel {
   int? userAddressId;
   List<String>? promoCodes;
   DeliveryInfoRequestModel? deliveryInfo;
+  double? usePoints;
 
   CreateOrderRequestModel({
     this.orderDate,
@@ -21,6 +22,7 @@ class CreateOrderRequestModel {
     this.userAddressId,
     this.promoCodes,
     this.deliveryInfo,
+    this.usePoints
   });
 
   factory CreateOrderRequestModel.fromJson(Map<String, dynamic> json) {
@@ -34,6 +36,7 @@ class CreateOrderRequestModel {
       userAddressId: json['userAddressId'],
       promoCodes: List<String>.from(json['promoCodes'] ?? []),
       deliveryInfo: DeliveryInfoRequestModel.fromJson(json['deliveryInfo']),
+      usePoints: json['usePoints']
     );
   }
 
@@ -48,6 +51,7 @@ class CreateOrderRequestModel {
       'userAddressId': userAddressId,
       'promoCodes': promoCodes,
       'deliveryInfo': deliveryInfo?.toJson(),
+      'usePoints':usePoints
     };
   }
 }
@@ -83,7 +87,7 @@ class DeliveryInfoRequestModel {
 
   factory DeliveryInfoRequestModel.fromJson(Map<String, dynamic> json) {
     return DeliveryInfoRequestModel(
-      deliveryDate:json['deliveryDate'],
+      deliveryDate: json['deliveryDate'],
       street: json['street'],
       ward: json['ward'],
       district: json['district'],

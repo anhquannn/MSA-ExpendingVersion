@@ -94,20 +94,18 @@ class PromoCodeRepositoryImpl extends IPromoCodeRepository {
     }
   }
 
-  static Future<List<PromoCodeModel>> getActivePromoCodesForCart(int cartId) async {
+  static Future<List<PromoCodeModel>> getActivePromoCodesForCart(
+    int cartId,
+  ) async {
     try {
       final response = await HttpConnection.get<List<PromoCodeModel>>(
-        'promo-code/cart/active?cartId=$cartId&userId=${userModelGlobal?.userId}',
-        fromJsonT: (json) => json,
+        'promo-code/cart/active?cartId=${cartId.toString()}&userId=${userModelGlobal?.userId.toString()}',
+        fromJsonT:
+            (json) =>
+                (json as List).map((e) => PromoCodeModel.fromJson(e)).toList(),
       );
 
-      if (response.result is List) {
-        return (response.result as List<dynamic>)
-            .map((e) => PromoCodeModel.fromJson(e))
-            .toList();
-      } else {
-        return [];
-      }
+      return response.result ?? [];
     } catch (e) {
       print('Lỗi lấy danh sách promo code: $e');
       return [];

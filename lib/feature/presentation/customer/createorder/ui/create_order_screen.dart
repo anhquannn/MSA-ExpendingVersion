@@ -77,6 +77,7 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
         SliverToBoxAdapter(child: listItemOrder(bloc)),
         SliverToBoxAdapter(child: _divider('Chi tiết đơn hàng')),
         SliverToBoxAdapter(child: _itemCarrier(bcontext, bloc)),
+        SliverToBoxAdapter(child: _customUserReward(bloc)),
         SliverToBoxAdapter(child: _divider('Danh sách mã giảm giá')),
         SliverToBoxAdapter(child: _itemSelectPromoCode(bloc, bcontext)),
         SliverToBoxAdapter(child: _itemPromoCode(bloc, bcontext)),
@@ -85,6 +86,26 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
         SliverToBoxAdapter(child: _buildButton(bcontext, bloc)),
         const SliverToBoxAdapter(child: SizedBox(height: 10)),
       ],
+    );
+  }
+
+  Widget _customUserReward(CreateOrderBloc bloc) {
+    return StreamBuilder(
+      stream: bloc.streamReward,
+      builder: (context, snapshot) {
+        final data = snapshot.data;
+        return
+        //  data == 0
+        //     ? Container()
+        //     :
+        UsePointSwitchRow(
+          point: data ?? 0,
+          isUsingPoint: bloc.isUseReward,
+          onChanged: (value) {
+            bloc.onChangeReward(value);
+          },
+        );
+      },
     );
   }
 
@@ -1308,6 +1329,41 @@ class _RateDetailWidget extends StatelessWidget {
           '${rate.report?.scorePercent?.toStringAsFixed(1)}/10',
         ),
       ],
+    );
+  }
+}
+
+class UsePointSwitchRow extends StatelessWidget {
+  final double point;
+  final bool isUsingPoint;
+  final ValueChanged<bool> onChanged;
+
+  const UsePointSwitchRow({
+    super.key,
+    required this.point,
+    required this.isUsingPoint,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Bạn có $point điểm. Bạn có muốn sử dụng?',
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+          Switch(
+            value: isUsingPoint,
+            onChanged: onChanged,
+            activeColor: toHexToColor(primaryButtonColor),
+          ),
+        ],
+      ),
     );
   }
 }

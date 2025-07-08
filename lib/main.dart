@@ -17,6 +17,11 @@ void main() async {
   await Supabase.initialize(url: urlSupabase, anonKey: anonKey);
   await Firebase.initializeApp();
   await getFcmToken();
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    print('🔔 Nhận thông báo!');
+    print('Title: ${message.notification?.title}');
+    print('Body: ${message.notification?.body}');
+  });
   if (defaultTargetPlatform == TargetPlatform.android) {
     WebViewPlatform.instance = WebViewPlatform.instance;
   }
@@ -69,4 +74,5 @@ Future<void> getFcmToken() async {
     print(stack);
   }
 }
+
 //Notification, Sửa orderDetail, API cho mua lại Order

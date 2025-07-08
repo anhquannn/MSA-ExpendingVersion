@@ -30,6 +30,7 @@ import 'package:msa/feature/data/repositories/order_connection.dart';
 import 'package:msa/feature/data/repositories/product_connection.dart';
 import 'package:msa/feature/data/repositories/promo_code_connection.dart';
 import 'package:msa/feature/data/repositories/return_order_connection.dart';
+import 'package:msa/feature/data/repositories/reward_points_connection.dart';
 import 'package:msa/feature/data/repositories/supplier_connection.dart';
 import 'package:msa/feature/data/repositories/user_connection.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
@@ -68,7 +69,8 @@ class Repository {
   static onGetAllBranch(BranchFilterRequest request) =>
       BranchRepositoryImpl.getBranchPaging(request);
 
-  static onUpdateDeviceId() => UserRepositoryImpl.onUpdateDeviceId();
+  static onUpdateDeviceId(int userId) =>
+      UserRepositoryImpl.onUpdateDeviceId(userId);
 
   static onUpdateInfo(UserUpdateRequest request) =>
       UserRepositoryImpl.onUpdateInfo(request);
@@ -90,10 +92,10 @@ class Repository {
   ) => UserRepositoryImpl.onUpdateUserAddress(userAdressId, model);
 
   static onCreateOrder(CreateOrderRequestModel model) =>
-      OrderRepositoryImpl.createOrderAPI(model);
+      OrderRepositoryImpl.createOrderAPI(model, );
 
-  static onGetPreviewOrder({List<String>? promoCode}) =>
-      OrderRepositoryImpl.onGetPreviewOrder(promoCodes: promoCode);
+  static onGetPreviewOrder({List<String>? promoCode, double? usePoints}) =>
+      OrderRepositoryImpl.onGetPreviewOrder(promoCodes: promoCode, usePoints: usePoints);
 
   static createShipment({int? orderId, int? addressId, String? rateId}) =>
       OrderRepositoryImpl.createShipment(
@@ -154,20 +156,24 @@ class Repository {
     required int orderId,
     required int userAddressId,
     List<String>? promoCodes,
+    double? usePoints
   }) => OrderRepositoryImpl.buyAgain(
     orderId: orderId,
     userAddressId: userAddressId,
     promoCodes: promoCodes,
+    usePoints: usePoints
   );
 
   static onGetPreviewOrderAgain({
     required int orderOldId,
     required int userAddressId,
     List<String>? promoCodes,
+    double? usePoints
   }) => OrderRepositoryImpl.onGetPreviewOrderAgain(
     orderOldId: orderOldId,
     userAddressId: userAddressId,
     promoCodes: promoCodes,
+    usePoints: usePoints
   );
 
   static getNotification(NotificationFilterRequest request) =>
@@ -180,4 +186,6 @@ class Repository {
 
   static getActivePromoCodesForCart(int cartId) =>
       PromoCodeRepositoryImpl.getActivePromoCodesForCart(cartId);
+
+  static getReward() => RewardPointsConnection.getReward();
 }

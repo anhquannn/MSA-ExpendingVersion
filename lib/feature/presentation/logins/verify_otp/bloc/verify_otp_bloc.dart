@@ -100,7 +100,7 @@ class VerifyOtpBloc extends BaseBloc<VerifyOtpScreen> {
     }
     bool success = await _userUseCases.verifyOtp(otp);
 
-    await Repository.onUpdateDeviceId();
+    // await Repository.onUpdateDeviceId();
     if (success) {
       // Navigator.pushAndRemoveUntil(
       //   viewContext,

@@ -162,7 +162,6 @@ class OrderRepositoryImpl extends IOrderRepository {
   static Future<OrderCreateResponseModel?> createOrderAPI(
     CreateOrderRequestModel orderData,
   ) async {
-    // 🔍 In toàn bộ dữ liệu gửi đi (debug rõ ràng)
     print('📦 [CREATE ORDER BODY]: ${orderData.toJson()}');
 
     final response = await HttpConnection.post<OrderCreateResponseModel>(
@@ -204,13 +203,15 @@ class OrderRepositoryImpl extends IOrderRepository {
 
   static Future<OrderPreviewModel?> onGetPreviewOrder({
     List<String>? promoCodes,
+    double? usePoints,
   }) async {
     String path =
         '$previewOrder'
         '?branchId=${Storage.branchModelGlobal?.branchId}'
         '&userAddressId=${Storage.addressModel?.userAddressId}'
         '&userId=${Storage.userModelGlobal?.userId}'
-        '&cartId=${Storage.cartModelGlobal?.cartId}';
+        '&cartId=${Storage.cartModelGlobal?.cartId}'
+        '&usePoints=${usePoints.toString()}';
 
     if (promoCodes != null && promoCodes.isNotEmpty) {
       for (var code in promoCodes) {
@@ -311,10 +312,12 @@ class OrderRepositoryImpl extends IOrderRepository {
     required int orderId,
     required int userAddressId,
     List<String>? promoCodes,
+    double? usePoints
   }) async {
     // Tạo query string
     final queryParams = <String>[
       'userAddressId=$userAddressId',
+        'usePoints=${usePoints.toString()}',
       if (promoCodes != null && promoCodes.isNotEmpty)
         ...promoCodes.map((code) => 'promoCodes=$code'),
     ];
@@ -337,12 +340,17 @@ class OrderRepositoryImpl extends IOrderRepository {
     required int orderOldId,
     required int userAddressId,
     List<String>? promoCodes,
+    double? usePoints
   }) async {
-    final queryParameters = {
+    final queryParameters = <String, dynamic>{
       'userAddressId': userAddressId.toString(),
-      if (promoCodes != null)
-        for (var code in promoCodes) 'promoCodes': code,
+      'usePoints': usePoints.toString(),
     };
+    if (promoCodes != null && promoCodes.isNotEmpty) {
+      queryParameters.addAll({
+        for (var code in promoCodes) 'promoCodes': code,
+      });
+    }
 
     final uri = Uri(
       path: 'order/$orderOldId/preview-buy-again',

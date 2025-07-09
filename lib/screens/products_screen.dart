@@ -60,14 +60,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    final ok = await context.read<InventoryProvider>().saveCheckedHistory(
-                          inventoryId: _inventory.id,
-                          note: noteCtrl.text.trim(),
-                        );
+                    final provider = context.read<InventoryProvider>();
+                    // Cập nhật toàn bộ số lượng đã kiểm trước khi lưu lịch sử
+                    final updateOk = await provider.saveAllCheckedProducts(_inventory.id);
+                    final historyOk = await provider.saveCheckedHistory(
+                      inventoryId: _inventory.id,
+                      note: noteCtrl.text.trim(),
+                    );
+                    final ok = updateOk && historyOk;
                     if (mounted) {
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(ok ? 'Đã lưu lịch sử' : 'Lưu thất bại')),
+                        SnackBar(content: Text(ok ? 'Đã lưu thành công' : 'Lưu thất bại')),
                       );
                     }
                   },
@@ -95,4 +99,3 @@ class _ProductsScreenState extends State<ProductsScreen> {
     super.dispose();
   }
 }
-

@@ -131,6 +131,23 @@ class InventoryProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> saveAllCheckedProducts(int inventoryId) async {
+    bool allOk = true;
+    // Only update products belonging to the requested inventory and that have a checked value
+    final toUpdate = _products.where((p) => p.inventoryId == inventoryId && p.stockNumberChecked != null);
+    for (final p in toUpdate) {
+      final ok = await updateProductChecked(
+        inventoryProductId: p.id,
+        inventoryId: p.inventoryId,
+        productId: p.productId,
+        stockNumber: p.stockNumber,
+        checked: p.stockNumberChecked!,
+      );
+      if (!ok) allOk = false;
+    }
+    return allOk;
+  }
+
   Future<bool> saveCheckedHistory({
     required int inventoryId,
     required String note,

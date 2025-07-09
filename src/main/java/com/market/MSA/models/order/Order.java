@@ -13,6 +13,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,6 +45,7 @@ public class Order {
 
   LocalDateTime orderDate;
 
+  @PositiveOrZero
   double grandTotal;
 
   @Enumerated(EnumType.STRING)

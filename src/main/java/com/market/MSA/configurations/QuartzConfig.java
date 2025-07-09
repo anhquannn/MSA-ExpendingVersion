@@ -59,7 +59,11 @@ public class QuartzConfig {
       JobDetail createTrendingProductDataJobDetail,
       Trigger createTrendingProductDataTrigger,
       JobDetail lowStockCheckJobDetail,
-      Trigger lowStockCheckTrigger) {
+      Trigger lowStockCheckTrigger,
+      JobDetail paymentTimeoutJobDetail,
+      Trigger paymentTimeoutTrigger,
+      JobDetail productDiscountJobDetail,
+      Trigger productDiscountTrigger) {
     return args -> {
       Scheduler scheduler = schedulerFactoryBean.getScheduler();
 
@@ -69,6 +73,8 @@ public class QuartzConfig {
       scheduler.scheduleJob(updateCampaignStatusJobDetail, updateCampaignStatusTrigger);
       scheduler.scheduleJob(createTrendingProductDataJobDetail, createTrendingProductDataTrigger);
       scheduler.scheduleJob(lowStockCheckJobDetail, lowStockCheckTrigger);
+      scheduler.scheduleJob(paymentTimeoutJobDetail, paymentTimeoutTrigger);
+      scheduler.scheduleJob(productDiscountJobDetail, productDiscountTrigger);
 
       // Khởi động scheduler (nếu chưa tự động chạy)
       if (!scheduler.isStarted()) {
@@ -170,6 +176,43 @@ public class QuartzConfig {
         .withIdentity("lowStockCheckTrigger")
         .withSchedule(
             SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(60).repeatForever())
+        .build();
+  }
+
+  @Bean
+  public JobDetail paymentTimeoutJobDetail() {
+    return JobBuilder.newJob(PaymentTimeoutScheduler.class)
+        .withIdentity("paymentTimeoutJob")
+        .storeDurably()
+        .build();
+  }
+
+  @Bean
+  public Trigger paymentTimeoutTrigger() {
+    return TriggerBuilder.newTrigger()
+        .forJob(paymentTimeoutJobDetail())
+        .withIdentity("paymentTimeoutTrigger")
+        .withSchedule(
+            SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(5).repeatForever())
+        .build();
+  }
+
+  @Bean
+  public JobDetail productDiscountJobDetail() {
+    return JobBuilder.newJob(ProductDiscountScheduler.class)
+        .withIdentity("productDiscountJob")
+        .storeDurably()
+        .build();
+  }
+
+  @Bean
+  public Trigger productDiscountTrigger() {
+    return TriggerBuilder.newTrigger()
+        .forJob(productDiscountJobDetail())
+        .withIdentity("productDiscountTrigger")
+        .withSchedule(
+            CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                .withMisfireHandlingInstructionFireAndProceed())
         .build();
   }
 }

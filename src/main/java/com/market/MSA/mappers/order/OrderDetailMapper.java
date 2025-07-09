@@ -8,11 +8,13 @@ import com.market.MSA.responses.order.OrderDetailResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.stereotype.Component;
 
 @Mapper(
     componentModel = "spring",
-    uses = {UserAddressMappper.class, RoleMapper.class})
+    uses = {UserAddressMappper.class, RoleMapper.class},
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface OrderDetailMapper {
   OrderDetail toOrderDetail(OrderDetailRequest request);

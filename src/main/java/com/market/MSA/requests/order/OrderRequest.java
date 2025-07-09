@@ -22,6 +22,7 @@ public class OrderRequest {
   double grandTotal;
 
   OrderStatus status;
+  double usePoints;
 
   Long branchId;
   Long cartId;

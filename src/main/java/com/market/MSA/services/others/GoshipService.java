@@ -212,7 +212,7 @@ public class GoshipService {
             .order(order)
             .build();
 
-    order.setStatus(OrderStatus.DELIVERING);
+    order.setStatus(OrderStatus.PENDING);
 
     deliveryInfoRepository.save(deliveryInfo);
     orderRepository.save(order);

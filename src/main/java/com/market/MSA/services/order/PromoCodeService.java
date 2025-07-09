@@ -178,16 +178,17 @@ public class PromoCodeService {
   @Transactional(readOnly = true)
   @Cacheable("promo_codes_cart_paging")
   public Page<PromoCodeResponse> filterPromoCodesWithPagingAndCart(
-          String keyword,
-          PromocodeStatus status,
-          Long campaignId,
-          LocalDateTime fromDate,
-          LocalDateTime toDate,
-          Long cartId,
-          Long userId,
-          Pageable pageable) {
+      String keyword,
+      PromocodeStatus status,
+      Long campaignId,
+      LocalDateTime fromDate,
+      LocalDateTime toDate,
+      Long cartId,
+      Long userId,
+      Pageable pageable) {
 
-    Page<PromoCode> promoCodePage = promoCodeRepository.filterWithPagingAndCart(
+    Page<PromoCode> promoCodePage =
+        promoCodeRepository.filterWithPagingAndCart(
             keyword, status, campaignId, fromDate, toDate, cartId, pageable);
 
     Page<PromoCodeResponse> responsePage = promoCodePage.map(promoCodeMapper::toPromoCodeResponse);
@@ -204,21 +205,21 @@ public class PromoCodeService {
   @Transactional(readOnly = true)
   @Cacheable("promo_codes_cart_list")
   public List<PromoCodeResponse> filterPromoCodesWithCart(
-          String keyword,
-          PromocodeStatus status,
-          Long campaignId,
-          LocalDateTime fromDate,
-          LocalDateTime toDate,
-          Long cartId,
-          Long userId,
-          Sort sort) {
+      String keyword,
+      PromocodeStatus status,
+      Long campaignId,
+      LocalDateTime fromDate,
+      LocalDateTime toDate,
+      Long cartId,
+      Long userId,
+      Sort sort) {
 
-    List<PromoCode> promoCodes = promoCodeRepository.filterWithCart(
+    List<PromoCode> promoCodes =
+        promoCodeRepository.filterWithCart(
             keyword, status, campaignId, fromDate, toDate, cartId, sort);
 
-    List<PromoCodeResponse> responses = promoCodes.stream()
-            .map(promoCodeMapper::toPromoCodeResponse)
-            .collect(Collectors.toList());
+    List<PromoCodeResponse> responses =
+        promoCodes.stream().map(promoCodeMapper::toPromoCodeResponse).collect(Collectors.toList());
 
     return filterUsedPromoCodes(responses, userId);
   }
@@ -226,15 +227,13 @@ public class PromoCodeService {
   @Transactional(readOnly = true)
   @Cacheable("promo_codes_applicable")
   public List<PromoCodeResponse> getApplicablePromoCodesForCart(
-          Long cartId,
-          PromocodeStatus status,
-          Long userId) {
+      Long cartId, PromocodeStatus status, Long userId) {
 
-    List<PromoCode> promoCodes = promoCodeRepository.findApplicablePromoCodesForCart(cartId, status);
+    List<PromoCode> promoCodes =
+        promoCodeRepository.findApplicablePromoCodesForCart(cartId, status);
 
-    List<PromoCodeResponse> responses = promoCodes.stream()
-            .map(promoCodeMapper::toPromoCodeResponse)
-            .collect(Collectors.toList());
+    List<PromoCodeResponse> responses =
+        promoCodes.stream().map(promoCodeMapper::toPromoCodeResponse).collect(Collectors.toList());
 
     return filterUsedPromoCodes(responses, userId);
   }
@@ -244,9 +243,8 @@ public class PromoCodeService {
   public List<PromoCodeResponse> getActivePromoCodesForCart(Long cartId, Long userId) {
     List<PromoCode> promoCodes = promoCodeRepository.findActivePromoCodesForCart(cartId);
 
-    List<PromoCodeResponse> responses = promoCodes.stream()
-            .map(promoCodeMapper::toPromoCodeResponse)
-            .collect(Collectors.toList());
+    List<PromoCodeResponse> responses =
+        promoCodes.stream().map(promoCodeMapper::toPromoCodeResponse).collect(Collectors.toList());
 
     return filterUsedPromoCodes(responses, userId);
   }

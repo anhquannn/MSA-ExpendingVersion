@@ -15,7 +15,6 @@ import com.market.MSA.services.product.InventoryProductService;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -36,11 +35,11 @@ public class PricingService {
 
   @Transactional(readOnly = true)
   public OrderSummaryResponse calculateSummary(
-          Long branchId,
-          Long userAddressId,
-          Long userId,
-          List<OrderItemDto> items,
-          List<String> promoCodes) {
+      Long branchId,
+      Long userAddressId,
+      Long userId,
+      List<OrderItemDto> items,
+      List<String> promoCodes) {
 
     if (items == null || items.isEmpty()) {
       throw new AppException(ErrorCode.INVALID_INPUT);
@@ -49,12 +48,14 @@ public class PricingService {
     double totalCost = 0.0;
     // Validate stock & compute total
     for (OrderItemDto item : items) {
-      boolean available = inventoryProductService.checkStockAvailability(
+      boolean available =
+          inventoryProductService.checkStockAvailability(
               branchId, item.getProductId(), item.getQuantity());
       if (!available) {
         throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
       }
-      double unitPrice = inventoryProductService.getBranchCurrentPrice(branchId, item.getProductId());
+      double unitPrice =
+          inventoryProductService.getBranchCurrentPrice(branchId, item.getProductId());
       totalCost += unitPrice * item.getQuantity();
     }
 
@@ -75,19 +76,16 @@ public class PricingService {
     grandTotal += firstRate.getTotalAmount();
 
     return OrderSummaryResponse.builder()
-            .totalCost(totalCost)
-            .discount(discount)
-            .grandTotal(grandTotal)
-            .rates(firstRate)
-            .build();
+        .totalCost(totalCost)
+        .discount(discount)
+        .grandTotal(grandTotal)
+        .rates(firstRate)
+        .build();
   }
 
   @Transactional(readOnly = true)
   public double validateAndCalculateDiscount(
-          List<OrderItemDto> items,
-          List<String> promoCodes,
-          Long userId,
-          double totalCost) {
+      List<OrderItemDto> items, List<String> promoCodes, Long userId, double totalCost) {
 
     if (promoCodes == null || promoCodes.isEmpty()) {
       return 0.0;
@@ -112,9 +110,7 @@ public class PricingService {
   }
 
   boolean validatePromoCodeEligibility(
-          PromoCodeResponse promo,
-          List<OrderItemDto> items,
-          double totalCost) {
+      PromoCodeResponse promo, List<OrderItemDto> items, double totalCost) {
 
     if (promo.getCampaignResponse() == null) {
       return true; // No campaign restrictions
@@ -133,20 +129,20 @@ public class PricingService {
         return true;
       }
       case CATEGORY, SUPPLIER, BATCH_NUMBER -> {
-        Set<Long> targetIds = campaignTargetRepository
-                .findByCampaign_CampaignId(campaign.getCampaignId())
-                .stream()
+        Set<Long> targetIds =
+            campaignTargetRepository.findByCampaign_CampaignId(campaign.getCampaignId()).stream()
                 .filter(t -> t.getTargetType() == campaign.getScopeType())
                 .map(CampaignTarget::getTargetId)
                 .collect(Collectors.toSet());
 
         // Log each item's eligibility
         for (OrderItemDto item : items) {
-          boolean itemEligible = isItemEligibleForCampaign(item, campaign.getScopeType(), targetIds);
+          boolean itemEligible =
+              isItemEligibleForCampaign(item, campaign.getScopeType(), targetIds);
         }
 
-          return items.stream().allMatch(item ->
-                  isItemEligibleForCampaign(item, campaign.getScopeType(), targetIds));
+        return items.stream()
+            .allMatch(item -> isItemEligibleForCampaign(item, campaign.getScopeType(), targetIds));
       }
       default -> {
         return false;
@@ -155,24 +151,24 @@ public class PricingService {
   }
 
   boolean isItemEligibleForCampaign(
-          OrderItemDto item,
-          PromoScopeType scopeType,
-          Set<Long> targetIds) {
+      OrderItemDto item, PromoScopeType scopeType, Set<Long> targetIds) {
 
     return switch (scopeType) {
       case CATEGORY -> {
-        Long catId = productRepository
+        Long catId =
+            productRepository
                 .findById(item.getProductId())
                 .map(p -> p.getCategory().getCategoryId())
                 .orElse(null);
-          yield catId != null && targetIds.contains(catId);
+        yield catId != null && targetIds.contains(catId);
       }
       case SUPPLIER -> {
-        Long supId = productRepository
+        Long supId =
+            productRepository
                 .findById(item.getProductId())
                 .map(p -> p.getSupplier().getSupplierId())
                 .orElse(null);
-          yield supId != null && targetIds.contains(supId);
+        yield supId != null && targetIds.contains(supId);
       }
       default -> false;
     };

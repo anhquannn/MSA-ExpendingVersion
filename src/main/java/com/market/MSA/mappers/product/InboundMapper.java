@@ -7,11 +7,13 @@ import com.market.MSA.responses.product.InboundResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.stereotype.Component;
 
 @Mapper(
     componentModel = "spring",
-    uses = {UserMapper.class, InventoryMapper.class, TransferRequestMapper.class})
+    uses = {UserMapper.class, InventoryMapper.class, TransferRequestMapper.class},
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface InboundMapper {
   InboundTransfer toInbound(InboundRequest inboundRequest);

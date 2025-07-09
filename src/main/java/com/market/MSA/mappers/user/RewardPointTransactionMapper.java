@@ -6,13 +6,17 @@ import com.market.MSA.responses.user.RewardPointTransactionResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface RewardPointTransactionMapper {
   RewardPointTransaction toRewardPointTransaction(RewardPointTransactionRequest request);
 
+  @Mapping(target = "order.rewardPointTransactions", ignore = true)
   RewardPointTransactionResponse toRewardPointTransactionResponse(
       RewardPointTransaction rewardPointTransaction);
 

@@ -23,6 +23,7 @@ public class SecurityConfig {
     "/user/verify-otp",
     "/user/login/google",
     "/user/refresh",
+    "/user/device/{deviceId}",
     "/user/reset-password/{email}",
     "/payment/vnpay/callback",
     "/shipment/cities",

@@ -3,6 +3,8 @@ package com.market.MSA.models.order;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.market.MSA.models.product.Product;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,7 +27,11 @@ public class CartItem {
   Long cartItemId;
 
   boolean isSelected;
+
+  @PositiveOrZero
   double price;
+
+  @Positive
   int quantity;
 
   @ManyToOne

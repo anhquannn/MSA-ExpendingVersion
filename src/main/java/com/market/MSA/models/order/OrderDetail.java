@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.product.Product;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,14 +28,20 @@ public class OrderDetail {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long orderDetailId;
 
+  @Positive
   int quantity;
+
   String name;
 
   @Enumerated(EnumType.STRING)
   OrderStatus status;
 
+  @PositiveOrZero
   double unitPrice;
+
+  @PositiveOrZero
   double totalPrice;
+
   String image;
   boolean rated;
 

@@ -7,11 +7,13 @@ import com.market.MSA.responses.product.TransferResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.stereotype.Component;
 
 @Mapper(
     componentModel = "spring",
-    uses = {UserMapper.class, InventoryMapper.class})
+    uses = {UserMapper.class, InventoryMapper.class},
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface TransferRequestMapper {
   Transfer toTransferRequest(com.market.MSA.requests.product.TransferRequest transferRequest);

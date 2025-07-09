@@ -8,11 +8,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
-@Repository
+@EnableJpaRepositories
 public interface CampaignTargetRepository extends JpaRepository<CampaignTarget, Long> {
+
+  @Query("SELECT COUNT(ct) FROM CampaignTarget ct WHERE ct.campaign.campaignId = :campaignId")
+  Long countByCampaignId(@Param("campaignId") Long campaignId);
+
+  @Query("SELECT ct FROM CampaignTarget ct WHERE ct.campaign.campaignId = :campaignId")
   List<CampaignTarget> findByCampaign_CampaignId(Long campaignId);
 
   boolean existsByCampaign_CampaignIdAndTargetTypeAndTargetId(

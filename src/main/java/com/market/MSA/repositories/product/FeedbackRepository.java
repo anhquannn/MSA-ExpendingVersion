@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
+  boolean existsByUser_UserIdAndProduct_ProductId(Long userId, Long productId);
+
   @Query(
       "SELECT f FROM Feedback f WHERE "
           + "(:productId IS NULL OR f.product.productId = :productId) AND "

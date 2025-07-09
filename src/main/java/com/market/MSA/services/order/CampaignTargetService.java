@@ -37,6 +37,12 @@ public class CampaignTargetService {
             .findById(request.getCampaignId())
             .orElseThrow(() -> new AppException(ErrorCode.CAMPAIGN_NOT_FOUND));
 
+    // Kiểm tra xem campaign này đã có mục trong CampaignTarget chưa
+    Long existingCount = campaignTargetRepository.countByCampaignId(request.getCampaignId());
+    if (existingCount > 0) {
+      throw new AppException(ErrorCode.DUPLICATE_CAMPAIGN_TARGET);
+    }
+
     CampaignTarget entity = campaignTargetMapper.toCampaignTarget(request);
     entity.setCampaign(campaign);
 

@@ -104,10 +104,11 @@ public class RewardPointController {
   @PostMapping("/redeem")
   public ApiResponse<RewardPointResponse> redeemPoints(
       @RequestParam Long userId,
+      @RequestParam Long orderId,
       @RequestParam double pointsToRedeem,
       @RequestParam(required = false) String description) {
     return ApiResponse.<RewardPointResponse>builder()
-        .result(rewardPointService.redeemPoints(userId, pointsToRedeem, description))
+        .result(rewardPointService.redeemPoints(userId, orderId, pointsToRedeem, description))
         .message(ApiMessage.POINTS_REDEEMED.getMessage())
         .build();
   }

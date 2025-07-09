@@ -77,9 +77,7 @@ public class TransferRequestService {
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_NOT_FOUND));
     transfer.setFromInventory(
         entityFinderService.findByIdOrThrow(
-            inventoryRepository,
-            transferRequest.getFromInventoryId(),
-            ErrorCode.INVENTORY_NOT_FOUND));
+            inventoryRepository, 1L, ErrorCode.INVENTORY_NOT_FOUND));
     transfer.setToInventory(
         entityFinderService.findByIdOrThrow(
             inventoryRepository,
@@ -89,8 +87,8 @@ public class TransferRequestService {
         entityFinderService.findByIdOrThrow(
             userRepository, transferRequest.getRequesterId(), ErrorCode.USER_NOT_EXISTED));
     transfer.setApprover(
-        entityFinderService.findByIdOrThrow(
-            userRepository, transferRequest.getApproverId(), ErrorCode.USER_NOT_EXISTED));
+        entityFinderService.findByIdOrThrow(userRepository, 1L, ErrorCode.USER_NOT_EXISTED));
+    transfer.setUpdatedAt(LocalDateTime.now());
 
     transferRequestMapper.updateTransferRequest(transferRequest, transfer);
     Transfer updatedTransfer = transferRequestRepository.save(transfer);

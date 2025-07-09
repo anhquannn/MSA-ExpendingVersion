@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.market.MSA.constants.OrderStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,6 +39,8 @@ public class CancelOrder {
   OrderStatus status;
 
   String reason;
+
+  @PositiveOrZero
   double refundAmount;
 
   @ManyToOne

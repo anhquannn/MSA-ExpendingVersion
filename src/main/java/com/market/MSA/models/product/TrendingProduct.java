@@ -3,6 +3,9 @@ package com.market.MSA.models.product;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -19,6 +22,7 @@ public class TrendingProduct {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long trendId;
 
+  @Positive
   double trendScore;
   LocalDateTime timestamp;
 

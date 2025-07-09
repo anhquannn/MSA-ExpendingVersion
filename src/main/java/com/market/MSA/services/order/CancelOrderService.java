@@ -15,6 +15,7 @@ import com.market.MSA.requests.order.CancelOrderRequest;
 import com.market.MSA.responses.order.CancelOrderResponse;
 import com.market.MSA.services.others.NotificationService;
 import com.market.MSA.services.product.InventoryProductService;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -59,11 +60,11 @@ public class CancelOrderService {
     // Lưu đơn trả hàng vào cơ sở dữ liệu
     CancelOrder cancelOrder =
         CancelOrder.builder()
-            .cancelDate(request.getCancelDate())
+            .cancelDate(LocalDateTime.now())
             .reason(request.getReason())
             .order(order)
             .refundAmount(order.getGrandTotal())
-            .status(OrderStatus.COMPLETED)
+            .status(OrderStatus.CANCELLED)
             .build();
 
     cancelOrder = cancelOrderRepository.save(cancelOrder);
@@ -74,6 +75,7 @@ public class CancelOrderService {
     // Khôi phục số lượng sản phẩm trong kho
     for (OrderDetail orderDetail : orderDetails) {
       inventoryProductService.restoreStock(orderDetail.getOrder());
+      orderDetail.setStatus(OrderStatus.CANCELLED);
     }
 
     // Send notification

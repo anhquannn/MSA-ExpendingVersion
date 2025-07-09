@@ -7,10 +7,10 @@ import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.requests.filters.OrderFilterRequest;
 import com.market.MSA.requests.order.OrderRequest;
 import com.market.MSA.responses.order.BranchRevenueResponse;
-import com.market.MSA.responses.order.TopCustomerResponse;
 import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.OrderSummaryResponse;
 import com.market.MSA.responses.order.RevenueStatisticsResponse;
+import com.market.MSA.responses.order.TopCustomerResponse;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.services.order.OrderService;
 import jakarta.validation.Valid;
@@ -45,7 +45,8 @@ public class OrderController {
             request.getBranchId(),
             request.getUserAddressId(),
             request.getCartId(),
-            request.getPromoCodes());
+            request.getPromoCodes(),
+            request.getUsePoints());
 
     orderService.sendRecipe(response.getOrderId(), response.getUser().getEmail());
 
@@ -61,21 +62,15 @@ public class OrderController {
       @RequestParam Long userAddressId,
       @RequestParam Long userId,
       @RequestParam Long cartId,
-      @RequestParam(required = false) List<String> promoCodes) {
+      @RequestParam(required = false) List<String> promoCodes,
+      @RequestParam Double usePoints) {
 
     OrderSummaryResponse orderSummary =
-        orderService.calculateOrderSummary(branchId, userAddressId, userId, cartId, promoCodes);
-
-    OrderSummaryResponse response =
-        OrderSummaryResponse.builder()
-            .totalCost(orderSummary.getTotalCost())
-            .discount(orderSummary.getDiscount())
-            .grandTotal(orderSummary.getGrandTotal())
-            .rates(orderSummary.getRates())
-            .build();
+        orderService.calculateOrderSummary(
+            branchId, userAddressId, userId, cartId, promoCodes, usePoints);
 
     return ApiResponse.<OrderSummaryResponse>builder()
-        .result(response)
+        .result(orderSummary)
         .message(ApiMessage.ORDER_SUMMARY_RETRIEVED.getMessage())
         .build();
   }
@@ -84,8 +79,10 @@ public class OrderController {
   public ApiResponse<OrderSummaryResponse> previewBuyAgain(
       @PathVariable Long orderId,
       @RequestParam Long userAddressId,
-      @RequestParam(required = false) List<String> promoCodes) {
-    OrderSummaryResponse summary = orderService.previewBuyAgain(orderId, userAddressId, promoCodes);
+      @RequestParam(required = false) List<String> promoCodes,
+      @RequestParam Double usePoints) {
+    OrderSummaryResponse summary =
+        orderService.previewBuyAgain(orderId, userAddressId, promoCodes, usePoints);
     return ApiResponse.<OrderSummaryResponse>builder()
         .result(summary)
         .message(ApiMessage.ORDER_SUMMARY_RETRIEVED.getMessage())
@@ -96,8 +93,9 @@ public class OrderController {
   public ApiResponse<OrderResponse> buyAgain(
       @PathVariable Long orderId,
       @RequestParam Long userAddressId,
-      @RequestParam(required = false) List<String> promoCodes) {
-    OrderResponse response = orderService.buyAgain(orderId, userAddressId, promoCodes);
+      @RequestParam(required = false) List<String> promoCodes,
+      @RequestParam Double usePoints) {
+    OrderResponse response = orderService.buyAgain(orderId, userAddressId, promoCodes, usePoints);
     return ApiResponse.<OrderResponse>builder()
         .result(response)
         .message(ApiMessage.ORDER_CREATED.getMessage())
@@ -202,7 +200,7 @@ public class OrderController {
       @PathVariable @NotNull(message = "Order ID is required") Long orderId,
       @RequestParam @NotNull(message = "Status is required") String status) {
 
-    if (OrderStatus.isValidStatus(status)) {
+    if (!OrderStatus.isValidStatus(status)) {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
 

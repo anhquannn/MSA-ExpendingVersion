@@ -72,9 +72,6 @@ public class CacheInvalidationAspect {
     for (String beanName : applicationContext.getBeanDefinitionNames()) {
       Object bean = applicationContext.getBean(beanName);
       Class<?> beanClass = AopUtils.getTargetClass(bean);
-      if (beanClass == null) {
-        continue;
-      }
       Package pkg = beanClass.getPackage();
       if (pkg == null || !pkg.getName().startsWith(basePackage)) {
         continue;

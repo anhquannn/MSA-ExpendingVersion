@@ -6,7 +6,9 @@ import com.market.MSA.responses.product.ProductCombinationResponse;
 import org.mapstruct.*;
 import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component("productCombinationMapper")
 public interface ProductCombinationMapper {
   ProductCombination toProductCombination(ProductCombinationRequest request);

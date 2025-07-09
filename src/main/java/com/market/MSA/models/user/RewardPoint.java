@@ -3,6 +3,8 @@ package com.market.MSA.models.user;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -19,9 +21,15 @@ public class RewardPoint {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long rewardPointId;
 
+  @PositiveOrZero
   double points;
+
+  @PositiveOrZero
   double totalEarned;
+
+  @PositiveOrZero
   double totalRedeemed;
+
   LocalDateTime updatedAt;
 
   @ManyToOne

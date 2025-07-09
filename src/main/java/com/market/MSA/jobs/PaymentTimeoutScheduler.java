@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,14 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PaymentTimeoutScheduler {
+public class PaymentTimeoutScheduler implements Job {
 
   private final PaymentRepository paymentRepository;
   private final OrderRepository orderRepository;
 
-  @Scheduled(fixedRate = 300_000) // every 5 minutes
+  @Override
   @Transactional
-  public void cancelExpiredVNPayPayments() {
+  public void execute(JobExecutionContext context) {
     LocalDateTime now = LocalDateTime.now();
     List<Payment> expired =
         paymentRepository.findAllByStatusAndPaymentMethodAndExpiryAtBefore(

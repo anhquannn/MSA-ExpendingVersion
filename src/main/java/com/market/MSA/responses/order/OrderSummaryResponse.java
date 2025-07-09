@@ -14,6 +14,9 @@ public class OrderSummaryResponse {
   double totalCost;
   double discount;
   double grandTotal;
+  double usedPoints;
+  double availablePoints;
+  double maxUsablePoints;
 
   RatesResponse rates;
 }

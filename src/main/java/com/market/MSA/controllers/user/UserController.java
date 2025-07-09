@@ -239,7 +239,8 @@ public class UserController {
   }
 
   @PostMapping("/surveyors")
-  public ApiResponse<UserResponse> createSurveyor(@RequestBody @Valid SurveyorCreateRequest request) {
+  public ApiResponse<UserResponse> createSurveyor(
+      @RequestBody @Valid SurveyorCreateRequest request) {
     return ApiResponse.<UserResponse>builder()
         .result(userService.createSurveyor(request))
         .message(ApiMessage.USER_CREATED.getMessage())

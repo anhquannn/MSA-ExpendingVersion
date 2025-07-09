@@ -104,63 +104,64 @@ public class PromoCodeController {
 
   @GetMapping("/cart/active")
   public ApiResponse<List<PromoCodeResponse>> getActivePromoCodesForCart(
-          @RequestParam Long cartId,
-          @RequestParam(required = false) Long userId) {
+      @RequestParam Long cartId, @RequestParam(required = false) Long userId) {
     return ApiResponse.<List<PromoCodeResponse>>builder()
-            .result(promoCodeService.getActivePromoCodesForCart(cartId, userId))
-            .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
-            .build();
+        .result(promoCodeService.getActivePromoCodesForCart(cartId, userId))
+        .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
+        .build();
   }
 
   @GetMapping("/cart/applicable")
   public ApiResponse<List<PromoCodeResponse>> getApplicablePromoCodesForCart(
-          @RequestParam Long cartId,
-          @RequestParam PromocodeStatus status,
-          @RequestParam(required = false) Long userId) {
+      @RequestParam Long cartId,
+      @RequestParam PromocodeStatus status,
+      @RequestParam(required = false) Long userId) {
     return ApiResponse.<List<PromoCodeResponse>>builder()
-            .result(promoCodeService.getApplicablePromoCodesForCart(cartId, status, userId))
-            .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
-            .build();
+        .result(promoCodeService.getApplicablePromoCodesForCart(cartId, status, userId))
+        .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/cart/list")
   public ApiResponse<List<PromoCodeResponse>> filterPromoCodesWithCart(
-          @RequestBody @Valid PromoCodeFilterRequest request) {
+      @RequestBody @Valid PromoCodeFilterRequest request) {
     return ApiResponse.<List<PromoCodeResponse>>builder()
-            .result(
-                    promoCodeService.filterPromoCodesWithCart(
-                            request.getKeyword(),
-                            request.getStatus(),
-                            request.getCampaignId(),
-                            request.getFromDate(),
-                            request.getToDate(),
-                            request.getCartId(),
-                            request.getUserId(),
-                            Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy())))
-            .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
-            .build();
+        .result(
+            promoCodeService.filterPromoCodesWithCart(
+                request.getKeyword(),
+                request.getStatus(),
+                request.getCampaignId(),
+                request.getFromDate(),
+                request.getToDate(),
+                request.getCartId(),
+                request.getUserId(),
+                Sort.by(
+                    Sort.Direction.fromString(request.getSortDirection()), request.getSortBy())))
+        .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/cart/paging")
   public ApiResponse<Page<PromoCodeResponse>> filterPromoCodesWithPagingAndCart(
-          @RequestBody @Valid PromoCodeFilterRequest request) {
-    Pageable pageable = PageRequest.of(
+      @RequestBody @Valid PromoCodeFilterRequest request) {
+    Pageable pageable =
+        PageRequest.of(
             request.getPage() - 1,
             request.getPageSize(),
             Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy()));
 
     return ApiResponse.<Page<PromoCodeResponse>>builder()
-            .result(
-                    promoCodeService.filterPromoCodesWithPagingAndCart(
-                            request.getKeyword(),
-                            request.getStatus(),
-                            request.getCampaignId(),
-                            request.getFromDate(),
-                            request.getToDate(),
-                            request.getCartId(),
-                            request.getUserId(),
-                            pageable))
-            .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
-            .build();
+        .result(
+            promoCodeService.filterPromoCodesWithPagingAndCart(
+                request.getKeyword(),
+                request.getStatus(),
+                request.getCampaignId(),
+                request.getFromDate(),
+                request.getToDate(),
+                request.getCartId(),
+                request.getUserId(),
+                pageable))
+        .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
+        .build();
   }
 }

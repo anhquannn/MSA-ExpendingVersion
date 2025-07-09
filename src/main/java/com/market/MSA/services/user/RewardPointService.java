@@ -122,8 +122,6 @@ public class RewardPointService {
                   return newRewardPoint;
                 });
 
-    // Calculate points (1 point per dollar)
-
     // Update reward point record
     rewardPoint.setPoints(rewardPoint.getPoints() + amount);
     rewardPoint.setTotalEarned(rewardPoint.getTotalEarned() + amount);
@@ -145,7 +143,8 @@ public class RewardPointService {
   }
 
   @Transactional
-  public RewardPointResponse redeemPoints(Long userId, double pointsToRedeem, String description) {
+  public RewardPointResponse redeemPoints(
+      Long userId, Long orderId, double pointsToRedeem, String description) {
     // Get reward point record
     RewardPoint rewardPoint =
         rewardPointRepository.findByUser_UserId(userId, PageRequest.of(0, 1)).stream()
@@ -167,7 +166,7 @@ public class RewardPointService {
     rewardPointTransactionService.createRewardPointTransaction(
         RewardPointTransactionRequest.builder()
             .userId(userId)
-            .orderId(null) // No order associated with redemption
+            .orderId(orderId)
             .pointChange(-pointsToRedeem)
             .type(RewardPointTransactionType.REDEEM)
             .description(description)

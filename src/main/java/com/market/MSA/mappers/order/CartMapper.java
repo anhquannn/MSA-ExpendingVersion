@@ -7,11 +7,13 @@ import com.market.MSA.responses.order.CartResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.stereotype.Component;
 
 @Mapper(
     componentModel = "spring",
-    uses = {UserMapper.class})
+    uses = {UserMapper.class},
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface CartMapper {
   Cart toCartItem(CartRequest request);

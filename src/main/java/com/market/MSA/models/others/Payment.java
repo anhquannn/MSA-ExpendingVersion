@@ -7,6 +7,8 @@ import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,7 +45,9 @@ public class Payment {
   @Enumerated(EnumType.STRING)
   OrderStatus status;
 
+  @PositiveOrZero
   double grandTotal;
+
   String transactionId;
 
   String bankCode;

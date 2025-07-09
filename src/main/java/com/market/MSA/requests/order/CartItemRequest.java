@@ -1,5 +1,7 @@
 package com.market.MSA.requests.order;
 
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +16,11 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartItemRequest {
   boolean isSelected;
+
+  @PositiveOrZero
   double price;
+
+  @Positive
   int quantity;
 
   Long productId;

@@ -12,10 +12,11 @@ import java.util.stream.Collectors;
 import org.mapstruct.*;
 import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface UserMapper {
-  @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
   @Mapping(target = "branches", ignore = true)
   User toUser(UserRequest request);
 

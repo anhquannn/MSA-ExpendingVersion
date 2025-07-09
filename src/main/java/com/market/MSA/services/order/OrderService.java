@@ -80,39 +80,60 @@ public class OrderService {
 
   @Transactional
   public OrderResponse createOrder(
-          Long userId, Long branchId, Long userAddressId, Long cartId, List<String> promoCodes) {
+      Long userId,
+      Long branchId,
+      Long userAddressId,
+      Long cartId,
+      List<String> promoCodes,
+      Double usePoints) {
 
     // Get cart items and convert to OrderItemDto for validation
     List<CartItemResponse> cartItems = cartItemService.getCartItemsByCartId(cartId);
-    List<OrderItemDto> orderItems = cartItems.stream()
+    List<OrderItemDto> orderItems =
+        cartItems.stream()
             .map(ci -> new OrderItemDto(ci.getProduct().getProductId(), ci.getQuantity()))
             .toList();
 
     // Calculate total cost for validation
-    double totalCost = cartItems.stream()
-            .mapToDouble(ci -> ci.getQuantity() * ci.getProduct().getPrice())
-            .sum();
+    double totalCost =
+        cartItems.stream().mapToDouble(ci -> ci.getQuantity() * ci.getProduct().getPrice()).sum();
 
     // VALIDATE PROMO CODES FIRST - This is the key addition
-    double discount = pricingService.validateAndCalculateDiscount(
-            orderItems, promoCodes, userId, totalCost);
+    double discount =
+        pricingService.validateAndCalculateDiscount(orderItems, promoCodes, userId, totalCost);
 
     // If validation passes, proceed with existing logic
-    OrderSummaryResponse orderSummary = calculateOrderSummary(
-            branchId, userAddressId, userId, cartId, promoCodes);
+    OrderSummaryResponse orderSummary =
+        calculateOrderSummary(branchId, userAddressId, userId, cartId, promoCodes, usePoints);
     double grandTotal = orderSummary.getGrandTotal();
 
+    // Trừ điểm nếu có sử dụng
+    if (usePoints > 0) {
+      double availablePoints = rewardPointService.getAvailablePoints(userId);
+      if (usePoints > availablePoints) {
+        throw new AppException(ErrorCode.INSUFFICIENT_POINTS);
+      }
+      grandTotal = Math.max(0, grandTotal - usePoints);
+    }
+
     // Rest of the existing createOrder logic...
-    User user = userRepository.findById(userId)
+    User user =
+        userRepository
+            .findById(userId)
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-    Cart cart = cartRepository.findById(cartId)
+    Cart cart =
+        cartRepository
+            .findById(cartId)
             .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
 
-    Branch branch = branchRepository.findById(branchId)
+    Branch branch =
+        branchRepository
+            .findById(branchId)
             .orElseThrow(() -> new AppException(ErrorCode.BRANCH_NOT_FOUND));
 
-    Order order = Order.builder()
+    Order order =
+        Order.builder()
             .user(user)
             .cart(cart)
             .orderDate(LocalDateTime.now())
@@ -131,7 +152,7 @@ public class OrderService {
 
       for (String promoCode : promoCodes) {
         if (promoCodeService.hasUserUsedPromoCode(
-                userId, promoCodeService.findPromoCodeByCode(promoCode).getPromoCodeId())) {
+            userId, promoCodeService.findPromoCodeByCode(promoCode).getPromoCodeId())) {
           throw new AppException(ErrorCode.PROMO_CODE_ALREADY_USED);
         }
 
@@ -139,7 +160,8 @@ public class OrderService {
         if (!promo.getStatus().equals(PromocodeStatus.EXPIRED)) {
           order.getPromoCodes().add(promo);
 
-          PromoCodeUsageRequest usageRequest = PromoCodeUsageRequest.builder()
+          PromoCodeUsageRequest usageRequest =
+              PromoCodeUsageRequest.builder()
                   .usedAt(LocalDateTime.now())
                   .promoCodeId(promo.getPromoCodeId())
                   .orderId(order.getOrderId())
@@ -154,7 +176,8 @@ public class OrderService {
     for (CartItemResponse cartItem : cartItems) {
       Product product = productService.findProductById(cartItem.getProduct().getProductId());
 
-      OrderDetail orderDetail = OrderDetail.builder()
+      OrderDetail orderDetail =
+          OrderDetail.builder()
               .order(order)
               .product(product)
               .quantity(cartItem.getQuantity())
@@ -164,11 +187,20 @@ public class OrderService {
 
       orderDetailRepository.save(orderDetail);
       inventoryProductService.updateInventoryProduct(
-              branchId, product.getProductId(), cartItem.getQuantity());
+          branchId, product.getProductId(), cartItem.getQuantity());
       productService.updateTotalRevenue(product.getProductId(), cartItem.getQuantity());
     }
 
     cartItemService.clearCart(cartId);
+    // Nếu người dùng đã sử dụng điểm, trừ điểm và ghi nhận giao dịch
+    if (usePoints > 0) {
+      rewardPointService.redeemPoints(
+          userId,
+          order.getOrderId(),
+          usePoints,
+          "Redeemed points for order #" + order.getOrderId());
+    }
+
     notificationService.sendOrderCreatedNotification(order.getOrderId());
 
     return orderMapper.toOrderResponse(order);
@@ -176,7 +208,12 @@ public class OrderService {
 
   @Transactional
   public OrderSummaryResponse calculateOrderSummary(
-      Long branchId, Long userAddressId, Long userId, Long cartId, List<String> promoCodes) {
+      Long branchId,
+      Long userAddressId,
+      Long userId,
+      Long cartId,
+      List<String> promoCodes,
+      Double usePoints) {
     // Convert current cart to list of items then delegate to PricingService
     CartResponse cart = cartService.getCartById(cartId);
     if (cart == null || !cart.getUser().getUserId().equals(userId)) {
@@ -186,14 +223,40 @@ public class OrderService {
         cartItemService.getCartItemsByCartId(cartId).stream()
             .map(ci -> new OrderItemDto(ci.getProduct().getProductId(), ci.getQuantity()))
             .toList();
-    return pricingService.calculateSummary(branchId, userAddressId, userId, items, promoCodes);
+
+    // Tính tổng tiền ban đầu
+    OrderSummaryResponse summary =
+        pricingService.calculateSummary(branchId, userAddressId, userId, items, promoCodes);
+
+    // Lấy số điểm có thể sử dụng
+    double availablePoints = rewardPointService.getAvailablePoints(userId);
+    double maxUsablePoints = Math.min(availablePoints, summary.getGrandTotal());
+
+    // Trừ điểm nếu có sử dụng
+    if (usePoints > 0) {
+      if (usePoints > availablePoints) {
+        throw new AppException(ErrorCode.INSUFFICIENT_POINTS);
+      }
+
+      double discount = Math.min(usePoints, summary.getGrandTotal());
+      summary.setGrandTotal(summary.getGrandTotal() - discount);
+      summary.setUsedPoints(usePoints);
+    }
+
+    // Đặt số điểm có thể sử dụng
+    summary.setAvailablePoints(availablePoints);
+    summary.setMaxUsablePoints(maxUsablePoints);
+
+    return summary;
   }
 
   @Transactional(readOnly = true)
   public OrderSummaryResponse previewBuyAgain(
-          Long oldOrderId, Long userAddressId, List<String> promoCodes) {
+      Long oldOrderId, Long userAddressId, List<String> promoCodes, Double usePoints) {
 
-    Order oldOrder = orderRepository.findById(oldOrderId)
+    Order oldOrder =
+        orderRepository
+            .findById(oldOrderId)
             .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
     if (oldOrder.getStatus() != OrderStatus.COMPLETED) {
@@ -204,7 +267,8 @@ public class OrderService {
     Long branchId = oldOrder.getBranch().getBranchId();
 
     // Convert order details to OrderItemDto for validation
-    List<OrderItemDto> items = oldOrder.getOrderDetails().stream()
+    List<OrderItemDto> items =
+        oldOrder.getOrderDetails().stream()
             .map(od -> new OrderItemDto(od.getProduct().getProductId(), od.getQuantity()))
             .toList();
 
@@ -213,17 +277,45 @@ public class OrderService {
     if (promoCodes != null && !promoCodes.isEmpty()) {
       effectivePromoCodes = promoCodes;
     } else {
-      effectivePromoCodes = oldOrder.getPromoCodes() == null ? List.of()
+      effectivePromoCodes =
+          oldOrder.getPromoCodes() == null
+              ? List.of()
               : oldOrder.getPromoCodes().stream().map(PromoCode::getCode).toList();
     }
 
-    return pricingService.calculateSummary(
+    // Tính tổng tiền ban đầu
+    OrderSummaryResponse summary =
+        pricingService.calculateSummary(
             branchId, userAddressId, userId, items, effectivePromoCodes);
+
+    // Lấy số điểm có thể sử dụng
+    double availablePoints = rewardPointService.getAvailablePoints(userId);
+    double maxUsablePoints = Math.min(availablePoints, summary.getGrandTotal());
+
+    // Trừ điểm nếu có sử dụng
+    if (usePoints > 0) {
+      if (usePoints > availablePoints) {
+        throw new AppException(ErrorCode.INSUFFICIENT_POINTS);
+      }
+
+      double discount = Math.min(usePoints, summary.getGrandTotal());
+      summary.setGrandTotal(summary.getGrandTotal() - discount);
+      summary.setUsedPoints(usePoints);
+    }
+
+    // Đặt số điểm có thể sử dụng
+    summary.setAvailablePoints(availablePoints);
+    summary.setMaxUsablePoints(maxUsablePoints);
+
+    return summary;
   }
 
   @Transactional
-  public OrderResponse buyAgain(Long oldOrderId, Long userAddressId, List<String> promoCodes) {
-    Order oldOrder = orderRepository.findById(oldOrderId)
+  public OrderResponse buyAgain(
+      Long oldOrderId, Long userAddressId, List<String> promoCodes, Double usePoints) {
+    Order oldOrder =
+        orderRepository
+            .findById(oldOrderId)
             .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
     if (oldOrder.getStatus() != OrderStatus.COMPLETED) {
@@ -234,12 +326,16 @@ public class OrderService {
     Long branchId = oldOrder.getBranch().getBranchId();
 
     // Prepare items for validation
-    List<OrderItemDto> orderItems = oldOrder.getOrderDetails().stream()
-            .map(detail -> new OrderItemDto(detail.getProduct().getProductId(), detail.getQuantity()))
+    List<OrderItemDto> orderItems =
+        oldOrder.getOrderDetails().stream()
+            .map(
+                detail ->
+                    new OrderItemDto(detail.getProduct().getProductId(), detail.getQuantity()))
             .toList();
 
     // Calculate total cost for validation
-    double totalCost = oldOrder.getOrderDetails().stream()
+    double totalCost =
+        oldOrder.getOrderDetails().stream()
             .mapToDouble(detail -> detail.getQuantity() * detail.getProduct().getPrice())
             .sum();
 
@@ -248,14 +344,16 @@ public class OrderService {
     if (promoCodes != null && !promoCodes.isEmpty()) {
       effectivePromoCodes = promoCodes;
     } else {
-      effectivePromoCodes = oldOrder.getPromoCodes() == null ? List.of()
+      effectivePromoCodes =
+          oldOrder.getPromoCodes() == null
+              ? List.of()
               : oldOrder.getPromoCodes().stream().map(PromoCode::getCode).toList();
     }
 
     // VALIDATE PROMO CODES FIRST - This is the key addition
     if (!effectivePromoCodes.isEmpty()) {
       pricingService.validateAndCalculateDiscount(
-              orderItems, effectivePromoCodes, userId, totalCost);
+          orderItems, effectivePromoCodes, userId, totalCost);
     }
 
     // If validation passes, proceed with existing logic
@@ -271,7 +369,7 @@ public class OrderService {
     }
 
     // Create new order using existing createOrder flow
-    return createOrder(userId, branchId, userAddressId, cartId, effectivePromoCodes);
+    return createOrder(userId, branchId, userAddressId, cartId, effectivePromoCodes, usePoints);
   }
 
   @Transactional
@@ -407,7 +505,7 @@ public class OrderService {
   @Async
   public void sendOrderDetails(Order order, String userEmail) {
     try {
-      String subject = "Order Confirmation - Your Order Details";
+      String subject = "Xác nhận đơn hàng - Chi tiết đơn hàng của bạn";
       String emailBody = buildOrderConfirmationEmail(order);
       emailService.sendEmail(userEmail, subject, emailBody);
     } catch (Exception e) {
@@ -436,26 +534,26 @@ public class OrderService {
   private String createEmailHeader(Order order) {
     return String.format(
         """
-			<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-				<h2>Thank you for your order!</h2>
-				<p>Order #%d has been confirmed and is being processed.</p>
-				<p>Order Date: %s</p>
-				<hr style="border: 1px solid #eee; margin: 20px 0;">
-			""",
+				<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+					<h2>Cảm ơn bạn đã đặt hàng!</h2>
+					<p>Đơn hàng #%d đã được xác nhận và đang được xử lý.</p>
+					<p>Ngày đặt hàng: %s</p>
+					<hr style="border: 1px solid #eee; margin: 20px 0;">
+				""",
         order.getOrderId(), order.getOrderDate().toString());
   }
 
   private String createOrderSummary(Order order) {
     return String.format(
         """
-			<div style="margin-bottom: 20px;">
-				<h3>Order Summary</h3>
-				<p><strong>Order ID:</strong> %d</p>
-				<p><strong>Status:</strong> %s</p>
-				<p><strong>Total Amount:</strong> %.2f VNĐ</p>
-			</div>
-			<hr style="border: 1px solid #eee; margin: 20px 0;">
-			""",
+				<div style="margin-bottom: 20px;">
+					<h3>Tóm tắt đơn hàng</h3>
+					<p><strong>Mã đơn hàng:</strong> %d</p>
+					<p><strong>Trạng thái:</strong> %s</p>
+					<p><strong>Tổng thanh toán:</strong> %.2f VNĐ</p>
+				</div>
+				<hr style="border: 1px solid #eee; margin: 20px 0;">
+				""",
         order.getOrderId(), order.getStatus(), order.getGrandTotal());
   }
 
@@ -463,19 +561,19 @@ public class OrderService {
     StringBuilder itemsList =
         new StringBuilder(
             """
-				<div>
-					<h3>Order Items</h3>
-					<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-						<thead>
-							<tr style="background-color: #f5f5f5;">
-								<th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Product</th>
-								<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Quantity</th>
-								<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Price</th>
-								<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Total</th>
-							</tr>
-						</thead>
-						<tbody>
-				""");
+						<div>
+							<h3>Sản phẩm trong đơn hàng</h3>
+							<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+								<thead>
+									<tr style="background-color: #f5f5f5;">
+										<th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Sản phẩm</th>
+										<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Số lượng</th>
+										<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Đơn giá</th>
+										<th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Thành tiền</th>
+									</tr>
+								</thead>
+								<tbody>
+						""");
 
     orderDetailService
         .findOrderDetailsByOrderId(order.getOrderId())
@@ -484,13 +582,13 @@ public class OrderService {
                 itemsList.append(
                     String.format(
                         """
-							<tr>
-								<td style="padding: 10px; border-bottom: 1px solid #eee;">%s</td>
-								<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%d</td>
-								<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
-								<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
-							</tr>
-							""",
+												<tr>
+													<td style="padding: 10px; border-bottom: 1px solid #eee;">%s</td>
+													<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%d</td>
+													<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
+													<td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">%.2f VNĐ</td>
+												</tr>
+												""",
                         detail.getProduct().getName(),
                         detail.getQuantity(),
                         detail.getUnitPrice(),
@@ -508,9 +606,9 @@ public class OrderService {
   private String createEmailFooter() {
     return """
 		<div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-radius: 5px;">
-			<p>Thank you for shopping with us!</p>
-			<p>If you have any questions about your order, please contact our support team.</p>
-			<p>Best regards,<br>Market Team</p>
+			<p>Cảm ơn bạn đã mua sắm tại Elosyia!</p>
+			<p>Nếu bạn có bất kỳ câu hỏi nào về đơn hàng, vui lòng liên hệ với đội ngũ hỗ trợ của chúng tôi.</p>
+			<p>Trân trọng,<br>Đội ngũ Elosyia</p>
 		</div>
 		</div> <!-- Close main container -->
 		""";
@@ -565,19 +663,23 @@ public class OrderService {
   }
 
   @Transactional(readOnly = true)
-  public List<BranchRevenueResponse> getBranchRevenueComparison(int year, int month, int periodMonths) {
+  public List<BranchRevenueResponse> getBranchRevenueComparison(
+      int year, int month, int periodMonths) {
     java.time.LocalDateTime end = java.time.LocalDateTime.of(year, month, 1, 0, 0).plusMonths(1);
     java.time.LocalDateTime start = end.minusMonths(periodMonths);
     List<Object[]> rows = orderDetailRepository.findRevenueByBranch(start, end);
     return rows.stream()
-        .map(r -> BranchRevenueResponse.builder()
-            .branchId((Long) r[0])
-            .name((String) r[1])
-            .totalRevenue(((Number) r[2]).doubleValue())
-            .build())
+        .map(
+            r ->
+                BranchRevenueResponse.builder()
+                    .branchId((Long) r[0])
+                    .name((String) r[1])
+                    .totalRevenue(((Number) r[2]).doubleValue())
+                    .build())
         .toList();
   }
 
+  @Transactional
   public RevenueStatisticsResponse getRevenueStatistics(
       int year,
       int month,
@@ -666,9 +768,9 @@ public class OrderService {
             .map(
                 row ->
                     TopSellingProductResponse.builder()
-                        .productId((Long) row[0])
+                        .productId(((Number) row[0]).longValue())
                         .name((String) row[1])
-                        .totalQuantity((Long) row[2])
+                        .totalQuantity(((Number) row[2]).longValue())
                         .build())
             .toList();
 
@@ -724,50 +826,63 @@ public class OrderService {
     // Validate status transition
     validateStatusTransition(currentStatus, updatedStatus);
 
-    // If order is being marked as completed and wasn't before
-    if (updatedStatus == OrderStatus.COMPLETED && currentStatus != OrderStatus.COMPLETED) {
-      if (!isPointsAwarded(order)) {
-        long pointsEarned = (long) Math.floor(order.getGrandTotal());
-        if (pointsEarned > 0) {
-          rewardPointService.earnPoints(order.getUser().getUserId(), orderId, pointsEarned);
-        }
-      }
+    // Update order status for Order, DeliveryInfo and OrderDetails
+    order.setStatus(updatedStatus);
+
+    // Propagate to delivery info
+    if (order.getDeliveryInfo() != null) {
+      order.getDeliveryInfo().setStatus(updatedStatus);
     }
 
-    // Update order status
-    order.setStatus(updatedStatus);
-    order = orderRepository.save(order);
+    // Propagate to each order detail
+    if (order.getOrderDetails() != null) {
+      order.getOrderDetails().forEach(od -> od.setStatus(updatedStatus));
+    }
+
+    order = orderRepository.saveAndFlush(order);
 
     return orderMapper.toOrderResponse(order);
   }
 
   private void validateStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) {
+    // Disallow any transition once the order is in a terminal state
     if (currentStatus == OrderStatus.CANCELLED
         || currentStatus == OrderStatus.COMPLETED
         || currentStatus == OrderStatus.FAILED) {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
 
-    // Add more specific rules if needed
+    // Only allow moving to DELIVERING from PENDING (COD) or PAID (VNPay)
+    if (newStatus == OrderStatus.DELIVERING
+        && !(currentStatus == OrderStatus.PENDING || currentStatus == OrderStatus.PAID)) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+
+    // Only allow cancelling when the order is still PENDING or currently DELIVERING
+    if (newStatus == OrderStatus.CANCELLED
+        && !(currentStatus == OrderStatus.PENDING || currentStatus == OrderStatus.DELIVERING)) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+
+    // Additional rules can be added here as business grows
   }
 
   @Transactional(readOnly = true)
   public List<TopCustomerResponse> getTopCustomers(
-      int year,
-      int month,
-      Long branchId,
-      int topPeriod,
-      int topLimit) {
+      int year, int month, Long branchId, int topPeriod, int topLimit) {
     java.time.LocalDateTime end = java.time.LocalDateTime.of(year, month, 1, 0, 0).plusMonths(1);
     java.time.LocalDateTime start = end.minusMonths(topPeriod);
-    org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, topLimit);
+    org.springframework.data.domain.Pageable pageable =
+        org.springframework.data.domain.PageRequest.of(0, topLimit);
     List<Object[]> rows = orderRepository.findTopCustomers(branchId, start, end, pageable);
     return rows.stream()
-        .map(r -> TopCustomerResponse.builder()
-            .customerId((Long) r[0])
-            .name((String) r[1])
-            .totalSpent(((Number) r[2]).doubleValue())
-            .build())
+        .map(
+            r ->
+                TopCustomerResponse.builder()
+                    .customerId((Long) r[0])
+                    .name((String) r[1])
+                    .totalSpent(((Number) r[2]).doubleValue())
+                    .build())
         .toList();
   }
 

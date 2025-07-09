@@ -93,7 +93,10 @@ public enum ErrorCode {
       166, "Inventory check request not found!", HttpStatus.NOT_FOUND),
   PRODUCT_COMBINATION_NOT_FOUND(167, "Product combination not found!", HttpStatus.NOT_FOUND),
   CAMPAIGN_TARGET_NOT_FOUND(168, "Campaign target not found!", HttpStatus.NOT_FOUND),
-  PROMO_CODE_NOT_APPLICABLE(169, "Promo code is not applicable to the selected items" , HttpStatus.BAD_REQUEST),;
+  PROMO_CODE_NOT_APPLICABLE(
+      169, "Promo code is not applicable to the selected items", HttpStatus.BAD_REQUEST),
+  DUPLICATE_CAMPAIGN_TARGET(170, "Campaign already has a target", HttpStatus.BAD_REQUEST),
+  ORDER_DETAIL_ALREADY_RATED(171, "Order detail has already been rated", HttpStatus.BAD_REQUEST);
 
   private final int code;
   private final String message;

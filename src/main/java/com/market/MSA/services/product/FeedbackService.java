@@ -12,6 +12,7 @@ import com.market.MSA.requests.filters.FeedbackFilterRequest;
 import com.market.MSA.requests.product.FeedbackRequest;
 import com.market.MSA.responses.product.FeedbackResponse;
 import com.market.MSA.services.others.EntityFinderService;
+import com.market.MSA.services.user.RewardPointService;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,6 +39,7 @@ public class FeedbackService {
   final com.market.MSA.repositories.order.OrderDetailRepository orderDetailRepository;
 
   final FeedbackMapper feedbackMapper;
+  final RewardPointService rewardPointService;
 
   // Create Feedback
   @Transactional
@@ -56,12 +58,45 @@ public class FeedbackService {
       OrderDetail od =
           entityFinderService.findByIdOrThrow(
               orderDetailRepository, request.getOrderDetailId(), ErrorCode.ORDER_DETAIL_NOT_FOUND);
+
+      // Kiểm tra xem order detail này đã được đánh giá chưa
+      if (od.isRated()) {
+        throw new AppException(ErrorCode.ORDER_DETAIL_ALREADY_RATED);
+      }
+
       od.setRated(true);
       feedback.setOrderDetail(od);
-      // save orderDetail later by cascade if needed
     }
 
     Feedback savedFeedback = feedbackRepository.save(feedback);
+
+    // Tích điểm cho feedback - chỉ tích điểm khi feedback được tạo từ order detail
+    if (feedback.getOrderDetail() != null) {
+      // Tính điểm thưởng cho feedback (100 điểm cho mỗi feedback)
+      double points = 100.0;
+
+      try {
+        // Gọi RewardPointService để vừa tạo transaction vừa cập nhật bảng reward_point
+        rewardPointService.earnPoints(
+            feedback.getUser().getUserId(),
+            feedback.getOrderDetail().getOrder().getOrderId(),
+            points);
+
+        log.info(
+            "Successfully awarded {} points to user {} for feedback {}",
+            points,
+            feedback.getUser().getUserId(),
+            savedFeedback.getFeedbackId());
+      } catch (Exception e) {
+        log.error(
+            "Failed to award points for feedback {}: {}",
+            savedFeedback.getFeedbackId(),
+            e.getMessage());
+        // Không throw exception để không làm rollback việc tạo feedback
+        // Có thể implement retry mechanism hoặc queue để xử lý sau
+      }
+    }
+
     return feedbackMapper.toFeedbackResponse(savedFeedback);
   }
 

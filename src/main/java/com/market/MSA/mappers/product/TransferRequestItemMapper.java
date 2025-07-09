@@ -6,11 +6,13 @@ import com.market.MSA.responses.product.TransferResponseItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.stereotype.Component;
 
 @Mapper(
     componentModel = "spring",
-    uses = {ProductMapper.class, TransferRequestMapper.class})
+    uses = {ProductMapper.class, TransferRequestMapper.class},
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface TransferRequestItemMapper {
   TransferItem toTransferRequestItem(TransferRequestItem transferRequestItemItem);

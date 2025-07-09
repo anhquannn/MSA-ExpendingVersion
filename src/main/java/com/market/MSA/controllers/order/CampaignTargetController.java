@@ -26,9 +26,7 @@ public class CampaignTargetController {
       @RequestBody @Valid CampaignTargetRequest request) {
     return ApiResponse.<CampaignTargetResponse>builder()
         .result(campaignTargetService.createCampaignTarget(request))
-        .message(
-            ApiMessage.CAMPAIGN_TARGET_CREATED
-                .getMessage())
+        .message(ApiMessage.CAMPAIGN_TARGET_CREATED.getMessage())
         .build();
   }
 
@@ -37,8 +35,7 @@ public class CampaignTargetController {
       @PathVariable Long campaignTargetId, @RequestBody CampaignTargetRequest request) {
     return ApiResponse.<CampaignTargetResponse>builder()
         .result(campaignTargetService.updateCampaignTarget(campaignTargetId, request))
-        .message(
-            ApiMessage.CAMPAIGN_TARGET_UPDATED.getMessage())
+        .message(ApiMessage.CAMPAIGN_TARGET_UPDATED.getMessage())
         .build();
   }
 
@@ -46,8 +43,7 @@ public class CampaignTargetController {
   public ApiResponse<Boolean> deleteCampaignTarget(@PathVariable Long campaignTargetId) {
     return ApiResponse.<Boolean>builder()
         .result(campaignTargetService.deleteCampaignTarget(campaignTargetId))
-        .message(
-            ApiMessage.CAMPAIGN_TARGET_DELETED.getMessage())
+        .message(ApiMessage.CAMPAIGN_TARGET_DELETED.getMessage())
         .build();
   }
 
@@ -56,8 +52,7 @@ public class CampaignTargetController {
       @PathVariable Long campaignTargetId) {
     return ApiResponse.<CampaignTargetResponse>builder()
         .result(campaignTargetService.getById(campaignTargetId))
-        .message(
-            ApiMessage.CAMPAIGN_TARGET_RETRIEVED.getMessage())
+        .message(ApiMessage.CAMPAIGN_TARGET_RETRIEVED.getMessage())
         .build();
   }
 
@@ -74,9 +69,7 @@ public class CampaignTargetController {
       @RequestBody @Valid CampaignTargetFilterRequest request) {
     return ApiResponse.<List<CampaignTargetResponse>>builder()
         .result(campaignTargetService.getCampaignTargets(request))
-        .message(
-            ApiMessage.ALL_CAMPAIGN_TARGETS_RETRIEVED
-                .getMessage())
+        .message(ApiMessage.ALL_CAMPAIGN_TARGETS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -85,9 +78,7 @@ public class CampaignTargetController {
       @RequestBody @Valid CampaignTargetFilterRequest request) {
     return ApiResponse.<Page<CampaignTargetResponse>>builder()
         .result(campaignTargetService.getCampaignTargetsWithPaging(request))
-        .message(
-            ApiMessage.ALL_CAMPAIGN_TARGETS_RETRIEVED
-                .getMessage())
+        .message(ApiMessage.ALL_CAMPAIGN_TARGETS_RETRIEVED.getMessage())
         .build();
   }
 }

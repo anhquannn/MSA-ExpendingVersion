@@ -36,7 +36,9 @@ class OrderBloc extends BaseBloc<OrderScreen> {
     } else {
       descError = null;
     }
-    setState(() {});
+      if (mounted) {
+      setState(() {});
+    }
     return isValid;
   }
 

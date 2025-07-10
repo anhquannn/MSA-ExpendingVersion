@@ -153,7 +153,9 @@ class CreateBranchBloc extends BaseBloc<CreateBranchScreen> {
       },
     );
 
-    setState(() {}); // Cập nhật lại UI
+      if (mounted) {
+      setState(() {});
+    }
 
     return isValid;
   }

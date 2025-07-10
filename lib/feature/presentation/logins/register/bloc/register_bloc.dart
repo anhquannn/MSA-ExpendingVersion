@@ -203,7 +203,7 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
           // address: formattedAddress,
           birthday: birthDayController.text,
           deviceId: Storage.deviceId,
-          image: avtMen4,
+          image: avtMen1,
         ),
       );
       if (user != null) {

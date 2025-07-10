@@ -36,7 +36,9 @@ class AdminNotificationBloc extends BaseBloc<AdminNotificationScreen> {
     } else {
       descError = null;
     }
-    setState(() {});
+      if (mounted) {
+      setState(() {});
+    }
     return isValid;
   }
 

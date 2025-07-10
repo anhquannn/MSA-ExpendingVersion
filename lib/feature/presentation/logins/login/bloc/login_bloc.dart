@@ -67,7 +67,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
       LoginRequest(
         email: email,
         password: password,
-        fcmToken: Storage.deviceId??'',
+        fcmToken: Storage.deviceId ?? '',
         platform: PlatformType.ANDROID,
       ),
     );
@@ -84,7 +84,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
 
   getFcmToken() async {
     final fcmToken = await FirebaseMessaging.instance.getToken();
-    if (fcmToken == null) {
+    if (fcmToken != null) {
       Storage.deviceId = fcmToken ?? '';
       Storage.saveDeviceId(fcmToken ?? '');
       print('FCM Token: $fcmToken');
@@ -168,9 +168,9 @@ class LoginBloc extends BaseBloc<LoginScreen> {
   }
 
   loginWithGoogle(BuildContext bContext) async {
-    if (Storage.deviceId == null) {
+    // if (Storage.deviceId == null) {
       await getFcmToken();
-    }
+    // }
     // try {
     final googleUser = await GoogleSignIn().signIn();
     if (googleUser == null) {
@@ -190,8 +190,9 @@ class LoginBloc extends BaseBloc<LoginScreen> {
     print('✅ Kết quả loginWithGoogleToken: $isSuccess');
     if (isSuccess) {
       final UserModel response = await Repository.onGetUserInfo();
-      final addressSuccess = await onGetAddress();
+
       await Repository.onUpdateDeviceId(response.userId ?? 0);
+      final addressSuccess = await onGetAddress();
       showCustomDialog(
         bContext,
         AppSize.w(0.9),
@@ -246,7 +247,7 @@ class LoginBloc extends BaseBloc<LoginScreen> {
 
   onGetAddress() async {
     final response = await Repository.getUserAddresses();
-    Storage.saveAddress(response[0]);
+    Storage.saveAddress(response[0]??null);
   }
 
   logoutFromGoogle() async {

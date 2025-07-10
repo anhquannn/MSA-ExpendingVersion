@@ -24,6 +24,8 @@ class InventoryInBloc extends BaseBloc<InventoryInScreen> {
 
   void onSelect(String select) {
     selectItem = select;
-    setState(() {});
+      if (mounted) {
+      setState(() {});
+    }
   }
 }

@@ -36,7 +36,10 @@ class AddCategoryBloc extends BaseBloc<AddCategoryScreen> {
     } else {
       descError = null;
     }
-    setState(() {});
+    if (mounted)
+      setState(() {
+        // cập nhật UI
+      });
     return isValid;
   }
 

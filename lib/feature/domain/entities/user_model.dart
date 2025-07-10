@@ -74,21 +74,45 @@ class Role {
   Role({this.roleId, this.permissions, this.name});
 
   int? roleId;
-  List<dynamic>? permissions;
+  List<Permission>? permissions;
   String? name;
 
-  factory Role.fromJson(Map<dynamic, dynamic> json) => Role(
+  factory Role.fromJson(Map<String, dynamic> json) => Role(
     roleId: json["roleId"],
-    permissions: List<dynamic>.from(json["permissions"].map((x) => x)),
     name: json["name"],
+    permissions:
+        json["permissions"] != null
+            ? List<Permission>.from(
+              json["permissions"].map((x) => Permission.fromJson(x)),
+            )
+            : [],
   );
 
-  Map<dynamic, dynamic> toJson() => {
+  Map<String, dynamic> toJson() => {
     "roleId": roleId,
+    "name": name,
     "permissions":
         permissions != null
-            ? List<dynamic>.from(permissions!.map((x) => x))
-            : null,
-    "name": name,
+            ? List<dynamic>.from(permissions!.map((x) => x.toJson()))
+            : [],
   };
+}
+class Permission {
+  final int? permissionId;
+  final String? name;
+  final String? description;
+
+  Permission({this.permissionId, this.name, this.description});
+
+  factory Permission.fromJson(Map<String, dynamic> json) => Permission(
+        permissionId: json["permissionId"],
+        name: json["name"],
+        description: json["description"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "permissionId": permissionId,
+        "name": name,
+        "description": description,
+      };
 }

@@ -37,7 +37,9 @@ class BranchListBloc extends BaseBloc<BranchListScreen> {
 
   onChangeBranch(int index) {
     selectedBranchId = index;
-    setState(() {});
+      if (mounted) {
+      setState(() {});
+    }
   }
 
   onGetAllBranch() async {

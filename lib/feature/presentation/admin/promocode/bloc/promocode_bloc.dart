@@ -34,6 +34,8 @@ class PromoCodeBloc extends BaseBloc<PromoCodeScreen> {
   void onDeleteProduct() {}
   void onDropdownChanged(String? value) {
     selectedValue = value;
-    setState(() {});
+      if (mounted) {
+      setState(() {});
+    }
   }
 }

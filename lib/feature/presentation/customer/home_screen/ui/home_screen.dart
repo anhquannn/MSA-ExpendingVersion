@@ -73,22 +73,9 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                     return const Icon(Icons.person, color: Colors.grey);
                   }
 
-                  String? imagePath = snapshot.data?.image;
-                  bool isValidImage =
-                      imagePath != null && imagePath.trim().isNotEmpty;
-
-                  String finalImagePath =
-                      isValidImage
-                          ? imagePath!
-                          : (Storage.userModelGlobal?.image
-                                      ?.trim()
-                                      .isNotEmpty ==
-                                  true
-                              ? Storage.userModelGlobal!.image
-                              : 'assets/images/default_avatar.jpg');
-
                   return Image.asset(
-                    finalImagePath,
+                    // Storage.userModelGlobal?.image ??
+                    'assets/images/avt_men1.jpg',
                     fit: BoxFit.cover,
                     width: 40,
                     height: 40,

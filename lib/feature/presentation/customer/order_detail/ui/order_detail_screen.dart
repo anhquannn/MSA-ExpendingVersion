@@ -447,45 +447,29 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
     switch (status) {
       case OrderStatus.pending:
         return Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: customButton(
-            () {
-              bloc.onReturnProducts(context: bContext);
-            },
-            AppSize.w(0.4),
-            40,
-            Text(
-              'Trả hàng',
-              style: TextStyle(
-                color: toHexToColor(primaryTextColor),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+          padding: const EdgeInsets.all(25),
+          child: SizedBox(
+            height: 45,
+            child: customButton(
+              () {
+                bloc.onReturnProducts(context: bContext);
+              },
+              AppSize.w(0.4),
+              40,
+              Text(
+                'Trả hàng',
+                style: TextStyle(
+                  color: toHexToColor(primaryTextColor),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
+              typeButton: 0,
             ),
-            typeButton: 0,
           ),
         );
       case OrderStatus.paying:
         return Container();
-      // return Padding(
-      //   padding: const EdgeInsets.only(top: 6),
-      //   child: customButton(
-      //     () {
-      //       // bloc.onCreateRatesForProducts(context: bContext);
-      //     },
-      //     AppSize.w(0.4),
-      //     40,
-      //     Text(
-      //       'Thanh toán',
-      //       style: TextStyle(
-      //         color: toHexToColor(primaryTextColor),
-      //         fontSize: 14,
-      //         fontWeight: FontWeight.w600,
-      //       ),
-      //     ),
-      //     typeButton: 0,
-      //   ),
-      // );
       case OrderStatus.paid:
         return Container();
       case OrderStatus.delivering:
@@ -511,6 +495,7 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
 
   Widget _buildSuccess(BuildContext bContext, OrderDetailBloc bloc) {
     return SizedBox(
+      height: 45,
       width: AppSize.width(),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -550,18 +535,21 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              customButton(
-                () {
-                  bloc.onCreateRatesForProducts(context: bContext);
-                },
-                AppSize.w(0.4),
-                40,
-                Text(
-                  'Đánh giá',
-                  style: TextStyle(color: toHexToColor(primaryTextColor)),
-                ),
-                typeButton: 0,
-              ),
+              ((bloc.orderDetail?.isNotEmpty ?? false) &&
+                      bloc.orderDetail?[0].rated == false)
+                  ? customButton(
+                    () {
+                      bloc.onCreateRatesForProducts(context: bContext);
+                    },
+                    AppSize.w(0.4),
+                    40,
+                    Text(
+                      'Đánh giá',
+                      style: TextStyle(color: toHexToColor(primaryTextColor)),
+                    ),
+                    typeButton: 0,
+                  )
+                  : Container(),
               customButton(
                 () {
                   bloc.onReturnProducts(context: bContext);

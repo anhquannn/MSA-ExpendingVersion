@@ -50,23 +50,33 @@ import '../ui/home_screen.dart';
 import 'package:get/get.dart';
 
 class HomeScreenBloc extends BaseBloc<HomeScreen> {
-  // UseCases
+  /// ==== UseCases ====
   final UserUseCases _userUseCases = GetIt.I<UserUseCases>();
   final CartUseCase _cartUseCase = GetIt.I<CartUseCase>();
   final CartItemUseCase _cartItemUseCase = GetIt.I<CartItemUseCase>();
 
-  // GlobalKeys
+  /// ==== GlobalKeys & Controllers ====
   final GlobalKey cartIconKey = GlobalKey();
   final GlobalKey cartIconKey1 = GlobalKey();
-  Map<int, GlobalKey> imageKeys = {};
+  final Map<int, GlobalKey> imageKeys = {};
+  final PageController categoryController = PageController(initialPage: 0);
+  final ScrollController scrollController = ScrollController();
+  final ValueNotifier<int> indexScreen = ValueNotifier(0);
+  final TextEditingController rateController = TextEditingController();
 
+  /// ==== User & Cart Models ====
   UserModel? userModel;
   CartModel? cartModel;
+
+  /// ==== Static Data ====
   ProductFilterResult? listProducts;
   List<CategoryModel>? listCategoryModel = [];
   List<PromoCodeModel>? listPromocode = [];
   List<CartItemModel>? listCartItemModel = [];
+  List<NotificationModel>? listNotificattionRead;
+  List<NotificationModel>? listNotificattionUnRead;
 
+  /// ==== Orders ====
   List<OrderResponse> listPending = [];
   List<OrderResponse> listPaying = [];
   List<OrderResponse> listPaid = [];
@@ -77,44 +87,54 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   List<OrderResponse> listCompleted = [];
   List<OrderResponse> listFailed = [];
 
-  final PageController categoryController = PageController(initialPage: 0);
-  final ScrollController scrollController = ScrollController();
-  final ValueNotifier<int> indexScreen = ValueNotifier(0);
+  /// ==== Streams ====
+  final BehaviorSubject<UserModel> streamUserModel =
+      BehaviorSubject<UserModel>();
+  final BehaviorSubject<CartModel> streamCartModel =
+      BehaviorSubject<CartModel>();
+  final BehaviorSubject<List<CategoryModel>> streamCategoryModels =
+      BehaviorSubject<List<CategoryModel>>();
+  final BehaviorSubject<ProductFilterResult> streamProductModels =
+      BehaviorSubject<ProductFilterResult>();
+  final BehaviorSubject<List<PromoCodeModel>> streamPromoCodeModels =
+      BehaviorSubject<List<PromoCodeModel>>();
+  final BehaviorSubject<List<CartItemModel>> streamCartItemModels =
+      BehaviorSubject<List<CartItemModel>>.seeded([mockCartItem]);
+  final BehaviorSubject<CartModel> cartModels = BehaviorSubject<CartModel>();
 
-  final streamCaculate = BehaviorSubject<double>();
-  final streamUserModel = BehaviorSubject<UserModel>();
-  final streamCartModel = BehaviorSubject<CartModel>();
-  final streamCategoryModels = BehaviorSubject<List<CategoryModel>>();
-  final streamProductModels = BehaviorSubject<ProductFilterResult>();
-  final streamPromoCodeModels = BehaviorSubject<List<PromoCodeModel>>();
-  final streamCartItemModels = BehaviorSubject<List<CartItemModel>>.seeded([
-    mockCartItem,
-  ]);
-  final cartModels = BehaviorSubject<CartModel>();
+  final BehaviorSubject<List<OrderResponse>> streamPending =
+      BehaviorSubject<List<OrderResponse>>();
+  final BehaviorSubject<List<OrderResponse>> streamPaying =
+      BehaviorSubject<List<OrderResponse>>();
+  final BehaviorSubject<List<OrderResponse>> streamPaid =
+      BehaviorSubject<List<OrderResponse>>();
+  final BehaviorSubject<List<OrderResponse>> streamDelivering =
+      BehaviorSubject<List<OrderResponse>>();
+  final BehaviorSubject<List<OrderResponse>> streamShipped =
+      BehaviorSubject<List<OrderResponse>>();
+  final BehaviorSubject<List<OrderResponse>> streamCancelling =
+      BehaviorSubject<List<OrderResponse>>();
+  final BehaviorSubject<List<OrderResponse>> streamCancelled =
+      BehaviorSubject<List<OrderResponse>>();
+  final BehaviorSubject<List<OrderResponse>> streamCompleted =
+      BehaviorSubject<List<OrderResponse>>();
+  final BehaviorSubject<List<OrderResponse>> streamFailed =
+      BehaviorSubject<List<OrderResponse>>();
 
-  final streamPending = BehaviorSubject<List<OrderResponse>>();
-  final streamPaying = BehaviorSubject<List<OrderResponse>>();
-  final streamPaid = BehaviorSubject<List<OrderResponse>>();
-  final streamDelivering = BehaviorSubject<List<OrderResponse>>();
-  final streamShipped = BehaviorSubject<List<OrderResponse>>();
-  final streamCancelling = BehaviorSubject<List<OrderResponse>>();
-  final streamCancelled = BehaviorSubject<List<OrderResponse>>();
-  final streamCompleted = BehaviorSubject<List<OrderResponse>>();
-  final streamFailed = BehaviorSubject<List<OrderResponse>>();
+  final BehaviorSubject<List<NotificationModel>> streamListNotificationRead =
+      BehaviorSubject<List<NotificationModel>>();
+  final BehaviorSubject<List<NotificationModel>> streamListNotificationUnRead =
+      BehaviorSubject<List<NotificationModel>>();
 
+  final BehaviorSubject<double> streamCaculate = BehaviorSubject<double>();
+
+  /// ==== UI Flags ====
   bool _isManuallyScrolling = false;
   bool _isAnimatingPage = false;
   bool _hasInitCalled = false;
+
+  /// ==== Debouncers ====
   final Map<int, Debouncer> _debouncers = {};
-
-  final TextEditingController rateController = TextEditingController();
-
-  List<NotificationModel>? listNotificattionRead;
-  final streamListNotificationRead = BehaviorSubject<List<NotificationModel>>();
-  List<NotificationModel>? listNotificattionUnRead;
-  final streamListNotificationUnRead =
-      BehaviorSubject<List<NotificationModel>>();
-
   @override
   String get contextKey => 'HomeScreen';
 
@@ -138,9 +158,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     init(context);
     indexScreen.value = 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      streamUserModel.add(UserModel());
-      streamCategoryModels.add([]);
-      streamProductModels.add(ProductFilterResult());
       if (indexScreen.value == 0) {
         categoryController.addListener(_onCategoryScroll);
       }
@@ -167,10 +184,34 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   @override
   void onDispose() {
     categoryController.dispose();
+    scrollController.dispose();
+    rateController.dispose();
+
     indexScreen.dispose();
+
+    // Dispose toàn bộ streams
     streamUserModel.close();
+    streamCartModel.close();
     streamCategoryModels.close();
     streamProductModels.close();
+    streamPromoCodeModels.close();
+    streamCartItemModels.close();
+    cartModels.close();
+
+    streamPending.close();
+    streamPaying.close();
+    streamPaid.close();
+    streamDelivering.close();
+    streamShipped.close();
+    streamCancelling.close();
+    streamCancelled.close();
+    streamCompleted.close();
+    streamFailed.close();
+
+    streamListNotificationRead.close();
+    streamListNotificationUnRead.close();
+
+    streamCaculate.close();
   }
 
   @override
@@ -192,11 +233,11 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       final response = await Repository.getUserAddresses();
       Storage.saveAddress(response[0]);
     } else {
-      print('⚠️ Không có địa chỉ trong Storage.addressModel để kiểm tra.');
+      //('⚠️ Không có địa chỉ trong Storage.addressModel để kiểm tra.');
     }
   }
 
-  onCheckBranch() async {
+  onCheckBranch(BuildContext context) async {
     if (Storage.branchModelGlobal == null) {
       Navigator.push(
         this.context,
@@ -206,22 +247,26 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onRefresh() async {
-    print("onRefresh started");
-    // await onGetProfile().catchError((e) => print('Lỗi profile: $e'));
+    //("onRefresh started");
     final List<Future<void>> futures = [
-      onGetProfile().catchError((e) => print('Lỗi profile: $e')),
-      onGetPromoCode().catchError((e) => print('Lỗi promo code: $e')),
-      onGetCategory().catchError((e) => print('Lỗi category: $e')),
-      onGetProduct().catchError((e) => print('Lỗi product: $e')),
-      // onGetUserCart().catchError((e) => print('Lỗi product: $e')),
-      // onCaculateCart().catchError((e) => print('Lỗi onCaculateCart: $e')),
-      onGetAddress().catchError((e) => print('Lỗi onGetAddress: $e')),
-      onCheckBranch(),
-      onGetUserCart(),
-      onGetNotification(),
+      onGetProfile().catchError((e) => ('Lỗi profile: $e')),
+      onGetPromoCode().catchError((e) => ('Lỗi promo code: $e')),
+      onGetCategory().catchError((e) => ('Lỗi category: $e')),
+      onGetProduct().catchError((e) => ('Lỗi product: $e')),
+      onGetAddress().catchError((e) => ('Lỗi onGetAddress: $e')),
+      // onCheckBranch().catchError((e) => ('Lỗi onCheckBranch: $e')),
+      // onGetUserCart().catchError((e) => ('Lỗi onGetUserCart: $e')),
+      onGetNotification().catchError((e) => ('Lỗi onGetNotification: $e')),
+    Repository.onUpdateDeviceId(Storage.userModelGlobal?.userId??0)
     ];
 
-    await Future.wait(futures);
+    try {
+      await Future.wait(futures);
+      //("onRefresh completed successfully");
+    } catch (e) {
+      //("Lỗi tổng quát trong onRefresh: $e");
+      // Bạn có thể xử lý lỗi tổng quát ở đây, ví dụ hiển thị thông báo lỗi cho người dùng
+    }
   }
 
   @override
@@ -241,7 +286,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       streamPromoCodeModels.add(promoCode ?? []);
       listPromocode = promoCode;
     } catch (e) {
-      print('Lỗi khi lấy danh sách mã giảm giá: $e');
+      //('Lỗi khi lấy danh sách mã giảm giá: $e');
       streamPromoCodeModels.add([]);
     }
   }
@@ -250,7 +295,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     try {
       UserModel? user = await Repository.onGetUserInfo();
       if (user != null) {
-        print('###########user.image######${user.image}');
         streamUserModel.add(user);
         Storage.userModelGlobal = user;
         Storage.saveUserModel(user);
@@ -261,46 +305,33 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
         streamUserModel.add(UserModel());
       }
     } catch (e) {
-      print('Lỗi khi lấy thông tin người dùng: $e');
+      //('Lỗi khi lấy thông tin người dùng: $e');
       streamUserModel.add(UserModel());
     }
   }
 
   onGetProduct() async {
-    setState(() {}); // Có thể gọi setState ở đây để hiện loading indicator
-
     try {
       ProductFilterRequest filter = ProductFilterRequest(
         page: 1,
         pageSize: 50,
         branchId: Storage.branchModelGlobal?.branchId,
       );
-
-      // ✅ SỬA ĐỔI: Cho phép biến 'product' nhận giá trị null
       final ProductFilterResult? product = await Repository.onFilterProducts(
         filter,
       );
 
-      // ✅ SỬA ĐỔI: Kiểm tra nếu product không phải là null trước khi sử dụng
       if (product != null) {
         listProducts = product;
         streamProductModels.add(product);
-      } else {
-        // Xử lý trường hợp không lấy được dữ liệu, có thể hiển thị thông báo
-        print('⚠️ Không nhận được dữ liệu sản phẩm từ repository.');
-        // Bạn có thể thêm một trạng thái lỗi vào stream nếu cần
-        // streamProductModels.addError('Failed to load products');
-      }
+      } else {}
     } catch (e, stack) {
-      print('❌ Lỗi khi lấy danh sách sản phẩm: $e');
-      print('📛 Stacktrace: $stack');
-      // Vẫn có thể thêm một đối tượng rỗng hoặc trạng thái lỗi vào stream
+      //('❌ Lỗi khi lấy danh sách sản phẩm: $e');
+      //('📛 Stacktrace: $stack');
       streamProductModels.add(ProductFilterResult());
     }
 
-    // Cuối cùng, gọi setState để cập nhật UI sau khi có kết quả
     if (mounted) {
-      // Thêm kiểm tra `mounted` nếu đây là StatefulWidget
       setState(() {});
     }
   }
@@ -313,7 +344,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       listCategoryModel = response;
       streamCategoryModels.set(response);
     } catch (e) {
-      print('Lỗi khi lấy danh sách danh mục: $e');
+      //('Lỗi khi lấy danh sách danh mục: $e');
       streamCategoryModels.add([]); // Fallback nếu có lỗi
     }
   }
@@ -412,27 +443,27 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   onBuyNow(ProductModel model, BuildContext bContext) async {
     showFullScreenLoading(bContext);
     List<int> cartIds = [];
-    print('🛒 1111111111Danh sách cartItemIds: $cartIds');
+    //('🛒 1111111111Danh sách cartItemIds: $cartIds');
     listCartItemModel?.forEach((element) {
-      print(element.cartItemId);
+      //(element.cartItemId);
       cartIds.add(element.cartItemId ?? 0);
     });
 
-    print('🛒 Danh sách cartItemIds: $cartIds');
+    //('🛒 Danh sách cartItemIds: $cartIds');
 
     final CartItemSelectionRequest request = CartItemSelectionRequest(
       cartId: Storage.cartModelGlobal?.cartId ?? 0,
       cartItemIds: cartIds,
     );
 
-    print('📦 Request cập nhật cart selection: ${request.toJson()}');
+    //('📦 Request cập nhật cart selection: ${request.toJson()}');
 
     final updateResponse = await Repository.onUpdateCartItemsSelectionAPI(
       request,
       false,
     );
 
-    print('✅ Kết quả cập nhật cart selection: $updateResponse');
+    //('✅ Kết quả cập nhật cart selection: $updateResponse');
 
     final data = await _cartItemUseCase.addToCart(
       AddToCartRequest(
@@ -443,7 +474,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       ),
     );
 
-    print('🛒 Kết quả thêm vào giỏ: $data');
+    //('🛒 Kết quả thêm vào giỏ: $data');
 
     if (data) {
       hideFullScreenLoading(bContext);
@@ -454,7 +485,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     } else {
       hideFullScreenLoading(bContext);
       buildCheck(bContext);
-      print('❌ Không thể thêm sản phẩm vào giỏ hàng.');
+      //('❌ Không thể thêm sản phẩm vào giỏ hàng.');
     }
   }
 
@@ -550,6 +581,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onAddToCart(ProductModel model, BuildContext bcontext, GlobalKey key) async {
+    onCheckBranch(bcontext);
     final data = await _cartItemUseCase.addToCart(
       AddToCartRequest(
         userId: Storage.userModelGlobal?.userId ?? 0,
@@ -657,11 +689,11 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onCaculateCart() async {
-    final response = await Repository.onCaculateOrder(
-      Storage.cartModelGlobal?.cartId ?? 0,
-    );
-
-    streamCaculate.set(double.tryParse(response ?? 0) ?? 0);
+    // final response = await Repository.onCaculateOrder(
+    //   Storage.cartModelGlobal?.cartId ?? 0,
+    // );
+    //
+    // streamCaculate.set(double.tryParse(response ?? 0) ?? 0);
   }
 
   onGetListOrderByStatus(OrderStatus status) async {
@@ -743,21 +775,19 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       userId: Storage.userModelGlobal?.userId,
     );
 
-    print('[READ] Request: ${model.toJson()}');
-
     final List<NotificationModel>? response = await Repository.getNotification(
       model,
     );
 
     if (response != null) {
-      print('[READ] Response length: ${response.length}');
+      //('[READ] Response length: ${response.length}');
       for (var i = 0; i < response.length; i++) {
-        print('[READ] Notification ${i + 1}: ${response[i].message}');
+        //('[READ] Notification ${i + 1}: ${response[i].message}');
       }
       listNotificattionRead = response;
       streamListNotificationRead.set(listNotificattionRead ?? []);
     } else {
-      print('[READ] Response is null');
+      //('[READ] Response is null');
     }
   }
 
@@ -769,21 +799,21 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       userId: Storage.userModelGlobal?.userId,
     );
 
-    print('[UNREAD] Request: ${model.toJson()}');
+    //('[UNREAD] Request: ${model.toJson()}');
 
     final List<NotificationModel>? response = await Repository.getNotification(
       model,
     );
 
     if (response != null) {
-      print('[UNREAD] Response length: ${response.length}');
+      //('[UNREAD] Response length: ${response.length}');
       for (var i = 0; i < response.length; i++) {
-        print('[UNREAD] Notification ${i + 1}: ${response[i].message}');
+        //('[UNREAD] Notification ${i + 1}: ${response[i].message}');
       }
       listNotificattionUnRead = response;
       streamListNotificationUnRead.set(listNotificattionUnRead ?? []);
     } else {
-      print('[UNREAD] Response is null');
+      //('[UNREAD] Response is null');
     }
   }
 
@@ -799,7 +829,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     if (response) {
       await onGetNotification();
     } else {
-      print('❌ Cập nhật thông báo thất bại');
+      //('❌ Cập nhật thông báo thất bại');
     }
   }
 }

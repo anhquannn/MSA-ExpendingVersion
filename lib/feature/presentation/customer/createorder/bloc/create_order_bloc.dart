@@ -27,38 +27,33 @@ import 'package:rxdart/rxdart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
-  UserAddressModel? model;
-
+  bool isUseReward = false;
+  bool isZaloPaySelected = true;
   List<CartItemModel>? listCartItem;
-  final streamListCartItem = BehaviorSubject<List<CartItemModel>>();
-
-  OrderPreviewModel? previewOrder;
-  final streamPreviewOrder = BehaviorSubject<OrderPreviewModel>();
-
-  List<PaymentMethod>? paymentMethods;
-  final streamPaymentMethod = BehaviorSubject<List<PaymentMethod>?>();
-
   List<PromoCodeModel>? listPromocode = [];
-  final streamPromoCodeModels = BehaviorSubject<List<PromoCodeModel>>();
-
-  final streamCanBuy = BehaviorSubject<bool>();
-
+  UserAddressModel? model;
   List<OrderDetailResponse>? orderDetail;
+  List<OrderDetailResponse>? orderDetails = [];
+  int orderId = 0;
+  List<PaymentMethod>? paymentMethods;
+  OrderPreviewModel? previewOrder;
+  double reward = 0;
+  final streamCanBuy = BehaviorSubject<bool>();
+  final streamListCartItem = BehaviorSubject<List<CartItemModel>>();
   final streamOrderDetail = BehaviorSubject<List<OrderDetailResponse>>();
-
+  final streamPaymentMethod = BehaviorSubject<List<PaymentMethod>?>();
+  final streamPreviewOrder = BehaviorSubject<OrderPreviewModel>();
+  final streamPromoCodeModels = BehaviorSubject<List<PromoCodeModel>>();
+  final streamReward = BehaviorSubject<double>();
   String vnPayurl = '';
 
-  int orderId = 0;
-  List<OrderDetailResponse>? orderDetails = [];
-
-  double reward = 0;
-  final streamReward = BehaviorSubject<double>();
-  bool isUseReward = false;
-
   final Map<int, Debouncer> _debouncers = {};
-  bool isZaloPaySelected = true;
+
   @override
   String get contextKey => 'CreateOrderScreen';
+
+  @override
+  void onDispose() {}
 
   @override
   void onInit() {
@@ -70,9 +65,6 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
       orderDetails = widget.orderDetail;
     }
   }
-
-  @override
-  void onDispose() {}
 
   @override
   void onReady() {
@@ -95,9 +87,6 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
 
   @override
   void onResumed() {}
-
-  @override
-  Widget build(BuildContext viewContext) => widget.build(viewContext);
 
   initPaymentMethod() {
     List<PaymentMethod> paymentMethod = [
@@ -122,7 +111,9 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
 
   onInitData() {
     model = Storage.addressModel;
-    setState(() {});
+      if (mounted) {
+      setState(() {});
+    }
   }
 
   onChangeAddress(BuildContext bcontext) async {
@@ -143,7 +134,9 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
       model = data;
       Storage.addressModel = data;
 
+        if (mounted) {
       setState(() {});
+    }
     }
   }
 
@@ -180,7 +173,7 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
         AppSize.width(),
         'Thông báo',
         Text(
-          'Đặt hàng thấy bại, vui lòng thử lại sau !!!',
+          'Đặt hàng thất bại, vui lòng thử lại sau !!!',
           style: TextStyle(color: Colors.white),
         ),
         true,
@@ -297,7 +290,9 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
       );
     }
 
-    setState(() {});
+      if (mounted) {
+      setState(() {});
+    }
   }
 
   onBuy(BuildContext bContext) async {
@@ -417,16 +412,89 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
     streamCanBuy.set(value);
   }
 
+  openUrlInChrome(String url) {
+    if (Platform.isAndroid) {
+      final intent = AndroidIntent(
+        action: 'action_view',
+        data: url,
+        package: 'com.android.chrome',
+      );
+      intent.launch();
+    }
+  }
+
+  openVNPayUrlWithChrome(String url) async {
+    if (url.contains('vnp_Locale=&')) {
+      url = url.replaceAll('vnp_Locale=&', 'vnp_Locale=vn&');
+    }
+
+    final uri = Uri.parse(url);
+
+    // ✅ Mở bằng Chrome nếu có
+    final chromePackage = 'com.android.chrome';
+    final canLaunchWithChrome = await canLaunchUrl(
+      Uri(
+        scheme: 'googlechrome',
+        host: uri.host,
+        path: uri.path,
+        query: uri.query,
+      ),
+    );
+
+    if (canLaunchWithChrome) {
+      final chromeUri = Uri(
+        scheme: 'googlechrome',
+        host: uri.host,
+        path: uri.path,
+        query: uri.query,
+      );
+
+      await launchUrl(chromeUri);
+    } else {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Không thể mở liên kết: $url';
+      }
+    }
+  }
+
+  onRefresh() {
+      if (mounted) {
+      setState(() {});
+    }
+  }
+
+  onGetReward() async {
+    final response = await Repository.getReward();
+    reward = response;
+    streamReward.set(response);
+  }
+
+  onChangeReward(bool value) async{
+    isUseReward = value;
+    if(value==true){
+        if (widget.isBuyAgain == true) {
+      await onPreviewOrderAgain();
+    } else {
+      await onGetPreviewOrder();
+    }
+    }
+      if (mounted) {
+      setState(() {});
+    }
+  }
+
   _handleCodPayment(
     BuildContext context,
-    CreateOrderRequestModel model,
+    CreateOrderRequestModel? model,
     int? orderId,
   ) async {
-    model.status = OrderStatus.pending;
+    model?.status = OrderStatus.pending;
 
-    final orderUpdate = await Repository.onUpdateOrderAPI(model, orderId);
+    final orderUpdate = await Repository.onUpdateOrderAPI(model??CreateOrderRequestModel(), orderId);
 
-    if (orderUpdate?.orderId != null) {
+    if (orderUpdate?.orderId != null||model!=null) {
       hideFullScreenLoading(context);
       await _showSuccessDialog(context, 'Đặt hàng thành công');
       // Navigator.pop(context);
@@ -519,77 +587,11 @@ class CreateOrderBloc extends BaseBloc<CreateOrderScreen> {
     );
   }
 
-  openUrlInChrome(String url) {
-    if (Platform.isAndroid) {
-      final intent = AndroidIntent(
-        action: 'action_view',
-        data: url,
-        package: 'com.android.chrome',
-      );
-      intent.launch();
-    }
-  }
-
-  openVNPayUrlWithChrome(String url) async {
-    if (url.contains('vnp_Locale=&')) {
-      url = url.replaceAll('vnp_Locale=&', 'vnp_Locale=vn&');
-    }
-
-    final uri = Uri.parse(url);
-
-    // ✅ Mở bằng Chrome nếu có
-    final chromePackage = 'com.android.chrome';
-    final canLaunchWithChrome = await canLaunchUrl(
-      Uri(
-        scheme: 'googlechrome',
-        host: uri.host,
-        path: uri.path,
-        query: uri.query,
-      ),
-    );
-
-    if (canLaunchWithChrome) {
-      final chromeUri = Uri(
-        scheme: 'googlechrome',
-        host: uri.host,
-        path: uri.path,
-        query: uri.query,
-      );
-
-      await launchUrl(chromeUri);
-    } else {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        throw 'Không thể mở liên kết: $url';
-      }
-    }
-  }
-
-  onRefresh() {
-    setState(() {});
-  }
-
-  onGetReward() async {
-    final response = await Repository.getReward();
-    reward = response;
-    streamReward.set(response);
-  }
-
-  onChangeReward(bool value) {
-    isUseReward = value;
-    setState(() {
-      
-    });
-  }
+  @override
+  Widget build(BuildContext viewContext) => widget.build(viewContext);
 }
 
 class PaymentMethod {
-  final String? id;
-  final String? iconUrl;
-  bool? selected;
-  Color? color;
-  final String? name;
   PaymentMethod({
     this.id,
     this.iconUrl,
@@ -597,4 +599,10 @@ class PaymentMethod {
     this.color,
     this.name,
   });
+
+  Color? color;
+  final String? iconUrl;
+  final String? id;
+  final String? name;
+  bool? selected;
 }

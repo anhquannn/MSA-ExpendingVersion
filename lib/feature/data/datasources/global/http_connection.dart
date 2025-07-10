@@ -177,6 +177,7 @@ class HttpConnection {
     isToken: isToken,
     context: context,
   );
+  static Future<bool>? _refreshingFuture;
 
   static Future<ApiResponse<T>> sendRequest<T>({
     required String method,
@@ -226,37 +227,47 @@ class HttpConnection {
     try {
       http.Response response = await doRequest(url, requestHeaders);
 
-      // Nếu token hết hạn
       if (response.statusCode == 401) {
-        print('Token hết hạn, đang gọi refreshToken...');
-        if (context != null && Storage.refreshToken == null) {
-          showCustomDialog(
-            context,
-            100,
-            100,
-            'Thông báo',
-            Text('Token đã hết hạn, vui lòng đăng nhập lại.'),
-            true,
-            true,
-            null,
-          );
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => LoginScreen()),
-          );
-        }
-        final refreshed = await Repository.onRefresh(
-          Storage.refreshToken ?? '',
-          // 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtd2FuZzM4MjAzQGdtYWlsLmNvbSIsInNjb3BlIjoiUk9MRV9DVVNUT01FUiIsImlzcyI6ImNvbS5tc2EiLCJleHAiOjE4ODA3MDYwODQsInRva2VuX3R5cGUiOiJyZWZyZXNoIiwiaWF0IjoxNzUxMTA2MDg0LCJqdGkiOiI1NTRjMzg1ZC1lYjgwLTRiNmYtODJmMC1mNDhhYTZkMWM0NTEifQ.r47-F54ytvnUjBXsoIMGPaOaGVNGo8q2-M25gf7MOWmuTUc7iXsVOwZB8mSQPbL-Fl_VLK11j8U02Sbr2w9Bbg',
-        );
+        print('🔁 Token hết hạn, xử lý refresh...');
 
-        if (refreshed) {
+        if (Storage.refreshToken == null || Storage.refreshToken == '') {
+          if (context != null) {
+
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => LoginScreen()),
+            );
+          }
+          return ApiResponse<T>(code: 401, message: 'No refresh token');
+        }
+
+        final refreshed = await _refreshingFuture;
+
+        if (refreshed??false) {
+          print('✅ Refresh thành công, gửi lại request...');
           requestHeaders = _configHeader(
             extraHeaders: headers,
             isToken: isToken,
           );
-          response = await doRequest(url, requestHeaders); // Gọi lại request cũ
+          response = await doRequest(url, requestHeaders);
         } else {
+          if (context != null) {
+            showCustomDialog(
+              context,
+              100,
+              100,
+              'Thông báo',
+              Text('Không thể làm mới token. Vui lòng đăng nhập lại.'),
+              true,
+              true,
+              null,
+            );
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => LoginScreen()),
+            );
+          }
+
           return ApiResponse<T>(
             code: 401,
             message: 'Token expired, refresh failed',
@@ -278,7 +289,7 @@ class HttpConnection {
 
       return ApiResponse.fromJson(responseBody, fromJsonT);
     } catch (e) {
-      print('Lỗi $method tại $path: $e');
+      print('❌ Lỗi $method tại $path: $e');
       return ApiResponse<T>(code: 500, message: 'Lỗi client: $e');
     }
   }

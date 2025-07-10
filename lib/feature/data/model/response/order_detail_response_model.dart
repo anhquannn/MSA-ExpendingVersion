@@ -11,6 +11,7 @@ class OrderDetailResponse {
   String? status;
   ProductModel? product;
   OrderModel? order;
+  bool? rated;
 
   OrderDetailResponse({
     this.orderDetailId,
@@ -22,6 +23,7 @@ class OrderDetailResponse {
     this.status,
     this.product,
     this.order,
+    this.rated,
   });
 
   factory OrderDetailResponse.fromJson(Map<String, dynamic> json) {
@@ -33,8 +35,12 @@ class OrderDetailResponse {
       image: json['image'],
       name: json['name'],
       status: json['status'],
-      product: json['product'] != null ? ProductModel.fromJson(json['product']) : null,
+      product:
+          json['product'] != null
+              ? ProductModel.fromJson(json['product'])
+              : null,
       order: json['order'] != null ? OrderModel.fromJson(json['order']) : null,
+      rated: json['rated'],
     );
   }
 
@@ -49,6 +55,7 @@ class OrderDetailResponse {
       'status': status,
       'product': product?.toJson(),
       'order': order?.toJson(),
+      'rated': rated,
     };
   }
 }

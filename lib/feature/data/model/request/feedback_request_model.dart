@@ -4,6 +4,7 @@ class FeedbackRequest {
   final String? createAt;
   final int? userId;
   final int? productId;
+  final int? orderDetailId;
 
   FeedbackRequest({
     this.rating,
@@ -11,6 +12,7 @@ class FeedbackRequest {
     this.createAt,
     this.userId,
     this.productId,
+    this.orderDetailId
   });
 
   factory FeedbackRequest.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class FeedbackRequest {
       createAt: json['createAt'],
       userId: json['userId'],
       productId: json['productId'],
+      orderDetailId: json['orderDetailId']
     );
   }
 
@@ -30,6 +33,7 @@ class FeedbackRequest {
       'createdAt': createAt,
       'userId': userId,
       'productId': productId,
+      'orderDetailId':orderDetailId
     };
   }
 }

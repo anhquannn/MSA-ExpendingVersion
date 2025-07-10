@@ -45,7 +45,9 @@ class AddManufacturerBloc extends BaseBloc<AddManufacturerScreen> {
     } else {
       addressError = null;
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
     return isValid;
   }
 

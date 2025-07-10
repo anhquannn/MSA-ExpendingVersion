@@ -144,6 +144,7 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
               (element) => {
                 'productId': element.product?.productId,
                 'productName': element.product?.name,
+                'orderDetailId': element.orderDetailId,
               },
             )
             .toList() ??
@@ -179,6 +180,7 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
           for (var product in products) {
             final productId = product['productId'];
             final productName = product['productName'];
+            final orderDetailId = product['orderDetailId'];
 
             final model = FeedbackRequest(
               comments: comment,
@@ -186,6 +188,7 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
               rating: rating,
               productId: productId,
               userId: userId,
+              orderDetailId: orderDetailId,
             );
 
             final request = Repository.createFeedbackAPI(model).then((
@@ -223,6 +226,11 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
       true,
       null,
       onSubmit: () {
+        // Navigator.pushAndRemoveUntil(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => HomeScreen()),
+        //   (route) => false,
+        // );
         contentKey.currentState?.callSubmit(); // Kích hoạt gọi onSubmit ở trên
       },
       onClose: () {

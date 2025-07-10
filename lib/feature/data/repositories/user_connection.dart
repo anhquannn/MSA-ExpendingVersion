@@ -164,9 +164,12 @@ class UserRepositoryImpl implements IUserRepository {
   }
 
   static Future<bool> onUpdateDeviceId(int userid) async {
-    String path = '$updateDeviceId${Storage.deviceId}/$userid';
+    print(
+      "Giá trị của Storage.deviceId trước khi dùng: ${Storage.deviceId}",
+    ); 
+    String path = '$updateDeviceId${Storage.deviceId}/${userid.toString()}';
     final response = await HttpConnection.put(
-      isToken: false,
+      isToken: true,
       path,
       fromJsonT: (json) => UserModel.fromJson(json),
     );
@@ -303,7 +306,7 @@ class UserRepositoryImpl implements IUserRepository {
     if (response.isSuccess && response.result != null) {
       Storage.userModelGlobal = response.result!;
       Storage.saveUserModel(response.result!);
-      await onUpdateDeviceId(data.userId ?? 0);
+      // await onUpdateDeviceId(data.userId ?? 0);
     }
     return response.result;
   }

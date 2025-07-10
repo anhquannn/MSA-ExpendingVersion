@@ -118,7 +118,9 @@ class ProductDetailBloc extends BaseBloc<ProductDetailScreen> {
       isValid = false;
     }
 
-    setState(() {});
+      if (mounted) {
+      setState(() {});
+    }
     return isValid;
   }
 
@@ -130,9 +132,10 @@ class ProductDetailBloc extends BaseBloc<ProductDetailScreen> {
     String? selectedColor = await selectColorDialog(context);
 
     if (selectedColor != null) {
-      setState(() {
         color = selectedColor;
-      });
+        if (mounted) {
+      setState(() {});
+    }
     }
   }
 

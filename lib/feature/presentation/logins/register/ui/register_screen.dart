@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
 import 'package:msa/core/utils/prarse_color.dart';

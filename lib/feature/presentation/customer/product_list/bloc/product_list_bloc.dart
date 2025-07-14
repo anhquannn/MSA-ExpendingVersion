@@ -56,7 +56,7 @@ class ProductListBloc extends BaseBloc<ProductListScreen> {
       ProductFilterRequest filter = ProductFilterRequest(
         page: page,
         pageSize: 10,
-        categoryId: widget.category?.categoryId,
+        categoryId: [(widget.category?.categoryId)],
         branchId: Storage.branchModelGlobal?.branchId,
       );
 

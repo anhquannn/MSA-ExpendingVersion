@@ -378,14 +378,14 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                       return images?[index] != null
                           ? CachedNetworkImage(
                             imageUrl: images![index].imageUrl,
-                            fit: BoxFit.cover,
+                            fit: BoxFit.contain,
                             placeholder:
                                 (context, url) => const Center(
                                   child: CircularProgressIndicator(),
                                 ),
                             errorWidget:
                                 (context, url, error) =>
-                                    Image.asset(imgBranch, fit: BoxFit.cover),
+                                    Image.asset(imgBranch, fit: BoxFit.contain),
                           )
                           : Image.asset(imgBranch);
                     },

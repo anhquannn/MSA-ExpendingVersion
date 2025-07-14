@@ -15,6 +15,7 @@ import 'package:msa/feature/presentation/customer/createorder/ui/create_order_sc
 import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
 import 'package:msa/feature/presentation/customer/product_list/ui/product_list_screen.dart';
 import 'package:msa/widget/customBottomSheet.dart';
+import 'package:msa/widget/custom_float_button.dart';
 import 'package:msa/widget/custom_notification_bottomsheet.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -191,34 +192,39 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
       appBarGradient: false,
       bodyBuilder: (controller) {
         final double width = AppSize.width();
-        return StreamBuilder(
-          stream: bloc.streamCategoryModels,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(
-                child: Text('Lỗi khi tải danh mục: ${snapshot.error}'),
-              );
-            }
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
-                child: SizedBox(
-                  height: 150,
-                  child: Lottie.asset('assets/animations/loading.json'),
-                ),
-              );
-            }
+        return Stack(
+          children: [
+            StreamBuilder(
+              stream: bloc.streamCategoryModels,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text('Lỗi khi tải danh mục: ${snapshot.error}'),
+                  );
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(
+                    child: SizedBox(
+                      height: 150,
+                      child: Lottie.asset('assets/animations/loading.json'),
+                    ),
+                  );
+                }
 
-            return buildBodyContent(
-              bloc: bloc,
-              width: width,
-              labels: snapshot.data!.map((e) => e).toList(),
-              primaryButtonColor: primaryButtonColor,
-              borderColor: borderColor,
-            );
-          },
+                return buildBodyContent(
+                  bloc: bloc,
+                  width: width,
+                  labels: snapshot.data!.map((e) => e).toList(),
+                  primaryButtonColor: primaryButtonColor,
+                  borderColor: borderColor,
+                );
+              },
+            ),
+            _buildPoints(points: 1200, context: context, onTap: () {}),
+          ],
         );
       },
       bottomBarItemsCustom: customBottomBar(bloc, bloc.indexScreen.value),
@@ -293,6 +299,89 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildPoints({
+    int? points,
+    VoidCallback? onTap,
+    BuildContext? context,
+  }) {
+    return Positioned(
+      bottom: 100,
+      right: 10,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(30),
+        onTap: () {
+          _showLoyaltyPointSheet(context!, points ?? 0);
+        },
+        child: SizedBox(
+          width: 60,
+          height: 80,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.monetization_on, color: Colors.amber, size: 40),
+              const SizedBox(height: 4),
+              Text(
+                '$points',
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLoyaltyPointSheet(BuildContext context, int currentPoints) {
+    showCustomBottomSheet(
+      context: context,
+      title: 'Chương trình tích điểm',
+      bodyWidget: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _customTextSpan('Số điểm hiện tại: ', '$currentPoints điểm'),
+          const SizedBox(height: 16),
+          const Text(
+            'Cách tích điểm:',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          const Text('• Đánh giá mỗi sản phẩm sau khi mua: +100 điểm'),
+          const SizedBox(height: 16),
+          const Text(
+            'Lợi ích:',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '• Quy đổi điểm để được giảm giá trực tiếp vào đơn hàng tiếp theo.',
+          ),
+          const Text(
+            '• Theo dõi và tích điểm dễ dàng trong tài khoản cá nhân.',
+          ),
+          const SizedBox(height: 50),
+        ],
+      ),
+    );
+  }
+
+  Widget _customTextSpan(String title, String body) {
+    return customTextSpan(
+      title,
+      body,
+      TextStyle(fontSize: 14, color: toHexToColor(secondaryTextColor)),
+      TextStyle(
+        fontSize: 15,
+        color: toHexToColor(primaryButtonColor),
+        fontWeight: FontWeight.bold,
+      ),
     );
   }
 }

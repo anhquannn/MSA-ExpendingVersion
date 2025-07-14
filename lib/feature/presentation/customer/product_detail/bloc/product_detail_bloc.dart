@@ -127,7 +127,7 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
       ProductFilterRequest filter = ProductFilterRequest(
         page: 1,
         pageSize: 10,
-        categoryId: productModel?.category?.categoryId,
+        categoryId: [(productModel?.category?.categoryId)??0],
         branchId: Storage.branchModelGlobal?.branchId,
       );
 

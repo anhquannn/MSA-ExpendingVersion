@@ -69,9 +69,12 @@ class CategoryRepositoryImpl extends ICategoryRepository {
     return data.result;
   }
 
-  static Future<List<CategoryModel>> getAllCategory(CategoryFilterRequest model) async {
+  static Future<List<CategoryModel>> getAllCategory(
+    CategoryFilterRequest model,
+  ) async {
     final response = await HttpConnection.post<PaginatedResult<CategoryModel>>(
       'category/paging',
+      body: model.toJson(),
       fromJsonT:
           (json) => PaginatedResult.fromJson(
             json,

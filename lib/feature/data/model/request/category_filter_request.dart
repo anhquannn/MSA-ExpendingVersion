@@ -12,7 +12,7 @@ class CategoryFilterRequest {
     this.sortBy = "name",
     this.sortDirection = "ASC",
     this.page = 1,
-    this.pageSize = 10,
+    this.pageSize = 40,
   });
 
   Map<String, dynamic> toJson() {

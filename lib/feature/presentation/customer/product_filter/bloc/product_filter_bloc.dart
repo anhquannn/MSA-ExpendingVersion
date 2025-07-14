@@ -39,8 +39,12 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
   List<SupplierModel>? listSupplyModels;
   final streamSupplyModels = BehaviorSubject<List<SupplierModel>>();
 
-  CategoryModel? categorySelect;
+  List<CategoryModel>? categorySelect = [];
+  final streamCategorySelect = BehaviorSubject<List<CategoryModel>>();
   SupplierModel? supplySelect;
+
+  List<List<CategoryModel>?> listCategoryChild = [];
+  final streamListCategoryChild = BehaviorSubject<List<List<CategoryModel>?>>();
 
   double? minPrice;
   double? maxPrice;
@@ -83,7 +87,8 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
     try {
       ProductFilterRequest filter = ProductFilterRequest(
         keyword: searchController.text,
-        categoryId: categorySelect?.categoryId,
+        categoryId:
+            categorySelect?.map((e) => e.categoryId).whereType<int>().toList(),
         supplierId: supplySelect?.supplierId,
         minPrice: minPrice,
         maxPrice: maxPrice,
@@ -140,20 +145,39 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
 
   onTapCategory(CategoryModel model, BuildContext ctx) async {
     showFullScreenLoading(ctx);
+    // onGetCategoryChild(model.parentCategory?.categoryId??0);
+    onGetCategoryChild(model.categoryId ?? 0);
     listCategoryModel?.forEach((e) {
       if (e.categoryId == model.categoryId) {
-        categorySelect = model;
-        e.selected = !e.selected;
-      } else {
-        e.selected = false;
+        model.selected = !model.selected;
+        if (model.selected == true) {
+          categorySelect?.add(model);
+        } else {
+          categorySelect?.remove(model);
+        }
       }
     });
+    if (model.selected == true) {}
+
     streamCategoryModels.set(listCategoryModel ?? []);
-    if (model.selected == false) {
-      categorySelect = null;
-    }
+    streamCategorySelect.set(categorySelect ?? []);
     await onGetProduct();
     hideFullScreenLoading(ctx);
+    setState(() {});
+  }
+
+  onGetCategoryChild(int categoryId) async {
+    try {
+      final response = await Repository.onGetAllCategory(
+        CategoryFilterRequest(parentId: categoryId),
+      );
+      List<CategoryModel> list = response;
+      listCategoryChild.add(list);
+      streamListCategoryChild.set(listCategoryChild);
+    } catch (e) {
+      print('Lỗi khi lấy danh sách danh mục: $e');
+      streamListCategoryChild.add([]);
+    }
   }
 
   onTapSupply(SupplierModel model, BuildContext ctx) async {
@@ -192,13 +216,12 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
           Navigator.pop(context);
         },
       );
-    }else{
-    showCustomMessageError(context);
-
+    } else {
+      showCustomMessageError(context);
     }
   }
 
-  onBuyNow(ProductModel? model, BuildContext context) async{
+  onBuyNow(ProductModel? model, BuildContext context) async {
     showFullScreenLoading(context);
     List<int> cartIds = [];
     print('🛒 1111111111Danh sách cartItemIds: $cartIds');
@@ -251,5 +274,4 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
     maxPrice = max;
     onGetProduct();
   }
-
 }

@@ -119,17 +119,17 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
   }
 
   void fillMockData() {
-    nameController.text = 'Nguyễn Văn A';
-    emailController.text = 'nguyenvana@example.com';
-    phoneNumberController.text = '0987654321';
-    passwordController.text = '123456@Abc';
-    validPasswordController.text = '123456@Abc';
-    provinceController.text = 'Hồ Chí Minh';
-    districtController.text = 'Quận 1';
-    wardController.text = 'Phường Bến Nghé';
-    streetController.text = '12 Nguyễn Huệ';
-    birthDayController.text =
-        '1998-05-21'; // hoặc "21/05/1998" tùy định dạng bạn cần
+    // nameController.text = 'Nguyễn Văn A';
+    // emailController.text = 'nguyenvana@example.com';
+    // phoneNumberController.text = '0987654321';
+    // passwordController.text = '123456@Abc';
+    // validPasswordController.text = '123456@Abc';
+    // provinceController.text = 'Hồ Chí Minh';
+    // districtController.text = 'Quận 1';
+    // wardController.text = 'Phường Bến Nghé';
+    // streetController.text = '12 Nguyễn Huệ';
+    // birthDayController.text =
+    //     '1998-05-21'; // hoặc "21/05/1998" tùy định dạng bạn cần
   }
 
   @override

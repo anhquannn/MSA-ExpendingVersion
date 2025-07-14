@@ -54,14 +54,17 @@ class ProductFilterScreen extends BaseView<ProductFilterBloc> {
       child: Column(
         children: [
           _buildPageRang(bloc),
-          _buildTextFormat('Loại sản phẩm'),
-          _buildCategoryChips(context, (model) {
-            bloc.onTapCategory(model, context);
-          }, bloc),
           _buildTextFormat('Nhà sản xuất'),
           _buildSupplyChips(context, (model) {
             bloc.onTapSupply(model, context);
           }, bloc),
+          _buildTextFormat('Loại sản phẩm'),
+          _buildCategoryChips(context, (model) {
+            bloc.onTapCategory(model, context);
+          }, bloc),
+          _buildLIstChild(context, bloc, (model) {
+            bloc.onTapCategory(model, context);
+          }),
           _buildProductSale(bloc, context),
           _buildAllProducts(bloc, context),
         ],
@@ -158,6 +161,84 @@ class ProductFilterScreen extends BaseView<ProductFilterBloc> {
         }
         return Center(child: Text('Không tìm thấy loại sản phẩm'));
       },
+    );
+  }
+
+  Widget _buildLIstChild(
+    BuildContext context,
+    ProductFilterBloc bloc,
+    Function(CategoryModel model) onTap,
+  ) {
+    return StreamBuilder(
+      stream: bloc.streamListCategoryChild.output,
+      builder: (context, snapshot) {
+        final data = snapshot.data;
+
+        final hasData =
+            data != null && data.any((child) => child?.isNotEmpty ?? false);
+
+        if (!hasData) return SizedBox.shrink();
+
+        return Column(
+          // ✅ Fix: Không lồng ListView ngang vào ListView dọc
+          children:
+              data.map((child) {
+                if (child != null && child.isNotEmpty) {
+                  return _buildCategoryChipsChild(context, onTap, bloc, child);
+                } else {
+                  return SizedBox.shrink();
+                }
+              }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoryChipsChild(
+    BuildContext context,
+    Function(CategoryModel model) onTap,
+    ProductFilterBloc bloc,
+    List<CategoryModel> list,
+  ) {
+    return SizedBox(
+      // ✅ Fix: Ràng buộc width
+      width: MediaQuery.sizeOf(context).width,
+      height: 50,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        scrollDirection: Axis.horizontal,
+        itemCount: list.length,
+        itemBuilder: (context, index) {
+          final data = list[index];
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: InkWell(
+              onTap: () {
+                onTap(data);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      data.selected == true
+                          ? toHexToColor(primaryColorPurple)
+                          : toHexToColor(primaryButtonColor),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  data.name ?? '',
+                  style: TextStyle(
+                    color: data.selected == true ? Colors.black : Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 

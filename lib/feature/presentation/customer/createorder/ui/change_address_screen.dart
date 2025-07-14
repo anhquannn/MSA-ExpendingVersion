@@ -108,27 +108,13 @@ class _AddressListWidgetState extends State<AddressListWidget> {
           primary: true,
           userId: Storage.userModelGlobal?.userId ?? 0,
         );
-
-        print('[onSave] Sending Request1: ${request.toJson()}');
       }
     }
-
-    // In request sẽ gửi đi
 
     final data = await Repository.onUpdateUserAddress(
       userAddresId ?? 0,
       request,
     );
-
-    // In kết quả từ API
-    print('AddressListWidget[onSave] Response2: $data');
-    print(
-      '=AddressListWidget========= [DEBUG] isChangePrimary == false ==========',
-    );
-    print('[AddressListWidget] Điều hướng đến màn hình CreateOrderScreen');
-    print('[AddressListWidget] orderId: ${widget.orderId}');
-    print('[AddressListWidget] isBuyAgain: ${widget.isBuyAgain}');
-    print('[AddressListWidget] orderDetail: ${widget.orderDetail?.toString()}');
     if (data) {
       Storage.addressModel = model;
       Storage.saveAddress(model);
@@ -179,22 +165,11 @@ class _AddressListWidgetState extends State<AddressListWidget> {
       appBarLeading: InkWell(
         onTap: () {
           if (widget.isChangePrimary == true) {
-            print('========== [DEBUG] isChangePrimary == true ==========');
-            print('[DEBUG] Điều hướng đến màn hình PersionalScreen');
-
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => PersionalScreen()),
             );
-
-            print('[DEBUG] Quay về từ màn hình PersionalScreen');
           } else {
-            print('========== [DEBUG] isChangePrimary == false ==========');
-            print('[DEBUG] Điều hướng đến màn hình CreateOrderScreen');
-            print('[DEBUG] orderId: ${widget.orderId}');
-            print('[DEBUG] isBuyAgain: ${widget.isBuyAgain}');
-            print('[DEBUG] orderDetail: ${widget.orderDetail?.toString()}');
-
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -252,24 +227,6 @@ class _AddressListWidgetState extends State<AddressListWidget> {
                           padding: const EdgeInsets.all(12),
                           child: Row(
                             children: [
-                              // Thông tin địa chỉ
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${data.street} ${data.ward} ${data.district} ${data.city}',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              // Custom Radio Button
                               Container(
                                 width: 22,
                                 height: 22,
@@ -282,7 +239,11 @@ class _AddressListWidgetState extends State<AddressListWidget> {
                                   ),
                                 ),
                                 child:
-                                    isSelected
+                                    (isSelected ||
+                                            Storage
+                                                    .addressModel
+                                                    ?.userAddressId ==
+                                                data.userAddressId)
                                         ? Center(
                                           child: Container(
                                             width: 10,
@@ -295,6 +256,69 @@ class _AddressListWidgetState extends State<AddressListWidget> {
                                         )
                                         : null,
                               ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  spacing: 6,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text.rich(
+                                      TextSpan(
+                                        text: Storage.userModelGlobal?.fullName,
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text:
+                                                ' | (${Storage.userModelGlobal?.phoneNumber})',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.blue,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    Text(
+                                      '${data.street} ${data.ward} ${data.district} ${data.city}',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Storage.addressModel?.userAddressId ==
+                                            data.userAddressId
+                                        ? Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: Colors.blue,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            color: Colors.white,
+                                          ),
+                                          child: Text(
+                                            'Mặc định',
+                                            style: TextStyle(
+                                              color: Colors.blue,
+                                            ),
+                                          ),
+                                        )
+                                        : Container(),
+                                  ],
+                                ),
+                              ),
+                              // Custom Radio Button
                             ],
                           ),
                         ),

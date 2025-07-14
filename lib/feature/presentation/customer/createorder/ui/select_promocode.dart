@@ -43,7 +43,7 @@ class SelectPromoCodeScreen extends StatelessWidget {
                       final promo = data?[index];
                       return InkWell(
                         onTap: () {
-                          bloc?.onSelectPromoCode(promo);
+                          bloc?.onSelectPromoCode(promo, bContext: context);
                         },
                         child: SizedBox(
                           height: 170,

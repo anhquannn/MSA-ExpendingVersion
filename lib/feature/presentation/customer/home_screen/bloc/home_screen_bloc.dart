@@ -780,10 +780,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     );
 
     if (response != null) {
-      //('[READ] Response length: ${response.length}');
-      for (var i = 0; i < response.length; i++) {
-        //('[READ] Notification ${i + 1}: ${response[i].message}');
-      }
       listNotificattionRead = response;
       streamListNotificationRead.set(listNotificattionRead ?? []);
     } else {
@@ -799,22 +795,15 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       userId: Storage.userModelGlobal?.userId,
     );
 
-    //('[UNREAD] Request: ${model.toJson()}');
 
     final List<NotificationModel>? response = await Repository.getNotification(
       model,
     );
 
     if (response != null) {
-      //('[UNREAD] Response length: ${response.length}');
-      for (var i = 0; i < response.length; i++) {
-        //('[UNREAD] Notification ${i + 1}: ${response[i].message}');
-      }
       listNotificattionUnRead = response;
       streamListNotificationUnRead.set(listNotificattionUnRead ?? []);
-    } else {
-      //('[UNREAD] Response is null');
-    }
+    } 
   }
 
   onGetNotification() async {
@@ -828,8 +817,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     );
     if (response) {
       await onGetNotification();
-    } else {
-      //('❌ Cập nhật thông báo thất bại');
     }
   }
 }

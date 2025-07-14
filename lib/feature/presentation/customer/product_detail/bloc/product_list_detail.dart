@@ -19,19 +19,18 @@ import 'package:rxdart/subjects.dart';
 
 class ProductListDetailBloc extends BaseBloc<ProductListDetailScreen> {
   List<ProductModel> listProducts = [];
-final streamProductModels = BehaviorSubject<List<ProductModel>>();
+  final streamProductModels = BehaviorSubject<List<ProductModel>>();
 
   final CartItemUseCase _cartItemUseCase = GetIt.I<CartItemUseCase>();
 
   @override
   String get contextKey => 'ProductListDetailScreen';
 
-@override
-void onInit() {
-  listProducts = widget.productList ?? [];
-  streamProductModels.set(listProducts);
-}
-
+  @override
+  void onInit() {
+    listProducts = widget.productList ?? [];
+    streamProductModels.set(listProducts);
+  }
 
   @override
   void onDispose() {}
@@ -49,29 +48,28 @@ void onInit() {
   @override
   Widget build(BuildContext context) => widget.build(context);
 
-onGetProduct() async {
-  try {
-    final filter = ProductFilterRequest(
-      page: 1,
-      pageSize: 20,
-      categoryId: widget.category?.categoryId,
-      branchId: Storage.branchModelGlobal?.branchId,
-    );
+  onGetProduct() async {
+    try {
+      final filter = ProductFilterRequest(
+        page: 1,
+        pageSize: 20,
+        categoryId: [(widget.category?.categoryId) ?? 0],
+        branchId: Storage.branchModelGlobal?.branchId,
+      );
 
-    final result = await Repository.onFilterProducts(filter);
+      final result = await Repository.onFilterProducts(filter);
 
-    // Tuỳ thuộc logic, bạn dùng page hay list
-    final products = result.productsPage?.content ?? [];
+      // Tuỳ thuộc logic, bạn dùng page hay list
+      final products = result.productsPage?.content ?? [];
 
-    listProducts = products;
-    streamProductModels.add(products);
-    setState(() {});
-  } catch (e, stack) {
-    print('❌ Lỗi khi lấy danh sách sản phẩm: $e');
-    streamProductModels.add([]);
+      listProducts = products;
+      streamProductModels.add(products);
+      setState(() {});
+    } catch (e, stack) {
+      print('❌ Lỗi khi lấy danh sách sản phẩm: $e');
+      streamProductModels.add([]);
+    }
   }
-}
-
 
   onBuyNow(ProductModel model, BuildContext bContext) async {
     showFullScreenLoading(bContext);

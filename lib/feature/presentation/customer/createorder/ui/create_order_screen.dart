@@ -1138,7 +1138,7 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
               Expanded(
                 child: ListView.builder(
                   itemCount: promoCodes.length,
-                  itemBuilder: (bcontext, index) {
+                  itemBuilder: (_, index) {
                     final promo = promoCodes[index];
                     return InkWell(
                       onTap: () {

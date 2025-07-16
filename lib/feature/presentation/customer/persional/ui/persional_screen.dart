@@ -76,6 +76,7 @@ class PersionalScreen extends BaseView<PersionalBloc> {
               'examp@gmail.com',
               bloc.errEmail,
               bloc.errTextEmail,
+              enable: false,
             ),
             _buildField(
               bloc.phoneNumberController,

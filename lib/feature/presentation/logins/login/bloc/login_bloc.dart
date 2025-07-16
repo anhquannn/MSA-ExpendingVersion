@@ -246,8 +246,14 @@ class LoginBloc extends BaseBloc<LoginScreen> {
   }
 
   onGetAddress() async {
+    try{
     final response = await Repository.getUserAddresses();
-    Storage.saveAddress(response[0]??null);
+    if(response[0]!=null&&response[0]!=[]){
+
+    Storage.saveAddress(response[0]);
+    }
+
+    }catch(_){}
   }
 
   logoutFromGoogle() async {

@@ -775,7 +775,7 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              'Phí giao hàng: ${formatCurrencyVN(model.rates?.totalFee ?? 0)}',
+                              'Phí giao hàng: ${formatCurrencyVN(model.rates?.totalAmount ?? 0)}',
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],

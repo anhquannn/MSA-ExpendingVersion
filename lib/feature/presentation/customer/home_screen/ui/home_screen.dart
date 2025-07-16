@@ -1,4 +1,5 @@
 import 'dart:ffi';
+import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:card_swiper/card_swiper.dart';
@@ -539,7 +540,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               return SizedBox(
                 height: 200,
                 child: Swiper(
-                  itemCount: promoCodes.length,
+                  itemCount: min(20,promoCodes.length),
                   scrollDirection: Axis.horizontal,
                   autoplay: false,
                   viewportFraction: 0.85,

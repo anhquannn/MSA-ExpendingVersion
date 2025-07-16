@@ -68,7 +68,7 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
       onGetProducts(),
       onGetProductCombination(),
       onGetProductPopular(),
-      onGetFeedBack(),
+      // onGetFeedBack(),
     ]);
   }
 
@@ -127,7 +127,7 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
       ProductFilterRequest filter = ProductFilterRequest(
         page: 1,
         pageSize: 10,
-        categoryId: [(productModel?.category?.categoryId)??0],
+        categoryId: [(productModel?.category?.categoryId) ?? 0],
         branchId: Storage.branchModelGlobal?.branchId,
       );
 
@@ -163,6 +163,7 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
       final data = await Repository.onGetProductById(widget.productId ?? 0);
       if (data != null) {
         productModel = data;
+        onGetFeedBack(id: productModel?.productId);
         setState(() {});
       }
     }
@@ -223,9 +224,9 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
     );
   }
 
-  onGetFeedBack() async {
+  onGetFeedBack({int? id}) async {
     final response = await Repository.getFeedback(
-      FeedbackFilterRequest(pageSize: 10, productId: widget.productId),
+      FeedbackFilterRequest(pageSize: 10, productId: id),
     );
 
     int count = 0;

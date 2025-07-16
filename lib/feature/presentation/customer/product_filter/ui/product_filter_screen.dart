@@ -67,8 +67,8 @@ class ProductFilterScreen extends BaseView<ProductFilterBloc> {
           _buildNetWeights(context, bloc),
           _buildUnits(context, bloc),
 
-          _buildProductSale(bloc, context),
           _buildAllProducts(bloc, context),
+          _buildProductSale(bloc, context),
         ],
       ),
     );
@@ -77,124 +77,122 @@ class ProductFilterScreen extends BaseView<ProductFilterBloc> {
   _buildBody(BuildContext context, ProductFilterBloc bloc) {}
 
   Widget _buildNetWeights(BuildContext context, ProductFilterBloc bloc) {
-    return SizedBox(
-      width: MediaQuery.sizeOf(context).width,
-      height: 60,
-      child: StreamBuilder<List<FilterModel>>(
-        stream: bloc.streamListNetWeights,
-        builder: (context, snapshot) {
-          if (snapshot.hasData&&snapshot.data!=null&&snapshot.data!=[]) {
-            final list = snapshot.data!;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTextFormat('Khối lượng'),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: list.length,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final e = list[index];
-                      final isSelected = e.isSelect == true;
-                      return InkWell(
-                        onTap: () {
-                          bloc.onTapNetWeight(e, context);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+    return StreamBuilder<List<FilterModel>>(
+      stream: bloc.streamListNetWeights,
+      builder: (context, snapshot) {
+        final list = snapshot.data ?? [];
+
+        if (list.isEmpty) return const SizedBox.shrink();
+
+        return SizedBox(
+          width: MediaQuery.sizeOf(context).width,
+          height: 60,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTextFormat('Khối lượng'),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: list.length,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final e = list[index];
+                    final isSelected = e.isSelect == true;
+                    return InkWell(
+                      onTap: () => bloc.onTapNetWeight(e, context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: toHexToColor(primaryButtonColor),
                           ),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: toHexToColor(primaryButtonColor),
-                            ),
-                            color:
-                                isSelected
-                                    ? toHexToColor(primaryButtonColor)
-                                    : Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            e.name ?? '',
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black,
-                            ),
+                          color:
+                              isSelected
+                                  ? toHexToColor(primaryButtonColor)
+                                  : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          e.name ?? '',
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black,
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
-              ],
-            );
-          }
-          return const SizedBox();
-        },
-      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   Widget _buildUnits(BuildContext context, ProductFilterBloc bloc) {
-    return SizedBox(
-      width: MediaQuery.sizeOf(context).width,
-      height: 60,
-      child: StreamBuilder<List<FilterModel>>(
-        stream: bloc.streamListUnits,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final list = snapshot.data!;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTextFormat('Đơn vị'),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: list.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final e = list[index];
-                      final isSelected = e.isSelect == true;
-                      return InkWell(
-                        onTap: () => bloc.onTapUnit(e, context),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+    return StreamBuilder<List<FilterModel>>(
+      stream: bloc.streamListUnits,
+      builder: (context, snapshot) {
+        final list = snapshot.data ?? [];
+
+        if (list.isEmpty) return const SizedBox.shrink();
+
+        return SizedBox(
+          width: MediaQuery.sizeOf(context).width,
+          height: 60,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTextFormat('Đơn vị'),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  itemCount: list.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final e = list[index];
+                    final isSelected = e.isSelect == true;
+                    return InkWell(
+                      onTap: () => bloc.onTapUnit(e, context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: toHexToColor(primaryButtonColor),
                           ),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: toHexToColor(primaryButtonColor),
-                            ),
-                            color:
-                                isSelected
-                                    ? toHexToColor(primaryButtonColor)
-                                    : Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            e.name ?? '',
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black,
-                            ),
+                          color:
+                              isSelected
+                                  ? toHexToColor(primaryButtonColor)
+                                  : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          e.name ?? '',
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black,
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
-              ],
-            );
-          }
-          return const SizedBox.shrink();
-        },
-      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

@@ -10,6 +10,7 @@ import 'package:msa/feature/data/model/request/cartitem_selection_request_model.
 import 'package:msa/feature/data/model/request/category_filter_request.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/supplier_filter_request.dart';
+import 'package:msa/feature/data/model/response/filter_product_response.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/repositories/repository.dart';
@@ -45,6 +46,11 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
 
   List<List<CategoryModel>?> listCategoryChild = [];
   final streamListCategoryChild = BehaviorSubject<List<List<CategoryModel>?>>();
+
+  final List<FilterModel> netWeights = [];
+  final List<FilterModel> units = [];
+  final streamListNetWeights = BehaviorSubject<List<FilterModel>>();
+  final streamListUnits = BehaviorSubject<List<FilterModel>>();
 
   double? minPrice;
   double? maxPrice;
@@ -85,11 +91,23 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
 
   onGetProduct() async {
     try {
+      final selectedNetWeight = netWeights.firstWhere(
+        (element) => element.isSelect == true,
+        orElse: () => FilterModel(name: null),
+      );
+
+      final selectedUnit = units.firstWhere(
+        (element) => element.isSelect == true,
+        orElse: () => FilterModel(name: null),
+      );
+
       ProductFilterRequest filter = ProductFilterRequest(
         keyword: searchController.text,
         categoryId:
             categorySelect?.map((e) => e.categoryId).whereType<int>().toList(),
         supplierId: supplySelect?.supplierId,
+        netWeight: selectedNetWeight.name,
+        unit: selectedUnit.name,
         minPrice: minPrice,
         maxPrice: maxPrice,
         page: 1,
@@ -99,11 +117,11 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
 
       ProductFilterResult product = await Repository.onFilterProducts(filter);
       listProducts = product;
-      streamProductModels.add(product);
+      streamProductModels.set(product);
     } catch (e, stack) {
       print('❌ Lỗi khi lấy danh sách sản phẩm: $e');
       print('📛 Stacktrace: $stack');
-      streamProductModels.add(ProductFilterResult());
+      streamProductModels.set(ProductFilterResult());
     }
     setState(() {});
   }
@@ -143,20 +161,45 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
     );
   }
 
-  onTapCategory(CategoryModel model, BuildContext ctx) async {
+  onTapCategory(
+    CategoryModel model,
+    BuildContext ctx, {
+    bool? isChild = false,
+  }) async {
     showFullScreenLoading(ctx);
     // onGetCategoryChild(model.parentCategory?.categoryId??0);
-    onGetCategoryChild(model.categoryId ?? 0);
-    listCategoryModel?.forEach((e) {
-      if (e.categoryId == model.categoryId) {
-        model.selected = !model.selected;
-        if (model.selected == true) {
-          categorySelect?.add(model);
-        } else {
-          categorySelect?.remove(model);
+    if (model.selected == false) {
+      onGetCategoryChild(model.categoryId ?? 0);
+      onFilterCategory(model.categoryId ?? 0);
+    } else {
+      onRemoveFilter(model.categoryId ?? 0);
+    }
+    if (isChild == true) {
+      listCategoryChild.forEach((e) {
+        e?.forEach((element) {
+          if (element.categoryId == model.categoryId) {
+            element.selected = !element.selected;
+            if (element.selected == true) {
+              categorySelect?.add(element);
+            } else {
+              categorySelect?.remove(model);
+            }
+          }
+        });
+      });
+    } else {
+      listCategoryModel?.forEach((e) {
+        if (e.categoryId == model.categoryId) {
+          model.selected = !model.selected;
+          if (model.selected == true) {
+            categorySelect?.add(model);
+          } else {
+            categorySelect?.remove(model);
+          }
         }
-      }
-    });
+      });
+    }
+
     if (model.selected == true) {}
 
     streamCategoryModels.set(listCategoryModel ?? []);
@@ -164,6 +207,75 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
     await onGetProduct();
     hideFullScreenLoading(ctx);
     setState(() {});
+  }
+
+  onFilterCategory(int cateId) async {
+    final FilterProductResponse? response = await Repository.onGetInfoFilter(
+      cateId: cateId,
+    );
+    listSupplyModels = response?.suppliers;
+    netWeights.addAll(
+      (response?.netWeights ?? []).map((e) => FilterModel(name: e)),
+    );
+    units.addAll((response?.units ?? []).map((e) => FilterModel(name: e)));
+
+    streamSupplyModels.set(listSupplyModels ?? []);
+    streamListNetWeights.set(netWeights ?? []);
+    streamListUnits.set(units ?? []);
+  }
+
+  onTapNetWeight(FilterModel model, BuildContext ctx) async {
+    showFullScreenLoading(ctx);
+    for (FilterModel i in netWeights) {
+      if (i.name == model.name) {
+        i.isSelect = !(i.isSelect ?? true);
+      } else {
+        i.isSelect = false;
+      }
+    }
+    streamListNetWeights.set(netWeights);
+
+    await onGetProduct();
+    hideFullScreenLoading(ctx);
+  }
+
+  onTapUnit(FilterModel model, BuildContext ctx) async {
+    showFullScreenLoading(ctx);
+    for (FilterModel i in units) {
+      if (i.name == model.name) {
+        i.isSelect = !(i.isSelect ?? true);
+      } else {
+        i.isSelect = false;
+      }
+    }
+    streamListUnits.set(units);
+
+    await onGetProduct();
+    hideFullScreenLoading(ctx);
+  }
+
+  onRemoveFilter(int cateId) async {
+    final FilterProductResponse? response = await Repository.onGetInfoFilter(
+      cateId: cateId,
+    );
+    if ((response?.suppliers ?? []) != [] && response!.suppliers.isNotEmpty) {
+      for (var i in response.suppliers) {
+        listSupplyModels?.remove(i);
+      }
+      if ((response.netWeights) != [] && response.netWeights.isNotEmpty) {
+        for (var i in response.netWeights) {
+          netWeights.remove(i);
+        }
+      }
+      if ((response.units) != [] && response.units.isNotEmpty) {
+        for (var i in response.units) {
+          units.remove(i);
+        }
+      }
+    }
+    streamSupplyModels.set(listSupplyModels ?? []);
+    streamListNetWeights.set(netWeights ?? []);
+    streamListUnits.set(units ?? []);
   }
 
   onGetCategoryChild(int categoryId) async {
@@ -274,4 +386,10 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
     maxPrice = max;
     onGetProduct();
   }
+}
+
+class FilterModel {
+  String? name;
+  bool? isSelect;
+  FilterModel({this.name, this.isSelect = false});
 }

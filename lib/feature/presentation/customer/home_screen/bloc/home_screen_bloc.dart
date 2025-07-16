@@ -128,6 +128,10 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   final BehaviorSubject<double> streamCaculate = BehaviorSubject<double>();
 
+  
+  double reward = 0;
+  final streamReward = BehaviorSubject<double>();
+
   /// ==== UI Flags ====
   bool _isManuallyScrolling = false;
   bool _isAnimatingPage = false;
@@ -256,6 +260,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       onGetAddress().catchError((e) => ('Lỗi onGetAddress: $e')),
       // onCheckBranch().catchError((e) => ('Lỗi onCheckBranch: $e')),
       // onGetUserCart().catchError((e) => ('Lỗi onGetUserCart: $e')),
+      onGetReward().catchError((e) => ('Lỗi onGetReward: $e')),
       onGetNotification().catchError((e) => ('Lỗi onGetNotification: $e')),
     Repository.onUpdateDeviceId(Storage.userModelGlobal?.userId??0)
     ];
@@ -818,5 +823,10 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     if (response) {
       await onGetNotification();
     }
+  }
+   onGetReward() async {
+    final response = await Repository.getReward();
+    reward = response;
+    streamReward.set(response);
   }
 }

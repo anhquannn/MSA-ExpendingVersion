@@ -41,7 +41,10 @@ class OrderCreateResponseModel {
           json['branch'] != null ? BranchModel.fromJson(json['branch']) : null,
       cart: json['cart'] != null ? CartModel.fromJson(json['cart']) : null,
       user: json['user'] != null ? UserModel.fromJson(json['user']) : null,
-      deliveryInfo: json['deliveryInfo'], // Bạn có thể map rõ hơn nếu có model
+      deliveryInfo:
+          json['deliveryInfo'] != null
+              ? DeliveryInfoModel.fromJson(json['deliveryInfo'])
+              : null,
       payments:
           json['payments'] != null
               ? (json['payments'] as List)

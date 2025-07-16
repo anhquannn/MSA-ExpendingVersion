@@ -174,7 +174,6 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     final userResponse = await Repository.onUpdateInfo(request);
 
     if (addressResponse && userResponse) {
-      
       await onGetUser();
       showCustomDialog(
         bContext,
@@ -207,7 +206,7 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
         ),
         true,
         false,
-        Icon(Icons.check_circle, color: toHexToColor(primaryColorGreen)),
+        Icon(Icons.warning, color: Colors.yellow),
       );
     } else {
       showCustomDialog(
@@ -224,12 +223,12 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
         ),
         true,
         false,
-        Icon(Icons.check_circle, color: toHexToColor(primaryColorGreen)),
+        Icon(Icons.warning, color: Colors.yellow),
       );
     }
   }
 
-    logoutFromGoogle() async {
+  logoutFromGoogle() async {
     final GoogleSignIn googleSignIn = GoogleSignIn();
     try {
       // Nếu đã đăng nhập thì mới signOut
@@ -257,6 +256,24 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     streetController.text = Storage.addressModel?.street ?? '';
     birthDayController.text = model.birthday ?? '';
     branchController.text = Storage.branchModelGlobal?.name ?? '';
+    city = City(
+      id: Storage.addressModel?.cityCode ?? '',
+      name: Storage.addressModel?.city ?? '',
+      supportCarriers: [],
+    );
+    district = District(
+      id: Storage.addressModel?.districtCode ?? '',
+      name: Storage.addressModel?.district ?? '',
+      cityId: city?.id ?? '',
+      supportCarriers: [],
+    );
+
+    ward = Ward(
+      id: Storage.addressModel?.wardCode ?? '',
+      name: Storage.addressModel?.ward ?? '',
+      districtId: district?.id ?? '',
+      supportCarriers: [],
+    );
   }
 
   onGetUser() async {
@@ -345,18 +362,39 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
     }
   }
 
-  pickDateTime(BuildContext context) async {
+  Future<String?> pickDateTime(BuildContext context) async {
     // Chọn ngày
     final DateTime? date = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
     );
 
     if (date == null) return null;
 
-    // Chọn giờ
+    // Tính tuổi
+    final DateTime today = DateTime.now();
+    final int age =
+        today.year -
+        date.year -
+        ((today.month < date.month ||
+                (today.month == date.month && today.day < date.day))
+            ? 1
+            : 0);
+
+    if (age < 18) {
+      // Báo lỗi nếu < 18 tuổi
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bạn phải đủ 18 tuổi trở lên'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return null;
+    }
+
+    // Chọn giờ (nếu bạn không cần giờ thì có thể bỏ phần này)
     final TimeOfDay? time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -364,7 +402,7 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
 
     if (time == null) return null;
 
-    // Kết hợp ngày và giờ thành DateTime
+    // Kết hợp ngày và giờ
     final DateTime dateTime = DateTime(
       date.year,
       date.month,
@@ -373,11 +411,68 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
       time.minute,
     );
 
-    // Chuyển thành chuỗi theo định dạng yyyy-MM-dd HH:mm:ss
+    // Trả về chuỗi định dạng ISO yyyy-MM-dd HH:mm:ss
     final String formatted = DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
 
     return formatted;
   }
+
+  // pickDateTime(BuildContext context) async {
+  //   // Chọn ngày
+  //   final DateTime? date = await showDatePicker(
+  //     context: context,
+  //     initialDate: DateTime.now().subtract(
+  //       const Duration(days: 365 * 18),
+  //     ), // mặc định là 18 tuổi
+  //     firstDate: DateTime(1900),
+  //     lastDate: DateTime.now(),
+  //   );
+
+  //   if (date == null) return null;
+
+  //   // Tính tuổi
+  //   final now = DateTime.now();
+  //   final age =
+  //       now.year -
+  //       date.year -
+  //       ((now.month < date.month ||
+  //               (now.month == date.month && now.day < date.day))
+  //           ? 1
+  //           : 0);
+
+  //   if (age < 18) {
+  //     // Thông báo lỗi
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Bạn phải đủ 18 tuổi trở lên'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //     return null;
+  //   }
+
+  //   // Chọn giờ
+  //   final TimeOfDay? time = await showTimePicker(
+  //     context: context,
+  //     initialTime: TimeOfDay.now(),
+  //   );
+
+  //   if (time == null) return null;
+
+  //   // Kết hợp ngày và giờ
+  //   final DateTime dateTime = DateTime(
+  //     date.year,
+  //     date.month,
+  //     date.day,
+  //     time.hour,
+  //     time.minute,
+  //   );
+
+  //   // Format kết quả
+  //   final String formatted = DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
+
+  //   return formatted;
+  // }
 
   showWardSelector(BuildContext context) async {
     await onGetWard();
@@ -523,13 +618,35 @@ class PersionalBloc extends BaseBloc<PersionalScreen> {
         errTextProvince = error;
       },
     );
+
     isValid &= validateField(
       controller: birthDayController,
       errorText: 'Vui lòng chọn ngày sinh',
-      validate: (text) => text.isNotEmpty,
+      validate: (text) {
+        if (text.isEmpty) return false;
+
+        try {
+          final birthDate = DateTime.parse(
+            text,
+          ); // đảm bảo text là ISO format: yyyy-MM-dd
+          final today = DateTime.now();
+          final age =
+              today.year -
+              birthDate.year -
+              ((today.month < birthDate.month ||
+                      (today.month == birthDate.month &&
+                          today.day < birthDate.day))
+                  ? 1
+                  : 0);
+
+          return age >= 18;
+        } catch (e) {
+          return false; // nếu parse lỗi
+        }
+      },
       onError: (error) {
         errorBirthDay = error.isNotEmpty;
-        errTextBirthDay = error;
+        errTextBirthDay = error.isNotEmpty ? 'Bạn phải trên 18 tuổi' : '';
       },
     );
     // Validate District

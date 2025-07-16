@@ -44,7 +44,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
         BottomBarItem(
           label: 'Mua ngay',
           onTap: (index) {
-            bloc.onBuy(mockProduct.productId ?? 0);
+            bloc.onBuy(bloc.productModel?.productId ?? 0);
           },
         ),
         BottomBarItem(

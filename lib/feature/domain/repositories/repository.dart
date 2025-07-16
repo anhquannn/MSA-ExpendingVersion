@@ -20,6 +20,7 @@ import 'package:msa/feature/data/model/request/user_address_request.dart';
 import 'package:msa/feature/data/model/request/user_login_request.dart';
 import 'package:msa/feature/data/model/request/user_update_request.dart';
 import 'package:msa/feature/data/model/response/feedback_filter_response.dart';
+import 'package:msa/feature/data/model/response/filter_product_response.dart';
 import 'package:msa/feature/data/model/response/notification_request_model.dart';
 import 'package:msa/feature/data/repositories/branch_connection.dart';
 import 'package:msa/feature/data/repositories/cart_item_connection.dart';
@@ -92,10 +93,13 @@ class Repository {
   ) => UserRepositoryImpl.onUpdateUserAddress(userAdressId, model);
 
   static onCreateOrder(CreateOrderRequestModel model) =>
-      OrderRepositoryImpl.createOrderAPI(model, );
+      OrderRepositoryImpl.createOrderAPI(model);
 
   static onGetPreviewOrder({List<String>? promoCode, double? usePoints}) =>
-      OrderRepositoryImpl.onGetPreviewOrder(promoCodes: promoCode, usePoints: usePoints);
+      OrderRepositoryImpl.onGetPreviewOrder(
+        promoCodes: promoCode,
+        usePoints: usePoints,
+      );
 
   static createShipment({int? orderId, int? addressId, String? rateId}) =>
       OrderRepositoryImpl.createShipment(
@@ -156,24 +160,24 @@ class Repository {
     required int orderId,
     required int userAddressId,
     List<String>? promoCodes,
-    double? usePoints
+    double? usePoints,
   }) => OrderRepositoryImpl.buyAgain(
     orderId: orderId,
     userAddressId: userAddressId,
     promoCodes: promoCodes,
-    usePoints: usePoints
+    usePoints: usePoints,
   );
 
   static onGetPreviewOrderAgain({
     required int orderOldId,
     required int userAddressId,
     List<String>? promoCodes,
-    double? usePoints
+    double? usePoints,
   }) => OrderRepositoryImpl.onGetPreviewOrderAgain(
     orderOldId: orderOldId,
     userAddressId: userAddressId,
     promoCodes: promoCodes,
-    usePoints: usePoints
+    usePoints: usePoints,
   );
 
   static getNotification(NotificationFilterRequest request) =>
@@ -188,4 +192,7 @@ class Repository {
       PromoCodeRepositoryImpl.getActivePromoCodesForCart(cartId);
 
   static getReward() => RewardPointsConnection.getReward();
+
+  static Future<FilterProductResponse?> onGetInfoFilter({int? cateId}) =>
+      ProductRepositoryImpl.onGetInfoFilter(cateId: cateId);
 }

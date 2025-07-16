@@ -535,21 +535,16 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              ((bloc.orderDetail?.isNotEmpty ?? false) &&
-                      bloc.orderDetail?[0].rated == false)
-                  ? customButton(
-                    () {
-                      bloc.onCreateRatesForProducts(context: bContext);
-                    },
-                    AppSize.w(0.4),
-                    40,
-                    Text(
-                      'Đánh giá',
-                      style: TextStyle(color: toHexToColor(primaryTextColor)),
-                    ),
-                    typeButton: 0,
-                  )
-                  : Container(),
+              customButton(
+                () {
+                  bloc.onBuyAgain(bContext);
+                },
+                AppSize.w(0.4),
+                40,
+                backgroundColorButton: toHexToColor(secondaryButtonColor),
+                Text('Mua lại', style: TextStyle(color: Colors.white)),
+                typeButton: 1,
+              ),
               customButton(
                 () {
                   bloc.onReturnProducts(context: bContext);
@@ -562,16 +557,20 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
             ],
           ),
           SizedBox(height: 10),
-          customButton(
-            () {
-              bloc.onBuyAgain(bContext);
-            },
-            AppSize.w(0.4),
-            40,
-            backgroundColorButton: toHexToColor(secondaryButtonColor),
-            Text('Mua lại', style: TextStyle(color: Colors.white)),
-            typeButton: 1,
-          ),
+          (bloc.orderDetail?[0].rated == false)
+              ? customButton(
+                () {
+                  bloc.onCreateRatesForProducts(context: bContext);
+                },
+                AppSize.w(0.4),
+                40,
+                Text(
+                  'Đánh giá',
+                  style: TextStyle(color: toHexToColor(primaryTextColor)),
+                ),
+                typeButton: 0,
+              )
+              : Container(),
         ],
       ),
     );

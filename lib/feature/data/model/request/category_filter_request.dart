@@ -10,7 +10,7 @@ class CategoryFilterRequest {
      this.name,
     this.parentId,
     this.sortBy = "name",
-    this.sortDirection = "ASC",
+    this.sortDirection,
     this.page = 1,
     this.pageSize = 40,
   });
@@ -20,7 +20,6 @@ class CategoryFilterRequest {
       'name': name,
       'parentId': parentId,
       'sortBy': sortBy,
-      'sortDirection': sortDirection,
       'page': page,
       'pageSize': pageSize,
     };

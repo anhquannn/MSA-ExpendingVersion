@@ -54,17 +54,19 @@ class ProductFilterScreen extends BaseView<ProductFilterBloc> {
       child: Column(
         children: [
           _buildPageRang(bloc),
-          _buildTextFormat('Nhà sản xuất'),
-          _buildSupplyChips(context, (model) {
-            bloc.onTapSupply(model, context);
-          }, bloc),
           _buildTextFormat('Loại sản phẩm'),
           _buildCategoryChips(context, (model) {
             bloc.onTapCategory(model, context);
           }, bloc),
           _buildLIstChild(context, bloc, (model) {
-            bloc.onTapCategory(model, context);
+            bloc.onTapCategory(model, context, isChild: true);
           }),
+          _buildSupplyChips(context, (model) {
+            bloc.onTapSupply(model, context);
+          }, bloc),
+          _buildNetWeights(context, bloc),
+          _buildUnits(context, bloc),
+
           _buildProductSale(bloc, context),
           _buildAllProducts(bloc, context),
         ],
@@ -73,6 +75,128 @@ class ProductFilterScreen extends BaseView<ProductFilterBloc> {
   }
 
   _buildBody(BuildContext context, ProductFilterBloc bloc) {}
+
+  Widget _buildNetWeights(BuildContext context, ProductFilterBloc bloc) {
+    return SizedBox(
+      width: MediaQuery.sizeOf(context).width,
+      height: 60,
+      child: StreamBuilder<List<FilterModel>>(
+        stream: bloc.streamListNetWeights,
+        builder: (context, snapshot) {
+          if (snapshot.hasData&&snapshot.data!=null&&snapshot.data!=[]) {
+            final list = snapshot.data!;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTextFormat('Khối lượng'),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: list.length,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final e = list[index];
+                      final isSelected = e.isSelect == true;
+                      return InkWell(
+                        onTap: () {
+                          bloc.onTapNetWeight(e, context);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: toHexToColor(primaryButtonColor),
+                            ),
+                            color:
+                                isSelected
+                                    ? toHexToColor(primaryButtonColor)
+                                    : Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            e.name ?? '',
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          }
+          return const SizedBox();
+        },
+      ),
+    );
+  }
+
+  Widget _buildUnits(BuildContext context, ProductFilterBloc bloc) {
+    return SizedBox(
+      width: MediaQuery.sizeOf(context).width,
+      height: 60,
+      child: StreamBuilder<List<FilterModel>>(
+        stream: bloc.streamListUnits,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final list = snapshot.data!;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTextFormat('Đơn vị'),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: list.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final e = list[index];
+                      final isSelected = e.isSelect == true;
+                      return InkWell(
+                        onTap: () => bloc.onTapUnit(e, context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: toHexToColor(primaryButtonColor),
+                            ),
+                            color:
+                                isSelected
+                                    ? toHexToColor(primaryButtonColor)
+                                    : Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            e.name ?? '',
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
+    );
+  }
 
   Widget buildSearchField(ProductFilterBloc bloc) {
     return Container(
@@ -137,10 +261,13 @@ class ProductFilterScreen extends BaseView<ProductFilterBloc> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
+                        border: Border.all(
+                          color: toHexToColor(primaryButtonColor),
+                        ),
                         color:
                             model.selected == true
-                                ? toHexToColor(primaryColorPurple)
-                                : toHexToColor(primaryButtonColor),
+                                ? toHexToColor(primaryButtonColor)
+                                : Colors.white,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -148,8 +275,8 @@ class ProductFilterScreen extends BaseView<ProductFilterBloc> {
                         style: TextStyle(
                           color:
                               model.selected == true
-                                  ? Colors.black
-                                  : Colors.white,
+                                  ? Colors.white
+                                  : Colors.black,
                         ),
                       ),
                     ),
@@ -222,16 +349,17 @@ class ProductFilterScreen extends BaseView<ProductFilterBloc> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
+                  border: Border.all(color: toHexToColor(primaryButtonColor)),
                   color:
                       data.selected == true
-                          ? toHexToColor(primaryColorPurple)
-                          : toHexToColor(primaryButtonColor),
+                          ? toHexToColor(primaryButtonColor)
+                          : Colors.white,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   data.name ?? '',
                   style: TextStyle(
-                    color: data.selected == true ? Colors.black : Colors.white,
+                    color: data.selected == true ? Colors.white : Colors.black,
                   ),
                 ),
               ),
@@ -247,54 +375,78 @@ class ProductFilterScreen extends BaseView<ProductFilterBloc> {
     Function(SupplierModel model) onTap,
     ProductFilterBloc bloc,
   ) {
-    return StreamBuilder(
+    return StreamBuilder<List<SupplierModel>>(
       stream: bloc.streamSupplyModels,
       builder: (context, snapshot) {
-        if (snapshot.data != null) {
-          final List<SupplierModel> list = snapshot.data ?? [];
-          return SizedBox(
-            height: 50,
-            child: ListView.builder(
-              physics: AlwaysScrollableScrollPhysics(),
-              scrollDirection: Axis.horizontal,
-              itemCount: list.length,
-              itemBuilder: (context, index) {
-                SupplierModel model = list[index];
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: InkWell(
-                    onTap: () {
-                      onTap(model);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            model.selected == true
-                                ? toHexToColor(primaryColorOrange)
-                                : toHexToColor(primaryButtonColor),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        model.name ?? '',
-                        style: TextStyle(
+        final List<SupplierModel> list = snapshot.data ?? [];
+
+        if (list.isEmpty) {
+          return SizedBox(); // Không hiển thị gì nếu không có dữ liệu
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTextFormat('Nhà sản xuất'),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 60,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: list.length,
+                itemBuilder: (context, index) {
+                  SupplierModel model = list[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: InkWell(
+                      onTap: () => onTap(model),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: toHexToColor(primaryButtonColor),
+                          ),
                           color:
-                              model.selected == false
-                                  ? Colors.white
-                                  : Colors.black,
+                              model.selected == true
+                                  ? toHexToColor(primaryButtonColor)
+                                  : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Image.network(
+                              (model.image != null && model.image!.isNotEmpty)
+                                  ? model.image!
+                                  : imgBranch,
+                              width: 35,
+                              height: 35,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Image.asset(imgBranch);
+                              },
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              model.name ?? '',
+                              style: TextStyle(
+                                color:
+                                    model.selected == true
+                                        ? Colors.white
+                                        : Colors.black,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          );
-        }
-        return Center(child: Text('Không tìm thấy nhà sản xuất'));
+          ],
+        );
       },
     );
   }
@@ -335,54 +487,57 @@ class ProductFilterScreen extends BaseView<ProductFilterBloc> {
         final products = snapshot.data?.productsPage?.content;
         final itemCount = (products?.length ?? 0) > 20 ? 20 : products?.length;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Text(
-                'Tất cả sản phẩm',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            MediaQuery.removePadding(
-              context: context,
-              removeTop: true,
-              removeBottom: true,
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 3,
-                  mainAxisSpacing: 3,
-                  mainAxisExtent: 300,
+        return products != null
+            ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: Text(
+                    'Tất cả sản phẩm',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ),
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemCount: itemCount,
-                itemBuilder: (context, index) {
-                  final product = products?[index] ?? ProductModel();
-                  return InkWell(
-                    key: key,
-                    onTap: () {
-                      bloc.onTapProductDetail(product);
+                MediaQuery.removePadding(
+                  context: context,
+                  removeTop: true,
+                  removeBottom: true,
+                  child: GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 3,
+                          mainAxisSpacing: 3,
+                          mainAxisExtent: 300,
+                        ),
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: itemCount,
+                    itemBuilder: (context, index) {
+                      final product = products?[index] ?? ProductModel();
+                      return InkWell(
+                        key: key,
+                        onTap: () {
+                          bloc.onTapProductDetail(product);
+                        },
+                        child: customItemProductCustomer(
+                          onBuy: () {
+                            bloc.onBuyNow(product, context);
+                          },
+                          onAddToCart: () {
+                            bloc.onAddToCart(product, context);
+                          },
+                          isDiscount: false,
+                          product,
+                          AppSize.w(0.4),
+                        ),
+                      );
                     },
-                    child: customItemProductCustomer(
-                      onBuy: () {
-                        bloc.onBuyNow(product, context);
-                      },
-                      onAddToCart: () {
-                        bloc.onAddToCart(product, context);
-                      },
-                      isDiscount: false,
-                      product,
-                      AppSize.w(0.4),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
+                  ),
+                ),
+              ],
+            )
+            : Container();
       },
     );
   }

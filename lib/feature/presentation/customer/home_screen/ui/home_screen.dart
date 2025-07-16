@@ -15,17 +15,14 @@ import 'package:msa/feature/presentation/customer/createorder/ui/create_order_sc
 import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
 import 'package:msa/feature/presentation/customer/product_list/ui/product_list_screen.dart';
 import 'package:msa/widget/customBottomSheet.dart';
-import 'package:msa/widget/custom_float_button.dart';
 import 'package:msa/widget/custom_notification_bottomsheet.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../core/config/base_bloc.dart';
 import '../../../../../core/config/config.dart';
 import '../../../../../core/config/constant.dart';
 import '../../../../../core/utils/prarse_color.dart';
 import '../../../../../widget/custom_item_promocode.dart';
-import '../../../../../widget/custom_notification.dart';
 import '../../../../../widget/custom_widget.dart';
 import '../../../../../widget/reuseable_screen_hide_appbar.dart';
 import '../bloc/home_screen_bloc.dart';
@@ -75,8 +72,8 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                   }
 
                   return Image.asset(
-                    // Storage.userModelGlobal?.image ??
-                    'assets/images/avt_men1.jpg',
+                    Storage.userModelGlobal?.image ??
+                        'assets/images/avt_men1.jpg',
                     fit: BoxFit.cover,
                     width: 40,
                     height: 40,
@@ -223,7 +220,7 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                 );
               },
             ),
-            _buildPoints(points: 1200, context: context, onTap: () {}),
+            _buildPoints(context: context, onTap: () {}, bloc: bloc),
           ],
         );
       },
@@ -303,42 +300,52 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
   }
 
   Widget _buildPoints({
-    int? points,
     VoidCallback? onTap,
     BuildContext? context,
+    HomeScreenBloc? bloc,
   }) {
     return Positioned(
       bottom: 100,
       right: 10,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(30),
-        onTap: () {
-          _showLoyaltyPointSheet(context!, points ?? 0);
-        },
-        child: SizedBox(
-          width: 60,
-          height: 80,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.monetization_on, color: Colors.amber, size: 40),
-              const SizedBox(height: 4),
-              Text(
-                '$points',
-                style: const TextStyle(
-                  color: Colors.amber,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+      child: StreamBuilder(
+        stream: bloc?.streamReward.output,
+        builder: (context, snapshot) {
+          final data = snapshot.data;
+          return InkWell(
+            borderRadius: BorderRadius.circular(30),
+            onTap: () {
+              _showLoyaltyPointSheet(context, data ?? 0);
+            },
+            child: SizedBox(
+              width: 60,
+              height: 80,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.monetization_on,
+                    color: Colors.amber,
+                    size: 40,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    (data ?? 0).toString(),
+                    style: const TextStyle(
+                      color: Colors.amber,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  void _showLoyaltyPointSheet(BuildContext context, int currentPoints) {
+  void _showLoyaltyPointSheet(BuildContext context, double currentPoints) {
     showCustomBottomSheet(
       context: context,
       title: 'Chương trình tích điểm',
@@ -937,7 +944,30 @@ class _OrderTabState extends State<OrderTab>
                     return StreamBuilder<List<OrderResponse>>(
                       stream: getStreamByStatus(status),
                       builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          // ⏳ Hiển thị loading khi stream chưa trả về dữ liệu
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        if (snapshot.hasError) {
+                          // ❌ Xử lý lỗi nếu có
+                          return Center(
+                            child: Text('Đã xảy ra lỗi: ${snapshot.error}'),
+                          );
+                        }
+
                         final data = snapshot.data ?? [];
+
+                        if (data.isEmpty) {
+                          // 💤 Khi không có đơn hàng
+                          return const Center(
+                            child: Text('Không có đơn hàng.'),
+                          );
+                        }
+
                         return MediaQuery.removePadding(
                           context: context,
                           removeTop: true,
@@ -970,6 +1000,8 @@ class _OrderTabState extends State<OrderTab>
     switch (status) {
       case OrderStatus.pending:
         return widget.bloc.streamPending.stream;
+      case OrderStatus.completed:
+        return widget.bloc.streamCompleted.stream;
       case OrderStatus.paying:
         return widget.bloc.streamPaying.stream;
       case OrderStatus.paid:
@@ -982,8 +1014,6 @@ class _OrderTabState extends State<OrderTab>
         return widget.bloc.streamCancelling.stream;
       case OrderStatus.cancelled:
         return widget.bloc.streamCancelled.stream;
-      case OrderStatus.completed:
-        return widget.bloc.streamCompleted.stream;
       case OrderStatus.failed:
         return widget.bloc.streamFailed.stream;
     }

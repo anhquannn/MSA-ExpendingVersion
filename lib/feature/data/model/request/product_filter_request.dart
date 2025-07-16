@@ -14,7 +14,7 @@ class ProductFilterRequest {
   final double? maxPrice;
   final String? keyword;
   final String sortBy;
-  final String sortDirection;
+  final String? sortDirection;
   final int page;
   final int pageSize;
 
@@ -30,7 +30,7 @@ class ProductFilterRequest {
     this.maxPrice,
     this.keyword,
     this.sortBy = 'price',
-    this.sortDirection = 'asc',
+    this.sortDirection ,
     this.page =
         0, // Backend thường xử lý trang từ 0, trong khi cURL gửi 1. Cần xác nhận lại.
     this.pageSize = 20,

@@ -4,6 +4,7 @@ import 'package:msa/feature/data/datasources/global/http_connection.dart';
 import 'package:msa/feature/data/model/request/product_conbine_model_request.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/product_get_all_request_model.dart';
+import 'package:msa/feature/data/model/response/filter_product_response.dart';
 import 'package:msa/feature/data/model/response/product_filter_response.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/repositories/product_repository.dart';
@@ -214,25 +215,6 @@ class ProductRepositoryImpl extends IProductRepository {
     return _parseSimpleProductList(response);
   }
 
-  // static Future<ProductFilterResult?> onFilterProducts(
-  //   ProductFilterRequest request, {
-  //   BuildContext? context,
-  // }) async {
-  //   const String endpoint = 'product/filter';
-
-  //   final response = await HttpConnection.post<ProductFilterResult>(
-  //     context: context,
-  //     endpoint,
-  //     body: request.toJson(),
-  //     isToken: true,
-  //     fromJsonT: (json) => ProductFilterResult.fromJson(json),
-  //   );
-
-  //   if (!response.isSuccess) {
-  //     return response.result;
-  //   }
-  //   return null;
-  // }
   static Future<ProductFilterResult?> onFilterProducts(
     ProductFilterRequest request, {
     BuildContext? context,
@@ -291,5 +273,14 @@ class ProductRepositoryImpl extends IProductRepository {
           ),
     );
     return response.result?.content;
+  }
+
+  // product/category/2/filters
+  static Future<FilterProductResponse?> onGetInfoFilter({int? cateId}) async {
+    final response = await HttpConnection.get<FilterProductResponse>(
+      'product/category/$cateId/filters',
+      fromJsonT: (json) => FilterProductResponse.fromJson(json),
+    );
+    return response.result;
   }
 }

@@ -245,14 +245,35 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
     // Chọn ngày
     final DateTime? date = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
     );
 
     if (date == null) return null;
 
-    // Chọn giờ
+    // Tính tuổi
+    final DateTime today = DateTime.now();
+    final int age =
+        today.year -
+        date.year -
+        ((today.month < date.month ||
+                (today.month == date.month && today.day < date.day))
+            ? 1
+            : 0);
+
+    if (age < 18) {
+      // Báo lỗi nếu < 18 tuổi
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bạn phải đủ 18 tuổi trở lên'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return null;
+    }
+
+    // Chọn giờ (nếu bạn không cần giờ thì có thể bỏ phần này)
     final TimeOfDay? time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -260,7 +281,7 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
 
     if (time == null) return null;
 
-    // Kết hợp ngày và giờ thành DateTime
+    // Kết hợp ngày và giờ
     final DateTime dateTime = DateTime(
       date.year,
       date.month,
@@ -269,11 +290,44 @@ class RegisterBloc extends BaseBloc<RegisterScreen> {
       time.minute,
     );
 
-    // Chuyển thành chuỗi theo định dạng yyyy-MM-dd HH:mm:ss
+    // Trả về chuỗi định dạng ISO yyyy-MM-dd HH:mm:ss
     final String formatted = DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
 
     return formatted;
   }
+  // Future<String?> pickDateTime(BuildContext context) async {
+  //   // Chọn ngày
+  //   final DateTime? date = await showDatePicker(
+  //     context: context,
+  //     initialDate: DateTime.now(),
+  //     firstDate: DateTime(2000),
+  //     lastDate: DateTime(2100),
+  //   );
+
+  //   if (date == null) return null;
+
+  //   // Chọn giờ
+  //   final TimeOfDay? time = await showTimePicker(
+  //     context: context,
+  //     initialTime: TimeOfDay.now(),
+  //   );
+
+  //   if (time == null) return null;
+
+  //   // Kết hợp ngày và giờ thành DateTime
+  //   final DateTime dateTime = DateTime(
+  //     date.year,
+  //     date.month,
+  //     date.day,
+  //     time.hour,
+  //     time.minute,
+  //   );
+
+  //   // Chuyển thành chuỗi theo định dạng yyyy-MM-dd HH:mm:ss
+  //   final String formatted = DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
+
+  //   return formatted;
+  // }
 
   void showWardSelector(BuildContext context) async {
     await onGetWard();

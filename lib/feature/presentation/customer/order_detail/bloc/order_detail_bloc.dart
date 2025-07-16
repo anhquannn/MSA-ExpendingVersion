@@ -18,6 +18,7 @@ import 'package:msa/feature/presentation/customer/createorder/ui/create_order_sc
 import 'package:msa/feature/presentation/customer/home_screen/ui/home_screen.dart';
 import 'package:msa/feature/presentation/customer/order_detail/ui/order_detail_screen.dart';
 import 'package:msa/widget/custom_dropdown.dart';
+import 'package:msa/widget/custom_loading.dart';
 import 'package:msa/widget/custom_rating.dart';
 import 'package:rxdart/subjects.dart';
 
@@ -116,6 +117,8 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
 
   onCheckStatus(OrderStatus status) {
     switch (status) {
+            case OrderStatus.completed:
+        return true;
       case OrderStatus.pending:
         return true;
       case OrderStatus.paying:
@@ -130,8 +133,6 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
         return false;
       case OrderStatus.cancelled:
         return false;
-      case OrderStatus.completed:
-        return true;
       case OrderStatus.failed:
         return false;
     }
@@ -153,6 +154,48 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
     final userId = Storage.userModelGlobal?.userId;
 
     await showRatingDialog(context, products: products, userId: userId);
+  }
+
+  _showSuccessDialog(BuildContext context, String message) async {
+    await showCustomDialog(
+      context,
+      AppSize.width(),
+      AppSize.width(),
+      'Thông báo',
+      Text(message, style: const TextStyle(color: Colors.black)),
+      true,
+      false,
+      Icon(
+        Icons.check_circle_outline_sharp,
+        size: 24,
+        color: toHexToColor(primaryColorGreen),
+      ),
+      onClose: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      },
+    );
+  }
+
+  _showErrorDialog(BuildContext context, String message) async {
+    await showCustomDialog(
+      context,
+      AppSize.width(),
+      AppSize.width(),
+      'Thông báo',
+      Text(message, style: const TextStyle(color: Colors.black)),
+      true,
+      false,
+      onClose: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      },
+      Icon(Icons.error_outline, size: 24, color: Colors.red),
+    );
   }
 
   showRatingDialog(
@@ -209,6 +252,7 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
                   ),
                 );
               } else {
+                _showSuccessDialog(context, 'Tạo đánh giá thành công');
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => HomeScreen()),

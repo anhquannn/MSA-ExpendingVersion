@@ -29,10 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DeliveryInfoService {
-  private static final String CACHE_LIST = "all_delivery_infos";
-  private static final String CACHE_PAGING = "delivery_infos_paging";
-  private static final String CACHE_FILTER_LIST = "delivery_infos_filter_list";
-  private static final String CACHE_FILTER_PAGING = "delivery_infos_filter_paging";
+  static final String CACHE_LIST = "all_delivery_infos";
+  static final String CACHE_FILTER_LIST = "delivery_infos_filter_list";
+  static final String CACHE_FILTER_PAGING = "delivery_infos_filter_paging";
   final EntityFinderService entityFinderService;
   final DeliveryInfoRepository deliveryInfoRepository;
   final OrderRepository orderRepository;

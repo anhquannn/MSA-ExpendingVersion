@@ -54,7 +54,8 @@ public class BranchService {
 
   @Transactional
   public BranchResponse createBranchWithManager(CreateBranchWithManagerRequest request) {
-    // 1. Create the branch
+    // 1. Tạo thực thể (entity) Chi nhánh (Branch)
+    // Sử dụng Builder pattern để tạo đối tượng Branch từ request.
     Branch branch =
         Branch.builder()
             .name(request.getBranchName())
@@ -67,20 +68,23 @@ public class BranchService {
             .wardCode(request.getBranchWardCode())
             .districtCode(request.getBranchDistrictCode())
             .build();
+    // Lưu chi nhánh vào cơ sở dữ liệu (CSDL) để lấy ID.
     branch = branchRepository.save(branch);
 
-    // 2. Create inventory for the branch
+    // 2. Tạo kho (Inventory) cho chi nhánh vừa tạo.
+    // Mỗi chi nhánh sẽ có một kho tương ứng để quản lý tồn kho sản phẩm.
     Inventory inventory =
         Inventory.builder()
-            .branch(branch)
+            .branch(branch) // Liên kết kho với chi nhánh
             .totalRevenue(0)
             .name(request.getInventoryName())
             .address(request.getInventoryAddress())
             .contact(request.getInventoryContact())
             .build();
-    inventory = inventoryRepository.save(inventory);
+    inventoryRepository.save(inventory);
 
-    // 3. Create permission for managing this branch
+    // 3. Tạo quyền (Permission) đặc thù để quản lý chi nhánh này.
+    // Tên quyền được tạo duy nhất dựa trên ID của chi nhánh (ví dụ: "MANAGE_BRANCH_123").
     String permissionName = "MANAGE_BRANCH_" + branch.getBranchId();
     String permissionDesc = "Quản lý chi nhánh " + branch.getBranchId();
 
@@ -88,7 +92,8 @@ public class BranchService {
         Permission.builder().name(permissionName).description(permissionDesc).build();
     permission = permissionRepository.save(permission);
 
-    // 4. Create role for branch manager
+    // 4. Tạo vai trò (Role) quản lý cho chi nhánh.
+    // Tên vai trò cũng được tạo duy nhất (ví dụ: "MANAGER_123").
     String roleName = "MANAGER_" + branch.getBranchId();
     Role role =
         Role.builder()
@@ -96,19 +101,19 @@ public class BranchService {
             .description("Quản lý chi nhánh " + branch.getBranchId())
             .build();
 
-    // Add the permission to the role
+    // Gán quyền vừa tạo vào vai trò này.
     Set<Permission> permissions = new HashSet<>();
     permissions.add(permission);
     role.setPermissions(permissions);
-
     role = roleRepository.save(role);
 
-    // 5. Create manager user and assign the role
+    // 5. Tạo người dùng (User) với vai trò quản lý và gán vào chi nhánh.
+    // Kiểm tra xem email của quản lý đã tồn tại trong hệ thống chưa.
     if (userRepository.findByEmail(request.getManagerEmail()).isPresent()) {
       throw new AppException(ErrorCode.USER_EXISTED);
     }
 
-    // Create user with branch relationship
+    // Tạo đối tượng User và mã hóa mật khẩu.
     User user =
         User.builder()
             .email(request.getManagerEmail())
@@ -117,29 +122,29 @@ public class BranchService {
             .fullName(request.getManagerFullName())
             .build();
 
-    // Initialize the branches set if it's null
+    // Khởi tạo danh sách chi nhánh nếu nó là null để tránh NullPointerException.
     if (user.getBranches() == null) {
       user.setBranches(new ArrayList<>());
     }
-
-    // Add the branch to user's branches
+    // Thêm chi nhánh này vào danh sách các chi nhánh mà người dùng quản lý.
     user.getBranches().add(branch);
 
-    // Assign the manager role
+    // Gán vai trò quản lý vừa tạo cho người dùng.
     Set<Role> roles = new HashSet<>();
     roles.add(role);
     user.setRoles(roles);
 
-    // Save the user (this will also save the user_branches relationship)
+    // Lưu người dùng (thao tác này cũng sẽ lưu mối quan hệ user-branch).
     user = userRepository.save(user);
 
-    // Ensure the relationship is properly set on both sides
+    // 6. Thiết lập mối quan hệ hai chiều: thêm người dùng vào danh sách của chi nhánh.
     if (branch.getUsers() == null) {
       branch.setUsers(new ArrayList<>());
     }
     branch.getUsers().add(user);
     branchRepository.save(branch);
 
+    // Trả về thông tin chi nhánh đã tạo.
     return branchMapper.toBranchResponse(branch);
   }
 
@@ -187,8 +192,6 @@ public class BranchService {
 
   @Cacheable(value = "branches_list")
   public List<BranchResponse> getAllBranches(BranchFilterRequest request) {
-    Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
-
     return branchRepository
         .filter(request.getKeyword(), request.getProductId(), request.getUserId())
         .stream()

@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,6 +27,7 @@ public class PromoCodeController {
   PromoCodeService promoCodeService;
 
   // Tạo PromoCode
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ApiResponse<PromoCodeResponse> createPromoCode(
       @RequestBody @Valid PromoCodeRequest request) {
@@ -36,6 +38,7 @@ public class PromoCodeController {
   }
 
   // Cập nhật PromoCode
+  @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{promoCodeId}")
   public ApiResponse<PromoCodeResponse> updatePromoCode(
       @PathVariable long promoCodeId, @RequestBody @Valid PromoCodeRequest request) {
@@ -46,6 +49,7 @@ public class PromoCodeController {
   }
 
   // Xóa PromoCode
+  @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{promoCodeId}")
   public ApiResponse<Boolean> deletePromoCode(@PathVariable long promoCodeId) {
     Boolean result = promoCodeService.deletePromoCode(promoCodeId);

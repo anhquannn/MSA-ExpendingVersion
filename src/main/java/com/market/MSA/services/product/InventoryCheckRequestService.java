@@ -107,7 +107,6 @@ public class InventoryCheckRequestService {
   }
 
   public List<InventoryCheckRequestResponse> filter(InventoryCheckRequestFilterRequest req) {
-    Sort sort = Sort.by(Sort.Direction.fromString(req.getSortDirection()), req.getSortBy());
     return icrRepository
         .filter(req.getKeyword(), req.getInventoryId(), req.getSurveyorId(), req.getStatus())
         .stream()

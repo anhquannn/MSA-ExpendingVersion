@@ -1,9 +1,8 @@
 package com.market.MSA.requests.others;
 
 import com.market.MSA.constants.OrderStatus;
-import java.time.LocalDateTime;
-
 import jakarta.validation.constraints.PositiveOrZero;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,8 +20,7 @@ public class PaymentRequest {
   String paymentDate;
   OrderStatus status;
 
-  @PositiveOrZero
-  double grandTotal;
+  @PositiveOrZero double grandTotal;
 
   String transactionId;
 

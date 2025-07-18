@@ -51,7 +51,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class UserService {
-  DeviceTokenRepository deviceTokenRepository;
   static final String CHARACTERS =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()";
   final UserRepository userRepository;
@@ -60,6 +59,7 @@ public class UserService {
   final EmailService emailService;
   final AuthenticationService authenticationService;
   final PasswordEncoder passwordEncoder;
+  final DeviceTokenRepository deviceTokenRepository;
 
   @Transactional
   public AuthenticationResponse loginAdmin(
@@ -204,7 +204,7 @@ public class UserService {
     // Gọi API Google để lấy thông tin người dùng
     RestTemplate restTemplate = new RestTemplate();
     URI uri =
-        UriComponentsBuilder.fromHttpUrl("https://www.googleapis.com/oauth2/v3/tokeninfo")
+        UriComponentsBuilder.fromUriString("https://www.googleapis.com/oauth2/v3/tokeninfo")
             .queryParam("access_token", accessToken)
             .build(true)
             .toUri();
@@ -350,6 +350,8 @@ public class UserService {
   public UserResponse updateUser(long userId, UpdateUserRequest request) {
     User user = getUserEntityByID(userId);
 
+    userMapper.updateUser(user, request);
+
     if (request.getRoles() != null && !request.getRoles().isEmpty()) {
       var roles = roleRepository.findAllById(request.getRoles());
       user.setRoles(new HashSet<>(roles));
@@ -393,11 +395,6 @@ public class UserService {
 
     // cập nhật các trường ngoại trừ roles, password (nếu Request.password null)
     userMapper.updateUser(user, request);
-
-    // không thay đổi role nếu request.roles null hoặc rỗng
-    if (request.getRoles() != null && !request.getRoles().isEmpty()) {
-      // giữ nguyên roles hiện tại
-    }
 
     // không đổi mật khẩu tại đây
     userRepository.save(user);
@@ -446,7 +443,9 @@ public class UserService {
     return password.toString();
   }
 
-  public Page<UserResponse> getAllUsersByRoleWithPagination(String role, int page, int size) {
+  @Cacheable("get_users_roles")
+  public Page<UserResponse> getAllUsersByRoleWithPagination(
+      String role, String keyword, int page, int size) {
     if (role == null || role.trim().isEmpty()) {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
@@ -457,15 +456,22 @@ public class UserService {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
     Page<User> userPage =
-        userRepository.findByRoleWithPagination(role.toUpperCase(), PageRequest.of(page, size));
+        userRepository.searchByKeywordAndRole(
+            (keyword == null || keyword.trim().isEmpty()) ? null : keyword.trim().toLowerCase(),
+            role.toUpperCase(),
+            PageRequest.of(page, size));
     return userPage.map(userMapper::toUserResponse);
   }
 
-  public List<UserResponse> getAllUsersByRole(String role) {
+  public List<UserResponse> getAllUsersByRole(String role, String keyword) {
     if (role == null || role.trim().isEmpty()) {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
-    return userRepository.findAllByRole(role.toUpperCase()).stream()
+    return userRepository
+        .findAllByRoleAndKeyword(
+            role.toUpperCase(),
+            (keyword == null || keyword.trim().isEmpty()) ? null : keyword.trim())
+        .stream()
         .map(userMapper::toUserResponse)
         .collect(Collectors.toList());
   }

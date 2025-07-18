@@ -42,6 +42,7 @@ public class UserResponse {
         .phoneNumber(user.getPhoneNumber())
         .birthday(user.getBirthday())
         .googleId(user.getGoogleId())
+        .image(user.getImage())
         .build();
   }
 }

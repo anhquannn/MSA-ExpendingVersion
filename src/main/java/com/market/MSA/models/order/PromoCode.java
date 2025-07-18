@@ -39,9 +39,16 @@ public class PromoCode {
   Long promoCodeId;
 
   String name;
+
+  @Column(nullable = false)
   String code;
+
   String description;
+
+  @Column(nullable = false)
   LocalDateTime startDate;
+
+  @Column(nullable = false)
   LocalDateTime endDate;
 
   @Enumerated(EnumType.STRING)

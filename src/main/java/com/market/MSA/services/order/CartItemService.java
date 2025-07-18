@@ -66,48 +66,67 @@ public class CartItemService {
 
   @Transactional
   public CartItemResponse addToCart(Long userId, Long productId, Long branchId, int quantity) {
+    // 1. Kiểm tra xem chi nhánh có đủ số lượng tồn kho cho sản phẩm hay không.
     boolean hasSufficientStock =
         inventoryProductService.checkStockAvailability(branchId, productId, quantity);
+    // Nếu không đủ hàng, ném ra ngoại lệ.
     if (!hasSufficientStock) {
       throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
     }
 
+    // 2. Tìm giỏ hàng của người dùng.
+    // Nếu người dùng đã có giỏ hàng, sử dụng nó.
+    // '.orElseGet()' sẽ được thực thi nếu không tìm thấy giỏ hàng.
     Cart cart =
         cartRepository
             .findByUser_UserId(userId)
             .orElseGet(
                 () -> {
+                  // Nếu không có, tạo một giỏ hàng mới.
                   Cart newCart = new Cart();
+                  // Tìm thông tin người dùng và gán vào giỏ hàng.
                   newCart.setUser(
                       entityFinderService.findByIdOrThrow(
                           userRepository, userId, ErrorCode.USER_NOT_EXISTED));
+                  // Đặt trạng thái giỏ hàng là 'ACTIVE'.
                   newCart.setStatus(CartStatus.ACTIVE);
+                  // Lưu giỏ hàng mới vào CSDL và trả về.
                   return cartRepository.save(newCart);
                 });
 
+    // 3. Kiểm tra xem sản phẩm đã có trong giỏ hàng hay chưa.
     Optional<CartItem> existingCartItem =
         cartItemRepository.findByCart_CartIdAndProduct_ProductId(cart.getCartId(), productId);
 
     CartItem cartItem;
+    // 4. Xử lý logic dựa trên việc sản phẩm đã tồn tại trong giỏ hay chưa.
     if (existingCartItem.isPresent()) {
+      // NẾU SẢN PHẨM ĐÃ CÓ TRONG GIỎ:
       cartItem = existingCartItem.get();
+      // Cộng dồn số lượng mới vào số lượng hiện có.
       int newQuantity = cartItem.getQuantity() + quantity;
 
+      // Kiểm tra lại tồn kho với số lượng mới.
       boolean hasEnoughStockForNewQuantity =
           inventoryProductService.checkStockAvailability(branchId, productId, newQuantity);
       if (!hasEnoughStockForNewQuantity) {
         throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
       }
 
+      // Cập nhật lại số lượng và đánh dấu là đã được chọn.
       cartItem.setQuantity(newQuantity);
       cartItem.setSelected(true);
     } else {
+      // NẾU SẢN PHẨM CHƯA CÓ TRONG GIỎ:
+      // Tìm thông tin sản phẩm.
       Product product =
           entityFinderService.findByIdOrThrow(
               productRepository, productId, ErrorCode.PRODUCT_NOT_FOUND);
 
+      // Lấy giá bán hiện tại của sản phẩm tại chi nhánh cụ thể.
       double effectivePrice = inventoryProductService.getBranchCurrentPrice(branchId, productId);
 
+      // Tạo một 'CartItem' (mục hàng trong giỏ) mới.
       cartItem =
           CartItem.builder()
               .cart(cart)
@@ -117,6 +136,7 @@ public class CartItemService {
               .isSelected(true)
               .build();
     }
+    // 5. Lưu 'CartItem' (dù là mới hay được cập nhật) vào CSDL và trả về response cho client.
     return cartItemMapper.toCartItemResponse(cartItemRepository.save(cartItem));
   }
 

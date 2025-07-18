@@ -71,11 +71,11 @@ public class Transfer {
   @JsonManagedReference("transfer-details")
   List<TransferItem> transferItems = new ArrayList<>();
 
-  @OneToMany(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("transfer-inbounds")
-  List<InboundTransfer> inboundTransfers = new ArrayList<>();
+  @OneToOne(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("transfer-inbound")
+  InboundTransfer inboundTransfer;
 
-  @OneToMany(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("transfer-details")
-  List<OutboundTransfer> outboundTransfers = new ArrayList<>();
+  @OneToOne(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("transfer-outbound")
+  OutboundTransfer outboundTransfer;
 }

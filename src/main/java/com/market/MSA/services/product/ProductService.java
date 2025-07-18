@@ -4,6 +4,7 @@ import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.product.InventoryProductMapper;
 import com.market.MSA.mappers.product.ProductMapper;
+import com.market.MSA.mappers.product.SupplierMapper;
 import com.market.MSA.models.product.Inventory;
 import com.market.MSA.models.product.InventoryProduct;
 import com.market.MSA.models.product.Product;
@@ -56,6 +57,7 @@ public class ProductService {
   final InventoryProductService inventoryProductService;
   static final String DEFAULT_SORT_BY = "price";
   static final String DEFAULT_SORT_DIRECTION = "asc";
+  private final SupplierMapper supplierMapper;
 
   @Transactional
   @Caching(
@@ -159,73 +161,78 @@ public class ProductService {
         .collect(Collectors.toList());
   }
 
+  public Map<String, Object> getFilterOptions(Long categoryId) {
+    Map<String, Object> map = new HashMap<>();
+    map.put("units", productRepository.findDistinctUnitsByCategoryId(categoryId));
+    map.put("netWeights", productRepository.findDistinctNetWeightsByCategoryId(categoryId));
+    map.put(
+        "suppliers",
+        productRepository.findDistinctSuppliersByCategoryId(categoryId).stream()
+            .map(supplierMapper::toSupplierResponse)
+            .toList());
+    return map;
+  }
+
   @Cacheable(
       value = "filtered_products",
       key =
-          "{#request.branchId, #request.categoryId, #request.supplierId, #request.unit, "
+          "{#request.branchId, #request.categoryIds, #request.supplierId, #request.unit, "
               + "#request.netWeight, #request.minPrice, #request.maxPrice, #request.keyword, "
               + "#request.page, #request.pageSize, #request.sortBy, #request.sortDirection}")
   public ProductFilterResponse filterProducts(ProductFilterRequest request) {
-    // Set default values for pagination and sorting
+    // 0. Chuẩn hóa các tham số lọc để tránh truyền collection rỗng vào truy vấn (IN () sẽ trả về
+    // rỗng)
+    List<Long> categoryIdsFilter =
+        (request.getCategoryIds() == null || request.getCategoryIds().isEmpty())
+            ? null
+            : request.getCategoryIds();
+
+    // 1. Thiết lập giá trị mặc định cho phân trang và sắp xếp.
     String sortBy =
         (request.getSortBy() != null && !request.getSortBy().isEmpty())
             ? request.getSortBy()
             : DEFAULT_SORT_BY;
-
     String sortDirection =
         (request.getSortDirection() != null && !request.getSortDirection().isEmpty())
             ? request.getSortDirection()
             : DEFAULT_SORT_DIRECTION;
-
-    // Create pageable with sorting
     Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
     Pageable pageable =
-        PageRequest.of(
-            request.getPage() - 1, // Page numbers are 0-based in Spring
-            request.getPageSize(),
-            Sort.by(direction, sortBy));
+        PageRequest.of(request.getPage() - 1, request.getPageSize(), Sort.by(direction, sortBy));
 
-    // Check if branchId is provided to handle discounted products
+    // 2. Xử lý logic đặc biệt nếu có lọc theo chi nhánh (`branchId`).
     if (request.getBranchId() != null) {
-      // First, get the inventory for the branch
+      // 2.1. Lấy kho của chi nhánh.
       Inventory inventory =
           inventoryRepository
               .findByBranch_BranchId(request.getBranchId())
               .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
 
-      // Get paginated discounted products for this branch
-      int discountedPageSize = request.getPageSize() * 2; // Show more discounted items
-
-      // Create a separate sort for discounted products to handle field name differences
-      Sort discountedSort = Sort.by(direction, sortBy.equals("price") ? "currentPrice" : sortBy);
-
+      // 2.2. Lấy các sản phẩm đang giảm giá tại chi nhánh này trước.
       Pageable discountedPageable =
           PageRequest.of(
-              request.getPage() - 1, // Align page numbers with regular products
-              discountedPageSize,
-              discountedSort);
-
-      // Get paginated discounted products
+              request.getPage() - 1,
+              request.getPageSize() * 2,
+              Sort.by(direction, sortBy.equals("price") ? "currentPrice" : sortBy));
       Page<InventoryProduct> discountedPage =
           inventoryProductRepository.findByInventory_InventoryIdAndIsDiscountedTrue(
               inventory.getInventoryId(), discountedPageable);
 
-      // Get the list of discounted product IDs to exclude from regular products
+      // 2.3. Lấy danh sách ID của các sản phẩm giảm giá để loại trừ chúng khỏi danh sách sản phẩm
+      // thường.
       List<Long> discountedProductIds =
           discountedPage.getContent().stream()
               .map(ip -> ip.getProduct().getProductId())
               .distinct()
               .collect(Collectors.toList());
-
-      // Map the discounted inventory products to responses with pagination
       Page<InventoryProductResponse> discountedProductsPage =
           discountedPage.map(inventoryProductMapper::toInventoryProductResponse);
 
-      // Get filtered products excluding the discounted ones
+      // 2.4. Lấy danh sách sản phẩm thường, loại trừ các sản phẩm đã có trong danh sách giảm giá.
       Page<Product> products =
           productRepository.filterWithPaging(
               request.getBranchId(),
-              request.getCategoryId(),
+              categoryIdsFilter,
               request.getSupplierId(),
               request.getUnit(),
               request.getNetWeight(),
@@ -234,10 +241,10 @@ public class ProductService {
               request.getFromDate(),
               request.getToDate(),
               request.getKeyword(),
-              discountedProductIds, // Pass the list of discounted product IDs to exclude
+              discountedProductIds, // Loại trừ các ID này
               pageable);
 
-      // Map and enrich regular products with branch price
+      // 2.5. Chuyển đổi sản phẩm thường sang response và thêm giá bán hiện tại của chi nhánh vào.
       Page<ProductResponse> mappedProductsPage =
           products.map(
               prod -> {
@@ -249,7 +256,7 @@ public class ProductService {
                 return resp;
               });
 
-      // Apply min/max price on branchCurrentPrice if provided
+      // 2.6. Áp dụng lại bộ lọc giá min/max trên giá thực tế của chi nhánh.
       double minPrice =
           request.getMinPrice() != null ? request.getMinPrice() : Double.NEGATIVE_INFINITY;
       double maxPrice =
@@ -264,7 +271,7 @@ public class ProductService {
       Page<ProductResponse> filteredProductsPage =
           new PageImpl<>(filteredProducts, pageable, filteredProducts.size());
 
-      // Map discounted inventory products already have currentPrice set
+      // 2.7. Lọc lại danh sách giảm giá theo giá (nếu có).
       Page<InventoryProductResponse> mappedDiscountedPage = discountedProductsPage;
       if (request.getMinPrice() != null || request.getMaxPrice() != null) {
         List<InventoryProductResponse> filteredDisc =
@@ -275,14 +282,14 @@ public class ProductService {
             new PageImpl<>(filteredDisc, discountedPageable, filteredDisc.size());
       }
 
-      // Return both regular and discounted products with pagination
+      // 2.8. Trả về kết quả bao gồm cả sản phẩm thường và sản phẩm giảm giá.
       return ProductFilterResponse.fromPages(filteredProductsPage, mappedDiscountedPage);
     } else {
-      // If no branchId is provided, just return the regular filtered products
+      // 3. Nếu không có `branchId`, chỉ lọc sản phẩm thông thường.
       Page<Product> products =
           productRepository.filterWithPaging(
-              null, // branchId
-              request.getCategoryId(),
+              null,
+              categoryIdsFilter,
               request.getSupplierId(),
               request.getUnit(),
               request.getNetWeight(),
@@ -291,13 +298,10 @@ public class ProductService {
               request.getFromDate(),
               request.getToDate(),
               request.getKeyword(),
-              Collections.emptyList(), // No products to exclude
+              Collections.emptyList(),
               pageable);
-
-      // Create an empty page for discounted products
       Page<InventoryProductResponse> emptyDiscountedPage =
           new org.springframework.data.domain.PageImpl<>(Collections.emptyList(), pageable, 0);
-
       return ProductFilterResponse.fromPages(
           products.map(productMapper::toProductResponse), emptyDiscountedPage);
     }

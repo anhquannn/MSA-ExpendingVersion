@@ -27,29 +27,23 @@ public class ProductFilterResponse implements Serializable {
   List<InventoryProductResponse> discountedProducts = new ArrayList<>();
 
   // Pagination fields
-  @lombok.Builder.Default
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-  int page = 0;
+  @lombok.Builder.Default @JsonProperty int page = 0;
 
-  @lombok.Builder.Default
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-  int size = 10;
+  @lombok.Builder.Default @JsonProperty int size = 10;
 
-  @lombok.Builder.Default
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-  long totalProducts = 0;
+  @lombok.Builder.Default @JsonProperty long totalProducts = 0;
 
-  @lombok.Builder.Default
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-  long totalDiscountedProducts = 0;
+  @lombok.Builder.Default @JsonProperty long totalDiscountedProducts = 0;
 
   // Helper method to convert to Page
+  @JsonProperty("productsPage")
   public Page<ProductResponse> getProductsPage() {
     return new PageImpl<>(
         products != null ? products : new ArrayList<>(), PageRequest.of(page, size), totalProducts);
   }
 
   // Helper method to convert to Page
+  @JsonProperty("discountedProductsPage")
   public Page<InventoryProductResponse> getDiscountedProductsPage() {
     return new PageImpl<>(
         discountedProducts != null ? discountedProducts : new ArrayList<>(),

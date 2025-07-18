@@ -229,8 +229,4 @@ public class AuthenticationService {
   public long getValidDuration() {
     return VALID_DURATION;
   }
-
-  public long getRefreshableDuration() {
-    return REFRESHABLE_DURATION;
-  }
 }

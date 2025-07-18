@@ -5,10 +5,8 @@ import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.order.Order;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import java.time.LocalDateTime;
-
 import jakarta.validation.constraints.PositiveOrZero;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,7 +43,7 @@ public class Payment {
   @Enumerated(EnumType.STRING)
   OrderStatus status;
 
-  @PositiveOrZero
+  @PositiveOrZero(message = "Tổng giá phải >= 0")
   double grandTotal;
 
   String transactionId;
@@ -64,15 +62,14 @@ public class Payment {
       nullable = false,
       foreignKey = @ForeignKey(name = "fk_payment_user"))
   @JsonBackReference("user-payments")
-  @NotNull(message = "User is required")
   User user;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(
       name = "order_id",
       nullable = false,
       unique = true,
       foreignKey = @ForeignKey(name = "fk_payment_order"))
-  @JsonBackReference("order-payments")
+  @JsonBackReference("order-payment")
   Order order;
 }

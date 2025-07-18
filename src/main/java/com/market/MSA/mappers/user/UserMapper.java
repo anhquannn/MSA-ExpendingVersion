@@ -18,13 +18,16 @@ import org.springframework.stereotype.Component;
 @Component
 public interface UserMapper {
   @Mapping(target = "branches", ignore = true)
+  @Mapping(target = "image", source = "image")
   User toUser(UserRequest request);
 
   @Mapping(target = "branches", ignore = true)
+  @Mapping(target = "image", source = "image")
   UserResponse toUserResponse(User user);
 
   @Mapping(target = "roles", source = "roles", qualifiedByName = "mapRoles")
   @Mapping(target = "userId", ignore = true)
+  @Mapping(target = "image", source = "image")
   void updateUser(@MappingTarget User user, UpdateUserRequest request);
 
   @Named("mapRoles")

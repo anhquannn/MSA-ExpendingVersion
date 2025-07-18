@@ -2,7 +2,6 @@ package com.market.MSA.services.order;
 
 import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.constants.PromocodeStatus;
-import com.market.MSA.constants.RewardPointTransactionType;
 import com.market.MSA.dtos.order.OrderItemDto;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
@@ -13,7 +12,6 @@ import com.market.MSA.models.order.OrderDetail;
 import com.market.MSA.models.order.PromoCode;
 import com.market.MSA.models.product.Branch;
 import com.market.MSA.models.product.Product;
-import com.market.MSA.models.user.RewardPointTransaction;
 import com.market.MSA.models.user.User;
 import com.market.MSA.repositories.order.CartItemRepository;
 import com.market.MSA.repositories.order.CartRepository;
@@ -87,36 +85,39 @@ public class OrderService {
       List<String> promoCodes,
       Double usePoints) {
 
-    // Get cart items and convert to OrderItemDto for validation
+    // 1. Lấy các sản phẩm trong giỏ hàng và chuyển đổi thành danh sách 'OrderItemDto' để kiểm tra.
     List<CartItemResponse> cartItems = cartItemService.getCartItemsByCartId(cartId);
     List<OrderItemDto> orderItems =
         cartItems.stream()
             .map(ci -> new OrderItemDto(ci.getProduct().getProductId(), ci.getQuantity()))
             .toList();
 
-    // Calculate total cost for validation
+    // 2. Tính tổng giá trị đơn hàng tạm thời để kiểm tra mã giảm giá.
     double totalCost =
         cartItems.stream().mapToDouble(ci -> ci.getQuantity() * ci.getProduct().getPrice()).sum();
 
-    // VALIDATE PROMO CODES FIRST - This is the key addition
+    // 3. KIỂM TRA MÃ GIẢM GIÁ TRƯỚC TIÊN - Đây là bước quan trọng được thêm vào.
+    // Việc này đảm bảo mã giảm giá hợp lệ trước khi thực hiện các logic phức tạp khác.
     double discount =
         pricingService.validateAndCalculateDiscount(orderItems, promoCodes, userId, totalCost);
 
-    // If validation passes, proceed with existing logic
+    // 4. Nếu mã giảm giá hợp lệ, tiếp tục tính toán tóm tắt đơn hàng (phí ship, tổng cuối...).
     OrderSummaryResponse orderSummary =
         calculateOrderSummary(branchId, userAddressId, userId, cartId, promoCodes, usePoints);
     double grandTotal = orderSummary.getGrandTotal();
 
-    // Trừ điểm nếu có sử dụng
+    // 5. Xử lý việc sử dụng điểm thưởng.
     if (usePoints > 0) {
+      // Kiểm tra xem người dùng có đủ điểm không.
       double availablePoints = rewardPointService.getAvailablePoints(userId);
       if (usePoints > availablePoints) {
         throw new AppException(ErrorCode.INSUFFICIENT_POINTS);
       }
+      // Trừ số điểm được sử dụng vào tổng tiền, đảm bảo tổng tiền không âm.
       grandTotal = Math.max(0, grandTotal - usePoints);
     }
 
-    // Rest of the existing createOrder logic...
+    // 6. Tìm các thực thể cần thiết từ CSDL (User, Cart, Branch).
     User user =
         userRepository
             .findById(userId)
@@ -132,6 +133,7 @@ public class OrderService {
             .findById(branchId)
             .orElseThrow(() -> new AppException(ErrorCode.BRANCH_NOT_FOUND));
 
+    // 7. Tạo đối tượng 'Order' chính.
     Order order =
         Order.builder()
             .user(user)
@@ -139,27 +141,30 @@ public class OrderService {
             .orderDate(LocalDateTime.now())
             .branch(branch)
             .grandTotal(grandTotal)
-            .status(OrderStatus.PENDING)
+            .status(OrderStatus.PENDING) // Trạng thái ban đầu là "Chờ xử lý".
             .build();
 
+    // Lưu đơn hàng vào CSDL để lấy được 'orderId'.
     order = orderRepository.save(order);
 
-    // Handle promo codes (existing logic)
+    // 8. Xử lý các mã giảm giá đã được áp dụng.
     if (promoCodes != null && !promoCodes.isEmpty()) {
       if (order.getPromoCodes() == null) {
         order.setPromoCodes(new ArrayList<>());
       }
-
+      // Duyệt qua từng mã.
       for (String promoCode : promoCodes) {
+        // Kiểm tra xem người dùng đã sử dụng mã này trước đây chưa.
         if (promoCodeService.hasUserUsedPromoCode(
             userId, promoCodeService.findPromoCodeByCode(promoCode).getPromoCodeId())) {
           throw new AppException(ErrorCode.PROMO_CODE_ALREADY_USED);
         }
-
+        // Tìm mã giảm giá và kiểm tra trạng thái.
         PromoCode promo = promoCodeService.findPromoCodeByCode(promoCode);
         if (!promo.getStatus().equals(PromocodeStatus.EXPIRED)) {
+          // Thêm mã vào danh sách mã của đơn hàng.
           order.getPromoCodes().add(promo);
-
+          // Ghi lại lịch sử sử dụng mã giảm giá.
           PromoCodeUsageRequest usageRequest =
               PromoCodeUsageRequest.builder()
                   .usedAt(LocalDateTime.now())
@@ -172,27 +177,33 @@ public class OrderService {
       }
     }
 
-    // Rest of existing logic for order details, inventory updates, etc.
+    // 9. Xử lý chi tiết đơn hàng (từng sản phẩm).
     for (CartItemResponse cartItem : cartItems) {
       Product product = productService.findProductById(cartItem.getProduct().getProductId());
-
+      // Tạo 'OrderDetail' cho mỗi sản phẩm trong giỏ hàng.
       OrderDetail orderDetail =
           OrderDetail.builder()
               .order(order)
+              .name(product.getName())
               .product(product)
               .quantity(cartItem.getQuantity())
               .unitPrice(product.getPrice())
+              .status(OrderStatus.PENDING)
               .totalPrice(cartItem.getQuantity() * product.getPrice())
               .build();
-
+      // Lưu chi tiết đơn hàng.
       orderDetailRepository.save(orderDetail);
+      // Cập nhật (trừ) số lượng tồn kho.
       inventoryProductService.updateInventoryProduct(
           branchId, product.getProductId(), cartItem.getQuantity());
+      // Cập nhật tổng doanh thu cho sản phẩm.
       productService.updateTotalRevenue(product.getProductId(), cartItem.getQuantity());
     }
 
+    // 10. Xóa các sản phẩm đã đặt hàng khỏi giỏ hàng.
     cartItemService.clearCart(cartId);
-    // Nếu người dùng đã sử dụng điểm, trừ điểm và ghi nhận giao dịch
+
+    // 11. Nếu người dùng đã sử dụng điểm, thực hiện trừ điểm và ghi lại giao dịch điểm thưởng.
     if (usePoints > 0) {
       rewardPointService.redeemPoints(
           userId,
@@ -201,8 +212,10 @@ public class OrderService {
           "Redeemed points for order #" + order.getOrderId());
     }
 
+    // 12. Gửi thông báo xác nhận đơn hàng đã được tạo.
     notificationService.sendOrderCreatedNotification(order.getOrderId());
 
+    // 13. Map đối tượng 'Order' sang 'OrderResponse' và trả về cho client.
     return orderMapper.toOrderResponse(order);
   }
 
@@ -214,39 +227,44 @@ public class OrderService {
       Long cartId,
       List<String> promoCodes,
       Double usePoints) {
-    // Convert current cart to list of items then delegate to PricingService
+    // 1. Lấy thông tin giỏ hàng của người dùng.
     CartResponse cart = cartService.getCartById(cartId);
     if (cart == null || !cart.getUser().getUserId().equals(userId)) {
       throw new AppException(ErrorCode.CART_NOT_FOUND);
     }
+    // Chuyển đổi các mục trong giỏ hàng thành danh sách 'OrderItemDto'.
     List<OrderItemDto> items =
         cartItemService.getCartItemsByCartId(cartId).stream()
             .map(ci -> new OrderItemDto(ci.getProduct().getProductId(), ci.getQuantity()))
             .toList();
 
-    // Tính tổng tiền ban đầu
+    // 2. Ủy quyền cho 'pricingService' để tính toán tóm tắt đơn hàng ban đầu
+    // (tổng tiền hàng, giảm giá từ promo code, phí vận chuyển).
     OrderSummaryResponse summary =
         pricingService.calculateSummary(branchId, userAddressId, userId, items, promoCodes);
 
-    // Lấy số điểm có thể sử dụng
+    // 3. Lấy số điểm thưởng hiện có của người dùng.
     double availablePoints = rewardPointService.getAvailablePoints(userId);
+    // Tính số điểm tối đa có thể sử dụng (không thể vượt quá tổng tiền đơn hàng).
     double maxUsablePoints = Math.min(availablePoints, summary.getGrandTotal());
 
-    // Trừ điểm nếu có sử dụng
+    // 4. Xử lý nếu người dùng muốn sử dụng điểm.
     if (usePoints > 0) {
+      // Kiểm tra lại xem có đủ điểm không.
       if (usePoints > availablePoints) {
         throw new AppException(ErrorCode.INSUFFICIENT_POINTS);
       }
-
+      // Tính toán số tiền được giảm giá (không thể vượt quá tổng tiền).
       double discount = Math.min(usePoints, summary.getGrandTotal());
       summary.setGrandTotal(summary.getGrandTotal() - discount);
       summary.setUsedPoints(usePoints);
     }
 
-    // Đặt số điểm có thể sử dụng
+    // 5. Gán thông tin điểm thưởng vào response để hiển thị cho người dùng.
     summary.setAvailablePoints(availablePoints);
     summary.setMaxUsablePoints(maxUsablePoints);
 
+    // 6. Trả về đối tượng tóm tắt đơn hàng.
     return summary;
   }
 
@@ -254,56 +272,61 @@ public class OrderService {
   public OrderSummaryResponse previewBuyAgain(
       Long oldOrderId, Long userAddressId, List<String> promoCodes, Double usePoints) {
 
+    // 1. Tìm lại đơn hàng cũ dựa vào 'oldOrderId'.
     Order oldOrder =
         orderRepository
             .findById(oldOrderId)
             .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
+    // 2. Chức năng "Mua lại" chỉ áp dụng cho các đơn hàng đã hoàn thành.
     if (oldOrder.getStatus() != OrderStatus.COMPLETED) {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
 
+    // 3. Lấy thông tin cần thiết từ đơn hàng cũ (userId, branchId).
     Long userId = oldOrder.getUser().getUserId();
     Long branchId = oldOrder.getBranch().getBranchId();
 
-    // Convert order details to OrderItemDto for validation
+    // 4. Chuyển đổi các chi tiết của đơn hàng cũ thành danh sách 'OrderItemDto' để tính toán lại.
     List<OrderItemDto> items =
         oldOrder.getOrderDetails().stream()
             .map(od -> new OrderItemDto(od.getProduct().getProductId(), od.getQuantity()))
             .toList();
 
-    // Determine effective promo codes
+    // 5. Xác định mã giảm giá sẽ được áp dụng.
     List<String> effectivePromoCodes;
     if (promoCodes != null && !promoCodes.isEmpty()) {
+      // Nếu người dùng cung cấp mã mới, sử dụng chúng.
       effectivePromoCodes = promoCodes;
     } else {
+      // Nếu không, tái sử dụng các mã từ đơn hàng cũ (nếu có).
       effectivePromoCodes =
           oldOrder.getPromoCodes() == null
-              ? List.of()
+              ? List.of() // Trả về danh sách rỗng nếu không có mã
               : oldOrder.getPromoCodes().stream().map(PromoCode::getCode).toList();
     }
 
-    // Tính tổng tiền ban đầu
+    // 6. Tính toán lại tóm tắt đơn hàng với giá cả và khuyến mãi hiện tại.
+    // Các bước còn lại tương tự như hàm 'calculateOrderSummary'.
     OrderSummaryResponse summary =
         pricingService.calculateSummary(
             branchId, userAddressId, userId, items, effectivePromoCodes);
 
-    // Lấy số điểm có thể sử dụng
+    // Lấy số điểm có thể sử dụng.
     double availablePoints = rewardPointService.getAvailablePoints(userId);
     double maxUsablePoints = Math.min(availablePoints, summary.getGrandTotal());
 
-    // Trừ điểm nếu có sử dụng
+    // Trừ điểm nếu có sử dụng.
     if (usePoints > 0) {
       if (usePoints > availablePoints) {
         throw new AppException(ErrorCode.INSUFFICIENT_POINTS);
       }
-
       double discount = Math.min(usePoints, summary.getGrandTotal());
       summary.setGrandTotal(summary.getGrandTotal() - discount);
       summary.setUsedPoints(usePoints);
     }
 
-    // Đặt số điểm có thể sử dụng
+    // Đặt số điểm có thể sử dụng vào response.
     summary.setAvailablePoints(availablePoints);
     summary.setMaxUsablePoints(maxUsablePoints);
 
@@ -313,19 +336,22 @@ public class OrderService {
   @Transactional
   public OrderResponse buyAgain(
       Long oldOrderId, Long userAddressId, List<String> promoCodes, Double usePoints) {
+    // 1. Tìm lại đơn hàng cũ, tương tự như hàm preview.
     Order oldOrder =
         orderRepository
             .findById(oldOrderId)
             .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
+    // 2. Kiểm tra xem đơn hàng cũ đã hoàn thành chưa.
     if (oldOrder.getStatus() != OrderStatus.COMPLETED) {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
 
+    // 3. Lấy thông tin người dùng và chi nhánh từ đơn hàng cũ.
     Long userId = oldOrder.getUser().getUserId();
     Long branchId = oldOrder.getBranch().getBranchId();
 
-    // Prepare items for validation
+    // 4. Chuẩn bị danh sách sản phẩm và tổng giá trị để kiểm tra mã giảm giá.
     List<OrderItemDto> orderItems =
         oldOrder.getOrderDetails().stream()
             .map(
@@ -333,13 +359,12 @@ public class OrderService {
                     new OrderItemDto(detail.getProduct().getProductId(), detail.getQuantity()))
             .toList();
 
-    // Calculate total cost for validation
     double totalCost =
         oldOrder.getOrderDetails().stream()
             .mapToDouble(detail -> detail.getQuantity() * detail.getProduct().getPrice())
             .sum();
 
-    // Determine promo codes to apply
+    // 5. Xác định các mã giảm giá sẽ được áp dụng (tương tự hàm preview).
     List<String> effectivePromoCodes;
     if (promoCodes != null && !promoCodes.isEmpty()) {
       effectivePromoCodes = promoCodes;
@@ -350,17 +375,18 @@ public class OrderService {
               : oldOrder.getPromoCodes().stream().map(PromoCode::getCode).toList();
     }
 
-    // VALIDATE PROMO CODES FIRST - This is the key addition
+    // 6. KIỂM TRA TÍNH HỢP LỆ CỦA MÃ GIẢM GIÁ TRƯỚC TIÊN.
     if (!effectivePromoCodes.isEmpty()) {
       pricingService.validateAndCalculateDiscount(
           orderItems, effectivePromoCodes, userId, totalCost);
     }
 
-    // If validation passes, proceed with existing logic
+    // 7. Nếu mọi thứ hợp lệ, lấy hoặc tạo giỏ hàng cho người dùng.
     CartResponse cartResponse = cartService.getOrCreateCartForUser(userId);
     Long cartId = cartResponse.getCartId();
 
-    // Merge items from old order into existing cart
+    // 8. Thêm các sản phẩm từ đơn hàng cũ vào giỏ hàng hiện tại.
+    // Chỉ thêm nếu sản phẩm đó chưa có trong giỏ.
     for (OrderDetail detail : oldOrder.getOrderDetails()) {
       Long productId = detail.getProduct().getProductId();
       if (cartItemRepository.findByCart_CartIdAndProduct_ProductId(cartId, productId).isEmpty()) {
@@ -368,7 +394,9 @@ public class OrderService {
       }
     }
 
-    // Create new order using existing createOrder flow
+    // 9. Gọi lại hàm 'createOrder' để thực hiện quy trình tạo đơn hàng mới
+    // với giỏ hàng đã được cập nhật và các thông tin khuyến mãi.
+    // Điều này giúp tái sử dụng logic và tránh lặp code.
     return createOrder(userId, branchId, userAddressId, cartId, effectivePromoCodes, usePoints);
   }
 
@@ -849,19 +877,19 @@ public class OrderService {
     if (currentStatus == OrderStatus.CANCELLED
         || currentStatus == OrderStatus.COMPLETED
         || currentStatus == OrderStatus.FAILED) {
-      throw new AppException(ErrorCode.INVALID_INPUT);
+      throw new AppException(ErrorCode.INVALID_STATUS);
     }
 
     // Only allow moving to DELIVERING from PENDING (COD) or PAID (VNPay)
     if (newStatus == OrderStatus.DELIVERING
         && !(currentStatus == OrderStatus.PENDING || currentStatus == OrderStatus.PAID)) {
-      throw new AppException(ErrorCode.INVALID_INPUT);
+      throw new AppException(ErrorCode.INVALID_STATUS);
     }
 
     // Only allow cancelling when the order is still PENDING or currently DELIVERING
     if (newStatus == OrderStatus.CANCELLED
         && !(currentStatus == OrderStatus.PENDING || currentStatus == OrderStatus.DELIVERING)) {
-      throw new AppException(ErrorCode.INVALID_INPUT);
+      throw new AppException(ErrorCode.INVALID_STATUS);
     }
 
     // Additional rules can be added here as business grows
@@ -884,16 +912,5 @@ public class OrderService {
                     .totalSpent(((Number) r[2]).doubleValue())
                     .build())
         .toList();
-  }
-
-  private boolean isPointsAwarded(Order order) {
-    List<RewardPointTransaction> transactions = order.getRewardPointTransactions();
-    if (transactions == null || transactions.isEmpty()) {
-      return false;
-    }
-
-    return transactions.stream()
-        .anyMatch(
-            tx -> tx.getPointChange() > 0 && RewardPointTransactionType.EARN.equals(tx.getType()));
   }
 }

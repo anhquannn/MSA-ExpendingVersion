@@ -30,9 +30,16 @@ public class DeliveryInfo {
   String ward;
   String district;
   String city;
+
+  @Column(nullable = false)
   String cityCode;
+
+  @Column(nullable = false)
   String districtCode;
+
+  @Column(nullable = false)
   String wardCode;
+
   String cod;
   String weight;
   String width;
@@ -43,6 +50,7 @@ public class DeliveryInfo {
   @Enumerated(EnumType.STRING)
   OrderStatus status;
 
+  @Column(nullable = false)
   LocalDateTime deliveryDate;
 
   @OneToOne

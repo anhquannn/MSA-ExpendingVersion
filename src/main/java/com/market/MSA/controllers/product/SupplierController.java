@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SupplierController {
   SupplierService supplierService;
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ApiResponse<SupplierResponse> createSupplier(@RequestBody SupplierRequest request) {
     return ApiResponse.<SupplierResponse>builder()
@@ -36,6 +38,7 @@ public class SupplierController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{id}")
   public ApiResponse<SupplierResponse> updateSupplier(
       @PathVariable Long id, @RequestBody SupplierRequest request) {
@@ -45,6 +48,7 @@ public class SupplierController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{id}")
   public ApiResponse<Boolean> deleteSupplier(@PathVariable Long id) {
     Boolean result = supplierService.deleteSupplier(id);

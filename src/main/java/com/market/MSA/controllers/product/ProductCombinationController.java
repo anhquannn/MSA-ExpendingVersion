@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +24,7 @@ public class ProductCombinationController {
 
   ProductCombinationService pcService;
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ApiResponse<ProductCombinationResponse> create(
       @RequestBody ProductCombinationRequest req) {
@@ -32,6 +34,7 @@ public class ProductCombinationController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{id}")
   public ApiResponse<ProductCombinationResponse> update(
       @PathVariable Long id, @RequestBody ProductCombinationRequest req) {
@@ -41,6 +44,7 @@ public class ProductCombinationController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{id}")
   public ApiResponse<Boolean> delete(@PathVariable Long id) {
     return ApiResponse.<Boolean>builder()

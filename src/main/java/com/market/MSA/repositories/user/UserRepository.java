@@ -26,6 +26,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
   List<User> findAllByRole(@Param("role") String role);
 
   @Query(
+      "SELECT u FROM User u JOIN u.roles r "
+          + "WHERE (:role IS NULL OR LOWER(r.name) LIKE LOWER(CONCAT('%', :role, '%'))) "
+          + "AND (:keyword IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) "
+          + "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) "
+          + "OR LOWER(u.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+  List<User> findAllByRoleAndKeyword(@Param("role") String role, @Param("keyword") String keyword);
+
+  @Query(
       "SELECT u FROM User u JOIN u.roles r JOIN u.branches b JOIN b.inventory i WHERE r.name LIKE 'MANAGER%' AND i.inventoryId = :inventoryId")
   Page<User> findManagersByInventoryIdWithPagination(
       @Param("inventoryId") Long inventoryId, Pageable pageable);
@@ -43,7 +51,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   @Query(
       "SELECT u FROM User u JOIN u.roles r "
-          + "WHERE (:role IS NULL OR r.name = :role) AND "
+          + "WHERE (:role IS NULL OR LOWER(r.name) LIKE LOWER(CONCAT('%', :role, '%'))) AND "
           + "(:keyword IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) "
           + "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) "
           + "OR LOWER(u.phoneNumber) LIKE LOWER(CONCAT('%', :keyword, '%')))")

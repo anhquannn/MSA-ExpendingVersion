@@ -50,18 +50,23 @@ public class InboundService {
             .findById(inboundTransferId)
             .orElseThrow(() -> new AppException(ErrorCode.INBOUND_TRANSFER_NOT_FOUND));
 
+    // Cờ này kiểm tra xem có phải là thao tác "Nhận hàng" hay không
+    // (tức là chuyển trạng thái từ "Đang vận chuyển" sang "Đã nhận").
     boolean isReceiving =
         ProductStatus.IN_PROGRESS.equals(inboundTransfer.getStatus())
             && ProductStatus.RECEIVED.equals(request.getStatus());
 
+    // Cập nhật thông tin chung của yêu cầu nhận hàng.
     inboundMapper.updateInbound(request, inboundTransfer);
-
     inboundTransfer = inboundTransferRepository.save(inboundTransfer);
 
+    // CHỈ CẬP NHẬT TỒN KHO KHI THỰC SỰ NHẬN HÀNG.
     if (isReceiving) {
       Transfer transfer = inboundTransfer.getTransfer();
 
+      // Duyệt qua từng sản phẩm trong phiếu chuyển kho.
       for (TransferItem item : transfer.getTransferItems()) {
+        // Tìm sản phẩm trong kho nguồn để lấy thông tin lô hàng (batch number).
         List<InventoryProduct> centralInvProducts =
             inventoryProductRepository.filter(
                 item.getProduct().getProductId(),
@@ -76,14 +81,14 @@ public class InboundService {
         if (centralInvProducts.isEmpty()) {
           throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
         }
-
         InventoryProduct sourceInvProduct = centralInvProducts.getFirst();
 
+        // Tìm sản phẩm trong kho đích dựa trên lô hàng của kho nguồn.
         List<InventoryProduct> destProducts =
             inventoryProductRepository.filter(
                 item.getProduct().getProductId(),
                 inboundTransfer.getInventory().getInventoryId(),
-                sourceInvProduct.getBatchNumber(),
+                sourceInvProduct.getBatchNumber(), // Đảm bảo nhận đúng lô hàng
                 null,
                 null,
                 null,
@@ -94,8 +99,10 @@ public class InboundService {
           throw new AppException(ErrorCode.INVALID_BATCH_OR_EXPDATE);
         }
 
+        // Cộng số lượng đã chuyển vào tồn kho của sản phẩm tại kho đích.
         InventoryProduct destProduct = destProducts.getFirst();
         destProduct.setStockNumber(destProduct.getStockNumber() + item.getQuantityTransferred());
+        // Cập nhật lại trạng thái mức tồn kho (ví dụ: LOW_STOCK, IN_STOCK).
         inventoryProductService.updateStockLevel(destProduct);
         inventoryProductRepository.save(destProduct);
       }

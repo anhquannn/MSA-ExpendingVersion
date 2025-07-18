@@ -1,13 +1,10 @@
 package com.market.MSA.services.user;
 
-import com.market.MSA.constants.RewardPointTransactionType;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.user.RewardPointTransactionMapper;
-import com.market.MSA.models.user.RewardPoint;
 import com.market.MSA.models.user.RewardPointTransaction;
 import com.market.MSA.repositories.order.OrderRepository;
-import com.market.MSA.repositories.user.RewardPointRepository;
 import com.market.MSA.repositories.user.RewardPointTransactionRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.RewardPointTransactionFilterRequest;
@@ -39,38 +36,6 @@ public class RewardPointTransactionService {
   final UserRepository userRepository;
   final OrderRepository orderRepository;
   final RewardPointTransactionRepository rewardPointTransactionRepository;
-  private final RewardPointRepository rewardPointRepository;
-
-  void updateUserRewardPoints(Long userId, Double pointChange, RewardPointTransactionType type) {
-    // Tìm hoặc tạo bản ghi RewardPoint cho user
-    RewardPoint rewardPoint =
-        rewardPointRepository.findByUser_UserId(userId, PageRequest.of(0, 1)).stream()
-            .findFirst()
-            .orElseGet(
-                () -> {
-                  RewardPoint newRewardPoint = new RewardPoint();
-                  newRewardPoint.setUser(
-                      entityFinderService.findByIdOrThrow(
-                          userRepository, userId, ErrorCode.USER_NOT_EXISTED));
-                  newRewardPoint.setPoints(0.0);
-                  newRewardPoint.setTotalEarned(0.0);
-                  newRewardPoint.setTotalRedeemed(0.0);
-                  newRewardPoint.setUpdatedAt(LocalDateTime.now());
-                  return newRewardPoint;
-                });
-
-    // Cập nhật điểm
-    rewardPoint.setPoints(rewardPoint.getPoints() + pointChange);
-
-    if (type == RewardPointTransactionType.EARN) {
-      rewardPoint.setTotalEarned(rewardPoint.getTotalEarned() + pointChange);
-    } else if (type == RewardPointTransactionType.REDEEM) {
-      rewardPoint.setTotalRedeemed(rewardPoint.getTotalRedeemed() + Math.abs(pointChange));
-    }
-
-    rewardPoint.setUpdatedAt(LocalDateTime.now());
-    rewardPointRepository.save(rewardPoint);
-  }
 
   @Transactional
   public RewardPointTransactionResponse createRewardPointTransaction(

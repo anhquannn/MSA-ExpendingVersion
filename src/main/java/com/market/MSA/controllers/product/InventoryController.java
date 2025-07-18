@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class InventoryController {
   InventoryService inventoryService;
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ApiResponse<InventoryResponse> createInventory(
       @RequestBody InventoryRequest inventoryRequest) {
@@ -30,6 +32,7 @@ public class InventoryController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{id}")
   public ApiResponse<InventoryResponse> updateInventory(
       @PathVariable long id, @RequestBody InventoryRequest inventoryRequest) {

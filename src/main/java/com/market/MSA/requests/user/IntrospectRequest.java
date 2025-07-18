@@ -1,5 +1,6 @@
 package com.market.MSA.requests.user;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,5 +14,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class IntrospectRequest {
+  @NotBlank(message = "Token không được để trống")
   String token;
 }

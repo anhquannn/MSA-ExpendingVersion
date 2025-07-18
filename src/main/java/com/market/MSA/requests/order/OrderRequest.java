@@ -2,6 +2,7 @@ package com.market.MSA.requests.order;
 
 import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.requests.others.DeliveryInfoRequest;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AccessLevel;
@@ -24,10 +25,18 @@ public class OrderRequest {
   OrderStatus status;
   double usePoints;
 
+  @NotNull(message = "branchId không được để null")
   Long branchId;
+
+  @NotNull(message = "cartId không được để null")
   Long cartId;
+
+  @NotNull(message = "userId không được để null")
   Long userId;
+
+  @NotNull(message = "userAddressId không được để null")
   Long userAddressId;
+
   List<String> promoCodes;
   DeliveryInfoRequest deliveryInfo;
 }

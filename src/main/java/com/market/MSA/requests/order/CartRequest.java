@@ -1,6 +1,7 @@
 package com.market.MSA.requests.order;
 
 import com.market.MSA.constants.CartStatus;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,5 +17,6 @@ import lombok.experimental.FieldDefaults;
 public class CartRequest {
   CartStatus status;
 
+  @NotNull(message = "userId không được để null")
   Long userId;
 }

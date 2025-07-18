@@ -10,11 +10,10 @@ import com.market.MSA.models.product.Branch;
 import com.market.MSA.models.user.RewardPointTransaction;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,8 +44,7 @@ public class Order {
 
   LocalDateTime orderDate;
 
-  @PositiveOrZero
-  double grandTotal;
+  @PositiveOrZero double grandTotal;
 
   @Enumerated(EnumType.STRING)
   OrderStatus status;
@@ -73,13 +71,13 @@ public class Order {
   @JsonManagedReference("order-delivery-info")
   DeliveryInfo deliveryInfo;
 
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("order-cancel-orders")
-  List<CancelOrder> cancelOrders = new ArrayList<>();
+  @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("order-cancel-order")
+  CancelOrder cancelOrder;
 
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("order-payments")
-  List<Payment> payments = new ArrayList<>();
+  @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("order-payment")
+  Payment payment;
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("order-details")

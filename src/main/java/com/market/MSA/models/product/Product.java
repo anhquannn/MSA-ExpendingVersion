@@ -7,7 +7,7 @@ import com.market.MSA.models.order.OrderDetail;
 import com.market.MSA.models.others.Notification;
 import com.market.MSA.models.user.UserBehavior;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,9 +38,11 @@ public class Product {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long productId;
 
+  @Column(nullable = false)
   String name;
 
-  @Positive double price;
+  @PositiveOrZero(message = "Giá sản phẩm phải >= 0")
+  double price;
 
   double discountPercentage;
   int discountTriggerDays;
@@ -50,7 +52,7 @@ public class Product {
   String description;
   LocalDateTime createdAt;
 
-  @Positive double totalRevenue;
+  @PositiveOrZero double totalRevenue;
 
   @ManyToOne
   @JoinColumn(

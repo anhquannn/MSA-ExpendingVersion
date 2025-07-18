@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class CampaignTargetController {
   final CampaignTargetService campaignTargetService;
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ApiResponse<CampaignTargetResponse> createCampaignTarget(
       @RequestBody @Valid CampaignTargetRequest request) {
@@ -30,6 +32,7 @@ public class CampaignTargetController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{campaignTargetId}")
   public ApiResponse<CampaignTargetResponse> updateCampaignTarget(
       @PathVariable Long campaignTargetId, @RequestBody CampaignTargetRequest request) {
@@ -39,6 +42,7 @@ public class CampaignTargetController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{campaignTargetId}")
   public ApiResponse<Boolean> deleteCampaignTarget(@PathVariable Long campaignTargetId) {
     return ApiResponse.<Boolean>builder()

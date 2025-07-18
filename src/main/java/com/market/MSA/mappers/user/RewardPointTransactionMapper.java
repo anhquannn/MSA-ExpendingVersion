@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 public interface RewardPointTransactionMapper {
   RewardPointTransaction toRewardPointTransaction(RewardPointTransactionRequest request);
 
-  @Mapping(target = "order.rewardPointTransactions", ignore = true)
   RewardPointTransactionResponse toRewardPointTransactionResponse(
       RewardPointTransaction rewardPointTransaction);
 

@@ -260,18 +260,20 @@ public class UserController {
   @GetMapping("/role/{role}/page")
   public ApiResponse<Page<UserResponse>> getAllUsersByRoleWithPagination(
       @PathVariable String role,
+      @RequestParam(required = false) String keyword,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size) {
     return ApiResponse.<Page<UserResponse>>builder()
-        .result(userService.getAllUsersByRoleWithPagination(role, page, size))
+        .result(userService.getAllUsersByRoleWithPagination(role, keyword, page, size))
         .message(ApiMessage.ALL_USERS_RETRIEVED.getMessage())
         .build();
   }
 
   @GetMapping("/role/{role}/all")
-  public ApiResponse<List<UserResponse>> getAllUsersByRole(@PathVariable String role) {
+  public ApiResponse<List<UserResponse>> getAllUsersByRole(
+      @PathVariable String role, @RequestParam(required = false) String keyword) {
     return ApiResponse.<List<UserResponse>>builder()
-        .result(userService.getAllUsersByRole(role))
+        .result(userService.getAllUsersByRole(role, keyword))
         .message(ApiMessage.ALL_USERS_RETRIEVED.getMessage())
         .build();
   }

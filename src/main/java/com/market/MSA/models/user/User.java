@@ -7,6 +7,8 @@ import com.market.MSA.models.order.PromoCodeUsage;
 import com.market.MSA.models.others.Notification;
 import com.market.MSA.models.others.Payment;
 import com.market.MSA.models.product.*;
+import com.market.MSA.validators.DobConstraint;
+import com.market.MSA.validators.PasswordConstraint;
 import com.market.MSA.validators.PhoneNumberConstraint;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -45,14 +47,19 @@ public class User {
   @Column(
       name = "email",
       unique = true,
+      nullable = false,
       columnDefinition = "varchar(255) collate utf8mb4_unicode_ci")
   String email;
 
   @PhoneNumberConstraint String phoneNumber;
 
+  @DobConstraint(min = 15)
   LocalDateTime birthday;
 
+  @Column(nullable = false)
+  @PasswordConstraint(min = 6, message = "Mật khẩu phải có ít nhất 6 ký tự")
   String password;
+
   String deviceId;
 
   @Column(columnDefinition = "TEXT")
@@ -104,9 +111,13 @@ public class User {
   @JsonManagedReference("user-approved-transfers")
   List<Transfer> toTransfers = new ArrayList<>();
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("user-carts")
-  List<Cart> carts = new ArrayList<>();
+  @OneToOne(
+      mappedBy = "user",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
+  @JsonManagedReference("user-cart")
+  Cart cart;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-payments")

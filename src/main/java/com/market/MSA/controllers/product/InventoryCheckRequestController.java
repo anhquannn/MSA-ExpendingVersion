@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,7 @@ public class InventoryCheckRequestController {
 
   InventoryCheckRequestService icrService;
 
+  @PreAuthorize("hasRole('SURVEYOR')")
   @PostMapping
   public ApiResponse<InventoryCheckRequestResponse> create(
       @RequestBody InventoryCheckRequestRequest req) {

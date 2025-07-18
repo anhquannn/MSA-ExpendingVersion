@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.models.others.Notification;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
@@ -25,7 +26,8 @@ public class Inventory {
   String name;
   String address;
   String contact;
-  double totalRevenue;
+
+  @PositiveOrZero double totalRevenue;
 
   @OneToOne
   @JoinColumn(name = "branchId", nullable = false, unique = true)

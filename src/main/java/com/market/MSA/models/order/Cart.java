@@ -31,9 +31,13 @@ public class Cart {
   @Enumerated(EnumType.STRING)
   CartStatus status;
 
-  @ManyToOne
-  @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_cart_user"))
-  @JsonBackReference("user-carts")
+  @OneToOne
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      unique = true,
+      foreignKey = @ForeignKey(name = "fk_cart_user"))
+  @JsonBackReference("user-cart")
   User user;
 
   @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)

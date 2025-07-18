@@ -18,16 +18,12 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Aspect that automatically clears all caches defined via {@link Cacheable} in the same service
- * class whenever a {@link Transactional} write-operation method succeeds.
+ * Aspect tự động xóa các cache được định nghĩa bởi @Cacheable trong cùng service class hoặc các
+ * service khác khi một phương thức @Transactional (không phải @Cacheable) hoàn thành.
  *
- * <p>This eliminates the need to add {@code @CacheEvict} annotations manually for every create /
- * update / delete method. Any method located in {@code com.market.MSA.services..*} package that: 1.
- * Is annotated with {@code @Transactional} 2. Is NOT annotated with {@code @Cacheable} will trigger
- * eviction of every cache name declared by {@code @Cacheable} annotations in the same class.
+ * <p>Mục đích: Loại bỏ nhu cầu thêm @CacheEvict thủ công cho các phương thức thay đổi dữ liệu.
  */
 @Aspect
 @Component
@@ -35,31 +31,42 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class CacheInvalidationAspect {
 
+  // Tiêm CacheManager để quản lý cache và ApplicationContext để truy cập các bean
   private final CacheManager cacheManager;
   private final ApplicationContext applicationContext;
 
-  // Pointcut: any transactional method in service layer
+  /**
+   * Pointcut: Xác định các phương thức trong package com.market.MSA.services có
+   * annotation @Transactional.
+   */
   @Pointcut(
       "execution(* com.market.MSA.services..*(..)) && @annotation(org.springframework.transaction.annotation.Transactional)")
   public void transactionalServiceOperation() {}
 
-  // After successful completion
+  /**
+   * Advice: Được gọi sau khi phương thức @Transactional hoàn thành thành công. Xóa tất cả cache
+   * được định nghĩa bởi @Cacheable trong cùng class hoặc các class khác trong package
+   * com.market.MSA.services.
+   */
   @AfterReturning("transactionalServiceOperation()")
   public void evictCaches(JoinPoint joinPoint) {
+    // Lấy thông tin phương thức được gọi
     MethodSignature signature = (MethodSignature) joinPoint.getSignature();
     Method method = signature.getMethod();
 
-    // Skip if method itself is a @Cacheable read method.
+    // Nếu phương thức có @Cacheable (phương thức đọc), bỏ qua để tránh xóa cache của chính nó
     if (method.isAnnotationPresent(Cacheable.class)) {
       return;
     }
 
+    // Lấy class chứa phương thức
     Object target = joinPoint.getTarget();
     Class<?> targetClass = target.getClass();
 
+    // Danh sách các cache name cần xóa
     Set<String> cacheNamesToEvict = new HashSet<>();
 
-    // Caches declared in the same class
+    // 1. Thu thập cache names từ các phương thức @Cacheable trong cùng class
     for (Method m : targetClass.getDeclaredMethods()) {
       Cacheable cacheable = AnnotationUtils.findAnnotation(m, Cacheable.class);
       if (cacheable != null) {
@@ -67,12 +74,13 @@ public class CacheInvalidationAspect {
       }
     }
 
-    // Caches declared in ANY service bean (cross-service invalidation)
+    // 2. Thu thập cache names từ tất cả các bean trong package com.market.MSA.services
     String basePackage = "com.market.MSA.services";
     for (String beanName : applicationContext.getBeanDefinitionNames()) {
       Object bean = applicationContext.getBean(beanName);
       Class<?> beanClass = AopUtils.getTargetClass(bean);
       Package pkg = beanClass.getPackage();
+      // Kiểm tra xem bean có thuộc package com.market.MSA.services không
       if (pkg == null || !pkg.getName().startsWith(basePackage)) {
         continue;
       }
@@ -84,6 +92,7 @@ public class CacheInvalidationAspect {
       }
     }
 
+    // 3. Xóa tất cả các cache trong danh sách
     for (String cacheName : cacheNamesToEvict) {
       Cache cache = cacheManager.getCache(cacheName);
       if (cache != null) {
@@ -92,7 +101,7 @@ public class CacheInvalidationAspect {
             cacheName,
             targetClass.getSimpleName(),
             method.getName());
-        cache.clear();
+        cache.clear(); // Xóa cache
       }
     }
   }

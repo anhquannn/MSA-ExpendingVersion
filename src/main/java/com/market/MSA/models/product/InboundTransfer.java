@@ -26,12 +26,13 @@ public class InboundTransfer {
 
   LocalDateTime inboundTransferDate;
 
-  @ManyToOne
+  @OneToOne
   @JoinColumn(
       name = "transfer_request_id",
       nullable = false,
+      unique = true,
       foreignKey = @ForeignKey(name = "fk_inbound_transfer_request"))
-  @JsonBackReference("transfer-inbounds")
+  @JsonBackReference("transfer-inbound")
   Transfer transfer;
 
   @ManyToOne

@@ -1,6 +1,7 @@
 package com.market.MSA.requests.product;
 
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -15,9 +16,11 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductRequest {
+  @NotBlank(message = "Tên sản phẩm không được để trống")
   String name;
 
-  @Positive double price;
+  @PositiveOrZero(message = "Giá sản phẩm phải >= 0")
+  double price;
 
   double discountPercentage;
   int discountTriggerDays;
@@ -27,7 +30,7 @@ public class ProductRequest {
   String description;
   LocalDateTime createdAt;
 
-  @Positive double totalRevenue;
+  @PositiveOrZero double totalRevenue;
 
   Long supplierId;
   Long categoryId;

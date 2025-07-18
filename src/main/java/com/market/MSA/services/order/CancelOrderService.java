@@ -48,39 +48,50 @@ public class CancelOrderService {
       value = {"all_campaigns", "campaigns_list", "campaigns_paging"},
       allEntries = true)
   public CancelOrderResponse createCancelOrder(CancelOrderRequest request) {
+    // 1. Tìm kiếm đơn hàng gốc trong CSDL bằng 'orderId' từ request.
+    // Nếu không tìm thấy, ném ra một ngoại lệ 'AppException' với mã lỗi 'ORDER_NOT_FOUND'.
     Order order =
         orderRepository
             .findById(request.getOrderId())
             .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
-    // Cập nhật trạng thái đơn hàng gốc
+    // 2. Cập nhật trạng thái của đơn hàng gốc thành 'CANCELLED' (Đã hủy).
     order.setStatus(OrderStatus.CANCELLED);
+    // Lưu lại thay đổi vào CSDL.
     orderRepository.save(order);
 
-    // Lưu đơn trả hàng vào cơ sở dữ liệu
+    // 3. Tạo một đối tượng 'CancelOrder' mới để ghi lại thông tin về việc hủy đơn hàng.
+    // Builder pattern được sử dụng để tạo đối tượng một cách linh hoạt.
     CancelOrder cancelOrder =
         CancelOrder.builder()
-            .cancelDate(LocalDateTime.now())
-            .reason(request.getReason())
-            .order(order)
-            .refundAmount(order.getGrandTotal())
-            .status(OrderStatus.CANCELLED)
+            .cancelDate(LocalDateTime.now()) // Ngày hủy là thời điểm hiện tại.
+            .reason(request.getReason()) // Lý do hủy lấy từ request.
+            .order(order) // Liên kết với đơn hàng gốc.
+            .refundAmount(order.getGrandTotal()) // Số tiền hoàn lại bằng tổng tiền của đơn hàng.
+            .status(OrderStatus.CANCELLED) // Trạng thái của việc hủy đơn.
             .build();
 
+    // Lưu đối tượng 'cancelOrder' này vào CSDL.
     cancelOrder = cancelOrderRepository.save(cancelOrder);
 
-    // Lấy chi tiết sản phẩm trong đơn hàng gốc
+    // 4. Lấy danh sách tất cả các chi tiết đơn hàng (các sản phẩm) từ đơn hàng gốc.
     List<OrderDetail> orderDetails = orderDetailRepository.findByOrder_OrderId(order.getOrderId());
 
-    // Khôi phục số lượng sản phẩm trong kho
+    // 5. Duyệt qua từng sản phẩm trong đơn hàng đã hủy để xử lý.
     for (OrderDetail orderDetail : orderDetails) {
+      // Gọi service 'inventoryProductService' để khôi phục (cộng lại) số lượng tồn kho cho sản
+      // phẩm.
       inventoryProductService.restoreStock(orderDetail.getOrder());
+      // Cập nhật trạng thái của từng mục sản phẩm trong đơn hàng thành 'CANCELLED'.
       orderDetail.setStatus(OrderStatus.CANCELLED);
     }
 
-    // Send notification
+    // 6. Gọi 'notificationService' để gửi thông báo (ví dụ: email, push notification)
+    // cho người dùng về việc đơn hàng của họ đã bị hủy.
     notificationService.sendOrderCancelledNotification(order.getOrderId());
 
+    // 7. Sử dụng 'cancelOrderMapper' để chuyển đổi đối tượng 'CancelOrder' (entity)
+    // thành 'CancelOrderResponse' (DTO - Data Transfer Object) và trả về cho client.
     return cancelOrderMapper.toCancelOrderResponse(cancelOrder);
   }
 

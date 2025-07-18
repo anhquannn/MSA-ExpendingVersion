@@ -29,13 +29,18 @@ public class Campaign {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long campaignId;
 
+  @Column(nullable = false)
   String name;
+
   String description;
 
   @Enumerated(EnumType.STRING)
   PromocodeStatus status;
 
+  @Column(nullable = false)
   LocalDateTime startDate;
+
+  @Column(nullable = false)
   LocalDateTime endDate;
 
   @Enumerated(EnumType.STRING)

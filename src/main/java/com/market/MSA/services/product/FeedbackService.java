@@ -44,39 +44,44 @@ public class FeedbackService {
   // Create Feedback
   @Transactional
   public FeedbackResponse createFeedback(FeedbackRequest request) {
+    // Chuyển đổi request DTO sang entity Feedback.
     Feedback feedback = feedbackMapper.toFeedback(request);
+    // Tìm và gán sản phẩm được đánh giá.
     feedback.setProduct(
         entityFinderService.findByIdOrThrow(
             productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND));
+    // Tìm và gán người dùng đã tạo đánh giá.
     feedback.setUser(
         entityFinderService.findByIdOrThrow(
             userRepository, request.getUserId(), ErrorCode.USER_NOT_EXISTED));
     feedback.setComments(request.getComments());
 
-    // Link to order detail and mark rated
+    // Nếu feedback này được tạo từ một đơn hàng cụ thể (order detail).
     if (request.getOrderDetailId() != null) {
       OrderDetail od =
           entityFinderService.findByIdOrThrow(
               orderDetailRepository, request.getOrderDetailId(), ErrorCode.ORDER_DETAIL_NOT_FOUND);
 
-      // Kiểm tra xem order detail này đã được đánh giá chưa
+      // Kiểm tra xem chi tiết đơn hàng này đã được đánh giá trước đó chưa.
       if (od.isRated()) {
         throw new AppException(ErrorCode.ORDER_DETAIL_ALREADY_RATED);
       }
 
+      // Đánh dấu là đã được đánh giá để tránh đánh giá lại.
       od.setRated(true);
+      // Liên kết feedback với chi tiết đơn hàng.
       feedback.setOrderDetail(od);
     }
 
     Feedback savedFeedback = feedbackRepository.save(feedback);
 
-    // Tích điểm cho feedback - chỉ tích điểm khi feedback được tạo từ order detail
+    // TÍCH ĐIỂM THƯỞNG CHO FEEDBACK: chỉ thực hiện khi feedback gắn với một đơn hàng.
     if (feedback.getOrderDetail() != null) {
-      // Tính điểm thưởng cho feedback (100 điểm cho mỗi feedback)
+      // Định nghĩa số điểm thưởng cho mỗi feedback (ví dụ: 100 điểm).
       double points = 100.0;
 
       try {
-        // Gọi RewardPointService để vừa tạo transaction vừa cập nhật bảng reward_point
+        // Gọi service điểm thưởng để cộng điểm cho người dùng.
         rewardPointService.earnPoints(
             feedback.getUser().getUserId(),
             feedback.getOrderDetail().getOrder().getOrderId(),
@@ -92,8 +97,8 @@ public class FeedbackService {
             "Failed to award points for feedback {}: {}",
             savedFeedback.getFeedbackId(),
             e.getMessage());
-        // Không throw exception để không làm rollback việc tạo feedback
-        // Có thể implement retry mechanism hoặc queue để xử lý sau
+        // Lỗi ở đây không được ném ra để không làm hỏng (rollback) việc tạo feedback.
+        // Có thể triển khai cơ chế thử lại (retry) hoặc đưa vào hàng đợi (queue) để xử lý sau.
       }
     }
 

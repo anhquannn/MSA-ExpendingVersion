@@ -4,7 +4,6 @@ import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.responses.others.DeliveryInfoResponse;
 import com.market.MSA.responses.others.PaymentResponse;
 import com.market.MSA.responses.product.BranchResponse;
-import com.market.MSA.responses.user.RewardPointTransactionResponse;
 import com.market.MSA.responses.user.UserResponse;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,6 +33,5 @@ public class OrderResponse {
   DeliveryInfoResponse deliveryInfo;
   List<PaymentResponse> payments;
   List<PromoCodeResponse> promoCodes;
-  List<RewardPointTransactionResponse> rewardPointTransactions;
   List<PromoCodeUsageResponse> promoCodeUsages;
 }

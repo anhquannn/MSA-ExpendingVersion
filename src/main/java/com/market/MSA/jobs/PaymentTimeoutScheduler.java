@@ -43,8 +43,8 @@ public class PaymentTimeoutScheduler implements Job {
       payment.setUpdateDate(now);
 
       Order order = payment.getOrder();
-      if (order != null && !OrderStatus.CANCELLED.equals(order.getStatus())) {
-        order.setStatus(OrderStatus.CANCELLED);
+      if (order != null && !OrderStatus.FAILED.equals(order.getStatus())) {
+        order.setStatus(OrderStatus.FAILED);
         orderRepository.save(order);
       }
       paymentRepository.save(payment);

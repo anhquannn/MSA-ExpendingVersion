@@ -1,5 +1,6 @@
 package com.market.MSA.requests.order;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -10,6 +11,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartItemSelectionRequest {
+  @NotNull(message = "cartId không được để null")
   Long cartId;
+
   List<Long> cartItemIds;
 }

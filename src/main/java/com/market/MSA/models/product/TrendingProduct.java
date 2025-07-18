@@ -2,10 +2,8 @@ package com.market.MSA.models.product;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
-
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -22,8 +20,9 @@ public class TrendingProduct {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long trendId;
 
-  @Positive
+  @PositiveOrZero(message = "Điểm xu hướng phải >= 0")
   double trendScore;
+
   LocalDateTime timestamp;
 
   @ManyToOne

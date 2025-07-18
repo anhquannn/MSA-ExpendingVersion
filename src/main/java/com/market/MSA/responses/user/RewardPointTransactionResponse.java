@@ -1,6 +1,5 @@
 package com.market.MSA.responses.user;
 
-import com.market.MSA.responses.order.OrderResponse;
 import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,5 +18,5 @@ public class RewardPointTransactionResponse {
   LocalDateTime createdAt;
 
   UserResponse user;
-  OrderResponse order;
+  //  OrderResponse order;
 }

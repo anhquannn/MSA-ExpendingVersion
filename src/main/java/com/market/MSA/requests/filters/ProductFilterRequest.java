@@ -3,6 +3,7 @@ package com.market.MSA.requests.filters;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductFilterRequest {
   Long branchId;
-  Long categoryId;
+  List<Long> categoryIds;
   Long supplierId;
   String unit;
   LocalDateTime fromDate;

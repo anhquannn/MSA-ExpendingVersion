@@ -1,6 +1,7 @@
 package com.market.MSA.repositories.product;
 
 import com.market.MSA.models.product.Product;
+import com.market.MSA.models.product.Supplier;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -15,12 +16,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
       "SELECT DISTINCT p FROM Product p "
           + "JOIN p.inventoryProducts ip "
           + "WHERE ip.inventory.branch.branchId = :branchId "
-          + "AND (:categoryId IS NULL OR p.category.categoryId = :categoryId) "
+          + "AND (COALESCE(:categoryIds, NULL) IS NULL OR p.category.categoryId IN :categoryIds) "
           + "AND (:supplierId IS NULL OR p.supplier.supplierId = :supplierId) "
           + "AND (:keyword IS NULL OR :keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
   Page<Product> findByBranchAndFilters(
       @Param("branchId") Long branchId,
-      @Param("categoryId") Long categoryId,
+      @Param("categoryIds") List<Long> categoryIds,
       @Param("supplierId") Long supplierId,
       @Param("keyword") String keyword,
       Pageable pageable);
@@ -31,7 +32,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
           + "JOIN FETCH p.category c "
           + "LEFT JOIN p.inventoryProducts ip "
           + "WHERE (:branchId IS NULL OR ip.inventory.branch.branchId = :branchId) "
-          + "AND (:categoryId IS NULL OR c.categoryId = :categoryId OR c.parentCategory.categoryId = :categoryId) "
+          + "AND (COALESCE(:categoryIds, NULL) IS NULL OR c.categoryId IN :categoryIds OR c.parentCategory.categoryId IN :categoryIds) "
           + "AND (:supplierId IS NULL OR s.supplierId = :supplierId) "
           + "AND (:unit IS NULL OR p.unit = :unit) "
           + "AND (:netWeight IS NULL OR p.netWeight = :netWeight) "
@@ -43,7 +44,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
           + "AND (COALESCE(:excludeProductIds, NULL) IS NULL OR p.productId NOT IN :excludeProductIds)")
   Page<Product> filterWithPaging(
       @Param("branchId") Long branchId,
-      @Param("categoryId") Long categoryId,
+      @Param("categoryIds") List<Long> categoryIds,
       @Param("supplierId") Long supplierId,
       @Param("unit") String unit,
       @Param("netWeight") String netWeight,
@@ -54,4 +55,15 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
       @Param("keyword") String keyword,
       @Param("excludeProductIds") List<Long> excludeProductIds,
       Pageable pageable);
+
+  @Query(
+      "select distinct p.unit from Product p where p.category.categoryId = :categoryId and p.unit is not null")
+  List<String> findDistinctUnitsByCategoryId(@Param("categoryId") Long categoryId);
+
+  @Query(
+      "select distinct p.netWeight from Product p where p.category.categoryId = :categoryId and p.netWeight is not null")
+  List<String> findDistinctNetWeightsByCategoryId(@Param("categoryId") Long categoryId);
+
+  @Query("select distinct p.supplier from Product p where p.category.categoryId = :categoryId")
+  List<Supplier> findDistinctSuppliersByCategoryId(@Param("categoryId") Long categoryId);
 }

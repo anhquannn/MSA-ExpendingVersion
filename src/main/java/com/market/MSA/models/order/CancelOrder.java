@@ -3,9 +3,8 @@ package com.market.MSA.models.order;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.market.MSA.constants.OrderStatus;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
-
 import jakarta.validation.constraints.PositiveOrZero;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +32,7 @@ public class CancelOrder {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long cancelOrderId;
 
+  @Column(nullable = false)
   LocalDateTime cancelDate;
 
   @Enumerated(EnumType.STRING)
@@ -40,14 +40,14 @@ public class CancelOrder {
 
   String reason;
 
-  @PositiveOrZero
-  double refundAmount;
+  @PositiveOrZero double refundAmount;
 
-  @ManyToOne
+  @OneToOne
   @JoinColumn(
       name = "order_id",
       nullable = false,
+      unique = true,
       foreignKey = @ForeignKey(name = "fk_cancel_order_order"))
-  @JsonBackReference("order-cancel-orders")
+  @JsonBackReference("order-cancel-order")
   Order order;
 }

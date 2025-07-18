@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CheckedHistoryController {
   CheckedHistoryService checkedHistoryService;
 
+  @PreAuthorize("hasRole('SURVEYOR')")
   @PostMapping
   public ApiResponse<CheckedHistoryResponse> createCheckedHistory(
       @RequestBody CheckedHistoryRequest request) {

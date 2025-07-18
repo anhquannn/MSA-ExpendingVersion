@@ -128,6 +128,7 @@ public class NotificationService {
               ErrorCode.INVENTORY_NOT_FOUND));
     }
 
+    notificationMapper.updateNotification(notificationRequest, notification);
     notification.setRead(notificationRequest.isRead());
 
     Notification updatedNotification = notificationRepository.save(notification);

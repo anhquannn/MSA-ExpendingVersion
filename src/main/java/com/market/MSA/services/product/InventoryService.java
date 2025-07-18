@@ -50,9 +50,11 @@ public class InventoryService {
         inventoryRepository
             .findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
-    inventory.setBranch(
-        entityFinderService.findByIdOrThrow(
-            branchRepository, inventoryRequest.getBranchId(), ErrorCode.BRANCH_NOT_FOUND));
+    if (inventoryRequest.getBranchId() != null) {
+      inventory.setBranch(
+          entityFinderService.findByIdOrThrow(
+              branchRepository, inventoryRequest.getBranchId(), ErrorCode.BRANCH_NOT_FOUND));
+    }
 
     inventoryMapper.updateInventory(inventoryRequest, inventory);
 

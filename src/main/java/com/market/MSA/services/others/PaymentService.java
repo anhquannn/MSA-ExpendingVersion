@@ -60,10 +60,6 @@ public class PaymentService {
   @Value("${vnpay.returnUrl}")
   protected String vnp_ReturnUrl;
 
-  @NonFinal
-  @Value("${vnpay.apiUrl}")
-  protected String vnp_apiUrl;
-
   @Transactional
   public PaymentResponse createPayment(PaymentRequest request) {
     Payment payment = paymentMapper.toPayment(request);
@@ -282,8 +278,6 @@ public class PaymentService {
     String vnp_TransactionNo = params.get("vnp_TransactionNo");
     String vnp_BankCode = params.get("vnp_BankCode");
     String vnp_PayDate = params.get("vnp_PayDate");
-    String vnp_Amount = params.get("vnp_Amount");
-    String vnp_SecureHash = params.get("vnp_SecureHash");
 
     // Find payment by transaction ID
     Payment payment =

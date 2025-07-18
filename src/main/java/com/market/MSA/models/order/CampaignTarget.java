@@ -21,6 +21,7 @@ public class CampaignTarget {
   Long campaignTargetId;
 
   @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
   PromoScopeType targetType;
 
   Long targetId;

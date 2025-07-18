@@ -28,7 +28,7 @@ public class OrderDetail {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long orderDetailId;
 
-  @Positive
+  @Positive(message = "Số lượng phải > 0")
   int quantity;
 
   String name;
@@ -36,10 +36,10 @@ public class OrderDetail {
   @Enumerated(EnumType.STRING)
   OrderStatus status;
 
-  @PositiveOrZero
+  @PositiveOrZero(message = "Đơn giá phải >= 0")
   double unitPrice;
 
-  @PositiveOrZero
+  @PositiveOrZero(message = "Tổng giá phải >= 0")
   double totalPrice;
 
   String image;

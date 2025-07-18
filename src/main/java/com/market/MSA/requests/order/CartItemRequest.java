@@ -17,10 +17,10 @@ import lombok.experimental.FieldDefaults;
 public class CartItemRequest {
   boolean isSelected;
 
-  @PositiveOrZero
+  @PositiveOrZero(message = "Giá phải >= 0")
   double price;
 
-  @Positive
+  @Positive(message = "Số lượng phải > 0")
   int quantity;
 
   Long productId;

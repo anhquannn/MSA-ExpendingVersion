@@ -11,6 +11,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,6 +46,7 @@ public class CartItemController {
         .build();
   }
 
+  @PreAuthorize("hasRole('CUSTOMER')")
   @PutMapping("/{cartItemId}")
   public ApiResponse<CartItemResponse> updateCartItem(
       @PathVariable Long cartItemId,
@@ -57,6 +59,7 @@ public class CartItemController {
         .build();
   }
 
+  @PreAuthorize("hasRole('CUSTOMER')")
   @PutMapping("/update-selection")
   ApiResponse<String> updateCartItemsSelection(
       @RequestBody CartItemSelectionRequest request, @RequestParam boolean isSelected) {
@@ -68,6 +71,7 @@ public class CartItemController {
         .build();
   }
 
+  @PreAuthorize("hasRole('CUSTOMER')")
   @DeleteMapping("/{cartItemId}")
   ApiResponse<Boolean> deleteCartItem(@PathVariable Long cartItemId) {
     Boolean result = cartItemService.deleteCartItem(cartItemId);
@@ -77,6 +81,7 @@ public class CartItemController {
         .build();
   }
 
+  @PreAuthorize("hasRole('CUSTOMER')")
   @DeleteMapping("/clear/{cartId}")
   ApiResponse<String> clearCart(@PathVariable Long cartId) {
     cartItemService.clearCart(cartId);
@@ -110,6 +115,7 @@ public class CartItemController {
         .build();
   }
 
+  @PreAuthorize("hasRole('CUSTOMER')")
   @PostMapping("/add")
   public ApiResponse<CartItemResponse> addToCart(
       @RequestParam Long userId,

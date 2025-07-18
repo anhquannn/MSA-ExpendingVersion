@@ -22,9 +22,16 @@ public class UserAddress {
   String city;
   String district;
   String ward;
+
+  @Column(nullable = false)
   String cityCode;
+
+  @Column(nullable = false)
   String districtCode;
+
+  @Column(nullable = false)
   String wardCode;
+
   String street;
   boolean isPrimary;
   LocalDateTime createdAt;

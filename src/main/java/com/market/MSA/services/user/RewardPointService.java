@@ -105,12 +105,12 @@ public class RewardPointService {
 
   @Transactional
   public RewardPointResponse earnPoints(Long userId, Long orderId, double amount) {
-    // Get or create reward point record for user
+    // 1. Tìm hoặc tạo mới bản ghi điểm thưởng cho người dùng.
     RewardPoint rewardPoint =
         rewardPointRepository.findByUser_UserId(userId, PageRequest.of(0, 1)).stream()
             .findFirst()
             .orElseGet(
-                () -> {
+                () -> { // Nếu người dùng chưa có điểm, tạo mới.
                   RewardPoint newRewardPoint = new RewardPoint();
                   newRewardPoint.setUser(
                       entityFinderService.findByIdOrThrow(
@@ -118,25 +118,24 @@ public class RewardPointService {
                   newRewardPoint.setPoints(0);
                   newRewardPoint.setTotalEarned(0);
                   newRewardPoint.setTotalRedeemed(0);
-                  newRewardPoint.setUpdatedAt(LocalDateTime.now());
                   return newRewardPoint;
                 });
 
-    // Update reward point record
-    rewardPoint.setPoints(rewardPoint.getPoints() + amount);
-    rewardPoint.setTotalEarned(rewardPoint.getTotalEarned() + amount);
+    // 2. Cập nhật điểm.
+    rewardPoint.setPoints(rewardPoint.getPoints() + amount); // Tăng điểm hiện có.
+    rewardPoint.setTotalEarned(
+        rewardPoint.getTotalEarned() + amount); // Tăng tổng điểm đã tích lũy.
     rewardPoint.setUpdatedAt(LocalDateTime.now());
     RewardPoint savedRewardPoint = rewardPointRepository.save(rewardPoint);
 
-    // Create transaction record
+    // 3. Tạo một giao dịch ghi lại lịch sử cộng điểm.
     rewardPointTransactionService.createRewardPointTransaction(
         RewardPointTransactionRequest.builder()
             .userId(userId)
             .orderId(orderId)
-            .pointChange(amount)
-            .type(RewardPointTransactionType.EARN)
+            .pointChange(amount) // Số điểm thay đổi là dương
+            .type(RewardPointTransactionType.EARN) // Loại giao dịch: Tích điểm
             .description("Earned points from order #" + orderId)
-            .createdAt(LocalDateTime.now())
             .build());
 
     return rewardPointMapper.toRewardPointResponse(savedRewardPoint);
@@ -145,32 +144,31 @@ public class RewardPointService {
   @Transactional
   public RewardPointResponse redeemPoints(
       Long userId, Long orderId, double pointsToRedeem, String description) {
-    // Get reward point record
+    // 1. Lấy thông tin điểm thưởng của người dùng.
     RewardPoint rewardPoint =
         rewardPointRepository.findByUser_UserId(userId, PageRequest.of(0, 1)).stream()
             .findFirst()
             .orElseThrow(() -> new AppException(ErrorCode.REWARD_POINT_NOT_FOUND));
 
-    // Check if user has enough points
+    // 2. Kiểm tra xem người dùng có đủ điểm để sử dụng không.
     if (rewardPoint.getPoints() < pointsToRedeem) {
       throw new AppException(ErrorCode.INSUFFICIENT_POINTS);
     }
 
-    // Update reward point record
-    rewardPoint.setPoints(rewardPoint.getPoints() - pointsToRedeem);
-    rewardPoint.setTotalRedeemed(rewardPoint.getTotalRedeemed() + pointsToRedeem);
-    rewardPoint.setUpdatedAt(LocalDateTime.now());
+    // 3. Cập nhật điểm.
+    rewardPoint.setPoints(rewardPoint.getPoints() - pointsToRedeem); // Trừ điểm hiện có.
+    rewardPoint.setTotalRedeemed(
+        rewardPoint.getTotalRedeemed() + pointsToRedeem); // Tăng tổng điểm đã sử dụng.
     RewardPoint savedRewardPoint = rewardPointRepository.save(rewardPoint);
 
-    // Create transaction record
+    // 4. Tạo giao dịch ghi lại lịch sử sử dụng điểm.
     rewardPointTransactionService.createRewardPointTransaction(
         RewardPointTransactionRequest.builder()
             .userId(userId)
             .orderId(orderId)
-            .pointChange(-pointsToRedeem)
-            .type(RewardPointTransactionType.REDEEM)
+            .pointChange(-pointsToRedeem) // Số điểm thay đổi là âm
+            .type(RewardPointTransactionType.REDEEM) // Loại giao dịch: Sử dụng điểm
             .description(description)
-            .createdAt(LocalDateTime.now())
             .build());
 
     return rewardPointMapper.toRewardPointResponse(savedRewardPoint);
@@ -178,31 +176,28 @@ public class RewardPointService {
 
   @Transactional
   public RewardPointResponse adjustPoints(Long userId, double adjustAmount, String reason) {
-    // Get reward point record
     RewardPoint rewardPoint =
         rewardPointRepository.findByUser_UserId(userId, PageRequest.of(0, 1)).stream()
             .findFirst()
             .orElseThrow(() -> new AppException(ErrorCode.REWARD_POINT_NOT_FOUND));
 
-    // Update reward point record
+    // Cập nhật điểm.
     rewardPoint.setPoints(rewardPoint.getPoints() + adjustAmount);
-    if (adjustAmount > 0) {
+    if (adjustAmount > 0) { // Nếu là cộng điểm
       rewardPoint.setTotalEarned(rewardPoint.getTotalEarned() + adjustAmount);
-    } else {
+    } else { // Nếu là trừ điểm
       rewardPoint.setTotalRedeemed(rewardPoint.getTotalRedeemed() + Math.abs(adjustAmount));
     }
-    rewardPoint.setUpdatedAt(LocalDateTime.now());
     RewardPoint savedRewardPoint = rewardPointRepository.save(rewardPoint);
 
-    // Create transaction record
+    // Tạo giao dịch ghi lại lịch sử điều chỉnh.
     rewardPointTransactionService.createRewardPointTransaction(
         RewardPointTransactionRequest.builder()
             .userId(userId)
-            .orderId(null) // No order associated with adjustment
+            .orderId(null) // Không liên quan đến đơn hàng cụ thể
             .pointChange(adjustAmount)
-            .type(RewardPointTransactionType.ADJUST)
+            .type(RewardPointTransactionType.ADJUST) // Loại giao dịch: Điều chỉnh
             .description(reason)
-            .createdAt(LocalDateTime.now())
             .build());
 
     return rewardPointMapper.toRewardPointResponse(savedRewardPoint);

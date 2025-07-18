@@ -96,7 +96,9 @@ public enum ErrorCode {
   PROMO_CODE_NOT_APPLICABLE(
       169, "Promo code is not applicable to the selected items", HttpStatus.BAD_REQUEST),
   DUPLICATE_CAMPAIGN_TARGET(170, "Campaign already has a target", HttpStatus.BAD_REQUEST),
-  ORDER_DETAIL_ALREADY_RATED(171, "Order detail has already been rated", HttpStatus.BAD_REQUEST);
+  ORDER_DETAIL_ALREADY_RATED(171, "Order detail has already been rated", HttpStatus.BAD_REQUEST),
+  INVALID_STATUS(172, "Invalid status", HttpStatus.BAD_REQUEST),
+  ;
 
   private final int code;
   private final String message;

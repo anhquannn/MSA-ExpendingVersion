@@ -34,8 +34,14 @@ public class Branch {
   String ward;
   String district;
   String city;
+
+  @Column(nullable = false)
   String cityCode;
+
+  @Column(nullable = false)
   String districtCode;
+
+  @Column(nullable = false)
   String wardCode;
 
   @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)

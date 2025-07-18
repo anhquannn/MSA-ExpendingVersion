@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,6 +40,7 @@ public class BranchController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping("/admin")
   public ApiResponse<BranchResponse> createBranchWithManager(
       @RequestBody CreateBranchWithManagerRequest request) {
@@ -50,6 +52,7 @@ public class BranchController {
   }
 
   // Update Branch
+  @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{branchId}")
   public ApiResponse<BranchResponse> updateBranch(
       @PathVariable Long branchId, @RequestBody BranchRequest branchRequest) {
@@ -61,6 +64,7 @@ public class BranchController {
   }
 
   // Delete Branch
+  @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{branchId}")
   public ApiResponse<Boolean> deleteBranch(@PathVariable Long branchId) {
     boolean result = branchService.deleteBranch(branchId);

@@ -39,7 +39,8 @@ public class PromoCodeService {
   @Transactional
   public PromoCodeResponse createPromoCode(PromoCodeRequest request) {
     PromoCode promoCode = promoCodeMapper.toPromoCode(request);
-    promoCode.setStatus(PromocodeStatus.INACTIVE);
+    promoCode.setStatus(
+        request.getStatus() != null ? request.getStatus() : PromocodeStatus.INACTIVE);
     promoCode.setCampaign(
         entityFinderService.findByIdOrThrow(
             campaignRepository, request.getCampaignId(), ErrorCode.CAMPAIGN_NOT_FOUND));

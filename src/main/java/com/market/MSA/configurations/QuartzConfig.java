@@ -24,6 +24,16 @@ public class QuartzConfig {
     this.beanFactory = beanFactory;
   }
 
+//  | Mô tả                        | Cron Expression        |
+//          | ---------------------------- | ---------------------- |
+//          | **Mỗi 5 phút**               | `"0 0/5 * * * ?"`      |
+//          | **Mỗi 10 phút**              | `"0 0/10 * * * ?"`     |
+//          | **Mỗi giờ**                  | `"0 0 * * * ?"`        |
+//          | **Mỗi ngày lúc 01:00 sáng**  | `"0 0 1 * * ?"`        |
+//          | **Mỗi thứ 2 lúc 09:00 sáng** | `"0 0 9 ? * MON"`      |
+//          | **Mỗi ngày làm việc 08:30**  | `"0 30 8 ? * MON-FRI"` |
+//          | **Mỗi 15 giây (demo)**       | `"0/15 * * * * ?"`     |
+
   @Bean
   public JobFactory jobFactory() {
     return new SpringBeanJobFactory() {

@@ -64,7 +64,7 @@ public class Payment {
   @JsonBackReference("user-payments")
   User user;
 
-  @OneToOne(fetch = FetchType.LAZY)
+  @OneToOne
   @JoinColumn(
       name = "order_id",
       nullable = false,

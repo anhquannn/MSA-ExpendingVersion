@@ -15,16 +15,20 @@ import org.springframework.data.repository.query.Param;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
   // --- Có phân trang: lọc theo userId + orderId + status + paymentMethod + từ ngày đến ngày ---
   @Query(
-      "SELECT p FROM Payment p WHERE "
-          + "(:userId IS NULL OR p.user.userId = :userId) AND "
-          + "(:orderId IS NULL OR p.order.orderId = :orderId) AND "
-          + "(:status IS NULL OR p.status = :status) AND "
-          + "(:paymentMethod IS NULL OR p.paymentMethod = :paymentMethod) AND "
-          + "(:fromDate IS NULL OR p.paymentDate >= :fromDate) AND "
-          + "(:toDate IS NULL OR p.paymentDate <= :toDate)")
+      """
+		SELECT p FROM Payment p WHERE
+		(:userId IS NULL OR p.user.userId = :userId) AND
+		( ( :orderIds IS NULL OR p.order.orderId IN :orderIds )
+			OR (:orderId IS NOT NULL AND p.order.orderId = :orderId) ) AND
+		(:status IS NULL OR p.status = :status) AND
+		(:paymentMethod IS NULL OR p.paymentMethod = :paymentMethod) AND
+		(:fromDate IS NULL OR p.paymentDate >= :fromDate) AND
+		(:toDate   IS NULL OR p.paymentDate <= :toDate)
+		""")
   Page<Payment> filterWithPaging(
       @Param("userId") Long userId,
       @Param("orderId") Long orderId,
+      @Param("orderIds") List<Long> orderIds,
       @Param("status") OrderStatus status,
       @Param("paymentMethod") String paymentMethod,
       @Param("fromDate") LocalDateTime fromDate,
@@ -33,16 +37,20 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
   // --- Không phân trang (dạng list): hỗ trợ sort ---
   @Query(
-      "SELECT p FROM Payment p WHERE "
-          + "(:userId IS NULL OR p.user.userId = :userId) AND "
-          + "(:orderId IS NULL OR p.order.orderId = :orderId) AND "
-          + "(:status IS NULL OR p.status = :status) AND "
-          + "(:paymentMethod IS NULL OR p.paymentMethod = :paymentMethod) AND "
-          + "(:fromDate IS NULL OR p.paymentDate >= :fromDate) AND "
-          + "(:toDate IS NULL OR p.paymentDate <= :toDate)")
+      """
+		SELECT p FROM Payment p WHERE
+		(:userId IS NULL OR p.user.userId = :userId) AND
+		( ( :orderIds IS NULL OR p.order.orderId IN :orderIds )
+			OR (:orderId IS NOT NULL AND p.order.orderId = :orderId) ) AND
+		(:status IS NULL OR p.status = :status) AND
+		(:paymentMethod IS NULL OR p.paymentMethod = :paymentMethod) AND
+		(:fromDate IS NULL OR p.paymentDate >= :fromDate) AND
+		(:toDate   IS NULL OR p.paymentDate <= :toDate)
+		""")
   List<Payment> filter(
       @Param("userId") Long userId,
       @Param("orderId") Long orderId,
+      @Param("orderIds") List<Long> orderIds,
       @Param("status") OrderStatus status,
       @Param("paymentMethod") String paymentMethod,
       @Param("fromDate") LocalDateTime fromDate,

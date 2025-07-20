@@ -135,6 +135,7 @@ public class PaymentService {
         .filter(
             request.getUserId(),
             request.getOrderId(),
+            request.getOrderIds(),
             request.getStatus(),
             request.getPaymentMethod(),
             fromDate,
@@ -171,6 +172,7 @@ public class PaymentService {
         .filterWithPaging(
             request.getUserId(),
             request.getOrderId(),
+            request.getOrderIds(),
             request.getStatus(),
             request.getPaymentMethod(),
             fromDate,

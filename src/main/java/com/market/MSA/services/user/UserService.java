@@ -357,6 +357,11 @@ public class UserService {
       user.setRoles(new HashSet<>(roles));
     }
 
+    // Hash new password if provided
+    if (request.getPassword() != null && !request.getPassword().isBlank()) {
+      user.setPassword(passwordEncoder.encode(request.getPassword()));
+    }
+
     // Save the updated user
     user = userRepository.save(user);
 

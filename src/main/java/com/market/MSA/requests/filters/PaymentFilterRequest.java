@@ -3,6 +3,7 @@ package com.market.MSA.requests.filters;
 import com.market.MSA.constants.OrderStatus;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,6 +13,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PaymentFilterRequest {
+  List<Long> orderIds;
   Long orderId;
   Long userId;
   String paymentMethod;

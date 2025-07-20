@@ -33,7 +33,7 @@ public interface UserMapper {
   @Named("mapRoles")
   default Set<Role> mapRoles(List<Long> roleIds) {
     if (roleIds == null || roleIds.isEmpty()) {
-      return new HashSet<>();
+      return null; // returning null allows MapStruct to ignore this field and keep existing roles
     }
     return roleIds.stream()
         .map(

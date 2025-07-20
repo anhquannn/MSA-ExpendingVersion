@@ -12,10 +12,13 @@ const firebaseConfig = {
   measurementId: 'G-BZSR3QVEP1'
 };
 
+// Declare messaging variable in outer scope so it is accessible later
+let messaging;
+
 // Initialize Firebase with configuration
 try {
   firebase.initializeApp(firebaseConfig);
-  const messaging = firebase.messaging();
+  messaging = firebase.messaging();
   
   // Handle background messages
   messaging.onBackgroundMessage((payload) => {
@@ -32,14 +35,17 @@ try {
   console.error('Firebase initialization failed:', error);
 }
 
-messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  
-  const notificationTitle = payload.notification.title;
-  const notificationOptions = {
-    body: payload.notification.body,
-    icon: '/icon.png'
-  };
+// If Firebase initialized successfully, set up background message handler
+if (messaging) {
+  messaging.onBackgroundMessage((payload) => {
+    console.log('[firebase-messaging-sw.js] Received background message ', payload);
+    const notificationTitle = payload.notification?.title ?? 'New notification';
+    const notificationOptions = {
+      body: payload.notification?.body,
+      icon: payload.notification?.icon ?? '/icon.png'
+    };
+    self.registration.showNotification(notificationTitle, notificationOptions);
+  });
+}
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
+

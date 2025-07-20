@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Pagination from '../../components/common/Pagination';
 import {
   inventoryCheckService,
   InventoryCheckRequestFilter,
@@ -13,6 +14,7 @@ const statusOptions: ProductStatus[] = ['PENDING', 'IN_PROGRESS', 'RECEIVED', 'C
 const InventoryCheckListPage: React.FC = () => {
   /*** STATE ***/
   const [data, setData] = useState<InventoryCheckRequestResponse[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<InventoryCheckRequestFilter>({ page: 1, pageSize: 20 });
   const [selectedIcr, setSelectedIcr] = useState<InventoryCheckRequestResponse | null>(null);
@@ -27,6 +29,7 @@ const InventoryCheckListPage: React.FC = () => {
         inventoryId: branchId,
       });
       setData(res.content);
+      setTotalPages(res.totalPages || 1);
     } catch (err: any) {
       alert(err.message || 'Tải dữ liệu thất bại');
     } finally {
@@ -94,17 +97,23 @@ const InventoryCheckListPage: React.FC = () => {
         >
           Lọc
         </button>
+        <button
+          className="px-3 py-2 bg-gray-200 rounded"
+          onClick={() => setFilter({ page: 1, pageSize: 20 })}
+        >
+          Reset
+        </button>
       </div>
 
       {/* TABLE */}
       {loading ? (
         <p>Đang tải...</p>
       ) : (
+        <>
         <table className="w-full border text-sm">
           <thead>
             <tr className="bg-gray-100">
               <th className="p-2 border">ID</th>
-              <th className="p-2 border">Kho</th>
               <th className="p-2 border">Người kiểm</th>
               <th className="p-2 border">Ghi chú</th>
               <th className="p-2 border">Ngày tạo</th>
@@ -116,30 +125,35 @@ const InventoryCheckListPage: React.FC = () => {
             {data.map((row: InventoryCheckRequestResponse) => (
               <tr key={row.icrId}>
                 <td className="p-2 border text-center">{row.icrId}</td>
-                <td className="p-2 border text-center">{row.inventoryResponse?.name}</td>
-                <td className="p-2 border text-center">{row.surveyorResponse?.fullName}</td>
+                <td className="p-2 border text-center">{row.surveyor?.fullName}</td>
                 <td className="p-2 border text-center max-w-xs truncate" title={row.note}>
                   {row.note}
                 </td>
                 <td className="p-2 border text-center">
-                  {new Date(row.createdAt).toLocaleString()}
+                  {row.requestedDate ? new Date(row.requestedDate).toLocaleString('vi-VN') : 'N/A'}
                 </td>
                 <td className="p-2 border text-center">{row.status}</td>
                 <td className="p-2 border text-center">
-                  <button
-                    className="px-3 py-1 bg-green-600 text-white rounded"
-                    onClick={() => handleStatusChange(row)}
-                    disabled={row.status === 'RECEIVED'}
-                  >
-                    Đánh dấu RECEIVED
-                  </button>
+                  {row.status !== 'RECEIVED' && (
+                    <button
+                      className="px-3 py-1 bg-green-600 text-white rounded"
+                      onClick={() => handleStatusChange(row)}
+                    >
+                      Đánh dấu RECEIVED
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-6">
+            <Pagination currentPage={filter.page ?? 1} totalPages={totalPages} onPageChange={(p)=>setFilter(f=>({...f,page:p}))} />
+          </div>
+        )}
+        </>
       )}
-
       {/* future detail modal */}
       {selectedIcr && (
         <Modal isOpen={!!selectedIcr} onClose={() => setSelectedIcr(null)} title="Chi tiết">

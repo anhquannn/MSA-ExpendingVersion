@@ -11,13 +11,14 @@ interface PromoCodeFormProps {
 
 const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialData, onSuccess, userId }) => {
   const queryClient = useQueryClient();
+  const today = new Date().toISOString().split('T')[0];
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [formData, setFormData] = useState<Partial<PromoCodePayload>>({
     name: '',
     code: '',
     description: '',
-    startDate: '',
-    endDate: '',
+    startDate: today,
+    endDate: today,
     status: 'ACTIVE',
     discountPercentage: 0,
     campaignId: 0,
@@ -42,8 +43,8 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialData, onSuccess, u
         name: initialData.name,
         code: initialData.code,
         description: initialData.description,
-        startDate: initialData.startDate.split('T')[0],
-        endDate: initialData.endDate.split('T')[0],
+        startDate: initialData.startDate.split(/T| /)[0],
+        endDate: initialData.endDate.split(/T| /)[0],
         status: initialData.status,
         discountPercentage: initialData.discountPercentage,
         campaignId: initialData.campaignId,
@@ -77,29 +78,44 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialData, onSuccess, u
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const {
-      name, code, startDate, endDate, discountPercentage, campaignId
-    } = formData;
+  const {
+    name, code, startDate, endDate, discountPercentage, campaignId, description, status
+  } = formData;
 
-    if (!name || !code || !startDate || !endDate || !campaignId) {
-      alert('Vui lòng nhập đầy đủ các trường bắt buộc.');
-      return;
-    }
+  if (!name || !code || !startDate || !endDate || !campaignId) {
+    alert('Vui lòng nhập đầy đủ các trường bắt buộc.');
+    return;
+  }
 
-    if (new Date(startDate) > new Date(endDate)) {
-      alert('Ngày bắt đầu không được sau ngày kết thúc.');
-      return;
-    }
+  if (new Date(startDate) > new Date(endDate)) {
+    alert('Ngày bắt đầu không được sau ngày kết thúc.');
+    return;
+  }
 
-    if (discountPercentage! < 0 || discountPercentage! > 100) {
-      alert('Giá trị giảm phải nằm trong khoảng 0 đến 100%.');
-      return;
-    }
+  if (discountPercentage! < 0 || discountPercentage! > 100) {
+    alert('Giá trị giảm phải nằm trong khoảng 0 đến 100%.');
+    return;
+  }
 
-    mutation.mutate(formData as PromoCodePayload);
+  // Chuyển đổi sang định dạng ISO 8601: yyyy-MM-ddTHH:mm:ss
+  const formattedStartDate = `${startDate} 00:00:00`;
+  const formattedEndDate = `${endDate} 23:59:59`; // optional: bao trùm hết ngày kết thúc
+
+  const payload: PromoCodePayload = {
+    name,
+    code,
+    description: description || '',
+    startDate: formattedStartDate,
+    endDate: formattedEndDate,
+    status: status || 'ACTIVE',
+    discountPercentage: discountPercentage || 0,
+    campaignId,
   };
+
+  mutation.mutate(payload);
+};
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -194,15 +210,12 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialData, onSuccess, u
           className="mt-1 w-full p-2 border rounded-md"
           required
         >
-          <option value={0}>-- Chọn chiến dịch --</option>
+          <option value="">-- Chọn chiến dịch --</option>
           {campaigns.map((campaign) => (
             <option key={campaign.campaignId} value={campaign.campaignId}>
               {campaign.name}
-              {campaign.scopeType !== 'ALL' && (
-                <span className="ml-2 text-sm text-gray-500">
-                  ({campaign.scopeType === 'CATEGORY' ? 'Danh mục' : 'Nhà cung cấp'})
-                </span>
-              )}
+              {campaign.scopeType !== 'ALL' &&
+                ` (${campaign.scopeType === 'CATEGORY' ? 'Danh mục' : 'Nhà cung cấp'})`}
             </option>
           ))}
         </select>

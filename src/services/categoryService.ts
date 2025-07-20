@@ -35,6 +35,7 @@ export interface CreateCategoryPayload {
 export interface UpdateCategoryPayload {
   name: string;
   description: string;
+  parentCategoryId?: number;
 }
 
 export const categoryService = {

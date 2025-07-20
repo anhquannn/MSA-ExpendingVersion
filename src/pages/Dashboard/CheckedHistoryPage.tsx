@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Pagination from '../../components/common/Pagination';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { inventoryService, CheckedHistory } from '../../services/inventoryService';
@@ -40,8 +41,13 @@ export const CheckedHistoryPage: React.FC = () => {
           placeholder="Tìm ghi chú..."
           value={filters.keyword}
           onChange={handleKeyword}
-          className="p-2 border rounded-md flex-1"
-        />
+          className="p-2 border rounded-md flex-1" />
+        <button
+          onClick={() => setFilters(prev => ({ ...prev, keyword: '' }))}
+          className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
+        >
+          Reset
+        </button>
       </div>
 
       {isLoading && <p>Đang tải...</p>}
@@ -73,24 +79,8 @@ export const CheckedHistoryPage: React.FC = () => {
       )}
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center mt-4 space-x-2">
-          <button
-            disabled={filters.page === 1}
-            onClick={() => gotoPage(filters.page - 1)}
-            className="px-3 py-1 border rounded disabled:opacity-40"
-          >
-            Prev
-          </button>
-          <span>
-            Trang {filters.page} / {totalPages}
-          </span>
-          <button
-            disabled={filters.page === totalPages}
-            onClick={() => gotoPage(filters.page + 1)}
-            className="px-3 py-1 border rounded disabled:opacity-40"
-          >
-            Next
-          </button>
+        <div className="flex justify-center mt-6">
+          <Pagination currentPage={filters.page} totalPages={totalPages} onPageChange={gotoPage} />
         </div>
       )}
     </div>

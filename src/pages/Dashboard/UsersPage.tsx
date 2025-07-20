@@ -1,6 +1,7 @@
 // src/pages/Dashboard/UsersPage.tsx
 
 import React, { useState, useEffect } from 'react';
+import Pagination from '../../components/common/Pagination';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 
@@ -27,6 +28,12 @@ const EditUserModal = ({ user, onClose, onSave, isSaving }: {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // --- Validate required fields ---
+    if (!formData.fullName?.trim() || !formData.email?.trim() || !formData.phoneNumber?.trim()) {
+      alert('Vui lòng nhập Họ tên, Email và Số điện thoại.');
+      return;
+    }
+    // (moved validation above)
     onSave(formData);
   };
 
@@ -66,6 +73,14 @@ const EditUserModal = ({ user, onClose, onSave, isSaving }: {
 
 const UsersPage: React.FC = () => {
   const navigate = useNavigate();
+  const handleKeywordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters(prev => ({ ...prev, keyword: e.target.value, page: 0 }));
+  };
+
+  const handleResetFilter = () => {
+    setFilters({ page: 0, size: 10, keyword: '' });
+  };
+
   const queryClient = useQueryClient();
 
   // --- STATE CHO UI: TAB, BỘ LỌC, VÀ MODAL ---
@@ -77,7 +92,7 @@ const UsersPage: React.FC = () => {
   ] as const;
   type UserTab = typeof tabList[number]['key'];
   const [activeTab, setActiveTab] = useState<UserTab>('customer');
-  const [filters, setFilters] = useState<PagingParams>({ page: 0, size: 10 });
+  const [filters, setFilters] = useState<PagingParams & { keyword?: string }>({ page: 0, size: 10, keyword: '' });
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [creating, setCreating] = useState<boolean>(false);
 
@@ -89,7 +104,7 @@ const UsersPage: React.FC = () => {
     error
   } = useQuery({
     queryKey: ['users', activeTab, filters],
-    queryFn: () => userService.getUsersByRole(activeTab === 'manager' ? 'manager_' : activeTab, filters),
+    queryFn: () => userService.getUsersByRole(activeTab === 'manager' ? 'manager_' : activeTab.toUpperCase(), { page: filters.page, size: filters.size, keyword: filters.keyword }),
     placeholderData: keepPreviousData,
   });
 
@@ -165,7 +180,22 @@ const UsersPage: React.FC = () => {
 
       </div>
 
-      {/* TODO: Thêm khu vực Filter/Search ở đây nếu cần */}
+      {/* Bộ lọc & thanh công cụ */}
+      <div className="flex items-center mb-4 space-x-2">
+        <input
+          type="text"
+          placeholder="Tìm kiếm..."
+          value={filters.keyword || ''}
+          onChange={handleKeywordChange}
+          className="p-2 border rounded-md w-64"
+        />
+        <button
+          onClick={handleResetFilter}
+          className="px-3 py-2 rounded-md bg-gray-300 hover:bg-gray-400"
+        >
+          Reset
+        </button>
+      </div>
 
       <div className="overflow-x-auto">
         {isLoading && <p className="text-center py-4">Đang tải dữ liệu...</p>}
@@ -234,29 +264,8 @@ const UsersPage: React.FC = () => {
       </div>
 
       {/* Phân trang */}
-      <div className="flex justify-between items-center mt-6">
-        {/* SỬA Ở ĐÂY: Dùng (filters.page ?? 0) để đảm bảo luôn là số */}
-        <p className="text-sm text-gray-600">Trang {(filters.page ?? 0) + 1} trên {totalPages}</p>
-
-        <div className="flex space-x-2">
-          {/* SỬA Ở ĐÂY */}
-          <button
-            onClick={() => handlePageChange((filters.page ?? 0) - 1)}
-            disabled={filters.page === 0 || isLoading}
-            className="px-4 py-2 border rounded-md disabled:opacity-50"
-          >
-            Trước
-          </button>
-
-          {/* SỬA Ở ĐÂY */}
-          <button
-            onClick={() => handlePageChange((filters.page ?? 0) + 1)}
-            disabled={(filters.page ?? 0) + 1 >= totalPages || isLoading}
-            className="px-4 py-2 border rounded-md disabled:opacity-50"
-          >
-            Sau
-          </button>
-        </div>
+      <div className="flex justify-center mt-6">
+        <Pagination currentPage={(filters.page ?? 0) + 1} totalPages={totalPages} onPageChange={(p)=>handlePageChange(p-1)} />
       </div>
 
       {/* Modal chỉnh sửa sẽ được render ở đây khi `editingUser` có giá trị */}

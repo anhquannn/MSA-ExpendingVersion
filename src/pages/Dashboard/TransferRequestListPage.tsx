@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { transferService, TransferRequestFilter, TransferResponse } from '../../services/transferService';
 import { Link } from 'react-router-dom';
-import { Eye, Search, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye } from 'lucide-react';
+import Pagination from '../../components/common/Pagination';
 
 const TransferRequestListPage: React.FC = () => {
   const [filters, setFilters] = useState<TransferRequestFilter>({ page: 1, pageSize: 10, sortBy: 'createdAt', sortDirection: 'DESC' });
@@ -14,8 +15,12 @@ const TransferRequestListPage: React.FC = () => {
   });
 
   const handleFilterChange = (newFilters: Partial<TransferRequestFilter>) => {
-    setFilters(prev => ({ ...prev, ...newFilters, page: 0 }));
+    setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
   };
+
+  const totalPages = (data?.totalPages !== undefined && data?.totalPages !== null)
+    ? data.totalPages
+    : Math.ceil((data?.totalElements ?? 0) / (filters.pageSize ?? 10)) || 1;
 
   const handlePageChange = (newPage: number) => {
     setFilters(prev => ({ ...prev, page: newPage }));
@@ -86,7 +91,11 @@ const TransferRequestListPage: React.FC = () => {
             ))}
           </tbody>
         </table>
-        {/* TODO: Add Pagination Component */}
+        {totalPages > 1 && (
+            <div className="flex justify-center my-6">
+              <Pagination currentPage={filters.page ?? 1} totalPages={totalPages} onPageChange={handlePageChange} />
+            </div>
+          )}
       </div>
     </div>
   );

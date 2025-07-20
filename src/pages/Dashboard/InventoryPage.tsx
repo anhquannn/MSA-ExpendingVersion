@@ -1,6 +1,7 @@
 // src/pages/Dashboard/InventoryPage.tsx
 
 import React, { useState, useEffect } from 'react';
+import Pagination from '../../components/common/Pagination';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { PagedResponse } from '../../services/categoryService';
@@ -30,10 +31,11 @@ function useDebounce(value: string, delay: number) {
 const InventoryModal = ({ isOpen, onClose, onSave, initialData }: {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: InventoryCreateParams) => void;
+    onSave: (data: InventoryCreateParams | Partial<InventoryCreateParams>) => void;
     initialData: Partial<Inventory> | null;
 }) => {
     const [formData, setFormData] = useState<Partial<InventoryCreateParams>>({});
+    const isEdit = Boolean(initialData?.inventoryId);
     const { data: branches = [] } = useQuery<Branch[]>({
         queryKey: ['allBranchesForSelect'],
         queryFn: () => branchService.getAllBranchesWithPaging({ pageSize: 999 }).then(res => res.content),
@@ -41,7 +43,16 @@ const InventoryModal = ({ isOpen, onClose, onSave, initialData }: {
 
     useEffect(() => {
         // Điền dữ liệu cho việc sửa, bao gồm cả branchId nếu có
-        setFormData(initialData || { name: '', address: '', contact: '', branchId: undefined });
+        if (initialData) {
+            setFormData({
+                name: initialData.name,
+                address: initialData.address,
+                contact: initialData.contact,
+                branchId: (initialData as any).branch?.branchId ?? (initialData as any).branchId, // hỗ trợ cả khi branchId được gửi trực tiếp
+            });
+        } else {
+            setFormData({ name: '', address: '', contact: '', branchId: undefined });
+        }
     }, [initialData, isOpen]);
 
     if (!isOpen) return null;
@@ -53,15 +64,24 @@ const InventoryModal = ({ isOpen, onClose, onSave, initialData }: {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData as InventoryCreateParams);
+        // Khi sửa, chỉ gửi lại address và contact
+        if (isEdit) {
+            onSave({
+                address: formData.address || '',
+                contact: formData.contact || '',
+                branchId: formData.branchId!,
+            });
+        } else {
+            onSave(formData as InventoryCreateParams);
+        }
     };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg space-y-4">
                 <h2 className="text-xl font-bold">{initialData?.inventoryId ? 'Sửa Kho Hàng' : 'Thêm Kho Hàng Mới'}</h2>
-                <input name="name" value={formData.name || ''} onChange={handleChange} placeholder="Tên kho (*)" required className="w-full p-2 border rounded-md" />
-                <select name="branchId" value={formData.branchId || ''} onChange={handleChange} required className="w-full p-2 border rounded-md">
+                <input name="name" value={formData.name || ''} onChange={handleChange} placeholder="Tên kho (*)" required={!isEdit} disabled={isEdit} className="w-full p-2 border rounded-md bg-gray-100 cursor-not-allowed" />
+                <select name="branchId" value={formData.branchId || ''} onChange={handleChange} required={!isEdit} disabled={isEdit} className="w-full p-2 border rounded-md bg-gray-100 cursor-not-allowed">
                     <option value="">Chọn chi nhánh (*)</option>
                     {branches.map(b => <option key={b.branchId} value={b.branchId}>{b.name}</option>)}
                 </select>
@@ -80,10 +100,11 @@ const InventoryModal = ({ isOpen, onClose, onSave, initialData }: {
 // Component chính: Trang Quản lý Kho Hàng
 export const InventoryListPage: React.FC = () => {
   const queryClient = useQueryClient();
-  const [filters, setFilters] = useState<Omit<InventoryListParams, 'branchId'>>({ keyword: '', sortBy: 'inventoryId', sortDirection: 'ASC' });
+  const [filters, setFilters] = useState<Omit<InventoryListParams, 'branchId'>>({ keyword: '', sortBy: 'inventoryId', sortDirection: 'ASC', page:1, pageSize:10 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingInventory, setEditingInventory] = useState<Partial<Inventory> | null>(null);
   const debouncedKeyword = useDebounce(filters.keyword || '', 500);
+
 
   const { data, isLoading, isError, error } = useQuery<PagedResponse<Inventory>, Error>({
     queryKey: ['inventories', { ...filters, keyword: debouncedKeyword }],
@@ -107,7 +128,8 @@ export const InventoryListPage: React.FC = () => {
   });
   
   const updateInventoryMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number, payload: InventoryCreateParams }) => inventoryService.updateInventory(id, payload),
+    mutationFn: ({ id, payload }: { id: number; payload: Partial<InventoryCreateParams> }) =>
+      inventoryService.updateInventory(id, payload),
     onSuccess: () => {
       alert('Cập nhật kho thành công!');
       queryClient.invalidateQueries({ queryKey: ['inventories'] });
@@ -125,29 +147,28 @@ export const InventoryListPage: React.FC = () => {
     setIsModalOpen(true);
   };
   const handleOpenEditModal = (inventory: Inventory) => {
-    setEditingInventory({
-      // inventoryId: inventory.inventoryId,
-      name: inventory.name,
-      address: inventory.address,
-      contact: inventory.contact,
-    });
+    // Pass entire inventory object so we can access branch info
+    setEditingInventory(inventory);
     setIsModalOpen(true);
   };
   
-  const handleSave = (formData: InventoryCreateParams) => {
+  // Receive either a full create payload or a partial update payload from the modal
+  const handleSave = (formData: InventoryCreateParams | Partial<InventoryCreateParams>) => {
     if (editingInventory && editingInventory.inventoryId) {
       updateInventoryMutation.mutate({ id: editingInventory.inventoryId, payload: formData });
     } else {
-      createInventoryMutation.mutate(formData);
+      createInventoryMutation.mutate(formData as InventoryCreateParams);
     }
   };
+  const totalPages = data?.totalPages ?? 1;
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">Quản lý Kho Hàng</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <input type="text" name="keyword" placeholder="Tìm theo tên kho..." value={filters.keyword || ''} onChange={handleFilterChange} className="p-2 border rounded-md md:col-span-2" />
+        <input type="text" name="keyword" placeholder="Tìm theo tên kho..." value={filters.keyword || ''} onChange={handleFilterChange} className="p-2 border rounded-md" />
+        <button onClick={()=>setFilters(f=>({ ...f, keyword:'', page:1 }))} className="px-3 py-2 bg-gray-200 rounded-md">Reset</button>
         <button onClick={handleOpenAddModal} className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition h-full">
           + Thêm Kho Hàng
         </button>
@@ -179,7 +200,7 @@ export const InventoryListPage: React.FC = () => {
                     <td className="py-3 px-6 font-medium">
                       <Link 
                         to={`/dashboard/inventories/${inv.inventoryId}`} 
-                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                        className="text-gray-800 hover:text-blue-600 font-medium transition-colors duration-200"
                         title={`Xem sản phẩm trong kho ${inv.name}`}
                       >
                         {inv.name}
@@ -204,6 +225,11 @@ export const InventoryListPage: React.FC = () => {
             )}
           </tbody>
         </table>
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-6">
+            <Pagination currentPage={filters.page ?? 1} totalPages={totalPages} onPageChange={(p)=>setFilters(f=>({...f,page:p}))} />
+          </div>
+        )}
       </div>
       <InventoryModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave} initialData={editingInventory} />
     </div>

@@ -2,16 +2,34 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Outlet } from 'react-router-dom';
 import AppBar from './AppBar';
+import { userService } from '../../../services/userService';
+import { LocalStorageManager } from '../../../utils/app_storage';
 import Sidebar from './Sidebar'; // Vẫn import Sidebar
 import { NotificationCtx, NotificationContextType } from '../../../contexts/NotificationContext';
 
 interface DashboardLayoutProps {
-  userName: string;
+  userName?: string;
   userAvatar?: string;
   onLogout: () => void;
 }
 
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ userName, userAvatar, onLogout }) => {
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ userName: initialUserName, userAvatar, onLogout }) => {
+  // --- User name state ---
+  const getLatestUserName = () => {
+    const stored = LocalStorageManager.getUser();
+    return (
+      (stored as any)?.Fullname ||
+      (stored as any)?.fullName ||
+      (stored as any)?.fullname ||
+      (stored as any)?.name ||
+      (stored as any)?.username ||
+      stored?.Email ||
+      initialUserName ||
+      'Guest'
+    );
+  };
+
+  const [userName, setUserName] = useState<string>(getLatestUserName());
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); 
   const [isMobile, setIsMobile] = useState(false); 
   const { unread: unreadCount } = useContext(NotificationCtx) as NotificationContextType; 
@@ -31,6 +49,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ userName, userAvatar,
       setIsSidebarOpen(false);
     }
   };
+  // Lắng nghe sự thay đổi user trong LocalStorage (CustomEvent được bắn từ LocalStorageManager)
+  useEffect(() => {
+    const handleUserUpdated = () => {
+      setUserName(getLatestUserName());
+    };
+    window.addEventListener('app_storage_user_updated', handleUserUpdated as EventListener);
+    return () => window.removeEventListener('app_storage_user_updated', handleUserUpdated as EventListener);
+  }, []);
+
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768; 

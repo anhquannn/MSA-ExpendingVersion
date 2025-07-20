@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tansta
 import { promoCodeService, PromoCode, PromoCodeFilter } from '../../services/promoCodeService';
 import PromoCodeForm from '../../components/PromoCode/PromoCodeForm';
 import Modal from '../../components/common/Modal';
+import Pagination from '../../components/common/Pagination';
 import { useParams } from 'react-router-dom';
 
 function useDebounce(value: string, delay: number) {
@@ -84,7 +85,7 @@ const PromoCodeManagementPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4 flex gap-3 items-center">
         <input
           type="text"
           placeholder="Tìm theo mã hoặc tên..."
@@ -92,6 +93,12 @@ const PromoCodeManagementPage: React.FC = () => {
           onChange={handleFilterChange}
           className="p-2 border rounded-md w-full md:w-1/3"
         />
+        <button
+          onClick={() => setFilters(prev => ({ ...prev, keyword: '', page: 1 }))}
+          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
+        >
+          Reset
+        </button>
       </div>
 
       {isLoading && <p className="text-center py-4">Đang tải...</p>}
@@ -139,24 +146,8 @@ const PromoCodeManagementPage: React.FC = () => {
         </table>
       </div>
 
-      <div className="flex justify-between items-center mt-6">
-        <p className="text-sm">Trang {pagedData?.number ? pagedData.number + 1 : 1} trên {totalPages}</p>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => handlePageChange(filters.page! - 1)}
-            disabled={pagedData?.number === 0 || isLoading}
-            className="px-4 py-2 border rounded disabled:opacity-50"
-          >
-            Trước
-          </button>
-          <button
-            onClick={() => handlePageChange(filters.page! + 1)}
-            disabled={(pagedData?.number ?? 0) + 1 >= totalPages || isLoading}
-            className="px-4 py-2 border rounded disabled:opacity-50"
-          >
-            Sau
-          </button>
-        </div>
+      <div className="flex justify-center mt-6">
+        <Pagination currentPage={filters.page ?? 1} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>
 
       <Modal

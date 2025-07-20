@@ -2,6 +2,7 @@
 
 import {api} from './apiService'; 
 import { PagedResponse } from './categoryService';
+import { uploadMultipleImages } from './storageService';
 
 export interface Supplier {
   supplierId: number;
@@ -71,5 +72,34 @@ export const supplierService = {
     };
     const fullResponse = await api.get<FullApiResponse>(`supplier/${supplierId}`);
     return fullResponse.result;
+  },  /**
+   * Tạo mới Supplier và upload ảnh lên Supabase (tùy chọn)
+   */
+  createSupplierWithImage: async (
+    payload: Omit<SupplierPayload, 'image'>,
+    imageFile?: File,
+  ): Promise<Supplier> => {
+    let imageUrl: string | null | undefined = null;
+    if (imageFile) {
+      const [url] = await uploadMultipleImages([imageFile], 'msa');
+      imageUrl = url;
+    }
+    return supplierService.createSupplier({ ...payload, image: imageUrl });
+  },
+
+  /**
+   * Cập nhật Supplier và upload ảnh mới nếu có
+   */
+  updateSupplierWithImage: async (
+    supplierId: number,
+    payload: SupplierPayload,
+    imageFile?: File,
+  ): Promise<Supplier> => {
+    let imageUrl: string | null | undefined = payload.image ?? null;
+    if (imageFile) {
+      const [url] = await uploadMultipleImages([imageFile], 'msa');
+      imageUrl = url;
+    }
+    return supplierService.updateSupplier(supplierId, { ...payload, image: imageUrl });
   },
 };

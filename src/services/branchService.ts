@@ -10,8 +10,11 @@ export interface Branch {
   phone: string;
   street: string;
   ward: string;
+  wardCode: string;
   district: string;
+  districtCode: string;
   city: string;
+  cityCode: string;
   inventory: {
     inventoryId: number;
     name: string;
@@ -24,8 +27,11 @@ export interface Branch {
       phone: string;
       street: string;
       ward: string;
+      wardCode: string;
       district: string;
+      districtCode: string;
       city: string;
+      cityCode: string;
     } | null;
   } | null;
 
@@ -45,8 +51,11 @@ export interface CreateBranchWithManagerPayload {
   branchPhone: string;
   branchStreet: string;
   branchWard: string;
+  branchWardCode: string;
   branchDistrict: string;
+  branchDistrictCode: string;
   branchCity: string;
+  branchCityCode: string;
 
   inventoryName: string;
   inventoryAddress: string;

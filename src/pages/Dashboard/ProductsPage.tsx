@@ -2,6 +2,7 @@
 
 // src/pages/ProductsPage.tsx
 import React, { useState, useEffect } from 'react';
+import Pagination from '../../components/common/Pagination';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 // --- Import các service và types ---
@@ -48,7 +49,7 @@ const ProductsPage: React.FC = () => {
     minPrice: undefined,
     maxPrice: undefined,
     page: 1,
-    pageSize: 100,
+    pageSize: 10,
   });
 
   const debouncedSearchTerm = useDebounce(filters.keyword || '', 500);
@@ -72,7 +73,9 @@ const ProductsPage: React.FC = () => {
   });
 
   const products = productsResponse?.productsPage?.content || [];
-  const totalPages = productsResponse?.productsPage?.totalPages || 1;
+  const totalPages = productsResponse?.productsPage?.totalPages && productsResponse.productsPage.totalPages > 0
+    ? productsResponse.productsPage.totalPages
+    : Math.ceil((productsResponse?.productsPage?.totalElements || 0) / (filters.pageSize || 10)) || 1;
   const categories = categoriesResponse?.content || [];
   const suppliers = suppliersResponse?.content || [];
 
@@ -165,6 +168,12 @@ const ProductsPage: React.FC = () => {
           onChange={handleFilterChange}
           className="w-full p-2 border rounded-md"
         />
+        <button
+          onClick={() => setFilters(prev => ({ ...prev, keyword: '', categoryId: undefined, supplierId: undefined, minPrice: undefined, maxPrice: undefined, page: 1 }))}
+          className="w-full md:w-auto px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
+        >
+          Reset
+        </button>
       </div>
 
       {/* --- CÁC NÚT THÊM --- */}
@@ -224,24 +233,8 @@ const ProductsPage: React.FC = () => {
       </div>
 
       {/* --- KHU VỰC PHÂN TRANG --- */}
-      <div className="flex justify-between items-center mt-6">
-        <p>Trang {filters.page} trên {totalPages}</p>
-        <div className="space-x-2">
-          <button
-            onClick={() => handlePageChange(filters.page! - 1)}
-            disabled={filters.page === 1}
-            className="px-4 py-2 border rounded-md disabled:opacity-50"
-          >
-            Trước
-          </button>
-          <button
-            onClick={() => handlePageChange(filters.page! + 1)}
-            disabled={filters.page === totalPages}
-            className="px-4 py-2 border rounded-md disabled:opacity-50"
-          >
-            Sau
-          </button>
-        </div>
+      <div className="flex justify-center mt-6">
+        <Pagination currentPage={filters.page ?? 1} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>
 
     </div>

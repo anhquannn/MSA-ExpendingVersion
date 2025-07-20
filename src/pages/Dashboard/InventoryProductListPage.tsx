@@ -6,6 +6,7 @@ import { inventoryProductService, InventoryProductFilterParams, InventoryProduct
 import { AlertTriangle, Edit, LoaderCircle, Search, X, Plus, Trash } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { Truck } from 'lucide-react';
+import Pagination from '../../components/common/Pagination';
 import { productService } from '../../services/productService';
 
 // UI-Only interface, should ideally import these instead
@@ -78,6 +79,7 @@ export function InventoryProductListPage() {
   placeholderData: (previousData) => previousData,
 });
 const productList = pagedData?.content ?? [];
+  const totalPages = pagedData?.totalPages ?? 1;
 
   // === Mutations ===
   const createMutation = useMutation({
@@ -115,12 +117,21 @@ const productList = pagedData?.content ?? [];
     setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
   };
 
+  const handlePageChange = (newPage: number) => {
+    setFilters(prev => ({ ...prev, page: newPage }));
+  };
+
   const handleEditClick = (product: InventoryProduct) => setEditingProduct(product);
   const handleCloseModal = () => setEditingProduct(null);
 
   const handleEditFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
+    // --- Validate new stock value ---
+    if (newStockValue === undefined || newStockValue === null || Number(newStockValue) <= 0) {
+      alert('Số lượng phải lớn hơn 0.');
+      return;
+    }
     const payload: InventoryProductUpdatePayload = {
       stockNumber: newStockValue,
       inventoryId: editingProduct.inventory.inventoryId,
@@ -133,7 +144,14 @@ const productList = pagedData?.content ?? [];
     // === Add form submit ===
   const handleAddFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addForm.productId) return;
+    if (!addForm.productId) {
+      alert('Vui lòng chọn sản phẩm.');
+      return;
+    }
+    if (addForm.stockNumber === undefined || addForm.stockNumber === null || Number(addForm.stockNumber) <= 0) {
+      alert('Số lượng phải lớn hơn 0.');
+      return;
+    }
     const payload: InventoryProductCreatePayload = {
       stockNumber: addForm.stockNumber,
       inventoryId: numericInventoryId,
@@ -352,6 +370,11 @@ const productList = pagedData?.content ?? [];
           </table>
         </div>
       </main>
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-6">
+        <Pagination currentPage={filters.page ?? 1} totalPages={totalPages} onPageChange={handlePageChange} />
+      </div>
 
       {/* Modal */}
       {editingProduct && (

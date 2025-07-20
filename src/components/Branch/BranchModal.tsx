@@ -23,9 +23,12 @@ const BranchModal: React.FC<BranchModalProps> = ({
     email: '',
     phone: '',
     city: '',
+    cityCode: '',
     district: '',
+    districtCode: '',
     street: '',
     ward: '',
+    wardCode: '',
     status: 'active', // Mặc định khi thêm mới
   });
 
@@ -36,9 +39,12 @@ const BranchModal: React.FC<BranchModalProps> = ({
         email: '',
         phone: '',
         city: '',
+        cityCode: '',
         district: '',
+        districtCode: '',
         street: '',
         ward: '',
+        wardCode: '',
         status: 'active',
       });
     }
@@ -50,6 +56,11 @@ const BranchModal: React.FC<BranchModalProps> = ({
   };
 
   const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.cityCode || !formData.districtCode || !formData.wardCode) {
+      alert('Vui lòng nhập đầy đủ mã Thành phố, Quận/Huyện và Phường/Xã.');
+      return;
+    }
     e.preventDefault();
     onSave(formData);
   };
@@ -121,6 +132,20 @@ const BranchModal: React.FC<BranchModalProps> = ({
               />
             </div>
             <div>
+              <label htmlFor="cityCode" className="block text-gray-700 text-sm font-bold mb-2">
+                Mã Thành phố:
+              </label>
+              <input
+                type="text"
+                id="cityCode"
+                name="cityCode"
+                value={formData.cityCode || ''}
+                onChange={handleChange}
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                required
+              />
+            </div>
+            <div>
               <label htmlFor="district" className="block text-gray-700 text-sm font-bold mb-2">
                 Quận/Huyện:
               </label>
@@ -129,6 +154,20 @@ const BranchModal: React.FC<BranchModalProps> = ({
                 id="district"
                 name="district"
                 value={formData.district}
+                onChange={handleChange}
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="districtCode" className="block text-gray-700 text-sm font-bold mb-2">
+                Mã Quận/Huyện:
+              </label>
+              <input
+                type="text"
+                id="districtCode"
+                name="districtCode"
+                value={formData.districtCode || ''}
                 onChange={handleChange}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 required
@@ -157,6 +196,19 @@ const BranchModal: React.FC<BranchModalProps> = ({
                 id="ward"
                 name="ward"
                 value={formData.ward || ''}
+                onChange={handleChange}
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              />
+            </div>
+            <div>
+              <label htmlFor="wardCode" className="block text-gray-700 text-sm font-bold mb-2">
+                Mã Phường/Xã:
+              </label>
+              <input
+                type="text"
+                id="wardCode"
+                name="wardCode"
+                value={formData.wardCode || ''}
                 onChange={handleChange}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               />

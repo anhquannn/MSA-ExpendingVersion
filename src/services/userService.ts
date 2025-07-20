@@ -65,7 +65,7 @@ export const userService = {
 
    getUsersByRole: async (
     role: string,
-    params: PagingParams
+    params: PagingParams & { keyword?: string }
   ): Promise<PagedResponse<User>> => {
     type FullApiResponse = { result: PagedResponse<User> };
     const endpoint = `user/role/${role}/page`;
@@ -91,7 +91,7 @@ export const userService = {
 
   getInfoUsers: async (): Promise<User[]> => {
     type FullApiResponse = { result: User[] };
-    const response = await api.get<FullApiResponse>('user');
+    const response = await api.get<FullApiResponse>('user/myinfo');
     return response.result;
   },
 

@@ -11,6 +11,7 @@ import logo from '../../assets/images/icon_app.png';
 import { routeConstants } from '../../constants/routeConstants';
 import { LoginApiResponse, LoginCredentials, UserProfileApiResponse } from '../../interfaces/auth.interface';
 import { LocalStorageManager, User } from '../../utils/app_storage';
+import { userService } from '../../services/userService';
 import { getFCMToken } from '../../config/firebaseConfig';
 import { NotificationService } from '../../services/notificationService';
 import { decodeJwt} from '../../utils/jwt';
@@ -51,16 +52,79 @@ const LoginPage = () => {
           return;
         }
 
-        // Lưu thông tin người dùng vào localStorage
-        if (loginResponse.result.user) {
+        // --- Fetch user profile after login and cache it locally ---
+        try {
+          const [me] = await userService.getInfoUsers();
+          if (me) {
+            const userToSave: User = {
+              User_Id: me.userId,
+              Fullname: me.fullName,
+              Email: me.email,
+              PhoneNumber: me.phoneNumber || '',
+              Address: '',
+              Role: me.roles?.[0]?.name === 'ADMIN' ? 'admin' : 'customer',
+              Brithday: me.birthday || '',
+            };
+            LocalStorageManager.saveUser(userToSave);
+          } else if (loginResponse.result.user) {
+            // Fallback if API still returns user object in login response (legacy)
+            const legacy = loginResponse.result.user;
+            const userToSave: User = {
+              User_Id: legacy.userId,
+              Fullname: legacy.fullName,
+              Email: legacy.email,
+              PhoneNumber: legacy.phoneNumber || '',
+              Address: legacy.address || '',
+              Role: (legacy.roles?.[0] as 'admin' | 'customer') || 'admin',
+              Brithday: legacy.birthday || '',
+            };
+            LocalStorageManager.saveUser(userToSave);
+          }
+        } catch (e) {
+          console.warn('Failed to fetch user info', e);
+          // Fallback to legacy user data if available
+          if (loginResponse.result.user) {
+            const legacy = loginResponse.result.user;
+            const userToSave: User = {
+              User_Id: legacy.userId,
+              Fullname: legacy.fullName,
+              Email: legacy.email,
+              PhoneNumber: legacy.phoneNumber || '',
+              Address: legacy.address || '',
+              Role: (legacy.roles?.[0] as 'admin' | 'customer') || 'admin',
+              Brithday: legacy.birthday || '',
+            };
+            LocalStorageManager.saveUser(userToSave);
+          }
+        }
+        try {
+          const [me] = await userService.getInfoUsers();
+          if (me) {
+            const userToSave: User = {
+              User_Id: me.userId,
+              Fullname: me.fullName,
+              Email: me.email,
+              PhoneNumber: me.phoneNumber || '',
+              Address: '',
+              Role: me.roles?.[0]?.name === 'ADMIN' ? 'admin' : 'customer',
+              Brithday: me.birthday || '',
+            };
+            LocalStorageManager.saveUser(userToSave);
+          }
+        } catch (e) {
+          console.warn('Failed to fetch user info', e);
+        }
+        // Extra safeguard for legacy API response that still returns a user object
+        if (loginResponse.result?.user) {
+          const legacy = loginResponse.result.user;
           const userToSave: User = {
-            User_Id: loginResponse.result.user.userId,
-            Fullname: loginResponse.result.user.fullName,
-            Email: loginResponse.result.user.email,
-            PhoneNumber: loginResponse.result.user.phoneNumber || '',
-            Address: loginResponse.result.user.address || '',
-            Role: loginResponse.result.user.roles?.[0] as 'admin' | 'customer' || 'admin',
-            Brithday: loginResponse.result.user.birthday || '',
+            User_Id: legacy.userId,
+            Fullname: legacy.fullName,
+            Email: legacy.email,
+            PhoneNumber: legacy.phoneNumber || '',
+            Address: legacy.address || '',
+            Role: (legacy.roles?.[0] as 'admin' | 'customer') || 'admin',
+            Brithday: legacy.birthday || '',
           };
           LocalStorageManager.saveUser(userToSave);
         }

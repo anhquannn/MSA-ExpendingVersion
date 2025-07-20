@@ -124,11 +124,17 @@ const CampaignForm: React.FC<CampaignFormProps> = ({ initialData, onSuccess }) =
             }
 
             if (initialData) {
-              // Editing mode: only update existing targets
+              // Editing mode: update existing targets or create new targets without campaignTargetId
               if (target.campaignTargetId) {
                 await campaignService.updateCampaignTarget(target.campaignTargetId, {
                   ...target,
                   campaignId: campaign.campaignId,
+                });
+              } else if (typeof target.targetId === 'number') {
+                await campaignService.createCampaignTarget({
+                  ...target,
+                  campaignId: campaign.campaignId,
+                  campaignTargetId: undefined,
                 });
               }
             } else {

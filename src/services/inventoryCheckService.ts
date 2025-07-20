@@ -8,10 +8,10 @@ export interface InventoryCheckRequestResponse {
   icrId: number;
   note?: string;
   status: ProductStatus;
-  createdAt: string;
+  requestedDate: string;
   updatedAt: string | null;
   inventoryResponse: InventoryResponse;
-  surveyorResponse: UserResponse;
+  surveyor: UserResponse;
 }
 
 export interface InventoryCheckRequestFilter {

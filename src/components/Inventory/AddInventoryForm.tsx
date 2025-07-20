@@ -42,8 +42,8 @@ const AddInventoryForm: React.FC<AddInventoryFormProps> = ({ onSuccess }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.branchId) {
-      alert('Vui lòng nhập Tên kho và chọn Chi nhánh.');
+    if (!formData.name?.trim() || !formData.address?.trim() || !formData.contact?.trim() || !formData.branchId) {
+      alert('Vui lòng nhập đầy đủ Tên kho, Địa chỉ, Số liên hệ và chọn Chi nhánh.');
       return;
     }
     createInventoryMutation.mutate(formData as InventoryCreateParams);

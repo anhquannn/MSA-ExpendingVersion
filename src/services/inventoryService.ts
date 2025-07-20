@@ -22,7 +22,7 @@ export interface InventoryCreateParams {
 }
 
 
-export type InventoryUpdateParams = InventoryCreateParams;
+export type InventoryUpdateParams = Partial<InventoryCreateParams>;
 export interface InventoryListParams {
   keyword?: string;
   branchId?: number;
@@ -64,7 +64,11 @@ export const inventoryService = {
     const response = await api.post<FullApiResponse>('inventory', payload);
     return response.result;
   },
-  updateInventory: async (inventoryId: number, payload: InventoryUpdateParams): Promise<Inventory> => {
+  // Accept partial fields when updating an inventory record
+  updateInventory: async (
+    inventoryId: number,
+    payload: InventoryUpdateParams
+  ): Promise<Inventory> => {
     type FullApiResponse = { result: Inventory };
     const response = await api.put<FullApiResponse>(`inventory/${inventoryId}`, payload);
     return response.result;

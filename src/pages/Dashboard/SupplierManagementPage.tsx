@@ -1,6 +1,7 @@
 // File: src/pages/Dashboard/SupplierManagementPage.tsx
 
 import React, { useState, useEffect } from 'react';
+import Pagination from '../../components/common/Pagination';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { supplierService, Supplier, SupplierPagingParams } from '../../services/supplierService';
 import Modal from '../../components/common/Modal'; // Tái sử dụng Modal chung
@@ -79,14 +80,20 @@ const SupplierManagementPage: React.FC = () => {
         <button onClick={handleOpenAddModal} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Thêm Mới</button>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4 flex gap-4">
         <input
           type="text"
           placeholder="Tìm theo tên hoặc thông tin liên hệ..."
           value={filters.keyword}
           onChange={handleFilterChange}
-          className="p-2 border rounded-md w-full md:w-1/3"
+          className="p-2 border rounded-md flex-1 md:w-1/3"
         />
+        <button
+          onClick={() => setFilters(prev => ({ ...prev, keyword: '' }))}
+          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
+        >
+          Reset
+        </button>
       </div>
 
       {isLoading && <p className="text-center py-4">Đang tải...</p>}
@@ -97,6 +104,7 @@ const SupplierManagementPage: React.FC = () => {
           <thead className="bg-gray-100">
             <tr>
               <th className="py-3 px-6 text-left">ID</th>
+              <th className="py-3 px-6 text-left">Hình</th>
               <th className="py-3 px-6 text-left">Tên NCC</th>
               <th className="py-3 px-6 text-left">Liên hệ</th>
               <th className="py-3 px-6 text-left">Địa chỉ</th>
@@ -107,6 +115,13 @@ const SupplierManagementPage: React.FC = () => {
             {suppliers.map(sup => (
               <tr key={sup.supplierId} className="border-b hover:bg-gray-50">
                 <td className="py-3 px-6">{sup.supplierId}</td>
+                <td className="py-3 px-4">
+                  <img
+                    src={sup.image ? sup.image : 'https://via.placeholder.com/64'}
+                    alt={sup.name}
+                    className="h-16 w-16 object-cover rounded-md"
+                  />
+                </td>
                 <td className="py-3 px-6 font-medium">{sup.name}</td>
                 <td className="py-3 px-6">{sup.contact}</td>
                 <td className="py-3 px-6">{sup.address}</td>
@@ -122,12 +137,8 @@ const SupplierManagementPage: React.FC = () => {
         </table>
       </div>
 
-      <div className="flex justify-between items-center mt-6">
-        <p className="text-sm">Trang {pagedData?.number ? pagedData.number + 1 : 1} trên {totalPages}</p>
-        <div className="flex space-x-2">
-            <button onClick={() => handlePageChange(filters.page! - 1)} disabled={pagedData?.number === 0 || isLoading} className="px-4 py-2 border rounded disabled:opacity-50">Trước</button>
-            <button onClick={() => handlePageChange(filters.page! + 1)} disabled={((pagedData?.number ?? 0) + 1 >= totalPages) || isLoading} className="px-4 py-2 border rounded disabled:opacity-50">Sau</button>
-        </div>
+      <div className="flex justify-center mt-6">
+        <Pagination currentPage={filters.page ?? 1} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>
 
       <Modal

@@ -60,6 +60,7 @@ export interface ProductUpdatePayload {
 export interface ProductFilterParams {
   branchId?: number;
   categoryId?: number;
+  categoryIds?: number[];
   supplierId?: number;
   unit?: string;
   fromDate?: string; // "YYYY-MM-DD HH:mm:ss"
@@ -104,18 +105,25 @@ export const productService = {
       message: string;
       result: FilteredProductsResult;
     };
-    const fullResponse = await api.post<FullApiResponse>('product/filter', params);
+    const payload = {
+      ...params,
+      categoryIds: params.categoryIds ?? (params.categoryId ? [params.categoryId] : undefined),
+    } as Omit<ProductFilterParams, 'categoryId'> & { categoryIds?: number[] };
+    const { categoryId, ...rest } = payload as any; // ensure no stale field
+    const fullResponse = await api.post<FullApiResponse>('product/filter', rest);
     return fullResponse.result;
   },
   createProduct: async (
     productData: ProductCreatePayload & { combinationProductIds?: number[] },
     imageUrls: string[],
-    initialInventoryData: Omit<InventoryProductCreatePayload, 'productId'>
+    initialInventoryData: Omit<InventoryProductCreatePayload, 'productId'>,
+    sendNotificationToAll: boolean = false
   ): Promise<Product> => {
     
     console.log("Service: Bước 1 - Đang tạo sản phẩm...");
     const { combinationProductIds, ...baseProductData } = productData as any;
-    const productResponse = await api.post<{ result: Product }>('product', baseProductData);
+    const endpoint = `product${sendNotificationToAll ? '?sendNotificationToAll=true' : ''}`;
+    const productResponse = await api.post<{ result: Product }>(endpoint, baseProductData);
     const newProduct = productResponse.result;
 
     if (!newProduct || !newProduct.productId) {
@@ -129,6 +137,7 @@ export const productService = {
         const imagePayload = {
           imageUrl: url,
           sortOrder: index + 1,
+          primary: index === 0,
           productId: newProduct.productId,
         };
         return api.post('image', imagePayload);
@@ -272,5 +281,20 @@ export const productService = {
     };
     const response = await api.get<FullApiResponse>(`product/${productId}`);
     return response.result;
+  },
+  addProductImages: async (productId: number, imageUrls: string[]): Promise<void> => {
+    if (!imageUrls || imageUrls.length === 0) {
+      return;
+    }
+    const imageAddPromises = imageUrls.map((url, index) => {
+      const imagePayload = {
+        imageUrl: url,
+        sortOrder: index + 1,
+        primary: index === 0,
+        productId,
+      };
+      return api.post('image', imagePayload);
+    });
+    await Promise.all(imageAddPromises);
   },
 };

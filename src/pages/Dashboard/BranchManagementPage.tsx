@@ -1,6 +1,7 @@
 // src/pages/Dashboard/BranchManagementPage.tsx
 
 import React, { useState, useEffect } from 'react';
+import Pagination from '../../components/common/Pagination';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 
@@ -135,6 +136,12 @@ const BranchManagementPage: React.FC = () => {
               <option value="ASC">Thứ tự: Tăng dần</option>
               <option value="DESC">Thứ tự: Giảm dần</option>
           </select>
+          <button
+            onClick={() => setFilters(prev => ({ ...prev, keyword: '', productId: undefined }))}
+            className="col-span-full md:col-auto bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md"
+          >
+            Reset
+          </button>
       </div>
 
       <div className="flex justify-end mb-6">
@@ -192,7 +199,7 @@ const BranchManagementPage: React.FC = () => {
       </div>
 
       <div className="flex justify-center mt-6">
-        {/* ... Pagination controls ... */}
+        <Pagination currentPage={filters.page ?? 1} totalPages={totalPages} onPageChange={goToPage} />
       </div>
     </div>
   );

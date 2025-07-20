@@ -72,6 +72,8 @@ const ProductUpsertPage: React.FC = () => {
   });
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [relatedProductIds, setRelatedProductIds] = useState<number[]>([]);
+  // Gửi thông báo cho tất cả khách hàng?
+  const [sendNotificationToAll, setSendNotificationToAll] = useState<boolean>(false);
   const [currentCombinations, setCurrentCombinations] = useState<any[]>([]); // Lưu các combination hiện tại
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [removingCombinationId, setRemovingCombinationId] = useState<number | null>(null);
@@ -177,7 +179,12 @@ const ProductUpsertPage: React.FC = () => {
 
   const createProductMutation = useMutation({
     mutationFn: (variables: { productData: ProductCreatePayload, imageUrls: string[], inventoryData: Omit<InventoryProductCreatePayload, 'productId'> }) =>
-      productService.createProduct({ ...variables.productData, combinationProductIds: relatedProductIds }, variables.imageUrls, variables.inventoryData),
+      productService.createProduct(
+        { ...variables.productData, combinationProductIds: relatedProductIds },
+        variables.imageUrls,
+        variables.inventoryData,
+        sendNotificationToAll,
+      ),
     ...mutationOptions,
     onSuccess: () => {
       alert('Thêm sản phẩm thành công!');
@@ -290,12 +297,21 @@ const ProductUpsertPage: React.FC = () => {
     e.preventDefault();
 
     // --- Validate ---
-    if (!productForm.name || !productForm.categoryId || !productForm.supplierId) {
+    if (!productForm.name?.trim() || !productForm.unit?.trim() || !productForm.netWeight?.trim() || !productForm.categoryId || !productForm.supplierId) {
       alert("Vui lòng điền các trường sản phẩm bắt buộc (*).");
       return;
     }
-    if (productForm.price !== undefined && Number(productForm.price) < 0) {
-      alert("Giá bán không được âm.");
+    if (productForm.price === undefined || Number(productForm.price) < 0) {
+    alert("Giá bán phải lớn hơn hoặc bằng 0.");
+      return;
+    }
+
+    if (productForm.discountPercentage !== undefined && Number(productForm.discountPercentage) < 0) {
+      alert("Phần trăm giảm giá phải lớn hơn hoặc bằng 0.");
+      return;
+    }
+    if (productForm.discountTriggerDays !== undefined && Number(productForm.discountTriggerDays) < 0) {
+      alert("Số ngày áp dụng phải lớn hơn hoặc bằng 0.");
       return;
     }
 
@@ -333,7 +349,10 @@ const ProductUpsertPage: React.FC = () => {
       };
 
       if (isEditMode) {
-        // Logic SỬA: chỉ cập nhật thông tin sản phẩm
+        // Logic SỬA: thêm ảnh mới (nếu có) rồi cập nhật thông tin sản phẩm
+        if (imageUrls.length > 0) {
+          await productService.addProductImages(Number(productId), imageUrls);
+        }
         updateProductMutation.mutate({ id: Number(productId), payload: productPayload });
       } else {
         // Logic THÊM: quy trình 3 bước
@@ -370,11 +389,11 @@ const ProductUpsertPage: React.FC = () => {
             </div>
             <div>
                <label htmlFor="price">Giá bán (VNĐ) (*)</label>
-               <input type="number" name="price" id="price" min={0} required value={productForm.price ?? ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border rounded-md" />
+               <input type="number" placeholder="0" name="price" id="price" min={0} required value={productForm.price ?? ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border rounded-md" />
              </div>
              <div>
                <label htmlFor="discountPercentage">Giảm giá (%)</label>
-               <input type="number" step="0.01" name="discountPercentage" id="discountPercentage" value={productForm.discountPercentage ?? ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border rounded-md" />
+               <input type="number" placeholder="0" min={0} step="0.01" name="discountPercentage" id="discountPercentage" value={productForm.discountPercentage ?? ''} onChange={handleFormChange} className="mt-1 block w-full p-2 border rounded-md" />
              </div>
              <div>
                <label htmlFor="discountTriggerDays">Số ngày áp dụng giảm</label>
@@ -528,6 +547,20 @@ const ProductUpsertPage: React.FC = () => {
             </div>
           </fieldset>
         )}
+
+        {/* === THÔNG BÁO === */}
+        <fieldset className="border p-4 rounded-md">
+          <legend className="text-lg font-semibold px-2">Thông báo</legend>
+          <label className="inline-flex items-center mt-2">
+            <input
+              type="checkbox"
+              className="form-checkbox h-5 w-5 text-green-600"
+              checked={sendNotificationToAll}
+              onChange={(e) => setSendNotificationToAll(e.target.checked)}
+            />
+            <span className="ml-2">Gửi thông báo sản phẩm mới đến tất cả khách hàng</span>
+          </label>
+        </fieldset>
 
         {/* === HÌNH ẢNH SẢN PHẨM === */}
         <fieldset className="border p-4 rounded-md">

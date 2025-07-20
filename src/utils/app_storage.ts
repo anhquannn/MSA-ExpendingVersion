@@ -61,7 +61,15 @@ class LocalStorageManager {
 
   static saveUser(user: User): void {
     LocalStorageManager._data.user = user;
+    // Trong handleSubmit, ngay trước saveUser
+    // Log the user data being saved for debugging purposes
+    console.log('Saving user to LocalStorageManager:', user);
     LocalStorageManager._saveData();
+    console.log('Saved user:', LocalStorageManager.getUser());
+    // Thông báo cho các component khác rằng user trong localStorage đã thay đổi
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('app_storage_user_updated', { detail: user }));
+    }
   }
 
   static saveBranch(branch: Branch): void {

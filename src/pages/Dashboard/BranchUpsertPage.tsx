@@ -10,6 +10,7 @@ import {
   Branch,
   CreateBranchWithManagerPayload,
 } from '../../services/branchService';
+import { shipmentService, CityResponse, DistrictResponse, WardResponse } from '../../services/shipmentService';
 
 // Giả định UpdatePayload, ta có thể tái sử dụng một phần từ CreatePayload
 type BranchUpdatePayload = Partial<Omit<Branch, 'branchId' | 'inventory'>>;
@@ -23,7 +24,24 @@ const BranchUpsertPage: React.FC = () => {
   const isEditMode = !!branchId;
 
   // State cho dữ liệu form
-  const [formData, setFormData] = useState<Partial<CreateBranchWithManagerPayload>>({});
+  const [formData, setFormData] = useState<Partial<CreateBranchWithManagerPayload>>({
+    branchName: '',
+    branchPhone: '',
+    branchStreet: '',
+    branchWard: '',
+    branchWardCode: '',
+    branchDistrict: '',
+    branchDistrictCode: '',
+    branchCity: '',
+    branchCityCode: '',
+    inventoryName: '',
+    inventoryAddress: '',
+    inventoryContact: '',
+    managerFullName: '',
+    managerEmail: '',
+    managerPhoneNumber: '',
+    managerPassword: '',
+  });
 
   // --- TẢI DỮ LIỆU CHO CHẾ ĐỘ SỬA ---
   const { data: existingBranch, isLoading: isLoadingBranch } = useQuery({
@@ -42,8 +60,11 @@ const BranchUpsertPage: React.FC = () => {
         branchName: existingBranch.name,
         branchPhone: existingBranch.phone,
         branchCity: existingBranch.city,
+        branchCityCode: existingBranch.cityCode,
         branchDistrict: existingBranch.district,
+        branchDistrictCode: existingBranch.districtCode,
         branchWard: existingBranch.ward,
+        branchWardCode: existingBranch.wardCode,
         branchStreet: existingBranch.street,
         // Các trường inventory và manager không được trả về từ API getById
         // nên sẽ không được điền sẵn khi chỉnh sửa.
@@ -51,7 +72,6 @@ const BranchUpsertPage: React.FC = () => {
       });
     }
   }, [existingBranch, isEditMode]);
-
 
   // --- MUTATIONS ĐỂ LƯU DỮ LIỆU ---
 
@@ -79,14 +99,103 @@ const BranchUpsertPage: React.FC = () => {
     onError: (err: Error) => alert(`Lỗi: ${err.message}`),
   });
 
+  // --- FETCH LOCATION LISTS ---
+  const { data: cities = [] } = useQuery<CityResponse[]>({
+    queryKey: ['cities'],
+    queryFn: shipmentService.getCities,
+  });
+
+  const { data: districts = [], refetch: refetchDistricts } = useQuery<DistrictResponse[]>({
+    queryKey: ['districts', formData.branchCityCode],
+    queryFn: () => {
+      const codeNum = Number(formData.branchCityCode);
+      if (Number.isNaN(codeNum)) return Promise.resolve([]);
+      return shipmentService.getDistricts(codeNum);
+    },
+    enabled: !!formData.branchCityCode,
+  });
+
+  const { data: wards = [], refetch: refetchWards } = useQuery<WardResponse[]>({
+    queryKey: ['wards', formData.branchDistrictCode],
+    queryFn: () => {
+      const codeNum = Number(formData.branchDistrictCode);
+      if (Number.isNaN(codeNum)) return Promise.resolve([]);
+      return shipmentService.getWards(codeNum);
+    },
+    enabled: !!formData.branchDistrictCode,
+  });
+
   // --- EVENT HANDLERS ---
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    // Cập nhật giá trị thô
     setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'branchCityCode') {
+      const selectedCity = cities.find(c => String(c.code) === value);
+      setFormData(prev => ({
+        ...prev,
+        branchCityCode: value,
+        branchCity: selectedCity?.name || '',
+        // reset các trường phụ thuộc
+        branchDistrictCode: '',
+        branchDistrict: '',
+        branchWardCode: '',
+        branchWard: '',
+      }));
+      // đảm bảo refetch sau khi state đã cập nhật
+      setTimeout(() => {
+        refetchDistricts();
+      }, 0);
+    }
+    if (name === 'branchDistrictCode') {
+      const selectedDistrict = districts.find(d => String(d.code) === value);
+      setFormData(prev => ({
+        ...prev,
+        branchDistrictCode: value,
+        branchDistrict: selectedDistrict?.name || '',
+        // reset ward
+        branchWardCode: '',
+        branchWard: '',
+      }));
+      setTimeout(() => {
+        refetchWards();
+      }, 0);
+
+    }
+    if (name === 'branchWardCode') {
+      const selectedWard = wards.find(w => String(w.code) === value);
+      setFormData(prev => ({
+        ...prev,
+        branchWardCode: value,
+        branchWard: selectedWard?.name || '',
+      }));
+    }
   };
 
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  // --- Validate required fields ---
+  const requiredFields = [
+    formData.branchName,
+    formData.branchPhone,
+    formData.branchCity,
+    formData.branchCityCode,
+    formData.branchDistrict,
+    formData.branchDistrictCode,
+    formData.branchWard,
+    formData.branchWardCode,
+    formData.branchStreet,
+  ];
+  const hasEmpty = requiredFields.some((f) => !f || String(f).trim() === '');
+  if (hasEmpty) {
+    alert('Vui lòng nhập đầy đủ thông tin chi nhánh.');
+    return;
+  }
     e.preventDefault();
 
     if (isEditMode) {
@@ -96,15 +205,18 @@ const BranchUpsertPage: React.FC = () => {
         name: formData.branchName,
         phone: formData.branchPhone,
         city: formData.branchCity,
+        cityCode: formData.branchCityCode,
         district: formData.branchDistrict,
+        districtCode: formData.branchDistrictCode,
         ward: formData.branchWard,
+        wardCode: formData.branchWardCode,
         street: formData.branchStreet,
       };
       updateBranchMutation.mutate({ id: Number(branchId), payload: updatePayload });
     } else {
       // Logic cho việc Thêm mới
       const createPayload = formData as CreateBranchWithManagerPayload;
-      // Thêm các bước validate dữ liệu ở đây nếu cần
+      // Passed validation, tiến hành gọi API
       createBranchMutation.mutate(createPayload);
     }
   };
@@ -114,30 +226,43 @@ const BranchUpsertPage: React.FC = () => {
   if (isLoadingBranch) {
     return <div className="text-center p-8">Đang tải thông tin chi nhánh để chỉnh sửa...</div>;
   }
-  
+
   return (
     <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md mt-10">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">
         {isEditMode ? 'Chỉnh Sửa Chi Nhánh' : 'Thêm Chi Nhánh Mới'}
       </h1>
       <form onSubmit={handleSubmit} className="space-y-8">
-        
-        {/* --- Phần Thông tin chi nhánh --- */}
+        {/* Thông tin chi nhánh */}
         <fieldset className="border p-4 rounded-md">
           <legend className="text-lg font-semibold px-2">Thông tin Chi nhánh</legend>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
             <input name="branchName" value={formData.branchName || ''} onChange={handleInputChange} placeholder="Tên chi nhánh (*)" required className="p-2 border rounded-md" />
             <input name="branchPhone" value={formData.branchPhone || ''} onChange={handleInputChange} placeholder="SĐT chi nhánh (*)" required className="p-2 border rounded-md" />
-            <input name="branchCity" value={formData.branchCity || ''} onChange={handleInputChange} placeholder="Thành phố (*)" required className="p-2 border rounded-md" />
-            <input name="branchDistrict" value={formData.branchDistrict || ''} onChange={handleInputChange} placeholder="Quận/Huyện (*)" required className="p-2 border rounded-md" />
-            <input name="branchWard" value={formData.branchWard || ''} onChange={handleInputChange} placeholder="Phường/Xã" className="p-2 border rounded-md" />
+
+            {/* Tỉnh/Thành phố */}
+            <select name="branchCityCode" value={formData.branchCityCode || ''} onChange={handleInputChange} required className="p-2 border rounded-md">
+              <option value="">Chọn Tỉnh/Thành phố (*)</option>
+              {cities.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+            </select>
+            {/* Quận/Huyện */}
+            <select name="branchDistrictCode" value={formData.branchDistrictCode || ''} onChange={handleInputChange} required className="p-2 border rounded-md">
+              <option value="">Chọn Quận/Huyện (*)</option>
+              {districts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
+            </select>
+            {/* Phường/Xã */}
+            <select name="branchWardCode" value={formData.branchWardCode || ''} onChange={handleInputChange} required className="p-2 border rounded-md">
+              <option value="">Chọn Phường/Xã (*)</option>
+              {wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
+            </select>
             <input name="branchStreet" value={formData.branchStreet || ''} onChange={handleInputChange} placeholder="Đường/Số nhà" className="p-2 border rounded-md" />
           </div>
         </fieldset>
 
-        {/* --- Phần Thông tin Kho và Quản lý (chỉ hiển thị khi thêm mới) --- */}
+        {/* Thông tin kho & manager chỉ khi thêm mới */}
         {!isEditMode && (
           <>
+            {/* Kho */}
             <fieldset className="border p-4 rounded-md">
               <legend className="text-lg font-semibold px-2">Thông tin Kho hàng</legend>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
@@ -147,6 +272,7 @@ const BranchUpsertPage: React.FC = () => {
               </div>
             </fieldset>
 
+            {/* Manager */}
             <fieldset className="border p-4 rounded-md">
               <legend className="text-lg font-semibold px-2">Thông tin Người quản lý</legend>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
@@ -159,7 +285,7 @@ const BranchUpsertPage: React.FC = () => {
           </>
         )}
 
-        {/* --- Nút bấm --- */}
+        {/* Buttons */}
         <div className="flex justify-end space-x-4">
           <button type="button" onClick={() => navigate('/dashboard/branches')} className="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-md hover:bg-gray-300">
             Hủy
@@ -168,10 +294,10 @@ const BranchUpsertPage: React.FC = () => {
             {createBranchMutation.isPending || updateBranchMutation.isPending ? 'Đang lưu...' : 'Lưu lại'}
           </button>
         </div>
-
       </form>
     </div>
   );
+
 };
 
 export default BranchUpsertPage;

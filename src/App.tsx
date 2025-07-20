@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 
 // Import các hằng số route
 import { routeConstants } from './constants/routeConstants';
+import { AuthTokenManager } from './services/apiService';
 
 // Import LocalStorageManager
 import { LocalStorageManager } from './utils/app_storage';
@@ -53,13 +54,26 @@ function App() {
   const currentUser = LocalStorageManager.getUser();
   const isLoggedIn = !!LocalStorageManager.getAccessToken();
 
+    // Derive a friendly display name with multiple fall-backs because different APIs
+  // may use different casings / fields (e.g. fullName, Fullname, name, username …)
+  const displayName =
+    (currentUser as any)?.Fullname ||
+    (currentUser as any)?.fullName ||
+    (currentUser as any)?.fullname ||
+    (currentUser as any)?.name ||
+    (currentUser as any)?.username ||
+    currentUser?.Email ||
+    'Guest';
+
   const mockLoggedInUser = {
-    name: currentUser ? currentUser.Fullname : 'Guest',
+    name: displayName,
     avatar: '../../assets/images/default-avatar.png',
   };
 
   const handleLogout = () => {
+    // Xóa toàn bộ dữ liệu ứng dụng và token đăng nhập
     LocalStorageManager.clearAllData();
+    AuthTokenManager.clearTokens();
     window.location.href = routeConstants.login;
   };
 

@@ -148,18 +148,18 @@ const OrdersPage = () => {
   };
 
     // Fetch orders from API
+  // Lấy trạng thái thanh toán một cách batch
   const fetchPaymentStatuses = useCallback(async (ordersList: SimpleOrder[]) => {
     const map: Record<number, OrderStatus | null> = {};
-    await Promise.all(
-      ordersList.map(async (o) => {
-        try {
-          const status = await paymentService.getLatestPaymentStatusForOrder(o.orderId);
-          map[o.orderId] = status;
-        } catch (e) {
-          map[o.orderId] = null;
-        }
-      })
-    );
+    try {
+        const mapFromApi = await paymentService.getLatestPaymentStatusesForOrders(
+          ordersList.map((o) => o.orderId),
+        );
+        Object.assign(map, mapFromApi);
+      } catch (err) {
+        console.error('Could not fetch payment statuses', err);
+      }
+    console.log('Fetched payment status map', map);
     setPaymentStatuses(map);
   }, []);
 
@@ -211,7 +211,7 @@ const OrdersPage = () => {
   };
 
     // Hiển thị nhãn tình trạng thanh toán
-  const renderPaymentStatus = (status?: OrderStatus | null): string => {
+  const renderPaymentStatus = (status?: OrderStatus | null | undefined): string => {
     switch (status) {
       case OrderStatus.PAID:
         return 'Đã thanh toán';
@@ -219,6 +219,7 @@ const OrdersPage = () => {
         return 'Đang thanh toán';
       case OrderStatus.FAILED:
         return 'Thanh toán thất bại';
+      case undefined:
       default:
         return 'Chưa thanh toán';
     }
@@ -535,7 +536,9 @@ const OrdersPage = () => {
                         <td className="py-3 px-4 border-b">{(order as any).branch?.name || order.branchName || 'N/A'}</td>
                         <td className="py-3 px-4 border-b">{formatDate(order.orderDate)}</td>
                         <td className="py-3 px-4 border-b">{formatCurrency(order.grandTotal)}</td>
-                         <td className="py-3 px-4 border-b">{renderPaymentStatus(paymentStatuses[order.orderId])}</td>
+                         <td className="py-3 px-4 border-b">{
+                             renderPaymentStatus(paymentStatuses[order.orderId] ?? undefined)
+                           }</td>
                         <td className="py-3 px-4 border-b">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusClasses(order.status)}`}>
                             {getStatusLabel(order.status)}

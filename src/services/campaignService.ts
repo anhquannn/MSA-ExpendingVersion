@@ -66,7 +66,7 @@ export const campaignService = {
       result: Campaign[];
     };
 
-    const response = await api.post<FullApiResponse>('campaign', {}); // Không có filter
+    const response = await api.get<FullApiResponse>('campaign', {}); // Không có filter
     return Array.isArray(response.result) ? response.result : [];
   },
 

@@ -17,15 +17,21 @@ const SupplierForm: React.FC<SupplierFormProps> = ({ onSuccess, initialData }) =
     contact: '',
     image: '',
   });
+  // File ảnh người dùng chọn
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   // Điền dữ liệu vào form khi ở chế độ sửa
   useEffect(() => {
     if (initialData) {
+      const supabaseBaseUrl = process.env.REACT_APP_SUPABASE_URL;
+      const processedImage = initialData.image && !initialData.image.startsWith('http') && supabaseBaseUrl
+        ? `${supabaseBaseUrl}/storage/v1/object/public/msa/${initialData.image}`
+        : initialData.image || '';
       setFormData({
         name: initialData.name,
         address: initialData.address,
         contact: initialData.contact,
-        image: initialData.image || '',
+        image: processedImage,
       });
     }
   }, [initialData]);
@@ -33,9 +39,9 @@ const SupplierForm: React.FC<SupplierFormProps> = ({ onSuccess, initialData }) =
   const mutation = useMutation({
     mutationFn: (payload: SupplierPayload) => {
       if (initialData?.supplierId) {
-        return supplierService.updateSupplier(initialData.supplierId, payload);
+        return supplierService.updateSupplierWithImage(initialData.supplierId, payload, imageFile || undefined);
       }
-      return supplierService.createSupplier(payload);
+      return supplierService.createSupplierWithImage(payload, imageFile || undefined);
     },
     onSuccess: () => {
       alert(initialData ? 'Cập nhật nhà cung cấp thành công!' : 'Thêm nhà cung cấp thành công!');
@@ -50,13 +56,35 @@ const SupplierForm: React.FC<SupplierFormProps> = ({ onSuccess, initialData }) =
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      // Hiển thị preview tạm thời
+      const previewUrl = URL.createObjectURL(file);
+      setFormData(prev => ({ ...prev, image: previewUrl }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.contact) {
       alert('Vui lòng điền Tên và Thông tin liên hệ.');
       return;
     }
-    mutation.mutate(formData as SupplierPayload);
+
+    try {
+      const payload: SupplierPayload = {
+        name: formData.name!,
+        contact: formData.contact!,
+        address: formData.address || '',
+        image: formData.image as string | null ?? null,
+      };
+      mutation.mutate(payload);
+    } catch (err) {
+      console.error('Lỗi upload ảnh:', err);
+      alert('Lỗi khi tải ảnh lên. Vui lòng thử lại.');
+    }
   };
 
   return (
@@ -74,8 +102,11 @@ const SupplierForm: React.FC<SupplierFormProps> = ({ onSuccess, initialData }) =
         <input name="address" value={formData.address} onChange={handleChange} className="mt-1 w-full p-2 border rounded-md" />
       </div>
       <div>
-        <label className="block text-sm font-medium">URL Hình ảnh</label>
-        <input name="image" value={formData.image || ''} onChange={handleChange} className="mt-1 w-full p-2 border rounded-md" />
+        <label className="block text-sm font-medium">Ảnh đại diện</label>
+        <input type="file" accept="image/*" onChange={handleFileChange} className="mt-1 w-full" />
+        {formData.image && (
+          <img src={formData.image as string} alt="preview" className="h-16 mt-2 object-cover rounded" />
+        )}
       </div>
       <div className="flex justify-end pt-2">
         <button type="submit" disabled={mutation.isPending} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400">

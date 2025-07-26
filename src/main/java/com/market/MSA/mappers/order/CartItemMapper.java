@@ -20,6 +20,7 @@ public interface CartItemMapper {
 
   @Mapping(target = "cartItemId", source = "cartItemId")
   @Mapping(target = "isSelected", source = "selected")
+  @Mapping(target = "isFreeItem", source = "freeItem")
   @Mapping(target = "price", source = "price")
   @Mapping(target = "quantity", source = "quantity")
   @Mapping(target = "product", source = "product")

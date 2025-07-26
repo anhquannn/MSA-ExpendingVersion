@@ -98,6 +98,7 @@ public enum ErrorCode {
   DUPLICATE_CAMPAIGN_TARGET(170, "Campaign already has a target", HttpStatus.BAD_REQUEST),
   ORDER_DETAIL_ALREADY_RATED(171, "Order detail has already been rated", HttpStatus.BAD_REQUEST),
   INVALID_STATUS(172, "Invalid status", HttpStatus.BAD_REQUEST),
+  PROMOTION_NOT_FOUND(173, "Promotion not found", HttpStatus.NOT_FOUND),
   ;
 
   private final int code;

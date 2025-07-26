@@ -1,6 +1,7 @@
 package com.market.MSA.responses.product;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.market.MSA.constants.ABCClassification;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,11 +38,15 @@ public class ProductResponse implements Serializable {
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime updatedAt;
 
+  LocalDateTime lastClassificationDate;
+  boolean isPromotional;
+  boolean isExemptFromPromotion;
+  ABCClassification abcClassification;
+
   double totalRevenue;
 
   SupplierResponse supplier;
   CategoryResponse category;
-  List<InventoryProductResponse> inventoryProductResponses;
   List<FeedbackResponse> feedbackResponses;
   List<ProductImageResponse> productImageResponses;
   List<TrendingProductResponse> trendingProductResponses;

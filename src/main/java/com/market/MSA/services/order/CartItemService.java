@@ -15,6 +15,7 @@ import com.market.MSA.requests.order.CartItemRequest;
 import com.market.MSA.responses.order.CartItemResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import com.market.MSA.services.product.InventoryProductService;
+import com.market.MSA.services.product.PromotionService;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ public class CartItemService {
   final CartItemMapper cartItemMapper;
 
   final InventoryProductService inventoryProductService;
+  final PromotionService promotionService;
 
   @Transactional
   public CartItemResponse createCartItem(CartItemRequest request) {
@@ -137,7 +139,17 @@ public class CartItemService {
               .build();
     }
     // 5. Lưu 'CartItem' (dù là mới hay được cập nhật) vào CSDL và trả về response cho client.
-    return cartItemMapper.toCartItemResponse(cartItemRepository.save(cartItem));
+    CartItem saved = cartItemRepository.save(cartItem);
+    // Sau khi thêm/cập nhật CartItem, hệ thống sẽ rà soát xem giỏ hàng có đủ
+    // điều kiện khuyến mãi gói (bundle promotion) hay không.
+    // Nếu thỏa, PromotionService sẽ tự động tạo/ cập nhật các mục giảm giá tương ứng
+    // (ví dụ: mua 2 tặng 1, mua combo giảm 10%, ...).
+    // Lưu ý: hàm này KHÔNG giảm giá trực tiếp ở đây, nó chỉ chuẩn bị dữ liệu
+    // để tính toán ở bước "preview" và "checkout".
+    // Kích hoạt khuyến mãi bundle tự động
+    // Truyền cả cartId và branchId để kiểm tra tồn kho chính xác
+    promotionService.applyBundlePromotions(cart.getCartId());
+    return cartItemMapper.toCartItemResponse(saved);
   }
 
   @Transactional
@@ -160,6 +172,8 @@ public class CartItemService {
     // Update cart item using repository method
     cartItemRepository.updateCartItem(cartItemId, isSelected, quantity);
 
+    // After update, ensure bundle items remain consistent with new selection/quantity
+    synchronizeBundleItems(cartItem.getCart().getCartId());
     // Get updated cart item
     return getCartItemById(cartItemId);
   }
@@ -171,6 +185,8 @@ public class CartItemService {
     } else {
       cartItemRepository.updateCartItemsSelection(cartItemIds, isSelected);
     }
+    // Synchronize bundle items after bulk selection change
+    synchronizeBundleItems(cartId);
   }
 
   @Transactional
@@ -195,19 +211,40 @@ public class CartItemService {
     return cartItemMapper.toCartItemResponse(cartItem);
   }
 
+  @Transactional(readOnly = true)
   @Cacheable("cart_items_true")
   public List<CartItemResponse> getCartItemsByCartId(Long cartId) {
+    // Ensure free items are synchronized based on current selections before returning list
+    synchronizeBundleItems(cartId);
     List<CartItem> cartItems = cartItemRepository.findByCart_CartIdAndIsSelected(cartId, true);
     return cartItems.stream().map(cartItemMapper::toCartItemResponse).collect(Collectors.toList());
   }
 
+  @Transactional(readOnly = true)
   @Cacheable("cart_items")
   public List<CartItemResponse> getAllCartItemsByCartId(Long cartId) {
+    // Synchronize free items to reflect current state (selected and non-selected)
+    synchronizeBundleItems(cartId);
     List<CartItem> cartItems = cartItemRepository.findByCart_CartId(cartId);
     return cartItems.stream().map(cartItemMapper::toCartItemResponse).collect(Collectors.toList());
   }
 
+  /**
+   * Refresh bundle (free) items to ensure consistency before any pricing operation. Logic: remove
+   * all free items, then re-apply bundle promotions based on current selected main items.
+   */
+  @Transactional
+  public void synchronizeBundleItems(Long cartId) {
+    // Remove current free items
+    cartItemRepository.deleteFreeItemsByCartId(cartId);
+    // Re-apply promotions to add correct free items
+    promotionService.applyBundlePromotions(cartId);
+  }
+
+  @Transactional
   public double calculateCartTotal(Long cartId) {
+    // Ensure free items reflect current cart state
+    synchronizeBundleItems(cartId);
     return cartItemRepository.calculateCartTotal(cartId);
   }
 }

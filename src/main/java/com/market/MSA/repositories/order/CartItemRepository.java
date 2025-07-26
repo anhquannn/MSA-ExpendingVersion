@@ -41,6 +41,11 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
   Optional<CartItem> findByCart_CartIdAndProduct_ProductId(
       @Param("cartId") Long cartId, @Param("productId") Long productId);
 
+  @Query(
+      "SELECT c FROM CartItem c WHERE c.cart.cartId = :cartId AND c.product.productId = :productId AND c.isFreeItem = true")
+  Optional<CartItem> findByCart_CartIdAndProduct_ProductIdAndIsFreeItemTrue(
+      @Param("cartId") Long cartId, @Param("productId") Long productId);
+
   @Query("SELECT c FROM CartItem c WHERE c.cart.cartId = :cartId AND c.isSelected = :isSelected")
   List<CartItem> findByCart_CartIdAndIsSelected(
       @Param("cartId") Long cartId, @Param("isSelected") boolean isSelected);
@@ -51,4 +56,10 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
   @Query(
       "SELECT COALESCE(SUM(c.price * c.quantity), 0) FROM CartItem c WHERE c.cart.cartId = :cartId AND c.isSelected = true")
   Double calculateCartTotal(@Param("cartId") Long cartId);
+
+  // Delete all free items in a cart – used to re-synchronise bundle items
+  @Transactional
+  @Modifying
+  @Query("DELETE FROM CartItem c WHERE c.cart.cartId = :cartId AND c.isFreeItem = true")
+  void deleteFreeItemsByCartId(@Param("cartId") Long cartId);
 }

@@ -64,7 +64,7 @@ public class OrderController {
       @RequestParam Long userId,
       @RequestParam Long cartId,
       @RequestParam(required = false) List<String> promoCodes,
-      @RequestParam Double usePoints) {
+      @RequestParam(required = false) Double usePoints) {
 
     OrderSummaryResponse orderSummary =
         orderService.calculateOrderSummary(
@@ -81,7 +81,7 @@ public class OrderController {
       @PathVariable Long orderId,
       @RequestParam Long userAddressId,
       @RequestParam(required = false) List<String> promoCodes,
-      @RequestParam Double usePoints) {
+      @RequestParam(required = false) Double usePoints) {
     OrderSummaryResponse summary =
         orderService.previewBuyAgain(orderId, userAddressId, promoCodes, usePoints);
     return ApiResponse.<OrderSummaryResponse>builder()
@@ -95,7 +95,7 @@ public class OrderController {
       @PathVariable Long orderId,
       @RequestParam Long userAddressId,
       @RequestParam(required = false) List<String> promoCodes,
-      @RequestParam Double usePoints) {
+      @RequestParam(required = false) Double usePoints) {
     OrderResponse response = orderService.buyAgain(orderId, userAddressId, promoCodes, usePoints);
     return ApiResponse.<OrderResponse>builder()
         .result(response)

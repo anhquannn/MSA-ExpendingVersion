@@ -1,6 +1,7 @@
 package com.market.MSA.services.others;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.exceptions.AppException;
@@ -72,6 +73,7 @@ public class GoshipService {
           restTemplate.exchange(url, method, requestEntity, String.class);
 
       String responseBody = response.getBody();
+      log.info(responseBody.toString());
       if (responseBody == null || responseBody.trim().isEmpty()) {
         throw new AppException(ErrorCode.PARSE_SHIPPO_RESPONSE_ERROR);
       }
@@ -217,7 +219,68 @@ public class GoshipService {
     deliveryInfoRepository.save(deliveryInfo);
     orderRepository.save(order);
 
-    return callApi(API_URL + "/shipments", HttpMethod.POST, request, ShipmentResponse.class);
+    ShipmentResponse shipmentResponse =
+        callApi(API_URL + "/shipments", HttpMethod.POST, request, ShipmentResponse.class);
+
+    // Lưu mã vận đơn để phục vụ webhook update
+    if (shipmentResponse != null) {
+      String shipmentCode = String.valueOf(shipmentResponse.getCode());
+      deliveryInfo.setShipmentCode(shipmentCode);
+      deliveryInfoRepository.save(deliveryInfo);
+    }
+
+    return shipmentResponse;
+  }
+
+  // Xử lý webhook từ Goshipvoid
+  public boolean processWebhook(String payload) {
+    try {
+      JsonNode root = objectMapper.readTree(payload);
+      String shipmentCode = root.path("code").asText();
+      int statusCode = root.path("status").asInt();
+
+      DeliveryInfo deliveryInfo =
+          deliveryInfoRepository
+              .findByShipmentCode(shipmentCode)
+              .orElseThrow(() -> new AppException(ErrorCode.DELIVERY_INFO_NOT_FOUND));
+
+      OrderStatus newStatus = mapGoshipStatusCodeToOrderStatus(statusCode);
+      deliveryInfo.setStatus(newStatus);
+      deliveryInfoRepository.save(deliveryInfo);
+
+      Order order = deliveryInfo.getOrder();
+      order.setStatus(newStatus);
+      if (order.getOrderDetails() != null) {
+        order.getOrderDetails().forEach(od -> od.setStatus(newStatus));
+      }
+      orderRepository.saveAndFlush(order);
+      return true;
+    } catch (JsonProcessingException e) {
+      throw new AppException(ErrorCode.PARSE_SHIPPO_RESPONSE_ERROR);
+    }
+  }
+
+  // Ánh xạ mã trạng thái số của Goship sang OrderStatus
+  OrderStatus mapGoshipStatusCodeToOrderStatus(int code) {
+    return switch (code) {
+      case 901, 902 -> OrderStatus.PENDING;
+      case 903, 904, 907, 908 -> OrderStatus.DELIVERING;
+      case 910 -> OrderStatus.SHIPPED;
+      case 905, 906 -> OrderStatus.CANCELLED;
+      default -> OrderStatus.PENDING;
+    };
+  }
+
+  // Hàm ánh xạ trạng thái Goship sang OrderStatus
+  OrderStatus mapGoshipStatusToOrderStatus(String goshipStatus) {
+    return switch (goshipStatus.toUpperCase()) {
+      case "PENDING" -> OrderStatus.PENDING;
+      case "ACCEPTED" -> OrderStatus.DELIVERING;
+      case "IN_TRANSIT" -> OrderStatus.DELIVERING;
+      case "DELIVERED" -> OrderStatus.SHIPPED;
+      case "CANCELED" -> OrderStatus.CANCELLED;
+      default -> OrderStatus.PENDING; // Trạng thái mặc định
+    };
   }
 
   public List<ShipmentDetailResponse> getAllShipments() {
@@ -233,6 +296,7 @@ public class GoshipService {
             HttpMethod.GET,
             null,
             ShipmentListResponse.class);
+    log.info(response.toString());
     return response.getData();
   }
 

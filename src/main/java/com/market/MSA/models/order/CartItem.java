@@ -27,6 +27,7 @@ public class CartItem {
   Long cartItemId;
 
   boolean isSelected;
+  boolean isFreeItem;
 
   @PositiveOrZero(message = "Giá phải >= 0")
   double price;

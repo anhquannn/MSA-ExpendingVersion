@@ -8,25 +8,20 @@ import com.market.MSA.mappers.product.SupplierMapper;
 import com.market.MSA.models.product.Inventory;
 import com.market.MSA.models.product.InventoryProduct;
 import com.market.MSA.models.product.Product;
+import com.market.MSA.models.product.Promotion;
 import com.market.MSA.repositories.product.*;
 import com.market.MSA.requests.filters.ProductFilterRequest;
 import com.market.MSA.requests.product.ProductRequest;
-import com.market.MSA.responses.product.InventoryProductResponse;
-import com.market.MSA.responses.product.MonthlySalesData;
-import com.market.MSA.responses.product.ProductFilterResponse;
+import com.market.MSA.responses.product.*;
+import com.market.MSA.responses.product.FreePromotionGroupResponse;
 import com.market.MSA.responses.product.ProductResponse;
-import com.market.MSA.responses.product.ProductSalesStatisticsResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import com.market.MSA.services.others.NotificationService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductService {
+  static final int MAX_FREE_PROMO_RESULTS = 50;
   final EntityFinderService entityFinderService;
   final ProductRepository productRepository;
   final SupplierRepository supplierRepository;
@@ -53,11 +49,12 @@ public class ProductService {
   final InventoryRepository inventoryRepository;
   final InventoryProductRepository inventoryProductRepository;
   final InventoryProductMapper inventoryProductMapper;
+  final PromotionRepository promotionRepository;
   final com.market.MSA.repositories.order.OrderDetailRepository orderDetailRepository;
   final InventoryProductService inventoryProductService;
   static final String DEFAULT_SORT_BY = "price";
   static final String DEFAULT_SORT_DIRECTION = "asc";
-  private final SupplierMapper supplierMapper;
+  final SupplierMapper supplierMapper;
 
   @Transactional
   @Caching(
@@ -173,6 +170,22 @@ public class ProductService {
     return map;
   }
 
+  @Cacheable(value = "branch_products", key = "{#branchId, #page, #size, #sortBy, #sortDirection}")
+  public Page<ProductResponse> getAllProductsInBranch(
+      Long branchId, int page, int size, String sortBy, String sortDirection) {
+
+    // Create pageable with sorting
+    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
+    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+    // Get all products in branch with pagination using database query
+    Page<Product> products =
+        productRepository.findByBranchAndFilters(branchId, null, null, null, pageable);
+
+    // Convert to response DTOs
+    return products.map(productMapper::toProductResponse);
+  }
+
   @Cacheable(
       value = "filtered_products",
       key =
@@ -242,6 +255,9 @@ public class ProductService {
               request.getToDate(),
               request.getKeyword(),
               discountedProductIds, // Loại trừ các ID này
+              request.getAbcClassification(),
+              request.getIsPromotional(),
+              request.getIsExemptFromPromotion(),
               pageable);
 
       // 2.5. Chuyển đổi sản phẩm thường sang response và thêm giá bán hiện tại của chi nhánh vào.
@@ -283,7 +299,12 @@ public class ProductService {
       }
 
       // 2.8. Trả về kết quả bao gồm cả sản phẩm thường và sản phẩm giảm giá.
-      return ProductFilterResponse.fromPages(filteredProductsPage, mappedDiscountedPage);
+      // 2.9. Lấy danh sách nhóm khuyến mãi bundle đang ACTIVE
+      List<FreePromotionGroupResponse> freeGroups = getActiveBundleGroups();
+      Page<FreePromotionGroupResponse> freeGroupPage =
+          new PageImpl<>(freeGroups, pageable, freeGroups.size());
+      return ProductFilterResponse.fromPages(
+          filteredProductsPage, mappedDiscountedPage, null, freeGroupPage);
     } else {
       // 3. Nếu không có `branchId`, chỉ lọc sản phẩm thông thường.
       Page<Product> products =
@@ -299,28 +320,18 @@ public class ProductService {
               request.getToDate(),
               request.getKeyword(),
               Collections.emptyList(),
+              request.getAbcClassification(),
+              request.getIsPromotional(),
+              request.getIsExemptFromPromotion(),
               pageable);
       Page<InventoryProductResponse> emptyDiscountedPage =
-          new org.springframework.data.domain.PageImpl<>(Collections.emptyList(), pageable, 0);
+          new PageImpl<>(Collections.emptyList(), pageable, 0);
+      List<FreePromotionGroupResponse> freeGroups = getActiveBundleGroups();
+      Page<FreePromotionGroupResponse> freeGroupPage =
+          new PageImpl<>(freeGroups, pageable, freeGroups.size());
       return ProductFilterResponse.fromPages(
-          products.map(productMapper::toProductResponse), emptyDiscountedPage);
+          products.map(productMapper::toProductResponse), emptyDiscountedPage, null, freeGroupPage);
     }
-  }
-
-  @Cacheable(value = "branch_products", key = "{#branchId, #page, #size, #sortBy, #sortDirection}")
-  public Page<ProductResponse> getAllProductsInBranch(
-      Long branchId, int page, int size, String sortBy, String sortDirection) {
-
-    // Create pageable with sorting
-    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
-    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-
-    // Get all products in branch with pagination using database query
-    Page<Product> products =
-        productRepository.findByBranchAndFilters(branchId, null, null, null, pageable);
-
-    // Convert to response DTOs
-    return products.map(productMapper::toProductResponse);
   }
 
   @Transactional(readOnly = true)
@@ -387,5 +398,50 @@ public class ProductService {
         .stockLevel(stockLevel)
         .expDate(expDate)
         .build();
+  }
+
+  /**
+   * Lấy danh sách sản phẩm của các khuyến mãi bundle đang ACTIVE (cả sản phẩm chính và sản phẩm
+   * tặng). Trả về tối đa MAX_FREE_PROMO_RESULTS phần tử để tránh trả về quá lớn.
+   */
+  List<FreePromotionGroupResponse> getActiveBundleGroups() {
+    LocalDateTime now = LocalDateTime.now();
+
+    // Lấy toàn bộ promotion ACTIVE trong khoảng thời gian hiệu lực
+    List<com.market.MSA.models.product.Promotion> activePromos =
+        promotionRepository.findAll().stream()
+            .filter(
+                p ->
+                    p.getStatus() == com.market.MSA.constants.PromocodeStatus.ACTIVE
+                        && (p.getStartDate() == null || !p.getStartDate().isAfter(now))
+                        && (p.getEndDate() == null || !p.getEndDate().isBefore(now)))
+            .toList();
+
+    Map<Long, FreePromotionGroupResponse> groupMap = new LinkedHashMap<>();
+
+    for (Promotion promo : activePromos) {
+      if (promo.getProductMain() == null) {
+        continue; // skip malformed promotion
+      }
+      Long mainId = promo.getProductMain().getProductId();
+
+      // Lấy hoặc khởi tạo group
+      FreePromotionGroupResponse group =
+          groupMap.computeIfAbsent(
+              mainId,
+              k ->
+                  FreePromotionGroupResponse.builder()
+                      .mainProduct(productMapper.toProductResponse(promo.getProductMain()))
+                      .freeProducts(new ArrayList<>())
+                      .build());
+
+      // Thêm sản phẩm free (nếu có)
+      if (promo.getProductFree() != null) {
+        ProductResponse freePr = productMapper.toProductResponse(promo.getProductFree());
+        group.getFreeProducts().add(freePr);
+      }
+    }
+    // Giới hạn số group trả về
+    return new ArrayList<>(groupMap.values()).stream().limit(MAX_FREE_PROMO_RESULTS).toList();
   }
 }

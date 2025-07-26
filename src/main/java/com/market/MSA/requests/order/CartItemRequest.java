@@ -16,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartItemRequest {
   boolean isSelected;
+  boolean isFreeItem;
 
   @PositiveOrZero(message = "Giá phải >= 0")
   double price;

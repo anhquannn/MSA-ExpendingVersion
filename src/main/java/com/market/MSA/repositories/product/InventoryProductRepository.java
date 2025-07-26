@@ -87,4 +87,10 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
   Optional<InventoryProduct>
       findFirstByInventory_Branch_BranchIdAndProduct_ProductIdOrderByExpDateAsc(
           Long branchId, Long productId);
+
+  Optional<InventoryProduct> findFirstByProduct_ProductId(Long productId);
+
+  @Query(
+      "SELECT SUM(ip.stockNumber) FROM InventoryProduct ip WHERE ip.product.productId = :productId")
+  Integer totalStockByProductId(@Param("productId") Long productId);
 }

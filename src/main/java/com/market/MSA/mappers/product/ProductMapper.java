@@ -17,6 +17,8 @@ public interface ProductMapper {
   Product toProduct(ProductRequest request);
 
   @Mapping(target = "productImageResponses", source = "images")
+  @Mapping(target = "isPromotional", source = "promotional")
+  @Mapping(target = "isExemptFromPromotion", source = "exemptFromPromotion")
   ProductResponse toProductResponse(Product product);
 
   // Cập nhật sản phẩm từ request

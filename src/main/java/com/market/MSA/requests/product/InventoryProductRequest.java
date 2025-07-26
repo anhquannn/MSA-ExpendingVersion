@@ -1,5 +1,6 @@
 package com.market.MSA.requests.product;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.market.MSA.validators.StockNumberConstraint;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
@@ -19,6 +20,7 @@ public class InventoryProductRequest {
   double currentPrice;
 
   @Future(message = "Expiration date must be in the future")
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime expDate;
 
   boolean isActive;
@@ -39,6 +41,12 @@ public class InventoryProductRequest {
   @StockNumberConstraint
   @PositiveOrZero(message = "Stock number must be positive or zero")
   int stockNumberDifferent;
+
+  @PositiveOrZero(message = "Min threshold must be positive or zero")
+  int minThreshold;
+
+  @PositiveOrZero(message = "Max threshold must be positive or zero")
+  int maxThreshold;
 
   @NotNull(message = "Inventory ID is required")
   Long inventoryId;

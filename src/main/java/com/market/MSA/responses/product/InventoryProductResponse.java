@@ -36,6 +36,8 @@ public class InventoryProductResponse implements Serializable {
   boolean isDiscounted;
   String batchNumber;
   String stockLevel;
+  int minThreshold;
+  int maxThreshold;
 
   ProductResponse product;
   InventoryResponse inventory;

@@ -47,6 +47,9 @@ public class DeliveryInfo {
   String length;
   String metadata;
 
+  // Goship shipment code to link webhook updates
+  String shipmentCode;
+
   @Enumerated(EnumType.STRING)
   OrderStatus status;
 

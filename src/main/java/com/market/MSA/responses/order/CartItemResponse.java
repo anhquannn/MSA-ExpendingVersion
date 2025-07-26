@@ -17,6 +17,7 @@ public class CartItemResponse {
   Long cartItemId;
 
   boolean isSelected;
+  boolean isFreeItem;
   double price;
   int quantity;
 

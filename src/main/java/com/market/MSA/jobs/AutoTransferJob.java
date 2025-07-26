@@ -19,6 +19,7 @@ public class AutoTransferJob implements Job {
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
+    // Bước 1: Ghi log để dễ dàng theo dõi job đang chạy
     log.info("Executing AutoTransferJob ...");
     autoTransferService.processLowStock();
   }

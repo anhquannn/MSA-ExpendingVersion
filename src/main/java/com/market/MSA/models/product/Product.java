@@ -2,6 +2,7 @@ package com.market.MSA.models.product;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.ABCClassification;
 import com.market.MSA.models.order.CartItem;
 import com.market.MSA.models.order.OrderDetail;
 import com.market.MSA.models.others.Notification;
@@ -38,7 +39,7 @@ public class Product {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long productId;
 
-  @Column(nullable = false)
+  @Column(nullable = false, unique = true)
   String name;
 
   @PositiveOrZero(message = "Giá sản phẩm phải >= 0")
@@ -51,6 +52,11 @@ public class Product {
   String specification;
   String description;
   LocalDateTime createdAt;
+  LocalDateTime lastClassificationDate;
+
+  boolean isPromotional;
+  boolean isExemptFromPromotion;
+  ABCClassification abcClassification;
 
   @PositiveOrZero double totalRevenue;
 
@@ -113,4 +119,12 @@ public class Product {
   @OneToMany(mappedBy = "product2", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("comb-product2")
   List<ProductCombination> product2s = new ArrayList<>();
+
+  @OneToMany(mappedBy = "productMain", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("promo-productMain")
+  List<Promotion> productMains = new ArrayList<>();
+
+  @OneToMany(mappedBy = "productFree", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("promo-productFree")
+  List<Promotion> productFrees = new ArrayList<>();
 }

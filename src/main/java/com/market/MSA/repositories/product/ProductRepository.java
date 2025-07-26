@@ -1,5 +1,6 @@
 package com.market.MSA.repositories.product;
 
+import com.market.MSA.constants.ABCClassification;
 import com.market.MSA.models.product.Product;
 import com.market.MSA.models.product.Supplier;
 import java.time.LocalDateTime;
@@ -38,9 +39,15 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
           + "AND (:netWeight IS NULL OR p.netWeight = :netWeight) "
           + "AND (:minPrice IS NULL OR p.price >= :minPrice) "
           + "AND (:maxPrice IS NULL OR p.price <= :maxPrice) "
+          + "AND (:abcClassification IS NULL OR p.abcClassification = :abcClassification) "
+          + "AND (:isPromotional IS NULL OR p.isPromotional = :isPromotional) "
+          + "AND (:isExemptFromPromotion IS NULL OR p.isExemptFromPromotion = :isExemptFromPromotion) "
           + "AND (:fromDate IS NULL OR p.createdAt >= :fromDate) "
           + "AND (:toDate IS NULL OR p.createdAt <= :toDate) "
-          + "AND (:keyword IS NULL OR :keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
+          + "AND (:keyword IS NULL OR :keyword = '' "
+          + "     OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) "
+          + "     OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) "
+          + "     OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
           + "AND (COALESCE(:excludeProductIds, NULL) IS NULL OR p.productId NOT IN :excludeProductIds)")
   Page<Product> filterWithPaging(
       @Param("branchId") Long branchId,
@@ -54,6 +61,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
       @Param("toDate") LocalDateTime toDate,
       @Param("keyword") String keyword,
       @Param("excludeProductIds") List<Long> excludeProductIds,
+      @Param("abcClassification") String abcClassification,
+      @Param("isPromotional") Boolean isPromotional,
+      @Param("isExemptFromPromotion") Boolean isExemptFromPromotion,
       Pageable pageable);
 
   @Query(
@@ -63,6 +73,18 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
   @Query(
       "select distinct p.netWeight from Product p where p.category.categoryId = :categoryId and p.netWeight is not null")
   List<String> findDistinctNetWeightsByCategoryId(@Param("categoryId") Long categoryId);
+
+  // Best selling A-class products by totalRevenue desc
+  @Query(
+      "SELECT p FROM Product p WHERE p.abcClassification = com.market.MSA.constants.ABCClassification.A ORDER BY p.totalRevenue DESC")
+  Page<Product> findBestSellingAProducts(Pageable pageable);
+
+  List<Product> findByAbcClassification(
+      com.market.MSA.constants.ABCClassification abcClassification);
+
+  @Query(
+      "SELECT p FROM Product p WHERE p.abcClassification = :abc AND p.isExemptFromPromotion = false")
+  List<Product> findByABCAndNotExempt(@Param("abc") ABCClassification abc);
 
   @Query("select distinct p.supplier from Product p where p.category.categoryId = :categoryId")
   List<Supplier> findDistinctSuppliersByCategoryId(@Param("categoryId") Long categoryId);

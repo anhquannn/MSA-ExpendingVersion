@@ -317,6 +317,17 @@ public class NotificationService {
   }
 
   @Transactional
+  public void notifyUser(Long userId, String message) {
+    NotificationRequest req =
+        NotificationRequest.builder()
+            .userId(userId)
+            .message(message)
+            .notificationDate(LocalDateTime.now())
+            .isRead(false)
+            .build();
+    createNotification(req);
+  }
+
   public void sendLowStockNotification(
       Long inventoryId, Long productId, int currentStock, int threshold) {
     // Get inventory and product

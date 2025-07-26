@@ -5,7 +5,6 @@ import com.market.MSA.models.user.User;
 import com.market.MSA.requests.user.UpdateUserRequest;
 import com.market.MSA.requests.user.UserRequest;
 import com.market.MSA.responses.user.UserResponse;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;

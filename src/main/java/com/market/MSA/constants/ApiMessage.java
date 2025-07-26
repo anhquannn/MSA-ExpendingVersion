@@ -297,7 +297,17 @@ public enum ApiMessage {
   PRODUCT_COMBINATION_UPDATED("Product combination updated successfully"),
   PRODUCT_COMBINATION_DELETED("Product combination deleted successfully"),
   PRODUCT_COMBINATION_RETRIEVED("Product combination retrieved successfully"),
-  ALL_PRODUCT_COMBINATIONS_RETRIEVED("All product combinations retrieved successfully");
+  ALL_PRODUCT_COMBINATIONS_RETRIEVED("All product combinations retrieved successfully"),
+
+  // Promotion messages
+  PROMOTION_CREATED("Promotion created successfully"),
+  PROMOTION_UPDATED("Promotion updated successfully"),
+  PROMOTION_DELETED("Promotion deleted successfully"),
+  PROMOTION_RETRIEVED("Promotion retrieved successfully"),
+  ALL_PROMOTIONS_RETRIEVED("All promotions retrieved successfully"),
+  PROMOTION_FILTERED_LIST_RETRIEVED("Filtered promotions list retrieved successfully"),
+  PROMOTION_PAGING_RETRIEVED("Promotions paging retrieved successfully"),
+  PROMOTION_APPLIED("Promotions applied successfully");
 
   private final String message;
 

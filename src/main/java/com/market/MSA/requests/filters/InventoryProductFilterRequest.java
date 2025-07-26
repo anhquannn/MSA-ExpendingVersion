@@ -1,5 +1,7 @@
 package com.market.MSA.requests.filters;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.market.MSA.validators.DateRangeConstraint;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
@@ -11,6 +13,11 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@DateRangeConstraint(
+    startDate = "fromDate",
+    endDate = "toDate",
+    message =
+        "Ngày bắt đầu và ngày kết thúc phải sau thời điểm hiện tại, và ngày kết thúc phải sau ngày bắt đầu")
 public class InventoryProductFilterRequest {
   Long inventoryId;
   Long productId;
@@ -21,7 +28,10 @@ public class InventoryProductFilterRequest {
   @Size(max = 50, message = "Batch number must be less than 50 characters")
   String batchNumber;
 
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime fromDate;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime toDate;
 
   Double minStock;

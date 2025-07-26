@@ -38,13 +38,14 @@ public class DateRangeConstraintValidator
         return true;
       }
 
-      // Check if end date is not before start date
-      return !endDate.isBefore(startDate);
+      LocalDateTime now = LocalDateTime.now();
+
+      // ✅ Kiểm tra logic
+      return !endDate.isBefore(startDate) && !startDate.isBefore(now) && !endDate.isBefore(now);
+
     } catch (NoSuchFieldException | IllegalAccessException e) {
-      // Log the error if needed
       return false;
     } catch (ClassCastException e) {
-      // This will be thrown if the fields are not LocalDateTime
       throw new IllegalArgumentException("Date fields must be of type LocalDateTime", e);
     }
   }

@@ -78,4 +78,13 @@ public class GoshipController {
         .message(ApiMessage.ALL_SHIPMENTS_RETRIEVED.getMessage())
         .build();
   }
+
+  @PostMapping("/webhook")
+  public ApiResponse<Boolean> handleWebhook(@RequestBody String payload) {
+    log.info("Nhận được webhook từ Goship: {}", payload);
+    return ApiResponse.<Boolean>builder()
+        .result(goshipService.processWebhook(payload))
+        .message(ApiMessage.SHIPMENT_RETRIEVED.getMessage())
+        .build();
+  }
 }

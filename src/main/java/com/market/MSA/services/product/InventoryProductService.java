@@ -72,6 +72,8 @@ public class InventoryProductService {
       existingProduct.setStockNumber(request.getStockNumber());
       existingProduct.setExpDate(request.getExpDate());
       existingProduct.setCurrentPrice(product.getPrice());
+      existingProduct.setMinThreshold(request.getMinThreshold());
+      existingProduct.setMaxThreshold(request.getMaxThreshold());
       existingProduct.setDiscounted(false);
       existingProduct.setActive(true);
 
@@ -118,6 +120,8 @@ public class InventoryProductService {
     inventoryProduct.setProduct(product);
     inventoryProduct.setStockNumber(request.getStockNumber());
     inventoryProduct.setStockLevel(request.getStockLevel());
+    inventoryProduct.setMinThreshold(request.getMinThreshold());
+    inventoryProduct.setMaxThreshold(request.getMaxThreshold());
 
     Integer stockNumberChecked = request.getStockNumberChecked();
 

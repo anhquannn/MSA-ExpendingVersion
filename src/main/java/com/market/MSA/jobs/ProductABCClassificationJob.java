@@ -19,6 +19,7 @@ public class ProductABCClassificationJob implements Job {
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
+    // Bước 1: Ghi log để biết job phân loại ABC đang được chạy (dễ debug Production)
     log.info("Running ProductABCClassificationJob ...");
     productClassificationService.classifyProducts();
   }

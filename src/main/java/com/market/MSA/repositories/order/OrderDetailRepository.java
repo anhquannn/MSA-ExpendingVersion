@@ -66,4 +66,16 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> 
       @Param("startDate") LocalDateTime startDate,
       @Param("endDate") LocalDateTime endDate,
       org.springframework.data.domain.Pageable pageable);
+
+  /** Get total revenue per product for a given period. */
+  @Query(
+      """
+	SELECT od.product.productId, SUM(od.quantity * od.unitPrice)
+	FROM OrderDetail od JOIN od.order o
+	WHERE o.orderDate BETWEEN :start AND :end
+		AND o.status = com.market.MSA.constants.OrderStatus.COMPLETED
+	GROUP BY od.product.productId
+	""")
+  List<Object[]> findRevenuePerProduct(
+      @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

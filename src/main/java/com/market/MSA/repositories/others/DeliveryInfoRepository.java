@@ -4,6 +4,7 @@ import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.others.DeliveryInfo;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -42,4 +43,7 @@ public interface DeliveryInfoRepository extends JpaRepository<DeliveryInfo, Long
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
       Sort sort);
+
+  // Find DeliveryInfo by Goship shipment code
+  Optional<DeliveryInfo> findByShipmentCode(String shipmentCode);
 }

@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ShipmentResponse {
   @JsonProperty("code")
-  int code;
+  String code;
 
   @JsonProperty("status")
   String status;

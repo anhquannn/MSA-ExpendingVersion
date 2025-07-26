@@ -40,7 +40,7 @@ public class CacheInvalidationAspect {
    * annotation @Transactional.
    */
   @Pointcut(
-      "execution(* com.market.MSA.services..*(..)) && @annotation(org.springframework.transaction.annotation.Transactional)")
+      "(execution(* com.market.MSA.services..*(..)) || execution(* com.market.MSA.jobs..*(..))) && @annotation(org.springframework.transaction.annotation.Transactional)")
   public void transactionalServiceOperation() {}
 
   /**

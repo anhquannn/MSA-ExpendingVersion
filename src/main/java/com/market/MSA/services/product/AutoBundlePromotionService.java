@@ -4,6 +4,7 @@ import com.market.MSA.constants.ABCClassification;
 import com.market.MSA.constants.PromocodeStatus;
 import com.market.MSA.models.product.Product;
 import com.market.MSA.models.product.Promotion;
+import com.market.MSA.repositories.product.InventoryProductRepository;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.repositories.product.PromotionRepository;
 import jakarta.transaction.Transactional;
@@ -13,7 +14,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,22 +28,21 @@ public class AutoBundlePromotionService {
 
   PromotionRepository promotionRepository;
   ProductRepository productRepository;
-  com.market.MSA.repositories.product.InventoryProductRepository inventoryProductRepository;
+  InventoryProductRepository inventoryProductRepository;
 
-  /** Generate inactive bundle promotions daily. Adjust cron if needed. */
-  @Scheduled(cron = "0 0 1 * * *")
+  /**
+   * Generate inactive bundle promotions. Lịch chạy được cấu hình qua Quartz Job {@link
+   * com.market.MSA.jobs.AutoBundlePromotionJob}
+   */
   @Transactional
   public void generateInactivePromotions() {
     List<Product> mains = productRepository.findByAbcClassification(ABCClassification.A);
     if (mains.isEmpty()) {
-      log.info("AutoBundlePromotion: no A-class products found.");
       return;
     }
 
-    List<Product> frees =
-        productRepository.findByAbcClassificationAndIsExemptFromPromotionFalse(ABCClassification.C);
+    List<Product> frees = productRepository.findByABCAndNotExempt(ABCClassification.C);
     if (frees.isEmpty()) {
-      log.info("AutoBundlePromotion: no eligible C-class products found.");
       return;
     }
 
@@ -52,24 +51,16 @@ public class AutoBundlePromotionService {
         frees.stream()
             .sorted(
                 (p1, p2) -> {
-                  int surplus1 =
-                      inventoryProductRepository
-                          .findFirstByProduct_ProductId(p1.getProductId())
-                          .map(ip -> ip.getStockNumber() - ip.getMinThreshold())
-                          .orElse(0);
-                  int surplus2 =
-                      inventoryProductRepository
-                          .findFirstByProduct_ProductId(p2.getProductId())
-                          .map(ip -> ip.getStockNumber() - ip.getMinThreshold())
-                          .orElse(0);
-                  return Integer.compare(surplus2, surplus1); // desc
+                  int stock1 = inventoryProductRepository.totalStockByProductId(p1.getProductId());
+                  int stock2 = inventoryProductRepository.totalStockByProductId(p2.getProductId());
+                  return Integer.compare(stock2, stock1); // desc
                 })
             .toList();
 
     int created = 0;
     for (Product main : mains) {
       // Chọn sản phẩm C có dư tồn kho nhất (đã sắp xếp ở trên)
-      Product free = frees.get(0);
+      Product free = frees.getFirst();
 
       boolean dupExists =
           promotionRepository.existsByProductMain_ProductIdAndProductFree_ProductId(
@@ -88,6 +79,5 @@ public class AutoBundlePromotionService {
       promotionRepository.save(promo);
       created++;
     }
-    log.info("AutoBundlePromotion: created {} new inactive promotions.", created);
   }
 }

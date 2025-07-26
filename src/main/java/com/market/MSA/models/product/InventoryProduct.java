@@ -57,6 +57,12 @@ public class InventoryProduct {
   @PositiveOrZero(message = "Stock number must be positive or zero")
   int stockNumberDifferent;
 
+  @PositiveOrZero(message = "Min threshold must be positive or zero")
+  int minThreshold;
+
+  @PositiveOrZero(message = "Max threshold must be positive or zero")
+  int maxThreshold;
+
   @ManyToOne
   @JoinColumn(
       name = "inventory_id",

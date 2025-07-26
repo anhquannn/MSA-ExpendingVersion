@@ -1,5 +1,6 @@
 package com.market.MSA.requests.product;
 
+import com.market.MSA.constants.ABCClassification;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
@@ -29,6 +30,10 @@ public class ProductRequest {
   String specification;
   String description;
   LocalDateTime createdAt;
+  LocalDateTime lastClassificationDate;
+  boolean isPromotional;
+  boolean isExemptFromPromotion;
+  ABCClassification abcClassification;
 
   @PositiveOrZero double totalRevenue;
 

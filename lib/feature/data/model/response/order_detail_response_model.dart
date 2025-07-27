@@ -12,6 +12,7 @@ class OrderDetailResponse {
   ProductModel? product;
   OrderModel? order;
   bool? rated;
+  List<OrderDetailResponse>? freeItems;
 
   OrderDetailResponse({
     this.orderDetailId,
@@ -24,6 +25,7 @@ class OrderDetailResponse {
     this.product,
     this.order,
     this.rated,
+    this.freeItems,
   });
 
   factory OrderDetailResponse.fromJson(Map<String, dynamic> json) {
@@ -35,12 +37,20 @@ class OrderDetailResponse {
       image: json['image'],
       name: json['name'],
       status: json['status'],
-      product:
-          json['product'] != null
-              ? ProductModel.fromJson(json['product'])
-              : null,
-      order: json['order'] != null ? OrderModel.fromJson(json['order']) : null,
+      product: json['product'] != null
+          ? ProductModel.fromJson(json['product'])
+          : null,
+      order: json['order'] != null
+          ? OrderModel.fromJson(json['order'])
+          : null,
       rated: json['rated'],
+      freeItems: json['freeItems'] != null
+          ? List<OrderDetailResponse>.from(
+              json['freeItems'].map(
+                (item) => OrderDetailResponse.fromJson(item),
+              ),
+            )
+          : null,
     );
   }
 
@@ -56,6 +66,7 @@ class OrderDetailResponse {
       'product': product?.toJson(),
       'order': order?.toJson(),
       'rated': rated,
+      'freeItems': freeItems?.map((item) => item.toJson()).toList(),
     };
   }
 }

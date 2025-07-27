@@ -8,6 +8,7 @@ class CartItemModel {
   ProductModel? product;
   CartModel? cart;
   bool? selected;
+  List<CartItemModel>? freeItems;
 
   CartItemModel({
     this.cartItemId,
@@ -15,7 +16,8 @@ class CartItemModel {
     this.quantity,
     this.product,
     this.cart,
-    this.selected
+    this.selected,
+    this.freeItems,
   });
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,10 @@ class CartItemModel {
               ? ProductModel.fromJson(json['product'])
               : null,
       cart: json['cart'] != null ? CartModel.fromJson(json['cart']) : null,
+      freeItems:
+          (json['freeItems'] as List<dynamic>?)
+              ?.map((item) => CartItemModel.fromJson(item))
+              .toList(),
     );
   }
 
@@ -40,6 +46,52 @@ class CartItemModel {
       'selected': selected,
       'product': product?.toJson(),
       'cart': cart?.toJson(),
+      'freeItems': freeItems?.map((item) => item.toJson()).toList(),
     };
   }
 }
+
+// class CartItemModel {
+//   int? cartItemId;
+//   double? price;
+//   int? quantity;
+//   ProductModel? product;
+//   CartModel? cart;
+//   bool? selected;
+//   List<CartItemModel>? freeItems;
+
+//   CartItemModel({
+//     this.cartItemId,
+//     this.price,
+//     this.quantity,
+//     this.product,
+//     this.cart,
+//     this.selected,
+//     this.freeItems
+//   });
+
+//   factory CartItemModel.fromJson(Map<String, dynamic> json) {
+//     return CartItemModel(
+//       cartItemId: json['cartItemId'],
+//       price: (json['price'] as num?)?.toDouble(),
+//       quantity: json['quantity'],
+//       selected: json['selected'],
+//       product:
+//           json['product'] != null
+//               ? ProductModel.fromJson(json['product'])
+//               : null,
+//       cart: json['cart'] != null ? CartModel.fromJson(json['cart']) : null,
+//     );
+//   }
+
+//   Map<String, dynamic> toJson() {
+//     return {
+//       'cartItemId': cartItemId,
+//       'price': price,
+//       'quantity': quantity,
+//       'selected': selected,
+//       'product': product?.toJson(),
+//       'cart': cart?.toJson(),
+//     };
+//   }
+// }

@@ -234,7 +234,7 @@ class _CustomScaffoldState extends State<CustomScaffold> {
                     child: buildAppBar(
                       isHide: isHide,
                       centerTitle: widget.centerTitle,
-                      title: widget.title ?? const SizedBox(),
+                      title: widget.title ?? const SizedBox(width: 200),
                       leading: widget.appBarLeading,
                       action: widget.appBarActions,
                       textStyle: widget.appBarTextStyle,

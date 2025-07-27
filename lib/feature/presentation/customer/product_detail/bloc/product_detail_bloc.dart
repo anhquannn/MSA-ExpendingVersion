@@ -19,7 +19,10 @@ import 'package:msa/feature/presentation/customer/product_detail/ui/product_list
 import 'package:msa/feature/presentation/customer/product_list/ui/product_list_screen.dart';
 import 'package:msa/widget/custom_dropdown.dart';
 import 'package:rxdart/rxdart.dart';
+import '../../../../../core/config/config.dart';
+import '../../../../../widget/custom_loading.dart';
 import '../../../../data/datasources/local/starage.dart';
+import '../../../../data/model/request/cartitem_selection_request_model.dart';
 import '../ui/product_detail_screen.dart';
 
 class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
@@ -87,6 +90,76 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
     );
   }
 
+  buildCheck(BuildContext bContext) {
+    if (Storage.branchModelGlobal == null) {
+      showCustomDialog(
+        bContext,
+        AppSize.width(),
+        AppSize.width(),
+        'Thông báo',
+        Text('Bạn chưa chọn chi nhánh'),
+        true,
+        false,
+        Icon(Icons.warning, color: Colors.yellow),
+        onClose: () {
+          Navigator.pop(bContext);
+        },
+      );
+    }
+  }
+
+  onBuyNow(ProductModel model, BuildContext bContext) async {
+    buildCheck(bContext);
+    showFullScreenLoading(bContext);
+    List<int> cartIds = [];
+    listCartItemModel?.forEach((element) {
+      cartIds.add(element.cartItemId ?? 0);
+    });
+
+    final CartItemSelectionRequest request = CartItemSelectionRequest(
+      cartId: Storage.cartModelGlobal?.cartId ?? 0,
+      cartItemIds: cartIds,
+    );
+
+    final updateResponse = await Repository.onUpdateCartItemsSelectionAPI(
+      request,
+      false,
+    );
+
+    final data = await _cartItemUseCase.addToCart(
+      AddToCartRequest(
+        userId: Storage.userModelGlobal?.userId ?? 0,
+        productId: model.productId ?? 0,
+        branchId: Storage.branchModelGlobal?.branchId ?? 0,
+        quantity: 1,
+      ),
+    );
+
+    if (data) {
+      hideFullScreenLoading(bContext);
+      Navigator.push(
+        bContext,
+        MaterialPageRoute(builder: (bContext) => CreateOrderScreen()),
+      );
+    } else {
+      hideFullScreenLoading(bContext);
+    }
+  }
+
+  onTapProductDetail(ProductModel model, {FreePromotionGroup? promotion}) {
+    Navigator.push(
+      viewContext,
+      MaterialPageRoute(
+        builder:
+            (context) => ProductDetailCustomerScreen(
+              productModel: model,
+              productId: model.productId,
+              promotion: promotion,
+            ),
+      ),
+    );
+  }
+
   onAddToCart(ProductModel model, BuildContext bcontext) async {
     final data = await _cartItemUseCase.addToCart(
       AddToCartRequest(
@@ -100,6 +173,37 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
       onGetUserCart();
       Navigator.pop(bcontext);
       return;
+    } else {
+      showCustomMessageError(bcontext);
+    }
+  }
+
+  onAddOtherProductToCart(ProductModel model, BuildContext bcontext) async {
+    showFullScreenLoading(bcontext);
+    final data = await _cartItemUseCase.addToCart(
+      AddToCartRequest(
+        userId: Storage.userModelGlobal?.userId ?? 0,
+        productId: model.productId ?? 0,
+        branchId: mockBranch.branchId ?? 0,
+        quantity: 1,
+      ),
+    );
+
+    hideFullScreenLoading(bcontext);
+    if (data) {
+      showCustomDialog(
+        bcontext,
+        AppSize.width(),
+        AppSize.width(),
+        'Thông báo',
+        Text('Thêm sản phẩm vào giỏ hàng thành công'),
+        true,
+        false,
+        Icon(Icons.check_circle_outline, color: Colors.green),
+        onClose: () {
+          Navigator.pop(bcontext);
+        },
+      );
     } else {
       showCustomMessageError(bcontext);
     }

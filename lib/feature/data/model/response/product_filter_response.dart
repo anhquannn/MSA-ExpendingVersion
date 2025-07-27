@@ -8,12 +8,14 @@ class ProductFilterResult {
   final PaginatedResult<ProductModel>? discountedProductsPage;
   final List<ProductModel>? products;
   final List<ProductModel>? discountedProducts;
+  final List<FreePromotionGroup>? freePromotionGroups;
 
   ProductFilterResult({
     this.productsPage,
     this.discountedProductsPage,
     this.products,
     this.discountedProducts,
+    this.freePromotionGroups,
   });
 
   factory ProductFilterResult.fromJson(Map<String, dynamic> json) {
@@ -28,19 +30,16 @@ class ProductFilterResult {
       return [];
     }
 
-    // ✅ Parse `productsPage` (đã đúng)
     final productsPage = PaginatedResult<ProductModel>.fromJson(
       json['productsPage'] ?? {},
       (item) => ProductModel.fromJson(item as Map<String, dynamic>),
     );
 
-    // ✅ Parse `discountedProductsPage` (sửa lại)
     final discountedProductsPageJson = json['discountedProductsPage'];
     final PaginatedResult<ProductModel>? discountedPage =
         discountedProductsPageJson != null
             ? PaginatedResult<ProductModel>.fromJson(
               discountedProductsPageJson,
-              // Sửa đổi callback để lấy đúng dữ liệu từ key 'product'
               (item) {
                 final productData = (item as Map<String, dynamic>)['product'];
                 if (productData != null) {
@@ -48,21 +47,25 @@ class ProductFilterResult {
                     productData as Map<String, dynamic>,
                   );
                 }
-                // Trả về một đối tượng rỗng nếu cấu trúc không đúng,
-                // và sẽ được lọc ra ở bước sau.
                 return ProductModel();
               },
             )
             : null;
 
-    // Lọc ra các sản phẩm rỗng có thể đã được tạo ra do lỗi parse
     discountedPage?.content.removeWhere((product) => product.productId == null);
+
+    final List<FreePromotionGroup> parsedFreePromotionGroups =
+        (json['freePromotionGroups'] as List<dynamic>?)
+            ?.map((item) => FreePromotionGroup.fromJson(item))
+            .toList() ??
+        [];
 
     return ProductFilterResult(
       productsPage: productsPage,
       discountedProductsPage: discountedPage,
       products: _parseProductList(json['products']),
       discountedProducts: _parseProductList(json['discountedProducts']),
+      freePromotionGroups: parsedFreePromotionGroups,
     );
   }
 
@@ -71,6 +74,8 @@ class ProductFilterResult {
       'products': products?.map((item) => item.toJson()).toList(),
       'discountedProducts':
           discountedProducts?.map((item) => item.toJson()).toList(),
+      'freePromotionGroups':
+          freePromotionGroups?.map((e) => e.toJson()).toList(),
     };
   }
 }
@@ -110,4 +115,31 @@ class ProductImage {
     sortOrder: 99,
     isPrimary: false,
   );
+}
+
+class FreePromotionGroup {
+  final ProductModel? mainProduct;
+  final List<ProductModel>? freeProducts;
+
+  FreePromotionGroup({this.mainProduct, this.freeProducts});
+
+  factory FreePromotionGroup.fromJson(Map<String, dynamic> json) {
+    return FreePromotionGroup(
+      mainProduct:
+          json['mainProduct'] != null
+              ? ProductModel.fromJson(json['mainProduct'])
+              : null,
+      freeProducts:
+          (json['freeProducts'] as List<dynamic>?)
+              ?.map((item) => ProductModel.fromJson(item))
+              .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'mainProduct': mainProduct?.toJson(),
+      'freeProducts': freeProducts?.map((e) => e.toJson()).toList(),
+    };
+  }
 }

@@ -61,7 +61,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   final Map<int, GlobalKey> imageKeys = {};
   final PageController categoryController = PageController(initialPage: 0);
   final ScrollController scrollController = ScrollController();
-  final ValueNotifier<int> indexScreen = ValueNotifier(0);
+  final ValueNotifier<int> indexScreen = ValueNotifier(3);
   final TextEditingController rateController = TextEditingController();
 
   /// ==== User & Cart Models ====
@@ -128,7 +128,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   final BehaviorSubject<double> streamCaculate = BehaviorSubject<double>();
 
-  
   double reward = 0;
   final streamReward = BehaviorSubject<double>();
 
@@ -236,9 +235,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     if (Storage.addressModel == null) {
       final response = await Repository.getUserAddresses();
       Storage.saveAddress(response[0]);
-    } else {
-      //('⚠️ Không có địa chỉ trong Storage.addressModel để kiểm tra.');
-    }
+    } else {}
   }
 
   onCheckBranch(BuildContext context) async {
@@ -251,25 +248,23 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onRefresh() async {
-    //("onRefresh started");
     final List<Future<void>> futures = [
       onGetProfile().catchError((e) => ('Lỗi profile: $e')),
       onGetPromoCode().catchError((e) => ('Lỗi promo code: $e')),
       onGetCategory().catchError((e) => ('Lỗi category: $e')),
       onGetProduct().catchError((e) => ('Lỗi product: $e')),
       onGetAddress().catchError((e) => ('Lỗi onGetAddress: $e')),
+      onGetUserCart(),
       // onCheckBranch().catchError((e) => ('Lỗi onCheckBranch: $e')),
       // onGetUserCart().catchError((e) => ('Lỗi onGetUserCart: $e')),
       onGetReward().catchError((e) => ('Lỗi onGetReward: $e')),
       onGetNotification().catchError((e) => ('Lỗi onGetNotification: $e')),
-    Repository.onUpdateDeviceId(Storage.userModelGlobal?.userId??0)
+      Repository.onUpdateDeviceId(Storage.userModelGlobal?.userId ?? 0),
     ];
 
     try {
       await Future.wait(futures);
-      //("onRefresh completed successfully");
     } catch (e) {
-      //("Lỗi tổng quát trong onRefresh: $e");
       // Bạn có thể xử lý lỗi tổng quát ở đây, ví dụ hiển thị thông báo lỗi cho người dùng
     }
   }
@@ -280,8 +275,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   @override
   Widget build(BuildContext viewContext) => widget.build(viewContext);
 
-  onTapPromoCode(PromoCodeModel model) {}
-
   onGetPromoCode() async {
     try {
       List<PromoCodeModel>? promoCode = await Repository.onGetAllPromoCode(
@@ -291,7 +284,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       streamPromoCodeModels.add(promoCode ?? []);
       listPromocode = promoCode;
     } catch (e) {
-      //('Lỗi khi lấy danh sách mã giảm giá: $e');
       streamPromoCodeModels.add([]);
     }
   }
@@ -310,7 +302,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
         streamUserModel.add(UserModel());
       }
     } catch (e) {
-      //('Lỗi khi lấy thông tin người dùng: $e');
       streamUserModel.add(UserModel());
     }
   }
@@ -331,8 +322,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
         streamProductModels.add(product);
       } else {}
     } catch (e, stack) {
-      //('❌ Lỗi khi lấy danh sách sản phẩm: $e');
-      //('📛 Stacktrace: $stack');
       streamProductModels.add(ProductFilterResult());
     }
 
@@ -349,12 +338,9 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       listCategoryModel = response;
       streamCategoryModels.set(response);
     } catch (e) {
-      //('Lỗi khi lấy danh sách danh mục: $e');
       streamCategoryModels.add([]); // Fallback nếu có lỗi
     }
   }
-
-  onSearch() {}
 
   filter(BuildContext ctex) {
     Navigator.push(
@@ -432,7 +418,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     );
   }
 
-  onTapProductDetail(ProductModel model) {
+  onTapProductDetail(ProductModel model, {FreePromotionGroup? promotion}) {
     Navigator.push(
       viewContext,
       MaterialPageRoute(
@@ -440,35 +426,29 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
             (context) => ProductDetailCustomerScreen(
               productModel: model,
               productId: model.productId,
+              promotion: promotion,
             ),
       ),
     );
   }
 
   onBuyNow(ProductModel model, BuildContext bContext) async {
+    buildCheck(bContext);
     showFullScreenLoading(bContext);
     List<int> cartIds = [];
-    //('🛒 1111111111Danh sách cartItemIds: $cartIds');
     listCartItemModel?.forEach((element) {
-      //(element.cartItemId);
       cartIds.add(element.cartItemId ?? 0);
     });
-
-    //('🛒 Danh sách cartItemIds: $cartIds');
 
     final CartItemSelectionRequest request = CartItemSelectionRequest(
       cartId: Storage.cartModelGlobal?.cartId ?? 0,
       cartItemIds: cartIds,
     );
 
-    //('📦 Request cập nhật cart selection: ${request.toJson()}');
-
     final updateResponse = await Repository.onUpdateCartItemsSelectionAPI(
       request,
       false,
     );
-
-    //('✅ Kết quả cập nhật cart selection: $updateResponse');
 
     final data = await _cartItemUseCase.addToCart(
       AddToCartRequest(
@@ -479,8 +459,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       ),
     );
 
-    //('🛒 Kết quả thêm vào giỏ: $data');
-
     if (data) {
       hideFullScreenLoading(bContext);
       Navigator.push(
@@ -489,8 +467,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       );
     } else {
       hideFullScreenLoading(bContext);
-      buildCheck(bContext);
-      //('❌ Không thể thêm sản phẩm vào giỏ hàng.');
     }
   }
 
@@ -586,7 +562,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onAddToCart(ProductModel model, BuildContext bcontext, GlobalKey key) async {
-    onCheckBranch(bcontext);
+    buildCheck(bcontext);
     final data = await _cartItemUseCase.addToCart(
       AddToCartRequest(
         userId: Storage.userModelGlobal?.userId ?? 0,
@@ -602,12 +578,10 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
         context: bcontext,
         urlImage: model.image,
       );
-      onGetUserCart();
+      await onGetUserCart();
       return;
     }
     showCustomMessageError(bcontext);
-
-    buildCheck(bcontext);
   }
 
   runAddToCartAnimation({
@@ -664,16 +638,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     overlay.insert(overlayEntry);
   }
 
-  onTapCartItem(CartItemModel model) async {
-    // listCartItemModel
-    //     ?.firstWhere((element) => element.cartItemId == model.cartItemId)
-    //     .isSelect = !(model.isSelect ?? true);
-    streamCartItemModels.set(listCartItemModel!);
-    // await onCaculateCart();
-    onUpdateSelected(model);
-  }
-
-  onUpdateSelected(CartItemModel model) async {
+  onUpdateSelected(CartItemModel model, BuildContext bContext) async {
+    showFullScreenLoading(bContext);
     final response = await Repository.onUpdateQuantity(
       branchId: Storage.branchModelGlobal?.branchId,
       cartItemId: model.cartItemId,
@@ -684,6 +650,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     if (response) {
       await onGetUserCart();
     }
+
+    hideFullScreenLoading(bContext);
   }
 
   onTapCreateOrder(BuildContext bContext) {
@@ -787,9 +755,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     if (response != null) {
       listNotificattionRead = response;
       streamListNotificationRead.set(listNotificattionRead ?? []);
-    } else {
-      //('[READ] Response is null');
-    }
+    } else {}
   }
 
   onGetNotificationUnRead() async {
@@ -800,7 +766,6 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       userId: Storage.userModelGlobal?.userId,
     );
 
-
     final List<NotificationModel>? response = await Repository.getNotification(
       model,
     );
@@ -808,7 +773,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     if (response != null) {
       listNotificattionUnRead = response;
       streamListNotificationUnRead.set(listNotificattionUnRead ?? []);
-    } 
+    }
   }
 
   onGetNotification() async {
@@ -824,7 +789,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       await onGetNotification();
     }
   }
-   onGetReward() async {
+
+  onGetReward() async {
     final response = await Repository.getReward();
     reward = response;
     streamReward.set(response);

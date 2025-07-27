@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/datasources/local/starage.dart';
@@ -210,9 +211,10 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
                           ? CachedNetworkImage(
                             imageUrl: userModelGlobal!.image,
                             placeholder:
-                                (context, url) => Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                                (context, url) => SizedBox(
+                                  height: 80,
+                                  child: Lottie.asset(
+                                    'assets/animations/loading.json',
                                   ),
                                 ),
                             errorWidget:
@@ -293,7 +295,10 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
           stream: bloc.streamListCartItem.output,
           builder: (context, snapshot) {
             if (!snapshot.hasData || snapshot.data == null) {
-              return const Center(child: CircularProgressIndicator());
+              return SizedBox(
+                height: 80,
+                child: Lottie.asset('assets/animations/loading.json'),
+              );
             }
 
             final list = snapshot.data as List<CartItemModel>;
@@ -322,7 +327,10 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
           stream: bloc.streamOrderDetail.output,
           builder: (context, snapshot) {
             if (!snapshot.hasData || snapshot.data == null) {
-              return const Center(child: CircularProgressIndicator());
+              return SizedBox(
+                height: 80,
+                child: Lottie.asset('assets/animations/loading.json'),
+              );
             }
 
             final list = snapshot.data as List<OrderDetailResponse>;
@@ -377,8 +385,10 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
                               ? CachedNetworkImage(
                                 imageUrl: product!.image!,
                                 placeholder:
-                                    (context, url) =>
-                                        CircularProgressIndicator(),
+                                    (context, url) => Lottie.asset(
+                                      'assets/animations/loading.json',
+                                    ),
+
                                 errorWidget:
                                     (context, url, error) => Image.asset(
                                       imgBranch,
@@ -505,150 +515,229 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
 
   Widget _itemCard({CartItemModel? model, CreateOrderBloc? bloc}) {
     final ProductModel? product = model?.product;
+    final listFreeItem = model?.freeItems;
     return SizedBox(
       width: AppSize.width(),
-      height: 150,
+      // height: listFreeItem != null ? 250 : 150,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
         child: Card(
           color: Colors.white,
           child: Padding(
             padding: const EdgeInsets.all(10),
-            child: SizedBox(
-              height: 100,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 4,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      // child: Image.asset(avtWomen6, fit: BoxFit.cover),
-                      child:
-                          (product?.image != null)
-                              ? CachedNetworkImage(
-                                imageUrl: product!.image!,
-                                placeholder:
-                                    (context, url) =>
-                                        CircularProgressIndicator(),
-                                errorWidget:
-                                    (context, url, error) => Image.asset(
-                                      imgBranch,
-                                      fit: BoxFit.cover,
-                                    ),
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                              )
-                              : Image.asset(imgBranch, fit: BoxFit.cover),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 6,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: SizedBox(
-                        height: 100,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.max,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            customAutoSizeText(
-                              14,
-                              18,
-                              model?.product?.name ?? '',
-                              isBold: true,
-                              textColor: toHexToColor(primaryTextColor),
-                            ),
-                            customAutoSizeText(
-                              12,
-                              16,
-                              formatCurrencyVN(model?.product?.price ?? 0.0),
-                              isBold: true,
-                              // isLine: true,
-                              textColor: toHexToColor(primaryButtonColor),
-                            ),
-                            Spacer(),
-                            Row(
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 100,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          // child: Image.asset(avtWomen6, fit: BoxFit.cover),
+                          child:
+                              (product?.image != null)
+                                  ? CachedNetworkImage(
+                                    imageUrl: product!.image!,
+                                    placeholder:
+                                        (context, url) => Lottie.asset(
+                                          'assets/animations/loading.json',
+                                        ),
+
+                                    errorWidget:
+                                        (context, url, error) => Image.asset(
+                                          imgBranch,
+                                          fit: BoxFit.cover,
+                                        ),
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  )
+                                  : Image.asset(imgBranch, fit: BoxFit.cover),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 6,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: SizedBox(
+                            height: 100,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.max,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Spacer(),
-                                Card(
-                                  color: Colors.white,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[300],
-                                      borderRadius: BorderRadius.circular(5),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        InkWell(
-                                          onTap: () {
-                                            bloc?.onCaculate(
-                                              model ?? CartItemModel(),
-                                              true,
-                                            );
-                                          },
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 3,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.only(
-                                                topLeft: Radius.circular(5),
-                                                bottomLeft: Radius.circular(5),
-                                              ),
-                                            ),
-                                            child: Text(' - '),
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 3,
-                                          ),
-                                          color: Colors.white,
-                                          child: Text(
-                                            model?.quantity.toString() ?? '0',
-                                          ),
-                                        ),
-                                        InkWell(
-                                          onTap: () {
-                                            bloc?.onCaculate(
-                                              model ?? CartItemModel(),
-                                              false,
-                                            );
-                                          },
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 3,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.only(
-                                                bottomRight: Radius.circular(5),
-                                                topRight: Radius.circular(5),
-                                              ),
-                                              // color: Colors.white,
-                                            ),
-                                            child: Text(' + '),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                customAutoSizeText(
+                                  14,
+                                  18,
+                                  model?.product?.name ?? '',
+                                  isBold: true,
+                                  textColor: toHexToColor(primaryTextColor),
+                                ),
+                                customAutoSizeText(
+                                  12,
+                                  16,
+                                  formatCurrencyVN(
+                                    model?.product?.price ?? 0.0,
                                   ),
+                                  isBold: true,
+                                  // isLine: true,
+                                  textColor: toHexToColor(primaryButtonColor),
+                                ),
+                                Spacer(),
+                                Row(
+                                  children: [
+                                    Spacer(),
+                                    Card(
+                                      color: Colors.white,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[300],
+                                          borderRadius: BorderRadius.circular(
+                                            5,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            InkWell(
+                                              onTap: () {
+                                                bloc?.onCaculate(
+                                                  model ?? CartItemModel(),
+                                                  true,
+                                                );
+                                              },
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 3,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.only(
+                                                        topLeft:
+                                                            Radius.circular(5),
+                                                        bottomLeft:
+                                                            Radius.circular(5),
+                                                      ),
+                                                ),
+                                                child: Text(' - '),
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 3,
+                                              ),
+                                              color: Colors.white,
+                                              child: Text(
+                                                model?.quantity.toString() ??
+                                                    '0',
+                                              ),
+                                            ),
+                                            InkWell(
+                                              onTap: () {
+                                                bloc?.onCaculate(
+                                                  model ?? CartItemModel(),
+                                                  false,
+                                                );
+                                              },
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 3,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.only(
+                                                        bottomRight:
+                                                            Radius.circular(5),
+                                                        topRight:
+                                                            Radius.circular(5),
+                                                      ),
+                                                  // color: Colors.white,
+                                                ),
+                                                child: Text(' + '),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                listFreeItem != null
+                    ? Column(
+                      children: [
+                        _divider('Sản phẩm tặng kèm'),
+                        Column(
+                          children:
+                              (listFreeItem)
+                                  .map((e) => _itemFree(e, context))
+                                  .toList(),
+                        ),
+                      ],
+                    )
+                    : Container(),
+              ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _itemFree(CartItemModel freeItem, BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Container(
+        height: 40,
+        width: MediaQuery.sizeOf(context).width,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.amber),
+        ),
+        padding: EdgeInsets.all(4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              // child: Image.asset(avtWomen6, fit: BoxFit.cover),
+              child:
+                  (freeItem.product?.image != null)
+                      ? CachedNetworkImage(
+                        imageUrl: freeItem.product!.image!,
+                        placeholder:
+                            (context, url) =>
+                                Lottie.asset('assets/animations/loading.json'),
+
+                        errorWidget:
+                            (context, url, error) =>
+                                Image.asset(imgBranch, fit: BoxFit.contain),
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.contain,
+                      )
+                      : Image.asset(imgBranch, fit: BoxFit.contain),
+            ),
+            customAutoSizeText(
+              14,
+              18,
+              freeItem.product?.name ?? '',
+              isBold: true,
+              textColor: toHexToColor(primaryTextColor),
+            ),
+          ],
         ),
       ),
     );
@@ -845,8 +934,8 @@ class CreateOrderScreen extends BaseView<CreateOrderBloc> {
                             imageUrl: userModelGlobal!.image,
                             placeholder:
                                 (context, url) => Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                                  child: Lottie.asset(
+                                    'assets/animations/loading.json',
                                   ),
                                 ),
                             errorWidget:

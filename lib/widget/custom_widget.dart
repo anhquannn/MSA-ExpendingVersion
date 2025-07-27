@@ -189,7 +189,7 @@ Widget customItemProductCustomer(
                 ),
 
                 // Thẻ giảm giá
-                model.discountPercentage != 0
+                isDiscount==true
                     ? Positioned(
                       top: 3,
                       right: 3,
@@ -225,7 +225,7 @@ Widget customItemProductCustomer(
           Container(
             height: 100,
             decoration: BoxDecoration(
-              color: Color(0xFFE6F4EA), // Xanh lá nhạt tươi sáng
+              color: Color(0xFFE6F4EA),
             ),
             padding: EdgeInsets.all(8),
             child: Column(
@@ -237,7 +237,7 @@ Widget customItemProductCustomer(
                   maxFontSize: 18,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                (model.branchCurrentPrice != 0&& model.branchCurrentPrice !=null)
+                (model.branchCurrentPrice != 0&& model.branchCurrentPrice !=null &&isDiscount==true)
                     ? AutoSizeText(
                       formatCurrencyVN((model.branchCurrentPrice ?? 0)),
                       minFontSize: 10,

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:msa/core/config/base_bloc.dart';
 import 'package:msa/core/config/config.dart';
 import 'package:msa/core/config/constant.dart';
@@ -15,6 +16,7 @@ import 'package:msa/feature/data/model/response/order_detail_response_model.dart
 import 'package:msa/feature/domain/entities/order_model.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
+import 'package:msa/feature/domain/entities/user_model.dart';
 import 'package:msa/feature/presentation/admin/product/product_detail/ui/product_detail_screen.dart';
 import 'package:msa/feature/presentation/customer/order_detail/bloc/order_detail_bloc.dart';
 import 'package:msa/feature/presentation/customer/product_detail/ui/product_detail_screen.dart';
@@ -23,6 +25,8 @@ import 'package:msa/widget/custom_button.dart';
 import 'package:msa/widget/custom_item_promocode.dart';
 import 'package:msa/widget/custom_widget.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
+
+import '../../../../domain/entities/cart_item.dart';
 
 class OrderDetailScreen extends BaseView<OrderDetailBloc> {
   final OrderResponse? order;
@@ -96,7 +100,7 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        itemInfomation(context),
+                        itemInfomation(context, order.user),
                         _divider('Thông tin đơn hàng'),
                         _buildItemOrder(bloc, context, order),
                         _divider('Danh sách sản phẩm'),
@@ -129,7 +133,7 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
     );
   }
 
-  Widget itemInfomation(BuildContext bContext) {
+  Widget itemInfomation(BuildContext bContext, UserModel? userModel) {
     return Card(
       color: Colors.white,
       child: Center(
@@ -150,30 +154,12 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
                   color: Colors.grey[200], // Màu nền tùy chọn
                 ),
                 child: ClipOval(
-                  child:
-                      (userModelGlobal?.image != null &&
-                              userModelGlobal?.image != '')
-                          ? CachedNetworkImage(
-                            imageUrl: userModelGlobal!.image,
-                            placeholder:
-                                (context, url) => Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                            errorWidget:
-                                (context, url, error) =>
-                                    Image.asset(imgBranch, fit: BoxFit.cover),
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                          )
-                          : Image.asset(
-                            avtWomen3,
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                          ),
+                  child: Image.asset(
+                    userModel?.image ?? (userModelGlobal?.image ?? avtWomen3),
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               SizedBox(width: 8),
@@ -186,7 +172,7 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
                   children: [
                     SizedBox(height: 15),
                     Text(
-                      userModelGlobal?.fullName ?? '',
+                      userModel?.fullName ?? userModelGlobal?.fullName ?? '',
                       overflow: TextOverflow.ellipsis,
                       maxLines: 2,
                       style: TextStyle(
@@ -328,89 +314,158 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
       },
       child: SizedBox(
         width: AppSize.width(),
-        height: 160,
+        // height: 160,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
           child: Card(
             color: Colors.white,
             child: SizedBox(
-              height: 100,
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 4,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          // child: Image.asset(avtWomen6, fit: BoxFit.cover),
-                          child:
-                              (product?.image != null)
-                                  ? CachedNetworkImage(
-                                    imageUrl: product!.image!,
-                                    placeholder:
-                                        (context, url) =>
-                                            CircularProgressIndicator(),
-                                    errorWidget:
-                                        (context, url, error) => Image.asset(
-                                          imgBranch,
-                                          fit: BoxFit.contain,
-                                        ),
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.contain,
-                                  )
-                                  : Image.asset(imgBranch, fit: BoxFit.contain),
+              // height: 100,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 4,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            // child: Image.asset(avtWomen6, fit: BoxFit.cover),
+                            child:
+                                (product?.image != null)
+                                    ? CachedNetworkImage(
+                                      imageUrl: product!.image!,
+                                      placeholder:
+                                          (context, url) =>
+                                              CircularProgressIndicator(),
+                                      errorWidget:
+                                          (context, url, error) => Image.asset(
+                                            imgBranch,
+                                            fit: BoxFit.contain,
+                                          ),
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.contain,
+                                    )
+                                    : Image.asset(
+                                      imgBranch,
+                                      fit: BoxFit.contain,
+                                    ),
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        flex: 6,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: SizedBox(
-                            height: 100,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.max,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                customAutoSizeText(
-                                  14,
-                                  18,
-                                  product?.name ?? '',
-                                  isBold: true,
-                                  textColor: toHexToColor(primaryTextColor),
-                                ),
-                                // customAutoSizeText(8, 12, '100.000đ', isLine: true),
-                                customAutoSizeText(
-                                  12,
-                                  16,
-                                  formatCurrencyVN(
-                                    orderModel?.totalPrice ?? 0.0,
+                        Expanded(
+                          flex: 6,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: SizedBox(
+                              height: 100,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.max,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  customAutoSizeText(
+                                    14,
+                                    18,
+                                    product?.name ?? '',
+                                    isBold: true,
+                                    textColor: toHexToColor(primaryTextColor),
                                   ),
-                                  isBold: true,
-                                  // isLine: true,
-                                  textColor: toHexToColor(primaryButtonColor),
-                                ),
-                                customAutoSizeText(
-                                  10,
-                                  12,
-                                  '${orderModel?.quantity} x ${formatCurrencyVN(product?.price ?? 0.0)}',
-                                  isBold: true,
-                                  // isLine: true,
-                                  textColor: toHexToColor(primaryTextColor),
-                                ),
-                              ],
+                                  // customAutoSizeText(8, 12, '100.000đ', isLine: true),
+                                  customAutoSizeText(
+                                    12,
+                                    16,
+                                    formatCurrencyVN(
+                                      orderModel?.totalPrice ?? 0.0,
+                                    ),
+                                    isBold: true,
+                                    // isLine: true,
+                                    textColor: toHexToColor(primaryButtonColor),
+                                  ),
+                                  customAutoSizeText(
+                                    10,
+                                    12,
+                                    '${orderModel?.quantity} x ${formatCurrencyVN(product?.price ?? 0.0)}',
+                                    isBold: true,
+                                    // isLine: true,
+                                    textColor: toHexToColor(primaryTextColor),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+
+                    (orderModel?.freeItems != null &&
+                            orderModel!.freeItems!.isNotEmpty)
+                        ? Column(
+                          children: [
+                            _divider('Sản phẩm tặng kèm'),
+                            Column(
+                              children:
+                                  (orderModel?.freeItems ?? [])
+                                      .map((e) => _itemFree(e, context))
+                                      .toList(),
+                            ),
+                          ],
+                        )
+                        : Container(),
+                  ],
+                ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _itemFree(OrderDetailResponse freeItem, BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Container(
+        height: 40,
+        width: MediaQuery.sizeOf(context).width,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.amber),
+        ),
+        padding: EdgeInsets.all(4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              // child: Image.asset(avtWomen6, fit: BoxFit.cover),
+              child:
+                  (freeItem.product?.image != null)
+                      ? CachedNetworkImage(
+                        imageUrl: freeItem.product!.image!,
+                        placeholder:
+                            (context, url) =>
+                                Lottie.asset('assets/animations/loading.json'),
+
+                        errorWidget:
+                            (context, url, error) =>
+                                Image.asset(imgBranch, fit: BoxFit.contain),
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.contain,
+                      )
+                      : Image.asset(imgBranch, fit: BoxFit.contain),
+            ),
+            customAutoSizeText(
+              14,
+              18,
+              freeItem.product?.name ?? '',
+              isBold: true,
+              textColor: toHexToColor(primaryTextColor),
+            ),
+          ],
         ),
       ),
     );
@@ -457,7 +512,7 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
               AppSize.w(0.4),
               40,
               Text(
-                'Trả hàng',
+                'Hủy đơn',
                 style: TextStyle(
                   color: toHexToColor(primaryTextColor),
                   fontSize: 14,
@@ -512,15 +567,15 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
             ),
             typeButton: 0,
           ),
-          customButton(
-            () {
-              bloc.onReturnProducts(context: bContext);
-            },
-            AppSize.w(0.4),
-            40,
-            Text('Trả hàng', style: TextStyle(color: Colors.white)),
-            typeButton: 1,
-          ),
+          // customButton(
+          //   () {
+          //     bloc.onReturnProducts(context: bContext);
+          //   },
+          //   AppSize.w(0.4),
+          //   40,
+          //   Text('Hủy đơn', style: TextStyle(color: Colors.white)),
+          //   typeButton: 1,
+          // ),
         ],
       ),
     );

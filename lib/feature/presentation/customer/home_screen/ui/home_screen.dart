@@ -14,7 +14,6 @@ import 'package:msa/feature/domain/entities/product_model.dart';
 import 'package:msa/feature/domain/entities/promo_code_model.dart';
 import 'package:msa/feature/presentation/customer/createorder/ui/create_order_screen.dart';
 import 'package:msa/feature/presentation/customer/persional/ui/persional_screen.dart';
-import 'package:msa/feature/presentation/customer/product_list/ui/product_list_screen.dart';
 import 'package:msa/widget/customBottomSheet.dart';
 import 'package:msa/widget/custom_notification_bottomsheet.dart';
 import 'package:rxdart/rxdart.dart';
@@ -26,6 +25,7 @@ import '../../../../../core/utils/prarse_color.dart';
 import '../../../../../widget/custom_item_promocode.dart';
 import '../../../../../widget/custom_widget.dart';
 import '../../../../../widget/reuseable_screen_hide_appbar.dart';
+import '../../../../data/model/response/product_filter_response.dart';
 import '../bloc/home_screen_bloc.dart';
 
 class HomeScreen extends BaseView<HomeScreenBloc> {
@@ -63,7 +63,10 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                 stream: bloc.streamUserModel,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
+                    return SizedBox(
+                      height: 80,
+                      child: Lottie.asset('assets/animations/loading.json'),
+                    );
                   }
                   if (snapshot.hasError) {
                     return const Icon(Icons.error, color: Colors.red);
@@ -95,7 +98,11 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
             stream: bloc.streamUserModel,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
+                return SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: Lottie.asset('assets/animations/loading.json'),
+                );
               }
               if (snapshot.hasError) {
                 return const Text(
@@ -133,7 +140,11 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                   stream: bloc.streamUserModel,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
+                      return SizedBox(
+                        width: 80,
+                        height: 80,
+                        child: Lottie.asset('assets/animations/loading.json'),
+                      );
                     }
                     if (snapshot.hasError) {
                       return const Text(
@@ -189,40 +200,46 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
       ],
       appBarGradient: false,
       bodyBuilder: (controller) {
-        final double width = AppSize.width();
-        return Stack(
-          children: [
-            StreamBuilder(
-              stream: bloc.streamCategoryModels,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text('Lỗi khi tải danh mục: ${snapshot.error}'),
-                  );
-                }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
-                    child: SizedBox(
+        final double width = MediaQuery.sizeOf(context).width;
+        return SizedBox(
+          width: width,
+          child: Stack(
+            children: [
+              StreamBuilder(
+                stream: bloc.streamCategoryModels,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return SizedBox(
                       height: 150,
                       child: Lottie.asset('assets/animations/loading.json'),
-                    ),
-                  );
-                }
+                    );
+                  }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text('Lỗi khi tải danh mục: ${snapshot.error}'),
+                    );
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(
+                      child: SizedBox(
+                        height: 150,
+                        child: Lottie.asset('assets/animations/loading.json'),
+                      ),
+                    );
+                  }
 
-                return buildBodyContent(
-                  bloc: bloc,
-                  width: width,
-                  labels: snapshot.data!.map((e) => e).toList(),
-                  primaryButtonColor: primaryButtonColor,
-                  borderColor: borderColor,
-                );
-              },
-            ),
-            _buildPoints(context: context, onTap: () {}, bloc: bloc),
-          ],
+                  return buildBodyContent(
+                    bloc: bloc,
+                    width: width,
+                    labels: snapshot.data!.map((e) => e).toList(),
+                    primaryButtonColor: primaryButtonColor,
+                    borderColor: borderColor,
+                  );
+                },
+              ),
+              _buildPoints(context: context, onTap: () {}, bloc: bloc),
+            ],
+          ),
         );
       },
       bottomBarItemsCustom: customBottomBar(bloc, bloc.indexScreen.value),
@@ -448,65 +465,6 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
     PageController promoPageController,
     BuildContext bContext,
   ) {
-    final chipList =
-        labels
-            .map(
-              (label) => Builder(
-                builder:
-                    (context) => InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          bContext,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => ProductListScreen(
-                                  category: label,
-                                  listCartItemModel: bloc.listCartItemModel,
-                                ),
-                          ),
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 3),
-                        child: Chip(
-                          label: Text(label.name ?? ''),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 3,
-                            vertical: 3,
-                          ),
-                          backgroundColor: toHexToColor(primaryButtonColor),
-                          labelStyle: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-              ),
-            )
-            .toList();
-
-    const chipWidth = 100.0;
-    final maxChips = (width / chipWidth).floor();
-    final dynamicChipList =
-        chipList.length < maxChips
-            ? [
-              ...chipList,
-              ...List.generate(
-                maxChips - chipList.length,
-                (i) => InkWell(
-                  onTap: () {},
-                  child: Chip(
-                    label: Text('Chip ${chipList.length + i + 1}'),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 6,
-                    ),
-                    backgroundColor: toHexToColor(primaryButtonColor),
-                    labelStyle: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-            ]
-            : chipList;
-
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -524,7 +482,10 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
             stream: bloc.streamPromoCodeModels,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return SizedBox(
+                  height: 150,
+                  child: Lottie.asset('assets/animations/loading.json'),
+                );
               }
               if (snapshot.hasError) {
                 return Center(
@@ -540,7 +501,7 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               return SizedBox(
                 height: 200,
                 child: Swiper(
-                  itemCount: min(20,promoCodes.length),
+                  itemCount: min(20, promoCodes.length),
                   scrollDirection: Axis.horizontal,
                   autoplay: false,
                   viewportFraction: 0.85,
@@ -589,31 +550,63 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
         buildCategoryChips(context, labels, (model) {
           bloc.onTapCategory(model);
         }),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: customTitleCategory(
-              'Sản phẩm giảm giá',
-              'Xem tất cả',
-              () => bloc.onTapProductSale(),
-            ),
-          ),
+
+        promotionItem(bloc: bloc, context: context),
+
+        sliverProductSection(
+          title: 'Sản phẩm giảm giá',
+          actionLabel: 'Xem tất cả',
+          onTapViewAll: () => bloc.onTapProductSale(),
+          stream: bloc.streamProductModels,
+          extractProducts: (data) => data?.discountedProductsPage?.content,
+          isDiscount: true,
+          width: width,
+          bloc: bloc,
         ),
 
-        SliverToBoxAdapter(
-          child: StreamBuilder(
+        sliverProductSection(
+          title: 'Sản phẩm phổ biến',
+          actionLabel: 'Xem tất cả',
+          onTapViewAll: () => bloc.onTapPopularProduct(),
+          stream: bloc.streamProductModels,
+          extractProducts: (data) => data?.productsPage?.content,
+          isDiscount: false,
+          width: width,
+          bloc: bloc,
+        ),
+
+        SliverToBoxAdapter(child: SizedBox(height: 70)),
+      ],
+    );
+  }
+
+  Widget promotionItem({required HomeScreenBloc bloc, BuildContext? context}) {
+    return SliverToBoxAdapter(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: customTitleCategory('Sản phẩm tặng kèm', '', () {}),
+          ),
+          StreamBuilder(
             stream: bloc.streamProductModels,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return SizedBox(
+                  height: 150,
+                  child: Lottie.asset('assets/animations/loading.json'),
+                );
               }
+
               if (snapshot.hasError) {
                 return Center(child: Text('Lỗi: ${snapshot.error}'));
               }
-              if (!snapshot.hasData || snapshot.data == null) {
+
+              final products = snapshot.data?.freePromotionGroups;
+
+              if (products == null || products.isEmpty) {
                 return const Center(child: Text('Không có sản phẩm'));
               }
-              final products = snapshot.data?.discountedProductsPage?.content;
               return MediaQuery.removePadding(
                 context: context,
                 removeTop: true,
@@ -627,37 +620,33 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   ),
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount:
-                      (products?.length ?? 0) > 20 ? 20 : (products?.length),
+                  itemCount: products.length > 20 ? 20 : products.length,
                   itemBuilder: (context, index) {
+                    final product = products[index];
                     final key = bloc.imageKeys.putIfAbsent(
-                      (products?[index].productId ?? 0) + 99999,
+                      (product.mainProduct?.productId ?? 0) + (101010101010),
                       () => GlobalKey(),
                     );
+
                     return InkWell(
                       key: key,
-                      onTap: () {
-                        bloc.onTapProductDetail(
-                          products?[index] ?? ProductModel(),
-                        );
-                      },
+                      onTap:
+                          () => bloc.onTapProductDetail(
+                            product.mainProduct ?? ProductModel(),
+                            promotion: product,
+                          ),
                       child: customItemProductCustomer(
-                        onBuy: () {
-                          bloc.onBuyNow(
-                            products?[index] ?? ProductModel(),
-                            context,
-                          );
-                        },
-                        onAddToCart: () {
-                          bloc.onAddToCart(
-                            products?[index] ?? ProductModel(),
-                            context,
-                            key,
-                          );
-                        },
+                        onBuy:
+                            () => bloc.onBuyNow(product.mainProduct!, context),
+                        onAddToCart:
+                            () => bloc.onAddToCart(
+                              product.mainProduct!,
+                              context,
+                              key,
+                            ),
                         isDiscount: false,
-                        products?[index] ?? ProductModel(),
-                        width * 0.4,
+                        product.mainProduct!,
+                        MediaQuery.sizeOf(context).width * 0.4,
                       ),
                     );
                   },
@@ -665,35 +654,53 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               );
             },
           ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
+        ],
+      ),
+    );
+  }
+
+  Widget sliverProductSection({
+    required String title,
+    required String actionLabel,
+    required VoidCallback onTapViewAll,
+    required Stream<ProductFilterResult?> stream,
+    required List<ProductModel>? Function(ProductFilterResult?) extractProducts,
+    required bool isDiscount,
+    required double width,
+    required HomeScreenBloc bloc,
+  }) {
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
             padding: const EdgeInsets.all(8.0),
-            child: customTitleCategory(
-              'Sản phẩm phổ biến',
-              'Xem tất cả',
-              () => bloc.onTapPopularProduct(),
-            ),
+            child: customTitleCategory(title, actionLabel, onTapViewAll),
           ),
-        ),
-        // Sản phẩm phổ biến
-        SliverToBoxAdapter(
-          child: StreamBuilder(
-            stream: bloc.streamProductModels,
+          StreamBuilder<ProductFilterResult?>(
+            stream: stream,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return SizedBox(
+                  height: 150,
+                  child: Lottie.asset('assets/animations/loading.json'),
+                );
               }
+
               if (snapshot.hasError) {
                 return Center(child: Text('Lỗi: ${snapshot.error}'));
               }
-              if (!snapshot.hasData || snapshot.data == null) {
+
+              final products = extractProducts(snapshot.data);
+
+              if (products == null || products.isEmpty) {
                 return const Center(child: Text('Không có sản phẩm'));
               }
-              final products = snapshot.data?.productsPage?.content;
+
               return MediaQuery.removePadding(
                 context: context,
                 removeTop: true,
+                removeBottom: true,
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -703,36 +710,23 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
                   ),
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount:
-                      (products?.length ?? 0) > 20 ? 20 : products?.length,
+                  itemCount: products.length > 20 ? 20 : products.length,
                   itemBuilder: (context, index) {
+                    final product = products[index];
                     final key = bloc.imageKeys.putIfAbsent(
-                      (products?[index].productId ?? 0),
+                      product.productId! + (isDiscount ? 99999 : 0),
                       () => GlobalKey(),
                     );
+
                     return InkWell(
                       key: key,
-                      onTap: () {
-                        bloc.onTapProductDetail(
-                          products?[index] ?? ProductModel(),
-                        );
-                      },
+                      onTap: () => bloc.onTapProductDetail(product),
                       child: customItemProductCustomer(
-                        onBuy: () {
-                          bloc.onBuyNow(
-                            products?[index] ?? ProductModel(),
-                            context,
-                          );
-                        },
-                        onAddToCart: () {
-                          bloc.onAddToCart(
-                            products?[index] ?? ProductModel(),
-                            context,
-                            key,
-                          );
-                        },
-                        isDiscount: false,
-                        products?[index] ?? ProductModel(),
+                        onBuy: () => bloc.onBuyNow(product, context),
+                        onAddToCart:
+                            () => bloc.onAddToCart(product, context, key),
+                        isDiscount: isDiscount,
+                        product,
                         width * 0.4,
                       ),
                     );
@@ -741,9 +735,8 @@ class _HomeTabState extends State<HomeTab> with AutomaticKeepAliveClientMixin {
               );
             },
           ),
-        ),
-        SliverToBoxAdapter(child: SizedBox(height: 20)),
-      ],
+        ],
+      ),
     );
   }
 
@@ -948,8 +941,11 @@ class _OrderTabState extends State<OrderTab>
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
                           // ⏳ Hiển thị loading khi stream chưa trả về dữ liệu
-                          return const Center(
-                            child: CircularProgressIndicator(),
+                          return SizedBox(
+                            height: 150,
+                            child: Lottie.asset(
+                              'assets/animations/loading.json',
+                            ),
                           );
                         }
 
@@ -991,6 +987,8 @@ class _OrderTabState extends State<OrderTab>
                   }).toList(),
             ),
           ),
+
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -1353,7 +1351,7 @@ class CardTab extends StatelessWidget {
                       );
                     }
                     final item = data[index - 1]; // lùi 1 vì index 0 là nút
-                    return itemCard(model: item);
+                    return itemCard(model: item, context: context);
                   },
                 ),
               );
@@ -1365,12 +1363,22 @@ class CardTab extends StatelessWidget {
     );
   }
 
-  Widget itemCard({CartItemModel? model}) {
+  Widget itemCard({CartItemModel? model, BuildContext? context}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
       child: InkWell(
         onTap: () {
-          bloc?.onTapProductDetail(model?.product ?? ProductModel());
+          bloc?.onTapProductDetail(
+            model?.product ?? ProductModel(),
+            promotion: FreePromotionGroup(
+              mainProduct: model?.product,
+              freeProducts:
+                  (model?.freeItems
+                      ?.map((e) => e.product)
+                      .whereType<ProductModel>()
+                      .toList()),
+            ),
+          );
         },
         child: Card(
           color: Colors.white,
@@ -1389,7 +1397,12 @@ class CardTab extends StatelessWidget {
                           child: CachedNetworkImage(
                             imageUrl: model?.product?.image ?? '',
                             placeholder:
-                                (context, url) => CircularProgressIndicator(),
+                                (context, url) => SizedBox(
+                                  height: 150,
+                                  child: Lottie.asset(
+                                    'assets/animations/loading.json',
+                                  ),
+                                ),
                             errorWidget:
                                 (context, url, error) =>
                                     Image.asset(imgBranch, fit: BoxFit.cover),
@@ -1421,12 +1434,13 @@ class CardTab extends StatelessWidget {
                                   textColor: toHexToColor(primaryTextColor),
                                 ),
                               ),
-                              // customAutoSizeText(8, 12, '100.000đ', isLine: true),
-                              model?.product?.discountPercentage != 0
+                              model?.product?.branchCurrentPrice != null
                                   ? customAutoSizeText(
                                     12,
                                     16,
-                                    '${formatCurrencyVN((model?.product?.price ?? 0) * (model?.product?.discountPercentage ?? 0))}',
+                                    formatCurrencyVN(
+                                      (model?.product?.branchCurrentPrice ?? 0),
+                                    ),
                                     isBold: true,
                                     isLine: true,
                                     textColor: toHexToColor(primaryButtonColor),
@@ -1435,9 +1449,16 @@ class CardTab extends StatelessWidget {
                               customAutoSizeText(
                                 12,
                                 16,
-                                '${formatCurrencyVN(model?.price ?? 0)}',
+                                formatCurrencyVN(model?.price ?? 0),
                                 isBold: true,
                                 textColor: toHexToColor(primaryButtonColor),
+                              ),
+                              customAutoSizeText(
+                                12,
+                                16,
+                                '+ ${model?.freeItems?.length} sản phẩm tặng kèm',
+                                isBold: true,
+                                textColor: Colors.amber,
                               ),
                               Spacer(),
                               Row(
@@ -1516,7 +1537,8 @@ class CardTab extends StatelessWidget {
                     ),
                   ],
                 ),
-                model?.product?.discountPercentage != 0
+                (model?.product?.discountPercentage != 0 &&
+                        model?.product?.branchCurrentPrice != null)
                     ? Positioned(
                       top: 1,
                       left: 65,
@@ -1544,11 +1566,7 @@ class CardTab extends StatelessWidget {
                   right: -1,
                   child: InkWell(
                     onTap: () {
-                      // bloc?.onUpdateSelected(
-                      //   (model?.selected ?? false),
-                      //   model!,
-                      // );
-                      bloc?.onTapCartItem(model!);
+                      bloc?.onUpdateSelected(model!, context!);
                     },
 
                     child:
@@ -1643,7 +1661,10 @@ class NotificationListTab extends StatelessWidget {
       stream: stream,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return SizedBox(
+            height: 150,
+            child: Lottie.asset('assets/animations/loading.json'),
+          );
         }
         final data = snapshot.data!;
         if (data.isEmpty) {

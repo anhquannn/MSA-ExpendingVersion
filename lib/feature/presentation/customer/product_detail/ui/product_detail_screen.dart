@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:msa/core/config/global.dart';
 import 'package:msa/core/utils/utility.dart';
 import 'package:msa/feature/data/model/response/feedback_filter_response.dart';
@@ -20,7 +21,13 @@ import '../bloc/product_detail_bloc.dart';
 class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
   final ProductModel? productModel;
   final int? productId;
-  ProductDetailCustomerScreen({super.key, this.productModel, this.productId});
+  final FreePromotionGroup? promotion;
+  ProductDetailCustomerScreen({
+    super.key,
+    this.productModel,
+    this.productId,
+    this.promotion,
+  });
 
   @override
   ProductDetailBloc createState() => ProductDetailBloc();
@@ -44,13 +51,16 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
         BottomBarItem(
           label: 'Mua ngay',
           onTap: (index) {
-            bloc.onBuy(bloc.productModel?.productId ?? 0);
+            bloc.onBuyNow(bloc.productModel ?? ProductModel(), context);
           },
         ),
         BottomBarItem(
           label: 'Thêm vào\n giỏ hàng',
           onTap: (index) {
-            bloc.onAddToCart(bloc.productModel ?? ProductModel(), context);
+            bloc.onAddOtherProductToCart(
+              bloc.productModel ?? ProductModel(),
+              context,
+            );
           },
         ),
       ],
@@ -72,6 +82,8 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
         SliverToBoxAdapter(
           child: itemProductDetail(bloc.productModel ?? ProductModel()),
         ),
+        const SliverToBoxAdapter(child: SizedBox(height: 5)),
+        buildListFreeProduct(context),
         const SliverToBoxAdapter(child: SizedBox(height: 5)),
         SliverToBoxAdapter(
           child: itemDec(bloc, bloc.productModel?.description ?? ''),
@@ -129,6 +141,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                 context: context,
                 removeTop: true,
                 child: buildProductSwiper(
+                  isDiscount: false,
                   products: snapshot.data ?? [],
                   bloc: bloc,
                 ),
@@ -155,6 +168,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
             if (snapshot.hasData &&
                 snapshot.data != null &&
                 snapshot.data!.isNotEmpty) {
+              final products = snapshot.data;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -172,9 +186,46 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                   MediaQuery.removePadding(
                     context: context,
                     removeTop: true,
-                    child: buildProductSwiper(
-                      products: snapshot.data!,
-                      bloc: bloc,
+                    child: GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 3,
+                            mainAxisSpacing: 3,
+                            mainAxisExtent: 300,
+                          ),
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount:
+                          (snapshot.data?.length ?? 0) > 20
+                              ? 20
+                              : products?.length,
+                      itemBuilder: (context, index) {
+                        final product = products?[index];
+
+                        return InkWell(
+                          key: key,
+                          onTap:
+                              () => bloc.onTapProductDetail(
+                                product ?? ProductModel(),
+                              ),
+                          child: customItemProductCustomer(
+                            onBuy:
+                                () => bloc.onBuyNow(
+                                  product ?? ProductModel(),
+                                  context,
+                                ),
+                            onAddToCart:
+                                () => bloc.onAddOtherProductToCart(
+                                  product ?? ProductModel(),
+                                  context,
+                                ),
+                            isDiscount: false,
+                            product ?? ProductModel(),
+                            MediaQuery.sizeOf(context).width * 0.4,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -225,6 +276,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
   Widget buildProductSwiper({
     required List<ProductModel> products,
     required ProductDetailBloc bloc,
+    bool? isDiscount = false,
   }) {
     return SizedBox(
       height: 300,
@@ -247,11 +299,11 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
               );
             },
             child: customItemProductCustomer(
-              isDiscount: (product.discountPercentage ?? 0) > 0,
+              isDiscount: isDiscount,
               product,
               AppSize.width() * 0.5,
               onBuy: () => bloc.onBuy(product.productId ?? 0),
-              onAddToCart: () => bloc.onAddToCart(product, context),
+              onAddToCart: () => bloc.onAddOtherProductToCart(product, context),
             ),
           );
         },
@@ -290,7 +342,8 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                 product,
                 AppSize.width() * 0.3,
                 onBuy: () => bloc.onBuy(product.productId ?? 0),
-                onAddToCart: () => bloc.onAddToCart(product, context),
+                onAddToCart:
+                    () => bloc.onAddOtherProductToCart(product, context),
               ),
             ),
           );
@@ -458,10 +511,11 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                   ),
                 ),
                 SizedBox(width: 10),
-                if ((model.discountPercentage ?? 0) > 0) ...[
+                if ((model.branchCurrentPrice ?? 0) > 0) ...[
                   Text(
                     formatCurrency(
-                      (model.discountPercentage ?? 0) * (model.price ?? 0),
+                      (model.discountPercentage ?? 0) *
+                          (model.branchCurrentPrice ?? 0),
                     ),
                     style: TextStyle(
                       color: toHexToColor(appBarColor),
@@ -479,7 +533,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                     fontSize: 16,
                   ),
                 ),
-                if ((model.discountPercentage ?? 0) > 0) ...[
+                if ((model.branchCurrentPrice ?? 0) > 0) ...[
                   Spacer(),
                   Container(
                     decoration: BoxDecoration(
@@ -826,6 +880,122 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget buildListFreeProduct(BuildContext context) {
+    return SliverToBoxAdapter(
+      child:
+          (promotion != null && promotion?.freeProducts != null)
+              ? MediaQuery.removePadding(
+                context: context,
+                removeBottom: true,
+                removeTop: true,
+                child: ListView(
+                  physics: NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  children:
+                      promotion!.freeProducts!
+                          .map((e) => itemProductFree(model: e))
+                          .toList(),
+                ),
+              )
+              : Container(),
+    );
+  }
+
+  Widget itemProductFree({ProductModel? model, ProductDetailBloc? bloc}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+      child: InkWell(
+        onTap: () {
+          bloc?.onTapProductDetail(model ?? ProductModel());
+        },
+        child: Card(
+          color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      // child: Image.asset(avtWomen6, fit: BoxFit.cover),
+                      child: CachedNetworkImage(
+                        imageUrl: model?.image ?? '',
+                        placeholder:
+                            (context, url) => SizedBox(
+                              height: 150,
+                              child: Lottie.asset(
+                                'assets/animations/loading.json',
+                              ),
+                            ),
+                        errorWidget:
+                            (context, url, error) =>
+                                Image.asset(imgBranch, fit: BoxFit.cover),
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 6,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: SizedBox(
+                      height: 80,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.max,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          customAutoSizeText(
+                            14,
+                            18,
+                            model?.name ?? '',
+                            isBold: true,
+                            textColor: toHexToColor(primaryTextColor),
+                          ),
+                          customAutoSizeText(
+                            12,
+                            16,
+                            '${formatCurrencyVN(model?.price ?? 0)}',
+                            isBold: true,
+                            textColor: toHexToColor(primaryButtonColor),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: toHexToColor(primaryErrorColor),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 2,
+                                horizontal: 8,
+                              ),
+                              child: Text(
+                                'Tặng kèm',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

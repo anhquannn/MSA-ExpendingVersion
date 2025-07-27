@@ -23,7 +23,7 @@ class AddPromoCodeScreen extends BaseView<AddPromoCodeBloc> {
 
     return CustomScaffold(
       appBarGradient: false,
-      appBarLeading: iconBack(bloc.viewContext,size: 25),
+      appBarLeading: iconBack(bloc.viewContext, size: 25),
       centerTitle: true,
       title: const AutoSizeText(
         'Thêm mã giảm giá',

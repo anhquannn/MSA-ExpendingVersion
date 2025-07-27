@@ -196,7 +196,7 @@ class PersionalScreen extends BaseView<PersionalBloc> {
               child: _buildField(
                 enable: false,
                 bloc.addressController,
-                'Chi nhánh mặc định',
+                'Địa chỉ',
                 '',
                 bloc.errorBranch,
                 bloc.errTextBranch,

@@ -20,6 +20,8 @@ import 'package:msa/widget/custom_dropdown.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 import 'package:rxdart/subjects.dart';
 
+import '../../../../../widget/custom_loading.dart';
+
 class AddressListWidget extends StatefulWidget {
   final UserAddressModel addresses;
   final bool isChangePrimary;
@@ -43,7 +45,7 @@ class _AddressListWidgetState extends State<AddressListWidget> {
   int? selectedIndex;
   final streamAddress = BehaviorSubject<List<UserAddressModel>>();
   List<UserAddressModel> address = [];
-  int? userAddresId = Storage.addressModel?.userAddressId;
+  int? userAddressId = Storage.addressModel?.userAddressId;
 
   @override
   void initState() {
@@ -68,6 +70,7 @@ class _AddressListWidgetState extends State<AddressListWidget> {
         if (widget.addresses.userAddressId == model.userAddressId) {
           model.primary = true;
           Storage.addressModel = model;
+          userAddressId = model.userAddressId;
           Storage.saveAddress(model);
         } else {
           model.primary = false;
@@ -78,7 +81,8 @@ class _AddressListWidgetState extends State<AddressListWidget> {
   }
 
   onChange(int userAddressId) {
-    userAddressId = userAddressId;
+    print('#######################userAddressId $userAddressId');
+    this.userAddressId = userAddressId;
     for (UserAddressModel model in address) {
       if (userAddressId == model.userAddressId) {
         Storage.addressModel = model;
@@ -92,6 +96,7 @@ class _AddressListWidgetState extends State<AddressListWidget> {
   }
 
   onSave(BuildContext bContext) async {
+    showFullScreenLoading(bContext);
     UserAddressUpdateRequest request = UserAddressUpdateRequest();
     UserAddressModel model = UserAddressModel();
     for (var i in address) {
@@ -112,9 +117,11 @@ class _AddressListWidgetState extends State<AddressListWidget> {
     }
 
     final data = await Repository.onUpdateUserAddress(
-      userAddresId ?? 0,
+      userAddressId ?? 0,
       request,
     );
+
+    hideFullScreenLoading(bContext);
     if (data) {
       Storage.addressModel = model;
       Storage.saveAddress(model);

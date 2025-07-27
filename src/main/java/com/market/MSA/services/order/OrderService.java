@@ -85,8 +85,18 @@ public class OrderService {
       List<String> promoCodes,
       Double usePoints) {
 
-    // 1. Lấy các sản phẩm trong giỏ hàng và chuyển đổi thành danh sách 'OrderItemDto' để kiểm tra.
-    List<CartItemResponse> cartItems = cartItemService.getCartItemsByCartId(cartId);
+    // 1. Lấy các sản phẩm trong giỏ hàng (bao gồm cả sản phẩm khuyến mãi miễn phí).
+    List<CartItemResponse> cartItemHierarchical = cartItemService.getCartItemsByCartId(cartId);
+    // Chuyển đổi cấu trúc cây -> danh sách phẳng để xử lý dễ dàng hơn.
+    List<CartItemResponse> cartItems = new ArrayList<>();
+    for (CartItemResponse ci : cartItemHierarchical) {
+      cartItems.add(ci);
+      if (ci.getFreeItems() != null && !ci.getFreeItems().isEmpty()) {
+        cartItems.addAll(ci.getFreeItems());
+      }
+    }
+
+    // Danh sách OrderItemDto dùng cho pricing / validation.
     List<OrderItemDto> orderItems =
         cartItems.stream()
             .map(ci -> new OrderItemDto(ci.getProduct().getProductId(), ci.getQuantity()))
@@ -94,7 +104,9 @@ public class OrderService {
 
     // 2. Tính tổng giá trị đơn hàng tạm thời để kiểm tra mã giảm giá.
     double totalCost =
-        cartItems.stream().mapToDouble(ci -> ci.getQuantity() * ci.getProduct().getPrice()).sum();
+        cartItems.stream()
+            .mapToDouble(ci -> ci.isFreeItem() ? 0 : ci.getQuantity() * ci.getProduct().getPrice())
+            .sum();
 
     // 3. KIỂM TRA MÃ GIẢM GIÁ TRƯỚC TIÊN - Đây là bước quan trọng được thêm vào.
     // Việc này đảm bảo mã giảm giá hợp lệ trước khi thực hiện các logic phức tạp khác.

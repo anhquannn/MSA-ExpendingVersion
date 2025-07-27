@@ -39,6 +39,31 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
           + "(:isActive IS NULL OR ip.isActive = :isActive) AND "
           + "(:isDiscounted IS NULL OR ip.isDiscounted = :isDiscounted) AND "
           + "(:fromDate IS NULL OR ip.expDate >= :fromDate) AND "
+          + "(:toDate IS NULL OR ip.expDate <= :toDate) AND "
+          + "(:minStock IS NULL OR ip.stockNumber >= :minStock) AND "
+          + "(:maxStock IS NULL OR ip.stockNumber <= :maxStock) AND "
+          + "(:isLowStock IS NULL OR :isLowStock = false OR ip.stockNumber <= ip.minThreshold)")
+  Page<InventoryProduct> filterWithPagingAndStock(
+      @Param("productId") Long productId,
+      @Param("inventoryId") Long inventoryId,
+      @Param("batchNumber") String batchNumber,
+      @Param("isActive") Boolean isActive,
+      @Param("isDiscounted") Boolean isDiscounted,
+      @Param("fromDate") LocalDateTime fromDate,
+      @Param("toDate") LocalDateTime toDate,
+      @Param("minStock") Double minStock,
+      @Param("maxStock") Double maxStock,
+      @Param("isLowStock") Boolean isLowStock,
+      Pageable pageable);
+
+  @Query(
+      "SELECT ip FROM InventoryProduct ip WHERE "
+          + "(:productId IS NULL OR ip.product.productId = :productId) AND "
+          + "(:inventoryId IS NULL OR ip.inventory.inventoryId = :inventoryId) AND "
+          + "(:batchNumber IS NULL OR ip.batchNumber = :batchNumber) AND "
+          + "(:isActive IS NULL OR ip.isActive = :isActive) AND "
+          + "(:isDiscounted IS NULL OR ip.isDiscounted = :isDiscounted) AND "
+          + "(:fromDate IS NULL OR ip.expDate >= :fromDate) AND "
           + "(:toDate IS NULL OR ip.expDate <= :toDate)")
   List<InventoryProduct> filter(
       @Param("productId") Long productId,

@@ -10,15 +10,19 @@ import com.market.MSA.models.product.Product;
 import com.market.MSA.repositories.order.CartItemRepository;
 import com.market.MSA.repositories.order.CartRepository;
 import com.market.MSA.repositories.product.ProductRepository;
+import com.market.MSA.repositories.product.PromotionRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.order.CartItemRequest;
 import com.market.MSA.responses.order.CartItemResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import com.market.MSA.services.product.InventoryProductService;
 import com.market.MSA.services.product.PromotionService;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -43,6 +47,7 @@ public class CartItemService {
 
   final InventoryProductService inventoryProductService;
   final PromotionService promotionService;
+  final PromotionRepository promotionRepository;
 
   @Transactional
   public CartItemResponse createCartItem(CartItemRequest request) {
@@ -191,10 +196,25 @@ public class CartItemService {
 
   @Transactional
   public boolean deleteCartItem(Long cartItemId) {
-    if (!cartItemRepository.existsById(cartItemId)) {
-      throw new AppException(ErrorCode.CART_ITEM_NOT_FOUND);
-    }
+    // Retrieve the cart item first to know its type (main or free) and cart reference
+    CartItem cartItem =
+        cartItemRepository
+            .findById(cartItemId)
+            .orElseThrow(() -> new AppException(ErrorCode.CART_ITEM_NOT_FOUND));
+
+    Long cartId = cartItem.getCart().getCartId();
+    boolean isMainItem = !cartItem.isFreeItem();
+
+    // Delete the requested cart item
     cartItemRepository.deleteById(cartItemId);
+
+    // If the deleted item is a main product, refresh bundle (free) items
+    if (isMainItem) {
+      // This will remove all current free items and re-apply promotions based on
+      // the remaining main items in the cart, effectively cascading the deletion
+      // of free products associated with the removed main product.
+      synchronizeBundleItems(cartId);
+    }
     return true;
   }
 
@@ -211,28 +231,69 @@ public class CartItemService {
     return cartItemMapper.toCartItemResponse(cartItem);
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   @Cacheable("cart_items_true")
   public List<CartItemResponse> getCartItemsByCartId(Long cartId) {
     // Ensure free items are synchronized based on current selections before returning list
     synchronizeBundleItems(cartId);
     List<CartItem> cartItems = cartItemRepository.findByCart_CartIdAndIsSelected(cartId, true);
-    return cartItems.stream().map(cartItemMapper::toCartItemResponse).collect(Collectors.toList());
+    return buildHierarchicalResponses(cartItems);
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   @Cacheable("cart_items")
   public List<CartItemResponse> getAllCartItemsByCartId(Long cartId) {
     // Synchronize free items to reflect current state (selected and non-selected)
     synchronizeBundleItems(cartId);
     List<CartItem> cartItems = cartItemRepository.findByCart_CartId(cartId);
-    return cartItems.stream().map(cartItemMapper::toCartItemResponse).collect(Collectors.toList());
+    return buildHierarchicalResponses(cartItems);
   }
 
   /**
    * Refresh bundle (free) items to ensure consistency before any pricing operation. Logic: remove
    * all free items, then re-apply bundle promotions based on current selected main items.
    */
+  private List<CartItemResponse> buildHierarchicalResponses(List<CartItem> cartItems) {
+    Map<Long, CartItemResponse> mainMap = new LinkedHashMap<>();
+    List<CartItemResponse> result = new ArrayList<>();
+
+    // build map for main items
+    for (CartItem item : cartItems) {
+      if (!item.isFreeItem()) {
+        CartItemResponse resp = cartItemMapper.toCartItemResponse(item);
+        resp.setFreeItems(new ArrayList<>());
+        mainMap.put(item.getProduct().getProductId(), resp);
+        result.add(resp);
+      }
+    }
+
+    // attach free items to their main ones using promotion repository
+    for (CartItem freeItem : cartItems) {
+      if (freeItem.isFreeItem()) {
+        Long freeProductId = freeItem.getProduct().getProductId();
+        // find main product that gives this free product via active promotion
+        Long matchedMain = null;
+        for (Long mainId : mainMap.keySet()) {
+          boolean matched =
+              promotionRepository.findActiveByProductMain(mainId, LocalDateTime.now()).stream()
+                  .anyMatch(p -> p.getProductFree().getProductId().equals(freeProductId));
+          if (matched) {
+            matchedMain = mainId;
+            break;
+          }
+        }
+        if (matchedMain != null) {
+          CartItemResponse parent = mainMap.get(matchedMain);
+          parent.getFreeItems().add(cartItemMapper.toCartItemResponse(freeItem));
+        } else {
+          // fallback standalone
+          result.add(cartItemMapper.toCartItemResponse(freeItem));
+        }
+      }
+    }
+    return result;
+  }
+
   @Transactional
   public void synchronizeBundleItems(Long cartId) {
     // Remove current free items

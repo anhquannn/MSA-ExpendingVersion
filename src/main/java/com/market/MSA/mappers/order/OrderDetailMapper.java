@@ -20,6 +20,7 @@ public interface OrderDetailMapper {
   OrderDetail toOrderDetail(OrderDetailRequest request);
 
   @Mapping(target = "product.productImageResponses", source = "product.images")
+  @Mapping(target = "freeItems", ignore = true)
   OrderDetailResponse toOrderDetailResponse(OrderDetail orderDetail);
 
   @Mapping(target = "orderDetailId", ignore = true)

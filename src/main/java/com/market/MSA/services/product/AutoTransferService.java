@@ -10,6 +10,7 @@ import com.market.MSA.repositories.product.InventoryProductRepository;
 import com.market.MSA.repositories.product.InventoryRepository;
 import com.market.MSA.repositories.product.TransferRequestRepository;
 import com.market.MSA.repositories.user.UserRepository;
+import com.market.MSA.services.others.NotificationService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,10 +36,11 @@ public class AutoTransferService {
   TransferRequestRepository transferRequestRepository;
   InventoryRepository inventoryRepository;
   UserRepository userRepository;
+  NotificationService notificationService;
 
   // Check kỹ tồn kho có trong HEAD rồi mới tạo TransferRequest.
   @Transactional(rollbackFor = Exception.class)
-  public void processLowStock() {
+  public List<Transfer> processLowStock() {
     log.info("Starting auto transfer process...");
 
     // 1. Xác định kho HEAD (có branchId = 1). Mặc định hệ thống luôn có.
@@ -75,7 +77,7 @@ public class AutoTransferService {
 
     if (lowStocks.isEmpty()) {
       log.info("No low stock items found");
-      return;
+      return new ArrayList<>();
     }
     log.info("Found {} low stock items", lowStocks.size());
 
@@ -97,6 +99,7 @@ public class AutoTransferService {
 
     int totalTransfersProcessed = 0;
     int totalItemsCreated = 0;
+    List<Transfer> createdTransfers = new ArrayList<>();
 
     for (Map.Entry<Inventory, List<InventoryProduct>> entry : groupedByInventory.entrySet()) {
       Inventory destInv = entry.getKey();
@@ -264,8 +267,24 @@ public class AutoTransferService {
         transfer.setUpdatedAt(LocalDateTime.now());
 
         Transfer savedTransfer = transferRequestRepository.save(transfer);
+        createdTransfers.add(savedTransfer);
         totalTransfersProcessed++;
         totalItemsCreated += itemsAddedForThisTransfer;
+
+        // Send notification for new transfer
+        if (isNewTransfer) {
+          try {
+            notificationService.sendAutoTransferCreatedNotification(savedTransfer);
+            log.info(
+                "✅ Sent auto transfer notification for transfer ID: {}",
+                savedTransfer.getTransferRequestId());
+          } catch (Exception e) {
+            log.error(
+                "❌ Failed to send auto transfer notification for transfer ID: {}",
+                savedTransfer.getTransferRequestId(),
+                e);
+          }
+        }
 
         log.info(
             "Saved transfer ID: {} with {} total items ({} new items added)",
@@ -281,5 +300,7 @@ public class AutoTransferService {
         "Auto transfer process completed - Processed {} transfers with {} total new items",
         totalTransfersProcessed,
         totalItemsCreated);
+
+    return createdTransfers;
   }
 }

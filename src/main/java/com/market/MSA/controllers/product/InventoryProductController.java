@@ -100,4 +100,47 @@ public class InventoryProductController {
         .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())
         .build();
   }
+
+  @GetMapping("/paging")
+  public ApiResponse<Page<InventoryProductResponse>> filterInventoryProductsWithPagingQuery(
+      @RequestParam(required = false) Long inventoryId,
+      @RequestParam(required = false) Long productId,
+      @RequestParam(required = false) Boolean isActive,
+      @RequestParam(required = false) Boolean isDiscounted,
+      @RequestParam(required = false) Boolean isLowStock,
+      @RequestParam(required = false) String batchNumber,
+      @RequestParam(required = false) Double minStock,
+      @RequestParam(required = false) Double maxStock,
+      @RequestParam(defaultValue = "1") int page,
+      @RequestParam(defaultValue = "10") int pageSize,
+      @RequestParam(defaultValue = "stockNumber") String sortBy,
+      @RequestParam(defaultValue = "DESC") String sortDirection) {
+
+    InventoryProductFilterRequest request =
+        InventoryProductFilterRequest.builder()
+            .inventoryId(inventoryId)
+            .productId(productId)
+            .isActive(isActive != null ? isActive : true)
+            .isDiscounted(isDiscounted != null ? isDiscounted : false)
+            .batchNumber(batchNumber)
+            .minStock(minStock)
+            .maxStock(maxStock)
+            .isLowStock(isLowStock)
+            .page(page)
+            .pageSize(pageSize)
+            .sortBy(sortBy)
+            .sortDirection(sortDirection)
+            .build();
+
+    // Handle isLowStock parameter by setting maxStock for low stock filtering
+    if (isLowStock != null && isLowStock) {
+      // Consider items with stock <= 10 as low stock
+      request.setMaxStock(10.0);
+    }
+
+    return ApiResponse.<Page<InventoryProductResponse>>builder()
+        .result(inventoryProductService.getAllInventoryProductsWithPaging(request))
+        .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())
+        .build();
+  }
 }

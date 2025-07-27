@@ -8,12 +8,14 @@ import com.market.MSA.models.others.Notification;
 import com.market.MSA.models.product.Inventory;
 import com.market.MSA.models.product.InventoryProduct;
 import com.market.MSA.models.product.Product;
+import com.market.MSA.models.product.Transfer;
 import com.market.MSA.models.user.User;
 import com.market.MSA.repositories.order.OrderRepository;
 import com.market.MSA.repositories.others.NotificationRepository;
 import com.market.MSA.repositories.product.InventoryProductRepository;
 import com.market.MSA.repositories.product.InventoryRepository;
 import com.market.MSA.repositories.product.ProductRepository;
+import com.market.MSA.repositories.product.TransferRequestRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.NotificationFilterRequest;
 import com.market.MSA.requests.others.NotificationRequest;
@@ -47,6 +49,7 @@ public class NotificationService {
   final ProductRepository productRepository;
   final InventoryRepository inventoryRepository;
   final InventoryProductRepository inventoryProductRepository;
+  final TransferRequestRepository transferRequestRepository;
   final FcmService fcmService;
 
   @Transactional
@@ -402,6 +405,182 @@ public class NotificationService {
     }
   }
 
+  // ================= Transfer Notification Methods =================
+
+  /**
+   * Send notification when a transfer request is created Notifies both admin (approver) and manager
+   * (requester)
+   */
+  @Transactional
+  public void sendTransferCreatedNotification(Long transferId) {
+    try {
+      Transfer transfer =
+          entityFinderService.findByIdOrThrow(
+              transferRequestRepository, transferId, ErrorCode.TRANSFER_REQUEST_NOT_FOUND);
+
+      // Notify admin (approver)
+      if (transfer.getApprover() != null) {
+        NotificationRequest adminRequest =
+            NotificationRequest.builder()
+                .userId(transfer.getApprover().getUserId())
+                .message(
+                    String.format(
+                        "📋 Yêu cầu chuyển kho mới: Có yêu cầu chuyển kho #%d từ %s đến %s với %d sản phẩm cần duyệt.",
+                        transfer.getTransferRequestId(),
+                        transfer.getFromInventory().getName(),
+                        transfer.getToInventory().getName(),
+                        transfer.getTransferItems().size()))
+                .notificationType("TRANSFER_PENDING")
+                .notificationDate(LocalDateTime.now())
+                .isRead(false)
+                .build();
+        createNotification(adminRequest);
+      }
+
+      // Notify manager (requester)
+      if (transfer.getRequester() != null
+          && !transfer.getRequester().getUserId().equals(transfer.getApprover().getUserId())) {
+        NotificationRequest managerRequest =
+            NotificationRequest.builder()
+                .userId(transfer.getRequester().getUserId())
+                .message(
+                    String.format(
+                        "📤 Yêu cầu chuyển kho đã tạo: Yêu cầu chuyển kho #%d của bạn từ %s đến %s đã được tạo và đang chờ duyệt.",
+                        transfer.getTransferRequestId(),
+                        transfer.getFromInventory().getName(),
+                        transfer.getToInventory().getName()))
+                .notificationType("TRANSFER_CREATED")
+                .notificationDate(LocalDateTime.now())
+                .isRead(false)
+                .build();
+        createNotification(managerRequest);
+      }
+
+      log.info("Sent transfer created notifications for transfer #{}", transferId);
+    } catch (Exception e) {
+      log.error("Error sending transfer created notification for transfer #{}", transferId, e);
+    }
+  }
+
+  /** Send notification when a transfer request is approved Notifies the manager (requester) */
+  @Transactional
+  public void sendTransferApprovedNotification(Long transferId) {
+    try {
+      Transfer transfer =
+          entityFinderService.findByIdOrThrow(
+              transferRequestRepository, transferId, ErrorCode.TRANSFER_REQUEST_NOT_FOUND);
+
+      if (transfer.getRequester() != null) {
+        NotificationRequest request =
+            NotificationRequest.builder()
+                .userId(transfer.getRequester().getUserId())
+                .message(
+                    String.format(
+                        "✅ Yêu cầu chuyển kho đã duyệt: Yêu cầu chuyển kho #%d của bạn từ %s đến %s đã được duyệt. Hàng hóa sẽ được chuyển sớm.",
+                        transfer.getTransferRequestId(),
+                        transfer.getFromInventory().getName(),
+                        transfer.getToInventory().getName()))
+                .notificationType("TRANSFER_APPROVED")
+                .notificationDate(LocalDateTime.now())
+                .isRead(false)
+                .build();
+        createNotification(request);
+      }
+
+      log.info("Sent transfer approved notification for transfer #{}", transferId);
+    } catch (Exception e) {
+      log.error("Error sending transfer approved notification for transfer #{}", transferId, e);
+    }
+  }
+
+  /** Send notification when a transfer request is rejected Notifies the manager (requester) */
+  @Transactional
+  public void sendTransferRejectedNotification(Long transferId, String reason) {
+    try {
+      Transfer transfer =
+          entityFinderService.findByIdOrThrow(
+              transferRequestRepository, transferId, ErrorCode.TRANSFER_REQUEST_NOT_FOUND);
+
+      if (transfer.getRequester() != null) {
+        String message =
+            String.format(
+                "❌ Yêu cầu chuyển kho bị từ chối: Yêu cầu chuyển kho #%d của bạn từ %s đến %s đã bị từ chối.",
+                transfer.getTransferRequestId(),
+                transfer.getFromInventory().getName(),
+                transfer.getToInventory().getName());
+
+        if (reason != null && !reason.trim().isEmpty()) {
+          message += " Lý do: " + reason;
+        }
+
+        NotificationRequest request =
+            NotificationRequest.builder()
+                .userId(transfer.getRequester().getUserId())
+                .message(message)
+                .notificationType("TRANSFER_REJECTED")
+                .notificationDate(LocalDateTime.now())
+                .isRead(false)
+                .build();
+        createNotification(request);
+      }
+
+      log.info("Sent transfer rejected notification for transfer #{}", transferId);
+    } catch (Exception e) {
+      log.error("Error sending transfer rejected notification for transfer #{}", transferId, e);
+    }
+  }
+
+  /** Send notification for auto-created transfer requests Used by AutoTransferJob */
+  @Transactional
+  public void sendAutoTransferCreatedNotification(Transfer transfer) {
+    try {
+      // Notify admin (approver)
+      if (transfer.getApprover() != null) {
+        NotificationRequest adminRequest =
+            NotificationRequest.builder()
+                .userId(transfer.getApprover().getUserId())
+                .message(
+                    String.format(
+                        "🤖 Yêu cầu chuyển kho tự động: Hệ thống đã tự động tạo yêu cầu chuyển kho #%d từ %s đến %s với %d sản phẩm do tồn kho thấp.",
+                        transfer.getTransferRequestId(),
+                        transfer.getFromInventory().getName(),
+                        transfer.getToInventory().getName(),
+                        transfer.getTransferItems().size()))
+                .notificationType("AUTO_TRANSFER_CREATED")
+                .notificationDate(LocalDateTime.now())
+                .isRead(false)
+                .build();
+        createNotification(adminRequest);
+      }
+
+      // Notify manager (requester)
+      if (transfer.getRequester() != null
+          && !transfer.getRequester().getUserId().equals(transfer.getApprover().getUserId())) {
+        NotificationRequest managerRequest =
+            NotificationRequest.builder()
+                .userId(transfer.getRequester().getUserId())
+                .message(
+                    String.format(
+                        "🤖 Yêu cầu chuyển kho tự động: Hệ thống đã tự động tạo yêu cầu chuyển kho #%d cho kho %s do tồn kho thấp. Yêu cầu đang chờ duyệt.",
+                        transfer.getTransferRequestId(), transfer.getToInventory().getName()))
+                .notificationType("AUTO_TRANSFER_CREATED")
+                .notificationDate(LocalDateTime.now())
+                .isRead(false)
+                .build();
+        createNotification(managerRequest);
+      }
+
+      log.info(
+          "Sent auto transfer created notifications for transfer #{}",
+          transfer.getTransferRequestId());
+    } catch (Exception e) {
+      log.error(
+          "Error sending auto transfer created notification for transfer #{}",
+          transfer.getTransferRequestId(),
+          e);
+    }
+  }
+
   private void pushToUser(Notification notification) {
     if (notification.getUser() == null) {
       return;
@@ -413,6 +592,12 @@ public class NotificationService {
           case "order_cancelled" -> "Đơn hàng bị huỷ";
           case "low_stock" -> "Cảnh báo tồn kho";
           case "product_new" -> "Sản phẩm mới";
+          case "TRANSFER_PENDING" -> "Yêu cầu chuyển kho";
+          case "TRANSFER_CREATED" -> "Yêu cầu chuyển kho";
+          case "TRANSFER_APPROVED" -> "Chuyển kho được duyệt";
+          case "TRANSFER_REJECTED" -> "Chuyển kho bị từ chối";
+          case "AUTO_TRANSFER_CREATED" -> "Chuyển kho tự động";
+          case "LOW_STOCK" -> "Cảnh báo tồn kho";
           default -> "Thông báo";
         };
     Map<String, String> data =

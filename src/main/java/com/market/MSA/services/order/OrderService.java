@@ -180,6 +180,9 @@ public class OrderService {
     // 9. Xử lý chi tiết đơn hàng (từng sản phẩm).
     for (CartItemResponse cartItem : cartItems) {
       Product product = productService.findProductById(cartItem.getProduct().getProductId());
+      // Xác định đơn giá và cờ miễn phí dựa trên thông tin giỏ hàng
+      boolean freeItem = cartItem.isFreeItem();
+      double unitPrice = freeItem ? 0 : product.getPrice();
       // Tạo 'OrderDetail' cho mỗi sản phẩm trong giỏ hàng.
       OrderDetail orderDetail =
           OrderDetail.builder()
@@ -187,9 +190,10 @@ public class OrderService {
               .name(product.getName())
               .product(product)
               .quantity(cartItem.getQuantity())
-              .unitPrice(product.getPrice())
+              .unitPrice(unitPrice)
               .status(OrderStatus.PENDING)
-              .totalPrice(cartItem.getQuantity() * product.getPrice())
+              .totalPrice(cartItem.getQuantity() * unitPrice)
+              .isFreeItem(freeItem)
               .build();
       // Lưu chi tiết đơn hàng.
       orderDetailRepository.save(orderDetail);

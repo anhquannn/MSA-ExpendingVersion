@@ -343,18 +343,40 @@ public class InventoryProductService {
             request.getPage() - 1, // Convert to 0-based page
             request.getPageSize(),
             sort);
-    // Apply filters
-    return inventoryProductRepository
-        .filterWithPaging(
-            request.getProductId(),
-            request.getInventoryId(),
-            request.getBatchNumber(),
-            request.isActive(),
-            request.isDiscounted(),
-            request.getFromDate(),
-            request.getToDate(),
-            pageable)
-        .map(inventoryProductMapper::toInventoryProductResponse);
+
+    // Check if stock filtering is needed
+    if (request.getMinStock() != null
+        || request.getMaxStock() != null
+        || (request.getIsLowStock() != null && request.getIsLowStock())) {
+      // Use stock filtering method
+      return inventoryProductRepository
+          .filterWithPagingAndStock(
+              request.getProductId(),
+              request.getInventoryId(),
+              request.getBatchNumber(),
+              request.isActive(),
+              request.isDiscounted(),
+              request.getFromDate(),
+              request.getToDate(),
+              request.getMinStock(),
+              request.getMaxStock(),
+              request.getIsLowStock(),
+              pageable)
+          .map(inventoryProductMapper::toInventoryProductResponse);
+    } else {
+      // Use regular filtering method
+      return inventoryProductRepository
+          .filterWithPaging(
+              request.getProductId(),
+              request.getInventoryId(),
+              request.getBatchNumber(),
+              request.isActive(),
+              request.isDiscounted(),
+              request.getFromDate(),
+              request.getToDate(),
+              pageable)
+          .map(inventoryProductMapper::toInventoryProductResponse);
+    }
   }
 
   public double getBranchCurrentPrice(Long branchId, Long productId) {

@@ -45,6 +45,10 @@ public class OrderDetail {
   String image;
   boolean rated;
 
+  // Indicates whether this order detail is a free promotional item
+  @Column(name = "is_free_item")
+  boolean isFreeItem;
+
   @ManyToOne
   @JoinColumn(
       name = "order_id",

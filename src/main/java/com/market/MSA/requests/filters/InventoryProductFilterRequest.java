@@ -39,6 +39,9 @@ public class InventoryProductFilterRequest {
   Double minPrice;
   Double maxPrice;
 
+  // Low stock filter
+  Boolean isLowStock;
+
   // Sorting
   @Builder.Default String sortBy = "stockNumber";
 

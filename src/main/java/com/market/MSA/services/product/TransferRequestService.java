@@ -15,6 +15,7 @@ import com.market.MSA.requests.filters.TransferRequestFilterRequest;
 import com.market.MSA.requests.product.TransferRequest;
 import com.market.MSA.responses.product.TransferResponse;
 import com.market.MSA.services.others.EntityFinderService;
+import com.market.MSA.services.others.NotificationService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,6 +44,7 @@ public class TransferRequestService {
   final InventoryProductService inventoryProductService;
   final OutboundRepository outboundRepository;
   final InboundRepository inboundRepository;
+  final NotificationService notificationService;
 
   @Transactional
   public TransferResponse createTransferRequest(TransferRequest transferRequest) {
@@ -64,6 +66,16 @@ public class TransferRequestService {
     transfer.setCreatedAt(LocalDateTime.now());
 
     Transfer saveTransfer = transferRequestRepository.save(transfer);
+
+    // Send notification to admin and manager
+    try {
+      notificationService.sendTransferCreatedNotification(saveTransfer.getTransferRequestId());
+    } catch (Exception e) {
+      log.warn(
+          "Failed to send transfer created notification for transfer #{}",
+          saveTransfer.getTransferRequestId(),
+          e);
+    }
 
     return transferRequestMapper.toTransferResponse(saveTransfer);
   }
@@ -288,6 +300,16 @@ public class TransferRequestService {
             .transfer(updatedTransfer)
             .build());
 
+    // Send notification to manager about approval
+    try {
+      notificationService.sendTransferApprovedNotification(updatedTransfer.getTransferRequestId());
+    } catch (Exception e) {
+      log.warn(
+          "Failed to send transfer approved notification for transfer #{}",
+          updatedTransfer.getTransferRequestId(),
+          e);
+    }
+
     return transferRequestMapper.toTransferResponse(updatedTransfer);
   }
 
@@ -308,6 +330,17 @@ public class TransferRequestService {
     transfer.setNote(note);
     transfer.setUpdatedAt(LocalDateTime.now());
     Transfer updatedTransfer = transferRequestRepository.save(transfer);
+
+    // Send notification to manager about rejection
+    try {
+      notificationService.sendTransferRejectedNotification(
+          updatedTransfer.getTransferRequestId(), note);
+    } catch (Exception e) {
+      log.warn(
+          "Failed to send transfer rejected notification for transfer #{}",
+          updatedTransfer.getTransferRequestId(),
+          e);
+    }
 
     return transferRequestMapper.toTransferResponse(updatedTransfer);
   }

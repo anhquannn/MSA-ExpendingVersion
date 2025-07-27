@@ -107,6 +107,8 @@ class VerifyOtpBloc extends BaseBloc<VerifyOtpScreen> {
       //   MaterialPageRoute(builder: (context) => HomeScreen()),
       //   (route) => false,
       // );
+
+      Storage.isLogin = true;
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),

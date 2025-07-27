@@ -45,6 +45,7 @@ import 'package:msa/widget/animate_add_to_cart.dart';
 import 'package:msa/widget/custom_dropdown.dart';
 import 'package:msa/widget/custom_loading.dart';
 import 'package:rxdart/rxdart.dart';
+import '../../../../../widget/custom_customer_lead.dart';
 import '../../../../data/datasources/local/starage.dart';
 import '../ui/home_screen.dart';
 import 'package:get/get.dart';
@@ -61,7 +62,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   final Map<int, GlobalKey> imageKeys = {};
   final PageController categoryController = PageController(initialPage: 0);
   final ScrollController scrollController = ScrollController();
-  final ValueNotifier<int> indexScreen = ValueNotifier(3);
+  final ValueNotifier<int> indexScreen = ValueNotifier(0);
   final TextEditingController rateController = TextEditingController();
 
   /// ==== User & Cart Models ====
@@ -159,8 +160,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   @override
   void onInit() {
     init(context);
-    indexScreen.value = 0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      indexScreen.value = 0;
       if (indexScreen.value == 0) {
         categoryController.addListener(_onCategoryScroll);
       }
@@ -248,6 +249,18 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onRefresh() async {
+    if (Storage.token == '') {
+      final List<Future<void>> future = [
+        onGetPromoCode().catchError((e) => ('Lỗi promo code: $e')),
+        onGetCategory().catchError((e) => ('Lỗi category: $e')),
+        onGetProduct().catchError((e) => ('Lỗi product: $e')),
+      ];
+      try {
+        await Future.wait(future);
+      } catch (e) {
+        // Bạn có thể xử lý lỗi tổng quát ở đây, ví dụ hiển thị thông báo lỗi cho người dùng
+      }
+    }
     final List<Future<void>> futures = [
       onGetProfile().catchError((e) => ('Lỗi profile: $e')),
       onGetPromoCode().catchError((e) => ('Lỗi promo code: $e')),
@@ -433,7 +446,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onBuyNow(ProductModel model, BuildContext bContext) async {
-    buildCheck(bContext);
+    if (buildCheck(bContext) == false) return;
     showFullScreenLoading(bContext);
     List<int> cartIds = [];
     listCartItemModel?.forEach((element) {
@@ -471,6 +484,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   buildCheck(BuildContext bContext) {
+    final isLogin = checkLogin(bContext);
+    if (isLogin == false) return false;
     if (Storage.branchModelGlobal == null) {
       showCustomDialog(
         bContext,
@@ -485,7 +500,9 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
           Navigator.pop(bContext);
         },
       );
+      return false;
     }
+    return true;
   }
 
   onGetOrCreateCart({BuildContext? bcontext}) async {
@@ -562,7 +579,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onAddToCart(ProductModel model, BuildContext bcontext, GlobalKey key) async {
-    buildCheck(bcontext);
+    if (buildCheck(bcontext) == false) return;
     final data = await _cartItemUseCase.addToCart(
       AddToCartRequest(
         userId: Storage.userModelGlobal?.userId ?? 0,
@@ -639,6 +656,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onUpdateSelected(CartItemModel model, BuildContext bContext) async {
+    buildCheck(bContext);
     showFullScreenLoading(bContext);
     final response = await Repository.onUpdateQuantity(
       branchId: Storage.branchModelGlobal?.branchId,
@@ -655,6 +673,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   }
 
   onTapCreateOrder(BuildContext bContext) {
+    buildCheck(bContext);
     Navigator.push(
       bContext,
       MaterialPageRoute(builder: (bContext) => CreateOrderScreen()),

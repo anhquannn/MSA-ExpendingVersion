@@ -141,6 +141,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                 context: context,
                 removeTop: true,
                 child: buildProductSwiper(
+                  context,
                   isDiscount: false,
                   products: snapshot.data ?? [],
                   bloc: bloc,
@@ -258,6 +259,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                     context: context,
                     removeTop: true,
                     child: buildProductSwiper(
+                      context,
                       products: products.productsPage?.content ?? [],
                       bloc: bloc,
                     ),
@@ -273,7 +275,8 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     );
   }
 
-  Widget buildProductSwiper({
+  Widget buildProductSwiper(
+    BuildContext context, {
     required List<ProductModel> products,
     required ProductDetailBloc bloc,
     bool? isDiscount = false,
@@ -302,7 +305,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
               isDiscount: isDiscount,
               product,
               AppSize.width() * 0.5,
-              onBuy: () => bloc.onBuy(product.productId ?? 0),
+              onBuy: () => bloc.onBuyNow(product, context),
               onAddToCart: () => bloc.onAddOtherProductToCart(product, context),
             ),
           );
@@ -311,7 +314,8 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
     );
   }
 
-  Widget buildHorizontalProductGrid({
+  Widget buildHorizontalProductGrid(
+    BuildContext bcontext, {
     required List<ProductModel> products,
     required ProductDetailBloc bloc,
   }) {
@@ -321,7 +325,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         itemCount: products.length,
-        itemBuilder: (context, index) {
+        itemBuilder: (bcontext, index) {
           final product = products[index];
           return Container(
             width: AppSize.width() * 0.3,
@@ -329,7 +333,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
             child: InkWell(
               onTap: () {
                 Navigator.push(
-                  context,
+                  bcontext,
                   MaterialPageRoute(
                     builder:
                         (_) =>
@@ -341,9 +345,9 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                 isDiscount: (product.discountPercentage ?? 0) > 0,
                 product,
                 AppSize.width() * 0.3,
-                onBuy: () => bloc.onBuy(product.productId ?? 0),
+                onBuy: () => bloc.onBuyNow(product, bcontext),
                 onAddToCart:
-                    () => bloc.onAddOtherProductToCart(product, context),
+                    () => bloc.onAddOtherProductToCart(product, bcontext),
               ),
             ),
           );
@@ -851,7 +855,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
             child: IconButton(
               icon: const Icon(Icons.close, color: Colors.white),
               onPressed: () {
-                bloc?.onTapBack();
+                // bloc?.onTapBack();
               },
             ),
           ),

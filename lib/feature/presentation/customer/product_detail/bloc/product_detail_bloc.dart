@@ -20,6 +20,7 @@ import 'package:msa/feature/presentation/customer/product_list/ui/product_list_s
 import 'package:msa/widget/custom_dropdown.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../../../../core/config/config.dart';
+import '../../../../../widget/custom_customer_lead.dart' show checkLogin;
 import '../../../../../widget/custom_loading.dart';
 import '../../../../data/datasources/local/starage.dart';
 import '../../../../data/model/request/cartitem_selection_request_model.dart';
@@ -81,16 +82,10 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   @override
   Widget build(BuildContext context) => widget.build(context);
 
-  onTapBack() {}
-
-  onBuy(int productId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => CreateOrderScreen()),
-    );
-  }
 
   buildCheck(BuildContext bContext) {
+    final isLogin = checkLogin(bContext);
+    if (isLogin == false) return false;
     if (Storage.branchModelGlobal == null) {
       showCustomDialog(
         bContext,
@@ -105,11 +100,13 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
           Navigator.pop(bContext);
         },
       );
+      return false;
     }
+    return true;
   }
 
   onBuyNow(ProductModel model, BuildContext bContext) async {
-    buildCheck(bContext);
+    if (buildCheck(bContext) == false) return;
     showFullScreenLoading(bContext);
     List<int> cartIds = [];
     listCartItemModel?.forEach((element) {
@@ -161,6 +158,7 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   }
 
   onAddToCart(ProductModel model, BuildContext bcontext) async {
+    if (buildCheck(bcontext) == false) return;
     final data = await _cartItemUseCase.addToCart(
       AddToCartRequest(
         userId: Storage.userModelGlobal?.userId ?? 0,
@@ -179,6 +177,7 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   }
 
   onAddOtherProductToCart(ProductModel model, BuildContext bcontext) async {
+    if (buildCheck(bcontext) == false) return;
     showFullScreenLoading(bcontext);
     final data = await _cartItemUseCase.addToCart(
       AddToCartRequest(
@@ -210,6 +209,7 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   }
 
   onGetUserCart({BuildContext? bcontext}) async {
+    if (Storage.isLogin == false) return;
     final data = await _cartItemUseCase
         .getCartItemsByCartId(Storage.cartModelGlobal?.cartId ?? 0)
         .timeout(
@@ -267,6 +267,7 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
       final data = await Repository.onGetProductById(widget.productId ?? 0);
       if (data != null) {
         productModel = data;
+
         onGetFeedBack(id: productModel?.productId);
         setState(() {});
       }
@@ -329,6 +330,7 @@ class ProductDetailBloc extends BaseBloc<ProductDetailCustomerScreen> {
   }
 
   onGetFeedBack({int? id}) async {
+    if (Storage.isLogin == false) return;
     final response = await Repository.getFeedback(
       FeedbackFilterRequest(pageSize: 10, productId: id),
     );

@@ -44,10 +44,7 @@ class LoginScreen extends BaseView<LoginBloc> {
 
       body: Builder(
         builder: (context) {
-          // Sử dụng AppContext để lấy bloc thay vì findAncestorStateOfType
           final bloc = context.findAncestorStateOfType<LoginBloc>()!;
-          // Hoặc có thể dùng: AppContext.ofType<LoginBloc>() nếu cần truy cập từ widget khác
-
           return SizedBox.expand(
             child: Stack(
               children: [
@@ -198,7 +195,7 @@ class LoginScreen extends BaseView<LoginBloc> {
             ],
           ),
         ),
-        SizedBox(height: 25),
+        SizedBox(height: 15),
         customButton(
           isBoxShadow: false,
           () async {
@@ -257,8 +254,21 @@ class LoginScreen extends BaseView<LoginBloc> {
           ),
           typeButton: 1,
         ),
+
+        TextButton(
+          onPressed: () => bloc.onLoginWithoutAccount(context),
+          child: Text(
+            'Truy cập không cần tài khoản',
+            style: TextStyle(
+              fontStyle: FontStyle.italic,
+              decoration: TextDecoration.underline,
+              color: Colors.blueAccent,
+              fontSize: 12,
+            ),
+          ),
+        ),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20),
+          padding: const EdgeInsets.symmetric(vertical: 15),
           child: Row(
             children: [
               Expanded(
@@ -301,20 +311,9 @@ class LoginScreen extends BaseView<LoginBloc> {
               ),
               backgroundColorButton: Colors.white,
             ),
-            // SizedBox(width: 20),
-            // customButton(
-            //   _bloc.loginWithGoogle,
-            //   45,
-            //   45,
-            //   Padding(
-            //     padding: const EdgeInsets.all(10),
-            //     child: Image.asset(iconFacebook),
-            //   ),
-            //   backgroundColorButton: Colors.white,
-            // ),
           ],
         ),
-        Spacer(),
+        // Spacer(),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

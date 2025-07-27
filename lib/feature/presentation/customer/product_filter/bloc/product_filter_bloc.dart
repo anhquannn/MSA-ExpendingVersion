@@ -22,6 +22,9 @@ import 'package:msa/widget/custom_dropdown.dart';
 import 'package:msa/widget/custom_loading.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../../../../../core/config/config.dart';
+import '../../../../../widget/custom_customer_lead.dart';
+
 class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
   @override
   String get contextKey => 'PersionalScreen';
@@ -239,6 +242,28 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
     hideFullScreenLoading(ctx);
   }
 
+  buildCheck(BuildContext bContext) {
+    final isLogin = checkLogin(bContext);
+    if (isLogin == false) return false;
+    if (Storage.branchModelGlobal == null) {
+      showCustomDialog(
+        bContext,
+        AppSize.width(),
+        AppSize.width(),
+        'Thông báo',
+        Text('Bạn chưa chọn chi nhánh'),
+        true,
+        false,
+        Icon(Icons.warning, color: Colors.yellow),
+        onClose: () {
+          Navigator.pop(bContext);
+        },
+      );
+      return false;
+    }
+    return true;
+  }
+
   onTapUnit(FilterModel model, BuildContext ctx) async {
     showFullScreenLoading(ctx);
     for (FilterModel i in units) {
@@ -311,6 +336,7 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
   }
 
   onAddToCart(ProductModel model, BuildContext context) async {
+    if (buildCheck(context) == false) return;
     final data = await _cartItemUseCase.addToCart(
       AddToCartRequest(
         userId: Storage.userModelGlobal?.userId ?? 0,
@@ -334,6 +360,7 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
   }
 
   onBuyNow(ProductModel? model, BuildContext context) async {
+    if (buildCheck(context) == false) return;
     showFullScreenLoading(context);
     List<int> cartIds = [];
     print('🛒 1111111111Danh sách cartItemIds: $cartIds');

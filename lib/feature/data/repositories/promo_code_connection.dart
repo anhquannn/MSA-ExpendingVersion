@@ -76,6 +76,7 @@ class PromoCodeRepositoryImpl extends IPromoCodeRepository {
   ) async {
     try {
       final response = await HttpConnection.post(
+        isToken: false,
         'promo-code/list',
         body: model.toJson(),
         fromJsonT: (json) => json,

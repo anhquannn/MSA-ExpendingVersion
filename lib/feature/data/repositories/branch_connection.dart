@@ -58,6 +58,7 @@ static Future<BranchFilterResponse?> getBranchPaging(
 ) async {
   final response = await HttpConnection.post<BranchFilterResponse>(
     getBranch,
+    isToken: false,
     fromJsonT: (json) => BranchFilterResponse.fromJson(json),
   );
 

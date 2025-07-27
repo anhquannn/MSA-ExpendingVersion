@@ -73,6 +73,7 @@ class CategoryRepositoryImpl extends ICategoryRepository {
     CategoryFilterRequest model,
   ) async {
     final response = await HttpConnection.post<PaginatedResult<CategoryModel>>(
+        isToken: false,
       'category/paging',
       body: model.toJson(),
       fromJsonT:

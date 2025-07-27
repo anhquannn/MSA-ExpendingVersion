@@ -105,6 +105,14 @@ class LoginBloc extends BaseBloc<LoginScreen> {
     );
   }
 
+  onLoginWithoutAccount(BuildContext context) {
+    Storage.isLogin = false;
+    Navigator.push(
+      viewContext,
+      MaterialPageRoute(builder: (viewContext) => const HomeScreen()),
+    );
+  }
+
   @override
   void onReady() {
     isShowPass = true;
@@ -168,8 +176,9 @@ class LoginBloc extends BaseBloc<LoginScreen> {
   }
 
   loginWithGoogle(BuildContext bContext) async {
+    Storage.isLogin = true;
     // if (Storage.deviceId == null) {
-      await getFcmToken();
+    await getFcmToken();
     // }
     // try {
     final googleUser = await GoogleSignIn().signIn();
@@ -246,14 +255,12 @@ class LoginBloc extends BaseBloc<LoginScreen> {
   }
 
   onGetAddress() async {
-    try{
-    final response = await Repository.getUserAddresses();
-    if(response[0]!=null&&response[0]!=[]){
-
-    Storage.saveAddress(response[0]);
-    }
-
-    }catch(_){}
+    try {
+      final response = await Repository.getUserAddresses();
+      if (response[0] != null && response[0] != []) {
+        Storage.saveAddress(response[0]);
+      }
+    } catch (_) {}
   }
 
   logoutFromGoogle() async {

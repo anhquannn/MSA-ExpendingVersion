@@ -15,6 +15,8 @@ import 'package:msa/widget/custom_dropdown.dart';
 import 'package:msa/widget/custom_textfield.dart';
 import 'package:msa/widget/reuseable_screen_hide_appbar.dart';
 
+import '../../../../../widget/custom_customer_lead.dart';
+
 class PersionalScreen extends BaseView<PersionalBloc> {
   const PersionalScreen({super.key});
 
@@ -48,7 +50,16 @@ class PersionalScreen extends BaseView<PersionalBloc> {
       ),
       bodyBuilder: (controller) {
         return CustomScrollView(
-          slivers: [SliverToBoxAdapter(child: _buildBody(context, bloc))],
+          slivers: [
+            SliverToBoxAdapter(
+              child:
+                  Storage.isLogin == true
+                      ? _buildBody(context, bloc)
+                      : Center(
+                        child: CustomCustomerLead(text: 'thông tin cá nhân'),
+                      ),
+            ),
+          ],
         );
       },
     );

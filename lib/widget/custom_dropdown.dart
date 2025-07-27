@@ -82,6 +82,7 @@ Future<void> showCustomDialog(
           child: Center(
             child: Text(
               title,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,

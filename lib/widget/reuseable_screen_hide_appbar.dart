@@ -47,7 +47,7 @@ class _CustomScaffoldState extends State<CustomScaffold> {
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<bool> _isAppBarVisible = ValueNotifier(true);
   final ValueNotifier<bool> _isBottomBarVisible = ValueNotifier(true);
-  final ValueNotifier<int> _selectIndex = ValueNotifier(3);
+  final ValueNotifier<int> _selectIndex = ValueNotifier(0);
   double _lastOffset = 0;
   Timer? _debounceTimer;
 

@@ -4,7 +4,6 @@ final String urlSupabase = 'https://lmtqwglnnbgsrxhelpxz.supabase.co';
 final String anonKey =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtdHF3Z2xubmJnc3J4aGVscHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3MTI1NzIsImV4cCI6MjA2MTI4ODU3Mn0.5D6-g10oFKgB5eJw7jbJPGtOsr2BmrYnm5pTpfjA_J0';
 
-
 //=================================API ENDPOINTS=================================
 //____________________________________USER______________________________________
 final String register = 'user/register';
@@ -234,3 +233,4 @@ final String avtManager = 'assets/images/avt_manager.jpg';
 final String imgBranch = 'assets/images/img_branch.png';
 final String imgProductDefault =
     'https://lmtqwglnnbgsrxhelpxz.supabase.co/storage/v1/object/sign/msa/715ddffcb1448a27614572608ab8b6e5.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InN0b3JhZ2UtdXJsLXNpZ25pbmcta2V5XzE5ZTM1ODc1LTdlODYtNDljMy1iOWE3LTQ5OWQ5MGRkOTk3MyJ9.eyJ1cmwiOiJtc2EvNzE1ZGRmZmNiMTQ0OGEyNzYxNDU3MjYwOGFiOGI2ZTUuanBnIiwiaWF0IjoxNzQ3NDgyNzk2LCJleHAiOjE3NzkwMTg3OTZ9.tDTHIEe7SvgaKbuftP9MlsjONd4XULSlWdS9GjDMFlo';
+final String loginRequest = 'assets/images/login_request.png';

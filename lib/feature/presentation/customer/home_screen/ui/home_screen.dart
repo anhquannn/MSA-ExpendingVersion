@@ -22,6 +22,7 @@ import '../../../../../core/config/base_bloc.dart';
 import '../../../../../core/config/config.dart';
 import '../../../../../core/config/constant.dart';
 import '../../../../../core/utils/prarse_color.dart';
+import '../../../../../widget/custom_customer_lead.dart';
 import '../../../../../widget/custom_item_promocode.dart';
 import '../../../../../widget/custom_widget.dart';
 import '../../../../../widget/reuseable_screen_hide_appbar.dart';
@@ -91,91 +92,100 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           ),
         ),
       ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          StreamBuilder(
-            stream: bloc.streamUserModel,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return SizedBox(
-                  width: 80,
-                  height: 80,
-                  child: Lottie.asset('assets/animations/loading.json'),
-                );
-              }
-              if (snapshot.hasError) {
-                return const Text(
-                  'Lỗi khi tải thông tin người dùng',
-                  style: TextStyle(color: Colors.red),
-                );
-              }
-              if (!snapshot.hasData) {
-                return const Text(
-                  'Không có thông tin người dùng',
-                  style: TextStyle(color: Colors.grey),
-                );
-              }
-              return AutoSizeText(
-                Storage.userModelGlobal?.fullName ?? '',
-                minFontSize: 12,
-                maxFontSize: 20,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                softWrap: true,
-                style: const TextStyle(color: Colors.white),
-              );
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.location_on_outlined,
-                  color: Colors.white,
-                  size: 15,
-                ),
-                StreamBuilder(
-                  stream: bloc.streamUserModel,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return SizedBox(
-                        width: 80,
-                        height: 80,
-                        child: Lottie.asset('assets/animations/loading.json'),
-                      );
-                    }
-                    if (snapshot.hasError) {
-                      return const Text(
-                        'Lỗi khi tải địa chỉ',
-                        style: TextStyle(color: Colors.red),
-                      );
-                    }
-                    if (!snapshot.hasData) {
-                      return const Text(
-                        'Không có địa chỉ',
-                        style: TextStyle(color: Colors.grey),
-                      );
-                    }
-                    return Expanded(
-                      child: AutoSizeText(
-                        '${Storage.addressModel?.street ?? ''} ${Storage.addressModel?.ward ?? ''} ${Storage.addressModel?.district ?? ''} ${Storage.addressModel?.city ?? ''}',
-                        minFontSize: 8,
-                        maxFontSize: 12,
+      title:
+          Storage.isLogin == false
+              ? Text(
+                'Khách vãng lai',
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              )
+              : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  StreamBuilder(
+                    stream: bloc.streamUserModel,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return SizedBox(
+                          width: 80,
+                          height: 80,
+                          child: Lottie.asset('assets/animations/loading.json'),
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return const Text(
+                          'Lỗi khi tải thông tin người dùng',
+                          style: TextStyle(color: Colors.red),
+                        );
+                      }
+                      if (!snapshot.hasData) {
+                        return const Text(
+                          'Không có thông tin người dùng',
+                          style: TextStyle(color: Colors.grey),
+                        );
+                      }
+                      return AutoSizeText(
+                        Storage.userModelGlobal?.fullName ?? '',
+                        minFontSize: 12,
+                        maxFontSize: 20,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         softWrap: true,
                         style: const TextStyle(color: Colors.white),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+                      );
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          color: Colors.white,
+                          size: 15,
+                        ),
+                        StreamBuilder(
+                          stream: bloc.streamUserModel,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return SizedBox(
+                                width: 80,
+                                height: 80,
+                                child: Lottie.asset(
+                                  'assets/animations/loading.json',
+                                ),
+                              );
+                            }
+                            if (snapshot.hasError) {
+                              return const Text(
+                                'Lỗi khi tải địa chỉ',
+                                style: TextStyle(color: Colors.red),
+                              );
+                            }
+                            if (!snapshot.hasData) {
+                              return const Text(
+                                'Không có địa chỉ',
+                                style: TextStyle(color: Colors.grey),
+                              );
+                            }
+                            return Expanded(
+                              child: AutoSizeText(
+                                '${Storage.addressModel?.street ?? ''} ${Storage.addressModel?.ward ?? ''} ${Storage.addressModel?.district ?? ''} ${Storage.addressModel?.city ?? ''}',
+                                minFontSize: 8,
+                                maxFontSize: 12,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: true,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
       appBarActions: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 5),
@@ -237,7 +247,9 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
                   );
                 },
               ),
-              _buildPoints(context: context, onTap: () {}, bloc: bloc),
+              Storage.isLogin == true
+                  ? _buildPoints(context: context, onTap: () {}, bloc: bloc)
+                  : Container(),
             ],
           ),
         );
@@ -250,38 +262,6 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
   List<BottomBarItem> customBottomBar(HomeScreenBloc bloc, int selectedIndex) {
     return [
       BottomBarItem(
-        icon: const Icon(Icons.notifications, color: Colors.white),
-        label: 'Thông báo',
-        isSelected: selectedIndex == 3,
-        onTap: (index) {
-          if (bloc.indexScreen.value != 3) {
-            bloc.indexScreen.value = 3;
-          }
-        },
-      ),
-      BottomBarItem(
-        icon: const Icon(Icons.receipt_long, color: Colors.white),
-        label: 'Đơn hàng',
-        onTap: (index) {
-          if (bloc.indexScreen.value != 1) {
-            bloc.indexScreen.value = 1;
-          }
-        },
-        isSelected: selectedIndex == 1,
-      ),
-      BottomBarItem(
-        key: bloc.cartIconKey1,
-        icon: const Icon(Icons.shopping_cart, color: Colors.white),
-        label: 'Giỏ hàng',
-        isSelected: selectedIndex == 2,
-        onTap: (index) {
-          if (bloc.indexScreen.value != 2) {
-            bloc.indexScreen.value = 2;
-          }
-          bloc.onGetUserCart(bcontext: context);
-        },
-      ),
-      BottomBarItem(
         icon: const Icon(Icons.home_outlined, color: Colors.white),
         label: 'Trang chủ',
         onTap: (index) {
@@ -290,6 +270,38 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           }
         },
         isSelected: selectedIndex == 0,
+      ),
+      BottomBarItem(
+        key: bloc.cartIconKey1,
+        icon: const Icon(Icons.shopping_cart, color: Colors.white),
+        label: 'Giỏ hàng',
+        isSelected: selectedIndex == 1,
+        onTap: (index) {
+          if (bloc.indexScreen.value != 1) {
+            bloc.indexScreen.value = 1;
+          }
+          bloc.onGetUserCart(bcontext: context);
+        },
+      ),
+      BottomBarItem(
+        icon: const Icon(Icons.receipt_long, color: Colors.white),
+        label: 'Đơn hàng',
+        onTap: (index) {
+          if (bloc.indexScreen.value != 2) {
+            bloc.indexScreen.value = 2;
+          }
+        },
+        isSelected: selectedIndex == 2,
+      ),
+      BottomBarItem(
+        icon: const Icon(Icons.notifications, color: Colors.white),
+        label: 'Thông báo',
+        isSelected: selectedIndex == 3,
+        onTap: (index) {
+          if (bloc.indexScreen.value != 3) {
+            bloc.indexScreen.value = 3;
+          }
+        },
       ),
     ];
   }
@@ -308,8 +320,8 @@ class HomeScreen extends BaseView<HomeScreenBloc> {
           index: index,
           children: [
             HomeTab(bloc, width, labels),
-            OrderTab(bloc: bloc),
             CardTab(bloc: bloc),
+            OrderTab(bloc: bloc),
             NotificationScreen(bloc),
           ],
         );
@@ -910,88 +922,90 @@ class _OrderTabState extends State<OrderTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        children: [
-          Container(
-            color: toHexToColor(backgroundColor),
-            child: TabBar(
-              isScrollable: true,
-              controller: _tabController,
-              dividerHeight: 0,
-              labelColor: Colors.blueGrey,
-              unselectedLabelColor: Colors.black,
-              indicatorColor: Colors.blueGrey,
-              tabs:
-                  orderStatuses
-                      .map((status) => Tab(text: status.description))
-                      .toList(),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children:
-                  orderStatuses.map((status) {
-                    return StreamBuilder<List<OrderResponse>>(
-                      stream: getStreamByStatus(status),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          // ⏳ Hiển thị loading khi stream chưa trả về dữ liệu
-                          return SizedBox(
-                            height: 150,
-                            child: Lottie.asset(
-                              'assets/animations/loading.json',
-                            ),
-                          );
-                        }
-
-                        if (snapshot.hasError) {
-                          // ❌ Xử lý lỗi nếu có
-                          return Center(
-                            child: Text('Đã xảy ra lỗi: ${snapshot.error}'),
-                          );
-                        }
-
-                        final data = snapshot.data ?? [];
-
-                        if (data.isEmpty) {
-                          // 💤 Khi không có đơn hàng
-                          return const Center(
-                            child: Text('Không có đơn hàng.'),
-                          );
-                        }
-
-                        return MediaQuery.removePadding(
-                          context: context,
-                          removeTop: true,
-                          child: ListView.builder(
-                            itemCount: data.length,
-                            itemBuilder: (context, index) {
-                              final order = data[index];
-                              return customCardOrder(
-                                AppSize.w(1),
-                                order: order,
-                                status: status,
-                                bCOntext: context,
-                                bloc: widget.bloc,
+    return Storage.isLogin == true
+        ? Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Column(
+            children: [
+              Container(
+                color: toHexToColor(backgroundColor),
+                child: TabBar(
+                  isScrollable: true,
+                  controller: _tabController,
+                  dividerHeight: 0,
+                  labelColor: Colors.blueGrey,
+                  unselectedLabelColor: Colors.black,
+                  indicatorColor: Colors.blueGrey,
+                  tabs:
+                      orderStatuses
+                          .map((status) => Tab(text: status.description))
+                          .toList(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children:
+                      orderStatuses.map((status) {
+                        return StreamBuilder<List<OrderResponse>>(
+                          stream: getStreamByStatus(status),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              // ⏳ Hiển thị loading khi stream chưa trả về dữ liệu
+                              return SizedBox(
+                                height: 150,
+                                child: Lottie.asset(
+                                  'assets/animations/loading.json',
+                                ),
                               );
-                            },
-                          ),
-                        );
-                      },
-                    );
-                  }).toList(),
-            ),
-          ),
+                            }
 
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
+                            if (snapshot.hasError) {
+                              // ❌ Xử lý lỗi nếu có
+                              return Center(
+                                child: Text('Đã xảy ra lỗi: ${snapshot.error}'),
+                              );
+                            }
+
+                            final data = snapshot.data ?? [];
+
+                            if (data.isEmpty) {
+                              // 💤 Khi không có đơn hàng
+                              return const Center(
+                                child: Text('Không có đơn hàng.'),
+                              );
+                            }
+
+                            return MediaQuery.removePadding(
+                              context: context,
+                              removeTop: true,
+                              child: ListView.builder(
+                                itemCount: data.length,
+                                itemBuilder: (context, index) {
+                                  final order = data[index];
+                                  return customCardOrder(
+                                    AppSize.w(1),
+                                    order: order,
+                                    status: status,
+                                    bCOntext: context,
+                                    bloc: widget.bloc,
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        );
+                      }).toList(),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
+        )
+        : CustomCustomerLead(text: 'đơn hàng');
   }
 
   /// Lấy stream tương ứng theo OrderStatus
@@ -1306,61 +1320,65 @@ class CardTab extends StatelessWidget {
   }
 
   Widget cardScreen() {
-    return StreamBuilder<List<CartItemModel>>(
-      stream: bloc?.streamCartItemModels,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          final data = snapshot.data ?? [];
+    return Storage.isLogin == true
+        ? StreamBuilder<List<CartItemModel>>(
+          stream: bloc?.streamCartItemModels,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final data = snapshot.data ?? [];
 
-          return StreamBuilder(
-            stream: bloc?.streamCaculate,
-            builder: (context, snapshot) {
-              final caculate = snapshot.data;
-              return MediaQuery.removePadding(
-                removeTop: true,
-                context: context,
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 100),
-                  itemCount: data.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: InkWell(
-                          onTap: () {
-                            bloc?.onTapCreateOrder(context);
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            height: 45,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: toHexToColor(primaryButtonColor),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Tạo đơn hàng',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+              return StreamBuilder(
+                stream: bloc?.streamCaculate,
+                builder: (context, snapshot) {
+                  final caculate = snapshot.data;
+                  return MediaQuery.removePadding(
+                    removeTop: true,
+                    context: context,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.only(bottom: 100),
+                      itemCount: data.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == data.length) {
+                          // Đây là phần tử cuối: nút "Tạo đơn hàng"
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: InkWell(
+                              onTap: () {
+                                bloc?.onTapCreateOrder(context);
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                height: 45,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: toHexToColor(primaryButtonColor),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'Tạo đơn hàng',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      );
-                    }
-                    final item = data[index - 1]; // lùi 1 vì index 0 là nút
-                    return itemCard(model: item, context: context);
-                  },
-                ),
+                          );
+                        }
+
+                        final item = data[index];
+                        return itemCard(model: item, context: context);
+                      },
+                    ),
+                  );
+                },
               );
-            },
-          );
-        }
-        return const Center(child: Text('Không có dữ liệu....'));
-      },
-    );
+            }
+            return const Center(child: Text('Không có dữ liệu....'));
+          },
+        )
+        : CustomCustomerLead(text: 'giỏ hàng');
   }
 
   Widget itemCard({CartItemModel? model, BuildContext? context}) {
@@ -1453,13 +1471,15 @@ class CardTab extends StatelessWidget {
                                 isBold: true,
                                 textColor: toHexToColor(primaryButtonColor),
                               ),
-                              customAutoSizeText(
-                                12,
-                                16,
-                                '+ ${model?.freeItems?.length} sản phẩm tặng kèm',
-                                isBold: true,
-                                textColor: Colors.amber,
-                              ),
+                              model?.freeItems?.length != 0
+                                  ? customAutoSizeText(
+                                    12,
+                                    16,
+                                    '+ ${model?.freeItems?.length} sản phẩm tặng kèm',
+                                    isBold: true,
+                                    textColor: Colors.amber,
+                                  )
+                                  : Container(),
                               Spacer(),
                               Row(
                                 children: [
@@ -1657,58 +1677,60 @@ class NotificationListTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<NotificationModel>>(
-      stream: stream,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return SizedBox(
-            height: 150,
-            child: Lottie.asset('assets/animations/loading.json'),
-          );
-        }
-        final data = snapshot.data!;
-        if (data.isEmpty) {
-          return Center(child: Text(emptyMessage));
-        }
+    return Storage.isLogin == true
+        ? StreamBuilder<List<NotificationModel>>(
+          stream: stream,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return SizedBox(
+                height: 150,
+                child: Lottie.asset('assets/animations/loading.json'),
+              );
+            }
+            final data = snapshot.data!;
+            if (data.isEmpty) {
+              return Center(child: Text(emptyMessage));
+            }
 
-        return ListView.separated(
-          padding: const EdgeInsets.only(bottom: 80),
-          itemCount: data.length,
-          separatorBuilder: (_, __) => const Divider(height: 0),
-          itemBuilder: (context, index) {
-            final n = data[index];
-            return ListTile(
-              leading: Icon(icon, color: toHexToColor(primaryColorPurple)),
-              title: Text(n.message ?? ''),
-              subtitle: Text(
-                n.message ?? '',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: Text(
-                formatDateString(
-                  n.notificationDate ?? formatDateTime(DateTime.now()),
-                ),
-                style: const TextStyle(fontSize: 12),
-              ),
-              onTap: () {
-                bloc.onUpdateNotification(n.notificationId ?? 0);
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
+            return ListView.separated(
+              padding: const EdgeInsets.only(bottom: 80),
+              itemCount: data.length,
+              separatorBuilder: (_, __) => const Divider(height: 0),
+              itemBuilder: (context, index) {
+                final n = data[index];
+                return ListTile(
+                  leading: Icon(icon, color: toHexToColor(primaryColorPurple)),
+                  title: Text(n.message ?? ''),
+                  subtitle: Text(
+                    n.message ?? '',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  builder:
-                      (_) => NotificationDetailBottomSheet(notification: n),
+                  trailing: Text(
+                    formatDateString(
+                      n.notificationDate ?? formatDateTime(DateTime.now()),
+                    ),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  onTap: () {
+                    bloc.onUpdateNotification(n.notificationId ?? 0);
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
+                      ),
+                      builder:
+                          (_) => NotificationDetailBottomSheet(notification: n),
+                    );
+                  },
                 );
               },
             );
           },
-        );
-      },
-    );
+        )
+        : CustomCustomerLead(text: 'thông báo');
   }
 }

@@ -226,7 +226,7 @@ class ProductRepositoryImpl extends IProductRepository {
         endpoint,
         context: context,
         body: request.toJson(),
-        isToken: true,
+        isToken: false,
         fromJsonT: (json) => ProductFilterResult.fromJson(json),
       );
 
@@ -254,6 +254,7 @@ class ProductRepositoryImpl extends IProductRepository {
   static getProductByIdApi(int productId) async {
     final response = await HttpConnection.get<ProductModel>(
       '$getProductById$productId',
+        isToken: false,
       fromJsonT: (json) => ProductModel.fromJson(json),
     );
     return response.result;
@@ -266,6 +267,7 @@ class ProductRepositoryImpl extends IProductRepository {
     final response = await HttpConnection.post<PaginatedResult<ProductModel>>(
       productCombine,
       body: request.toJson(),
+        isToken: false,
       fromJsonT:
           (json) => PaginatedResult<ProductModel>.fromJson(
             json,

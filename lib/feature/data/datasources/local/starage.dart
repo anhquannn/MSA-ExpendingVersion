@@ -22,6 +22,8 @@ class Storage {
   static BranchModel? branchModelGlobal;
   static String email = ''; //'mwang38203@gmail.com';
 
+  static bool isLogin = true;
+
   // ===================== ĐỌC DỮ LIỆU =====================
   static Future<void> readFromLocalStorage() async {
     final prefs = await SharedPreferences.getInstance();

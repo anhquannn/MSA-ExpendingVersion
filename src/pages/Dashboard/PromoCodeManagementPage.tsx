@@ -17,6 +17,36 @@ function useDebounce(value: string, delay: number) {
   return debounced;
 }
 
+function renderStatusBadge(status: string): JSX.Element {
+    const normalized = status?.toUpperCase();
+    switch (normalized) {
+      case 'ACTIVE':
+        return (
+          <span className="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            Kích hoạt
+          </span>
+        );
+      case 'INACTIVE':
+        return (
+          <span className="bg-gray-200 text-gray-800 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            Chưa kích hoạt
+          </span>
+        );
+      case 'EXPIRED':
+        return (
+          <span className="bg-red-100 text-red-700 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            Hết hạn
+          </span>
+        );
+      default:
+        return (
+          <span className="bg-yellow-100 text-yellow-800 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            {status || 'Không xác định'}
+          </span>
+        );
+    }
+  }
+
 const PromoCodeManagementPage: React.FC = () => {
   const { campaignId } = useParams<{ campaignId?: string }>();
   const userId = 1; // Giả sử đã đăng nhập
@@ -132,7 +162,7 @@ const PromoCodeManagementPage: React.FC = () => {
             <td className="py-3 px-6">{pc.campaignResponse?.minOrderValue || '---'}</td>
                 <td className="py-3 px-6">{pc.startDate}</td>
                 <td className="py-3 px-6">{pc.endDate}</td>
-                <td className="py-3 px-6">{pc.status || '---'}</td>
+                <td className="py-3 px-6">{renderStatusBadge(pc.status) || '---'}</td>
                 <td className="py-3 px-6">{pc.description}</td>
                 <td className="py-3 px-6 text-center">
                   <button onClick={() => openEditModal(pc)} className="text-yellow-600 hover:underline mr-4">Sửa</button>

@@ -3,6 +3,8 @@ import { useQueries, useQuery } from '@tanstack/react-query';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, Area, AreaChart } from 'recharts';
 import { dashboardService, BranchRevenue, TopCustomer } from '../../services/dashboardService';
 import { productService, ProductSalesStatistics } from '../../services/productService';
+import { lowStockService } from '../../services/lowStockService';
+import LowStockModal from '../../components/LowStockModal';
 import { branchService, Branch } from '../../services/branchService';
 import { AlertTriangle, BarChart2, DollarSign, LoaderCircle, ShoppingCart, Grid, List, ChevronDown, AlertCircle, TrendingUp, Package, Calendar, Filter, Users, X } from 'lucide-react';
 import { getSavedFCMToken } from '../../config/firebaseConfig';
@@ -134,6 +136,11 @@ interface DashboardHomeNewProps {
 }
 
 const DashboardHomeNew: React.FC<DashboardHomeNewProps> = ({ branchId }) => {
+  const [showLowStock, setShowLowStock] = useState(false);
+  const { data: lowStockCount = 0, isLoading: lowStockLoading } = useQuery({
+    queryKey: ['lowStockCount'],
+    queryFn: () => lowStockService.getLowStockCount(),
+  });
   const [productModalId, setProductModalId] = useState<number | null>(null);
   const [selectedProductBranchId, setSelectedProductBranchId] = useState<number | undefined>(undefined);
   const [selectedBranchId, setSelectedBranchId] = useState<number | undefined>(undefined);
@@ -355,13 +362,12 @@ const DashboardHomeNew: React.FC<DashboardHomeNewProps> = ({ branchId }) => {
           />
 
           <StatCard
-            title="Sản phẩm hết hạn"
-            value={currentMonthData?.expiringLowStockProducts?.length?.toLocaleString() || '0'}
+            title="Tồn kho thấp"
+            value={lowStockCount.toLocaleString()}
             icon={AlertTriangle}
             color="red"
-            change={0}
-            isLoading={isLoading}
-            onClick={() => currentMonthData?.expiringLowStockProducts && setShowExpiring(true)}
+            isLoading={lowStockLoading}
+            onClick={() => setShowLowStock(true)}
           />
         </div>
 
@@ -566,6 +572,10 @@ const DashboardHomeNew: React.FC<DashboardHomeNewProps> = ({ branchId }) => {
           </div>
         </div>
       </div>
+      {/* Low stock modal */}
+      {showLowStock && (
+        <LowStockModal open={showLowStock} onClose={() => setShowLowStock(false)} />
+      )}
       {/* Product statistics modal */}
       {productModalId !== null && (
         <ProductStatsModal productId={productModalId} branchId={selectedBranchId} onClose={() => setProductModalId(null)} />

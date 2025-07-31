@@ -1,6 +1,5 @@
 import { api } from './apiService';
-import { supabaseClient } from '../api/baseApi';
-import { NotificationType } from '@constants/enums';
+import { NotificationType } from '../constants/enums';
 
 interface NotificationPayload {
   title: string;
@@ -33,9 +32,62 @@ export class NotificationService {
     }
   }
 
+  static async getNotificationsPaged(isRead: boolean, page = 1, pageSize = 20): Promise<any[]> {
+    try {
+      const body = {
+        isRead,
+        page,
+        pageSize,
+        sortBy: 'notificationDate',
+        sortDirection: 'DESC',
+      };
+      const response = await api.post<any>('notification/paging', body);
+      const list = response.result?.content ?? [];
+      return list.map((n: any) => ({ ...n, isRead: n.isRead ?? n.read ?? false }));
+    } catch (error) {
+      console.error('Error paging notifications:', error);
+      throw error;
+    }
+  }
+
+  static async countUnread(): Promise<number> {
+    try {
+      const body = { isRead: false, page: 1, pageSize: 1 };
+      const response = await api.post<any>('notification/paging', body);
+      const list = response.result?.content ?? [];
+      return list.map((n: any) => ({ ...n, isRead: n.isRead ?? n.read ?? false }));
+    } catch (error) {
+      console.error('Error counting unread notifications:', error);
+      return 0;
+    }
+  }
+  
+  static async getNotificationsByUserId(userId: number, page = 1, pageSize = 50): Promise<any[]> {
+    try {
+      const body = {
+        userId,
+        page,
+        pageSize,
+        sortBy: 'notificationDate',
+        sortDirection: 'DESC',
+      };
+      const response = await api.post<any>('notification/paging', body);
+      const list = response.result?.content ?? [];
+      return list.map((n: any) => ({ ...n, isRead: n.isRead ?? n.read ?? false }));
+    } catch (error) {
+      console.error('Error fetching notifications by userId:', error);
+      throw error;
+    }
+  }
+
+  // giữ hàm cũ nhưng đánh dấu deprecated
+  /** @deprecated use getNotificationsPaged */
+  /*
+   * @deprecated Supabase implementation removed. Use getNotificationsByUserId or getNotificationsPaged.
+   */
   static async getNotifications(userId: string): Promise<any[]> {
     try {
-      const response = await supabaseClient.get(`/notifications/${userId}`);
+      const response = await api.get<any>(`notification/user/${userId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -45,10 +97,10 @@ export class NotificationService {
 
   static async markAsRead(notificationId: string): Promise<void> {
     try {
-      const response = await supabaseClient.put(`/notifications/${notificationId}/read`);
-      if (response.status === 200) {
-        console.log('Notification marked as read');
-      }
+      // Backend does not expose /read endpoint; update uses main PUT /notification/{id}
+      await api.put<void>(`notification/${notificationId}`, { read: true });
+      console.log('Notification marked as read');
+      
     } catch (error) {
       console.error('Error marking notification as read:', error);
       throw error;
@@ -57,10 +109,8 @@ export class NotificationService {
 
   static async deleteNotification(notificationId: string): Promise<void> {
     try {
-      const response = await supabaseClient.delete(`/notifications/${notificationId}`);
-      if (response.status === 200) {
-        console.log('Notification deleted successfully');
-      }
+      await api.delete<void>(`notification/${notificationId}`);
+      console.log('Notification deleted successfully');
     } catch (error) {
       console.error('Error deleting notification:', error);
       throw error;

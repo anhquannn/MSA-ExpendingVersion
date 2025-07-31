@@ -46,6 +46,9 @@ const ProductsPage: React.FC = () => {
     keyword: '',
     categoryId: undefined,
     supplierId: undefined,
+    abcClassification: undefined,
+    isPromotional: undefined,
+    isExemptFromPromotion: undefined,
     minPrice: undefined,
     maxPrice: undefined,
     page: 1,
@@ -160,6 +163,20 @@ const ProductsPage: React.FC = () => {
           onChange={handleFilterChange}
           className="w-full p-2 border rounded-md"
         />
+        <select name="abcClassification" value={filters.abcClassification || ''} onChange={handleFilterChange} className="w-full p-2 border rounded-md">
+          <option value="">Tất cả ABC</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+        </select>
+        <label className="inline-flex items-center space-x-1">
+          <input type="checkbox" name="isPromotional" checked={filters.isPromotional ?? false} onChange={e=>setFilters(prev=>({...prev,isPromotional:e.target.checked?true:undefined}))}/>
+          <span>Đang KM</span>
+        </label>
+        <label className="inline-flex items-center space-x-1">
+          <input type="checkbox" name="isExemptFromPromotion" checked={filters.isExemptFromPromotion ?? false} onChange={e=>setFilters(prev=>({...prev,isExemptFromPromotion:e.target.checked?true:undefined}))}/>
+          <span>Loại trừ KM</span>
+        </label>
         <input
           type="number"
           name="maxPrice"
@@ -195,6 +212,9 @@ const ProductsPage: React.FC = () => {
               <th className="py-3 px-4 text-left">Ảnh</th>
               <th className="py-3 px-4 text-left">Tên sản phẩm</th>
               <th className="py-3 px-4 text-left">Giá</th>
+              <th className="py-3 px-4 text-left">ABC</th>
+              <th className="py-3 px-4 text-left">KM</th>
+              <th className="py-3 px-4 text-left">Loại trừ KM</th>
               <th className="py-3 px-4 text-left">Danh mục</th>
               <th className="py-3 px-4 text-left">Nhà cung cấp</th>
               <th className="py-3 px-4 text-left">SP đính kèm</th>
@@ -202,7 +222,12 @@ const ProductsPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {products.map(product => (
+            {products.map(product => {
+            const promoFlag = (product as any).promotional ?? product.isPromotional;
+            const exemptFlag = (product as any).exemptFromPromotion ?? product.isExemptFromPromotion;
+            const abc = product.abcClassification as 'A' | 'B' | 'C' | undefined;
+            const abcColor = abc === 'A' ? 'text-green-600 font-semibold' : abc === 'B' ? 'text-yellow-600 font-semibold' : abc === 'C' ? 'text-red-600 font-semibold' : '';
+            return (
               <tr key={product.productId} className="border-b hover:bg-gray-50">
                 <td className="py-3 px-4">{product.productId}</td>
                 <td className="py-3 px-4">
@@ -214,6 +239,23 @@ const ProductsPage: React.FC = () => {
                 </td>
                 <td className="py-3 px-4 font-medium">{product.name}</td>
                 <td className="py-3 px-4">{new Intl.NumberFormat('vi-VN').format(product.price)}đ</td>
+                <td className="py-3 px-4">
+                  {abc ? (
+                    <span
+                      className={`inline-block px-2 py-1 rounded-full text-xs font-semibold 
+                        ${abc === 'A' ? 'bg-green-600 text-white' :
+                          abc === 'B' ? 'bg-yellow-400 text-black' :
+                          abc === 'C' ? 'bg-red-500 text-white' :
+                          'bg-gray-300 text-black'}`}
+                    >
+                      {abc}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </td>
+                <td className="py-3 px-4">{promoFlag ? '✔️' : ''}</td>
+                <td className="py-3 px-4">{exemptFlag ? '✔️' : ''}</td>
                 <td className="py-3 px-4">{product.category.name}</td>
                 <td className="py-3 px-4">{product.supplier.name}</td>
                 <td className="py-3 px-4"><AttachedProductsCell productId={product.productId} /></td>
@@ -227,7 +269,7 @@ const ProductsPage: React.FC = () => {
                   <button onClick={() => handleDeleteClick(product)} disabled={deleteProductMutation.isPending} className="text-red-600 hover:underline disabled:text-gray-400">Xóa</button>
                 </td>
               </tr>
-            ))}
+            )})}
           </tbody>
         </table>
       </div>

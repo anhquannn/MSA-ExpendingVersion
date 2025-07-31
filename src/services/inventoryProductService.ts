@@ -22,6 +22,8 @@ export interface InventoryProduct {
   batchNumber: string | null;
   discounted: boolean;
   stockLevel: 'low' | 'medium' | 'high' | string;
+  minThreshold?: number;
+  maxThreshold?: number;
   active: boolean;
   product: Product;
   inventory: Inventory;
@@ -50,6 +52,8 @@ export interface InventoryProductCreatePayload {
   inventoryId: number;
   productId: number;
   stockLevel: 'low' | 'medium' | 'high' | string;
+  minThreshold?: number;
+  maxThreshold?: number;
   expDate?: string; // "YYYY-MM-DD HH:mm:ss"
   batchNumber?: string;
   discounted?: boolean;
@@ -60,6 +64,8 @@ export interface InventoryProductUpdatePayload {
   inventoryId: number;
   productId: number;
   stockLevel: 'low' | 'medium' | 'high' | string;
+  minThreshold?: number;
+  maxThreshold?: number;
   expDate?: string;
   batchNumber?: string;
   discounted?: boolean;

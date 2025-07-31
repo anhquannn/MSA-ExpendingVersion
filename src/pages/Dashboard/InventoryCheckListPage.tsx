@@ -56,6 +56,36 @@ const InventoryCheckListPage: React.FC = () => {
     }
   };
 
+  function renderStatusBadge(status: string): JSX.Element {
+    const normalized = status?.toUpperCase();
+    switch (normalized) {
+      case 'RECEIVED':
+        return (
+          <span className="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            Đã nhận
+          </span>
+        );
+      case 'PENDING':
+        return (
+          <span className="bg-gray-200 text-gray-800 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            Chờ xử lý
+          </span>
+        );
+      case 'EXPIRED':
+        return (
+          <span className="bg-red-100 text-red-700 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            Hết hạn
+          </span>
+        );
+      default:
+        return (
+          <span className="bg-yellow-100 text-yellow-800 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            {status || 'Không xác định'}
+          </span>
+        );
+    }
+  }
+
   /*** RENDER ***/
   return (
     <div className="p-4">
@@ -132,7 +162,7 @@ const InventoryCheckListPage: React.FC = () => {
                 <td className="p-2 border text-center">
                   {row.requestedDate ? new Date(row.requestedDate).toLocaleString('vi-VN') : 'N/A'}
                 </td>
-                <td className="p-2 border text-center">{row.status}</td>
+                <td className="p-2 border text-center">{renderStatusBadge(row.status)}</td>
                 <td className="p-2 border text-center">
                   {row.status !== 'RECEIVED' && (
                     <button

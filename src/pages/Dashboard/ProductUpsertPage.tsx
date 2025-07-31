@@ -66,6 +66,9 @@ const ProductUpsertPage: React.FC = () => {
     discountPercentage: undefined,
     discountTriggerDays: undefined,
     netWeight: '',
+    abcClassification: 'A',
+    isPromotional: false,
+    isExemptFromPromotion: false,
   });
   const [inventoryForm, setInventoryForm] = useState<Omit<InventoryProductCreatePayload, 'productId'>>({
     inventoryId: 0, stockNumber: 100, stockLevel: 'MEDIUM',
@@ -126,6 +129,9 @@ const ProductUpsertPage: React.FC = () => {
         description: existingProduct.description,
         categoryId: existingProduct.category.categoryId,
         supplierId: existingProduct.supplier.supplierId,
+        abcClassification: existingProduct.abcClassification ?? 'A',
+        isPromotional: (existingProduct as any).promotional ?? existingProduct.isPromotional ?? false,
+        isExemptFromPromotion: (existingProduct as any).exemptFromPromotion ?? existingProduct.isExemptFromPromotion ?? false,
       });
       const existingImages = existingProduct.productImageResponses?.map(img => img.imageUrl) || [];
       setImagePreviews(existingImages);
@@ -148,7 +154,8 @@ const ProductUpsertPage: React.FC = () => {
     }
   }, [currentCombinationsData]);
 
-  // Lấy danh sách cho các dropdown
+  
+
   const { data: categoriesResponse } = useQuery({
     queryKey: ['allCategories'],
     queryFn: () => categoryService.getCategories({ pageSize: 999 }),
@@ -334,7 +341,8 @@ const ProductUpsertPage: React.FC = () => {
       const discountPercentageValue = productForm.discountPercentage === undefined || String(productForm.discountPercentage).trim() === '' ? undefined : Number(productForm.discountPercentage);
       const discountTriggerDaysValue = productForm.discountTriggerDays === undefined || String(productForm.discountTriggerDays).trim() === '' ? undefined : Number(productForm.discountTriggerDays);
 
-      const productPayload: ProductCreatePayload | ProductUpdatePayload = {
+      const productPayload = {
+
         name: productForm.name!,
         description: productForm.description || '',
         price: Number(productForm.price) || 0,
@@ -345,7 +353,10 @@ const ProductUpsertPage: React.FC = () => {
         specification: productForm.specification || '',
         categoryId: Number(productForm.categoryId),
         supplierId: Number(productForm.supplierId),
-        totalRevenue: 1
+        totalRevenue: 1,
+        abcClassification: (productForm.abcClassification && productForm.abcClassification.trim() !== '' ? productForm.abcClassification : 'A'),
+        promotional: productForm.isPromotional,
+        exemptFromPromotion: productForm.isExemptFromPromotion
       };
 
       if (isEditMode) {
@@ -547,6 +558,35 @@ const ProductUpsertPage: React.FC = () => {
             </div>
           </fieldset>
         )}
+
+        {/* === THUỘC TÍNH KHUYẾN MÃI & PHÂN LOẠI === */}
+        <fieldset className="border p-4 rounded-md">
+          <legend className="text-lg font-semibold px-2">Khuyến mãi & Phân loại</legend>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Phân loại ABC</label>
+              <select
+                name="abcClassification"
+                value={productForm.abcClassification || 'A'}
+                onChange={handleFormChange}
+                className="w-full p-2 border rounded-md"
+              >
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+              </select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <label className="block text-sm font-medium">Được giảm giá?</label>
+              <input type="checkbox" name="isPromotional" checked={productForm.isPromotional || false} onChange={e=>setProductForm(p=>({...p,isPromotional:e.target.checked}))} />
+            </div>
+            <div className="flex items-center space-x-2">
+              <label className="block text-sm font-medium">Loại trừ KM?</label>
+              <input type="checkbox" name="isExemptFromPromotion" checked={productForm.isExemptFromPromotion || false} onChange={e=>setProductForm(p=>({...p,isExemptFromPromotion:e.target.checked}))} />
+            </div>
+           
+          </div>
+        </fieldset>
 
         {/* === THÔNG BÁO === */}
         <fieldset className="border p-4 rounded-md">

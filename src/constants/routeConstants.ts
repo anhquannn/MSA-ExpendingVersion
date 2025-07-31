@@ -22,5 +22,6 @@ export const routeConstants = {
   supply:'/dashboard/suppliers',
   inventoryProduct:'/dashboard/inventories/:inventoryId',
   campaigns: 'campaigns',
+  promotions: 'promotions',
   promoCodes: 'promocodes',
 };

@@ -26,7 +26,10 @@ export interface Product {
   totalRevenue: number;
   supplier: Supplier;
   category: Category;
-  productImageResponses: ProductImage[] | null; 
+  productImageResponses: ProductImage[] | null;
+  abcClassification?: 'A' | 'B' | 'C';
+  isExemptFromPromotion?: boolean;
+  isPromotional?: boolean;
 }
 
 export interface ProductCreatePayload {
@@ -41,6 +44,9 @@ export interface ProductCreatePayload {
   totalRevenue?: number;
   categoryId: number;
   supplierId: number;
+  abcClassification?: 'A' | 'B' | 'C';
+  isExemptFromPromotion?: boolean;
+  isPromotional?: boolean;
 }
 
 export interface ProductUpdatePayload {
@@ -55,6 +61,9 @@ export interface ProductUpdatePayload {
   totalRevenue?: number;
   categoryId: number;
   supplierId: number;
+  abcClassification?: 'A' | 'B' | 'C';
+  isExemptFromPromotion?: boolean;
+  isPromotional?: boolean;
 }
 
 export interface ProductFilterParams {
@@ -63,6 +72,9 @@ export interface ProductFilterParams {
   categoryIds?: number[];
   supplierId?: number;
   unit?: string;
+  abcClassification?: 'A' | 'B' | 'C';
+  isPromotional?: boolean;
+  isExemptFromPromotion?: boolean;
   fromDate?: string; // "YYYY-MM-DD HH:mm:ss"
   toDate?: string;   // "YYYY-MM-DD HH:mm:ss"
   netWeight?: string;

@@ -108,6 +108,36 @@ const CampaignManagementPage: React.FC = () => {
 
   const campaigns = pagedData?.content || [];
 
+function renderStatusBadge(status: string): JSX.Element {
+    const normalized = status?.toUpperCase();
+    switch (normalized) {
+      case 'ACTIVE':
+        return (
+          <span className="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            Kích hoạt
+          </span>
+        );
+      case 'INACTIVE':
+        return (
+          <span className="bg-gray-200 text-gray-800 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            Chưa kích hoạt
+          </span>
+        );
+      case 'EXPIRED':
+        return (
+          <span className="bg-red-100 text-red-700 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            Hết hạn
+          </span>
+        );
+      default:
+        return (
+          <span className="bg-yellow-100 text-yellow-800 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            {status || 'Không xác định'}
+          </span>
+        );
+    }
+  }
+
   // Khi campaigns thay đổi, lấy target name cho từng campaign (chỉ khi cần)
   useEffect(() => {
     const fetchTargetsForCampaigns = async () => {
@@ -200,7 +230,7 @@ const CampaignManagementPage: React.FC = () => {
                     {c.name}
                   </button>
                 </td>
-                <td className="py-3 px-6">{c.status}</td>
+                <td className="py-3 px-6">{renderStatusBadge(c.status)}</td>
                 <td className="py-3 px-6">{c.startDate}</td>
                 <td className="py-3 px-6">{c.endDate}</td>
                 <td className="py-3 px-6">{c.scopeType}</td>

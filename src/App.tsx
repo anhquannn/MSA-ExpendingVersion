@@ -35,6 +35,7 @@ import BranchUpsertPage from './pages/Dashboard/BranchUpsertPage';
 import CategoryManagementPage from './pages/Dashboard/CategoryManagementPage';
 import SupplierManagementPage from './pages/Dashboard/SupplierManagementPage';
 import CampaignManagementPage from './pages/Dashboard/CampaignManagementPage';
+import PromotionManagementPage from './pages/Dashboard/PromotionManagementPage';
 import PromoCodeManagementPage from './pages/Dashboard/PromoCodeManagementPage';
 import TransferRequestListPage from './pages/Dashboard/TransferRequestListPage';
 import InventoryCheckListPage from './pages/Dashboard/InventoryCheckListPage';
@@ -113,6 +114,7 @@ function App() {
           <Route path="suppliers" element={<SupplierManagementPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationScreen />} />
+          <Route path="promotions" element={<PromotionManagementPage />} />
           <Route path="campaigns" element={<CampaignManagementPage />} />
           <Route path="campaigns/:campaignId/promocodes" element={<PromoCodeManagementPage />} />
           <Route path="transfer-requests" element={<TransferRequestListPage />} />

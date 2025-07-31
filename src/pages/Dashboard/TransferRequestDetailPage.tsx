@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transferService } from '../../services/transferService';
 import { transferItemService, TransferResponseItem } from '../../services/transferItemService';
 import { toast } from 'react-toastify';
-import { Edit, Check, X, ArrowLeft } from 'lucide-react';
+import { Edit, Check, X, ArrowLeft, Trash2 } from 'lucide-react';
 
 type StatusType = 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'IN_PROGRESS';
 
@@ -130,6 +130,19 @@ const TransferRequestDetailPage: React.FC<TransferRequestDetailProps> = () => {
     },
   });
 
+  // Delete transfer item mutation
+  const deleteItemMutation = useMutation({
+    mutationFn: (itemId: number) => transferItemService.deleteTransferItem(itemId),
+    onSuccess: () => {
+      toast.success('Đã xóa sản phẩm khỏi yêu cầu');
+      queryClient.invalidateQueries({ queryKey: ['transferItems', requestId] });
+    },
+    onError: (error: Error) => {
+      console.error('Error deleting transfer item:', error);
+      toast.error('Có lỗi xảy ra khi xóa sản phẩm');
+    },
+  });
+
   const handleStartEdit = (item: TransferResponseItem) => {
     setEditingItem(item);
     setNewQuantity(item.quantityTransferred || 0);
@@ -141,6 +154,12 @@ const TransferRequestDetailPage: React.FC<TransferRequestDetailProps> = () => {
         itemId: editingItem.transferRequestItemId,
         quantity: newQuantity,
       });
+    }
+  };
+
+  const handleDeleteItem = (itemId: number) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi yêu cầu?')) {
+      deleteItemMutation.mutate(itemId);
     }
   };
 
@@ -304,12 +323,21 @@ const TransferRequestDetailPage: React.FC<TransferRequestDetailProps> = () => {
                         </div>
                       ) : (
                         normalizedStatus === 'PENDING' ? (
-                          <button
-                            onClick={() => handleStartEdit(item)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            <Edit className="w-5 h-5" />
-                          </button>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleStartEdit(item)}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              <Edit className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteItem(item.transferRequestItemId)}
+                              className="text-red-600 hover:text-red-900"
+                              disabled={deleteItemMutation.isPending}
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
                         ) : (
                           <span className="text-gray-400">—</span>
                         )

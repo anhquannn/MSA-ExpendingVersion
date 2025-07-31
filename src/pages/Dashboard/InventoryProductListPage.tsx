@@ -42,6 +42,8 @@ export function InventoryProductListPage() {
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
   const [editingProduct, setEditingProduct] = useState<InventoryProduct | null>(null);
   const [newStockValue, setNewStockValue] = useState<number>(0);
+  const [newMinThreshold, setNewMinThreshold] = useState<number | null | undefined>(undefined);
+  const [newMaxThreshold, setNewMaxThreshold] = useState<number | null | undefined>(undefined);
 
   // === Add Product Modal State ===
   const [isAddModalOpen, setAddModalOpen] = useState(false);
@@ -49,6 +51,8 @@ export function InventoryProductListPage() {
     productId: 0,
     stockNumber: 0,
     stockLevel: 'medium',
+    minThreshold: 0,
+    maxThreshold: 0,
     expDate: '',
     batchNumber: '',
     discounted: false,
@@ -121,7 +125,12 @@ const productList = pagedData?.content ?? [];
     setFilters(prev => ({ ...prev, page: newPage }));
   };
 
-  const handleEditClick = (product: InventoryProduct) => setEditingProduct(product);
+  const handleEditClick = (product: InventoryProduct) => {
+    setEditingProduct(product);
+    setNewStockValue(product.stockNumber);
+    setNewMinThreshold(product.minThreshold);
+    setNewMaxThreshold(product.maxThreshold);
+  };
   const handleCloseModal = () => setEditingProduct(null);
 
   const handleEditFormSubmit = (e: React.FormEvent) => {
@@ -137,6 +146,8 @@ const productList = pagedData?.content ?? [];
       inventoryId: editingProduct.inventory.inventoryId,
       productId: editingProduct.product.productId,
       stockLevel: 'medium', // TODO: optionally recalculate stock level
+    minThreshold: newMinThreshold ?? undefined,
+    maxThreshold: newMaxThreshold ?? undefined,
     };
     updateStockMutation.mutate({ id: editingProduct.inventoryProductId, payload });
   };
@@ -157,6 +168,8 @@ const productList = pagedData?.content ?? [];
       inventoryId: numericInventoryId,
       productId: addForm.productId,
       stockLevel: addForm.stockLevel as any,
+      minThreshold: addForm.minThreshold || undefined,
+      maxThreshold: addForm.maxThreshold || undefined,
       expDate: addForm.expDate ? `${addForm.expDate.replace('T', ' ')}:00` : undefined,
       batchNumber: addForm.batchNumber || undefined,
       discounted: addForm.discounted,
@@ -263,6 +276,8 @@ const productList = pagedData?.content ?? [];
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Tồn kho</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Đã kiểm</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Chênh lệch</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ngưỡng min</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ngưỡng max</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hạn dùng</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Mã lô</th>
@@ -325,8 +340,16 @@ const productList = pagedData?.content ?? [];
                       </td>
                       {/* Different */}
                       <td className="px-6 py-4 text-right text-sm text-gray-900">
-                        {item.stockNumberDifferent ?? 0}
-                      </td>
+                         {item.stockNumberDifferent ?? 0}
+                       </td>
+                       {/* Min Threshold */}
+                       <td className="px-6 py-4 text-right text-sm text-gray-900">
+                         {item.minThreshold ?? '--'}
+                       </td>
+                       {/* Max Threshold */}
+                       <td className="px-6 py-4 text-right text-sm text-gray-900">
+                         {item.maxThreshold ?? '--'}
+                       </td>
                       {/* Status */}
                       <td className="px-6 py-4 text-center text-sm">
                         <span
@@ -400,6 +423,34 @@ const productList = pagedData?.content ?? [];
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
+
+              {/* Min Threshold */}
+              <label htmlFor="minThreshold" className="block text-sm font-medium text-gray-700 mt-4 mb-1">
+                Ngưỡng tồn kho tối thiểu
+              </label>
+              <input
+                id="minThreshold"
+                type="number"
+                value={newMinThreshold ?? ''}
+                onChange={(e) =>
+                  setNewMinThreshold(e.target.value === '' ? undefined : Number(e.target.value))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              {/* Max Threshold */}
+              <label htmlFor="maxThreshold" className="block text-sm font-medium text-gray-700 mt-4 mb-1">
+                Ngưỡng tồn kho tối đa
+              </label>
+              <input
+                id="maxThreshold"
+                type="number"
+                value={newMaxThreshold ?? ''}
+                onChange={(e) =>
+                  setNewMaxThreshold(e.target.value === '' ? undefined : Number(e.target.value))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
               <div className="mt-6 flex justify-end gap-3">
                 <button type="button" onClick={handleCloseModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
                   Hủy
@@ -448,6 +499,10 @@ const productList = pagedData?.content ?? [];
                 onChange={(e) => setAddForm({ ...addForm, stockNumber: Number(e.target.value) })}
                 className="w-full border rounded-md px-3 py-2 mb-3"
               />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ngưỡng tối thiểu</label>
+              <input type="number" value={addForm.minThreshold} onChange={e=>setAddForm({...addForm,minThreshold:Number(e.target.value)})} className="w-full border rounded-md px-3 py-2 mb-3" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Ngưỡng tối đa</label>
+              <input type="number" value={addForm.maxThreshold} onChange={e=>setAddForm({...addForm,maxThreshold:Number(e.target.value)})} className="w-full border rounded-md px-3 py-2 mb-3" />
               <label className="block text-sm font-medium text-gray-700 mb-1">Ngày hết hạn</label>
               <input
                 type="datetime-local"

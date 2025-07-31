@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { FiSearch, FiFilter, FiCalendar, FiChevronDown, FiX, FiLoader } from 'react-icons/fi';
+import { FiSearch, FiFilter, FiCalendar, FiChevronDown, FiX } from 'react-icons/fi';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { paymentService } from '../../services/paymentService';
+import { orderDetailService, OrderDetail } from '../../services/orderDetailService';
 import { orderService, OrderFilterRequest, OrderStatus, SimpleOrder} from '../../services/orderService';
+import { shipmentService } from '../../services/shipmentService';
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -101,6 +103,12 @@ const ORDER_STATUSES = [
 const SearchIcon = (props: React.SVGProps<SVGSVGElement>) => <FiSearch {...props} />;
 
 const OrdersPage = () => {
+  // Modal for order details
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<SimpleOrder | null>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
+
   // Modal for editing status
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [orderToEdit, setOrderToEdit] = useState<SimpleOrder | null>(null);
@@ -331,6 +339,21 @@ const OrdersPage = () => {
     }));
   };
 
+  // Open order detail modal
+  const openDetailModal = async (order: SimpleOrder) => {
+    setSelectedOrder(order);
+    setShowDetailModal(true);
+    setDetailLoading(true);
+    try {
+      const details = await orderDetailService.getByOrderId(order.orderId);
+      setOrderDetails(details);
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
   // Quick next-status update (retain existing behaviour)
   const handleQuickUpdateStatus = async (orderId: number, currentStatus: OrderStatus) => {
     const nextStatus = getNextStatus(currentStatus);
@@ -545,7 +568,7 @@ const OrdersPage = () => {
                           </span>
                         </td>
                         <td className="py-3 px-4 border-b text-right">
-                          <div className="flex space-x-2">
+                          <div className="flex space-x-2 group">
                               <button
                                 onClick={() => openStatusModal(order)}
                                 className="px-2 py-1 text-xs text-white bg-green-600 rounded hover:bg-green-700"
@@ -574,13 +597,24 @@ const OrdersPage = () => {
                             )}
                             <button
                               className="p-1 text-gray-500 hover:text-gray-700"
-                              onClick={() => {
-                                // Xem chi tiết đơn hàng
-                                console.log('View order details:', order.orderId);
-                              }}
+                              onClick={() => openDetailModal(order)}
                             >
                               <SearchIcon className="w-4 h-4" />
                             </button>
+                            {/* Hidden webhook test button */}
+                            {(() => {
+                              const shipmentCode = (order as any).shipmentCode || (order as any).deliveryInfo?.shipmentCode;
+                              if (!shipmentCode) return null;
+                              return (
+                                <button
+                                  onClick={() => shipmentService.mockWebhook(shipmentCode, 913).then(()=>fetchOrders())}
+                                  title="Test Webhook"
+                                  className="px-1 text-xs text-purple-600 border border-purple-600 rounded hidden group-hover:inline-block"
+                                >
+                                  Webhook
+                                </button>
+                              );
+                            })()}
                           </div>
                         </td>
                       </tr>
@@ -622,6 +656,56 @@ const OrdersPage = () => {
                       className="px-3 py-1 rounded-md bg-blue-600 text-white"
                     >
                       Lưu
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Order Detail Modal */}
+            {showDetailModal && selectedOrder && (
+              <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <h3 className="text-xl font-semibold mb-4">Chi tiết đơn hàng #{selectedOrder.orderId}</h3>
+                  {/* User info */}
+                  <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                    <div><span className="font-medium">Tên KH:</span> { (selectedOrder as any).user?.fullName || (selectedOrder as any).fullName || 'N/A' }</div>
+                    <div><span className="font-medium">Email:</span> { (selectedOrder as any).user?.email || (selectedOrder as any).email || 'N/A' }</div>
+                    <div><span className="font-medium">SĐT:</span> { (selectedOrder as any).user?.phoneNumber || (selectedOrder as any).phoneNumber || 'N/A' }</div>
+                  </div>
+
+                  {/* Order details list */}
+                  {detailLoading ? (
+                    <div className="flex justify-center items-center py-8">
+                      <div className="animate-spin w-6 h-6 border-2 border-t-transparent border-green-600 rounded-full" />
+                    </div>
+                  ) : orderDetails.length > 0 ? (
+                    <table className="min-w-full bg-white border border-gray-200 text-sm">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="py-2 px-3 border-b text-left">Sản phẩm</th>
+                          <th className="py-2 px-3 border-b text-left">Số lượng</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orderDetails.map((d) => (
+                          <tr key={d.orderDetailId}>
+                            <td className="py-2 px-3 border-b">{d.name}</td>
+                            <td className="py-2 px-3 border-b">{d.quantity}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">Không có chi tiết đơn hàng.</p>
+                  )}
+
+                  <div className="flex justify-end mt-4">
+                    <button
+                      onClick={() => setShowDetailModal(false)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md"
+                    >
+                      Đóng
                     </button>
                   </div>
                 </div>

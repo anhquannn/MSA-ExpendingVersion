@@ -27,6 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { name: 'Quản Lý Chi Nhánh', icon: '🏪', path: '/dashboard/branches' },
     { name: 'Loại Sản Phẩm', icon: '🏷️', path: '/dashboard/categories' },
     { name: 'Nhà Cung Cấp', icon: '🏪', path: '/dashboard/suppliers' },
+    { name: 'Khuyến Mãi', icon: '🎁', path: '/dashboard/promotions' },
     { name: 'Chiến Dịch', icon: '📢', path: '/dashboard/campaigns' },
     { name: 'Cài Đặt', icon: '⚙️', path: '/dashboard/settings' },
   ];

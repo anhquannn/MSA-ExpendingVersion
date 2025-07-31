@@ -92,5 +92,14 @@ export const transferItemService = {
     type FullApiResponse = { result: TransferResponseItem };
     const response = await api.put<FullApiResponse>(`tri/${id}`, payload);
     return response.result;
+  },
+
+  // Delete a transfer request item
+  deleteTransferItem: async (id: number): Promise<boolean> => {
+    type FullApiResponse = { result: boolean };
+    const response = await api.delete<FullApiResponse>(`tri/${id}`);
+    // Some APIs may return 204 No Content, handle accordingly
+    if (response === null) return true;
+    return response.result;
   }
 };

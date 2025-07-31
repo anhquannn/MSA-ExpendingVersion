@@ -21,6 +21,7 @@ export interface SimpleOrder {
   grandTotal: number;
   status: OrderStatus;
   branchName: string;
+  shipmentCode?: string;
 }
 
 // Dữ liệu lọc (theo OrderFilterRequest bên backend)

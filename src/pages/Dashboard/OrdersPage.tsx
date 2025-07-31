@@ -7,6 +7,31 @@ import { orderDetailService, OrderDetail } from '../../services/orderDetailServi
 import { orderService, OrderFilterRequest, OrderStatus, SimpleOrder} from '../../services/orderService';
 import { shipmentService } from '../../services/shipmentService';
 
+// Danh sách mã trạng thái Goship để test webhook
+const GOSHIP_STATUS_CODES: { code: number; label: string }[] = [
+  { code: 900, label: '900 - Đơn mới' },
+  { code: 901, label: '901 - Chờ lấy hàng' },
+  { code: 902, label: '902 - Bưu tá đang đến' },
+  { code: 903, label: '903 - Đã lấy hàng' },
+  { code: 904, label: '904 - Đang giao' },
+  { code: 905, label: '905 - Giao thành công' },
+  { code: 906, label: '906 - Giao thất bại' },
+  { code: 907, label: '907 - Đang chuyển hoàn' },
+  { code: 908, label: '908 - Đã chuyển hoàn' },
+  { code: 909, label: '909 - Đã đối soát' },
+  { code: 910, label: '910 - Đã đối soát khách' },
+  { code: 911, label: '911 - Đã trả COD' },
+  { code: 912, label: '912 - Đã đối soát COD' },
+  { code: 913, label: '913 - Hoàn thành' },
+  { code: 914, label: '914 - Đơn hủy' },
+  { code: 915, label: '915 - Giao chậm' },
+  { code: 916, label: '916 - Giao một phần' },
+  { code: 917, label: '917 - Thất lạc' },
+  { code: 918, label: '918 - Lưu kho' },
+  { code: 919, label: '919 - Đang vận chuyển' },
+  { code: 1000, label: '1000 - Lỗi' },
+];
+
 // Helper function to format date
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -27,6 +52,8 @@ const getStatusLabel = (status: OrderStatus): string => {
     [OrderStatus.PAID]: 'Đã thanh toán',
     [OrderStatus.DELIVERING]: 'Đang giao',
     [OrderStatus.SHIPPED]: 'Đã vận chuyển',
+    [OrderStatus.RETURNING]: 'Đang chuyển hoàn',
+    [OrderStatus.RETURNED]: 'Đã chuyển hoàn',
     [OrderStatus.CANCELLING]: 'Đang hủy',
     [OrderStatus.CANCELLED]: 'Đã hủy',
     [OrderStatus.COMPLETED]: 'Hoàn thành',
@@ -43,6 +70,8 @@ const getStatusClasses = (status: OrderStatus): string => {
     [OrderStatus.PAID]: 'bg-indigo-100 text-indigo-800',
     [OrderStatus.DELIVERING]: 'bg-purple-100 text-purple-800',
     [OrderStatus.SHIPPED]: 'bg-purple-100 text-purple-800',
+    [OrderStatus.RETURNING]: 'bg-yellow-200 text-yellow-900',
+    [OrderStatus.RETURNED]: 'bg-yellow-300 text-yellow-900',
     [OrderStatus.CANCELLING]: 'bg-orange-100 text-orange-800',
     [OrderStatus.CANCELLED]: 'bg-red-100 text-red-800',
     [OrderStatus.COMPLETED]: 'bg-green-100 text-green-800',
@@ -70,6 +99,8 @@ const getNextStatus = (currentStatus: OrderStatus): OrderStatus | null => {
     [OrderStatus.PAID]: OrderStatus.DELIVERING,
     [OrderStatus.DELIVERING]: OrderStatus.SHIPPED,
     [OrderStatus.SHIPPED]: OrderStatus.COMPLETED,
+    [OrderStatus.RETURNING]: OrderStatus.RETURNED,
+    [OrderStatus.RETURNED]: null,
     [OrderStatus.CANCELLING]: OrderStatus.CANCELLED,
     [OrderStatus.CANCELLED]: null,
     [OrderStatus.COMPLETED]: null,
@@ -93,6 +124,8 @@ const ORDER_STATUSES = [
   { value: OrderStatus.PAID, label: 'Đã thanh toán' },
   { value: OrderStatus.DELIVERING, label: 'Đang giao' },
   { value: OrderStatus.SHIPPED, label: 'Đã vận chuyển' },
+  { value: OrderStatus.RETURNING, label: 'Đang chuyển hoàn' },
+  { value: OrderStatus.RETURNED, label: 'Đã chuyển hoàn' },
   { value: OrderStatus.CANCELLING, label: 'Đang hủy' },
   { value: OrderStatus.CANCELLED, label: 'Đã hủy' },
   { value: OrderStatus.COMPLETED, label: 'Hoàn thành' },
@@ -545,6 +578,7 @@ const OrdersPage = () => {
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Ngày đặt</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Tổng tiền</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Thanh toán</th>
+                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Mã vận đơn</th>
                   <th className="py-3 px-4 border-b text-left text-sm font-medium text-gray-700">Trạng thái</th>
                   <th className="py-3 px-4 border-b text-right text-sm font-medium text-gray-700">Thao tác</th>
                 </tr>
@@ -562,6 +596,7 @@ const OrdersPage = () => {
                          <td className="py-3 px-4 border-b">{
                              renderPaymentStatus(paymentStatuses[order.orderId] ?? undefined)
                            }</td>
+                         <td className="py-3 px-4 border-b">{order.shipmentCode || (order as any).deliveryInfo?.shipmentCode || '—'}</td>
                         <td className="py-3 px-4 border-b">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusClasses(order.status)}`}>
                             {getStatusLabel(order.status)}
@@ -606,13 +641,24 @@ const OrdersPage = () => {
                               const shipmentCode = (order as any).shipmentCode || (order as any).deliveryInfo?.shipmentCode;
                               if (!shipmentCode) return null;
                               return (
-                                <button
-                                  onClick={() => shipmentService.mockWebhook(shipmentCode, 913).then(()=>fetchOrders())}
-                                  title="Test Webhook"
-                                  className="px-1 text-xs text-purple-600 border border-purple-600 rounded hidden group-hover:inline-block"
-                                >
-                                  Webhook
-                                </button>
+                                <div className="relative hidden group-hover:inline-block">
+                                   <select
+                                     onChange={(e) => {
+                                       const codeInt = parseInt(e.target.value, 10);
+                                       if (!isNaN(codeInt)) {
+                                         shipmentService.mockWebhook(shipmentCode, codeInt).then(() => fetchOrders());
+                                       }
+                                     }}
+                                     className="px-2 py-1 text-sm text-purple-800 bg-purple-50 border-2 border-purple-600 rounded w-48 shadow-lg cursor-pointer"
+                                     defaultValue=""
+                                     title="Test Webhook"
+                                   >
+                                     <option value="" disabled>Webhook</option>
+                                     {GOSHIP_STATUS_CODES.map((s) => (
+                                       <option key={s.code} value={s.code}>{s.label}</option>
+                                     ))}
+                                   </select>
+                                 </div>
                               );
                             })()}
                           </div>
@@ -622,7 +668,7 @@ const OrdersPage = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-gray-500">
+                    <td colSpan={8} className="py-8 text-center text-gray-500">
                       Không có đơn hàng nào được tìm thấy.
                     </td>
                   </tr>

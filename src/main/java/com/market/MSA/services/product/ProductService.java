@@ -24,6 +24,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductService {
   static final int MAX_FREE_PROMO_RESULTS = 50;
   final EntityFinderService entityFinderService;
-  final ProductRepository productRepository;
+  // Expose repository for bulk fetches in service layer (avoid extra N+1)
+  @Getter final ProductRepository productRepository;
+
   final SupplierRepository supplierRepository;
   final CategoryRepository categoryRepository;
   final ProductMapper productMapper;
@@ -150,6 +153,7 @@ public class ProductService {
   }
 
   @Cacheable(value = "products", key = "'all_' + #page + '_' + #pageSize")
+  @Transactional(readOnly = true)
   public List<ProductResponse> getAllProducts(int page, int pageSize) {
     return productRepository.findAll().stream()
         .skip((long) (page - 1) * pageSize)
@@ -171,6 +175,7 @@ public class ProductService {
   }
 
   @Cacheable(value = "branch_products", key = "{#branchId, #page, #size, #sortBy, #sortDirection}")
+  @Transactional(readOnly = true)
   public Page<ProductResponse> getAllProductsInBranch(
       Long branchId, int page, int size, String sortBy, String sortDirection) {
 
@@ -192,6 +197,7 @@ public class ProductService {
           "{#request.branchId, #request.categoryIds, #request.supplierId, #request.unit, "
               + "#request.netWeight, #request.minPrice, #request.maxPrice, #request.keyword, "
               + "#request.page, #request.pageSize, #request.sortBy, #request.sortDirection}")
+  @Transactional(readOnly = true)
   public ProductFilterResponse filterProducts(ProductFilterRequest request) {
     // 0. Chuẩn hóa các tham số lọc để tránh truyền collection rỗng vào truy vấn (IN () sẽ trả về
     // rỗng)

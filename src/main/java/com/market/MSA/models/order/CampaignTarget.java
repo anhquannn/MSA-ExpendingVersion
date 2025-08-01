@@ -13,7 +13,9 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "campaign_targets")
+@Table(
+    name = "campaign_targets",
+    indexes = {@Index(name = "idx_campaign_target", columnList = "targetType")})
 public class CampaignTarget {
 
   @Id

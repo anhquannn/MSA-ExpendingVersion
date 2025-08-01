@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,6 +25,7 @@ public interface BranchRepository extends JpaRepository<Branch, Long> {
           + "LOWER(b.phone) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
           + "(:productId IS NULL OR ip.product.productId = :productId) AND "
           + "(:userId IS NULL OR u.userId = :userId)")
+  @EntityGraph(attributePaths = {"inventory", "inventory.inventoryProducts", "users"})
   List<Branch> filter(
       @Param("keyword") String keyword,
       @Param("productId") Long productId,
@@ -43,6 +45,7 @@ public interface BranchRepository extends JpaRepository<Branch, Long> {
           + "LOWER(b.phone) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
           + "(:productId IS NULL OR ip.product.productId = :productId) AND "
           + "(:userId IS NULL OR u.userId = :userId)")
+  @EntityGraph(attributePaths = {"inventory", "inventory.inventoryProducts", "users"})
   Page<Branch> filterWithPaging(
       @Param("keyword") String keyword,
       @Param("productId") Long productId,
@@ -58,6 +61,7 @@ public interface BranchRepository extends JpaRepository<Branch, Long> {
               + "JOIN roles r ON ur.roles_role_id = r.role_id "
               + "WHERE r.name = :role",
       nativeQuery = true)
+  @EntityGraph(attributePaths = {"inventory", "users"})
   Branch findByUserRole(@Param("role") String role);
 
   Optional<Branch> findByName(String name);

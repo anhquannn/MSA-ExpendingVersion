@@ -132,6 +132,7 @@ public class CancelOrderService {
   }
 
   @Cacheable("cancel_orders_list")
+  @Transactional(readOnly = true)
   public List<CancelOrderResponse> getAllCancelOrders(CancelOrderFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return cancelOrderRepository
@@ -149,6 +150,7 @@ public class CancelOrderService {
   }
 
   @Cacheable("cancel_orders_paging")
+  @Transactional(readOnly = true)
   public Page<CancelOrderResponse> getAllCancelOrdersWithPaging(CancelOrderFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);

@@ -89,6 +89,7 @@ public class DeliveryInfoService {
 
   // Get all DeliveryInfos with filter (List)
   @Cacheable(value = CACHE_FILTER_LIST)
+  @Transactional(readOnly = true)
   public List<DeliveryInfoResponse> getAllDeliveryInfos(DeliveryInfoFilterRequest filter) {
     Sort sort = Sort.by("deliveryInfoId").descending();
     List<DeliveryInfo> list =
@@ -104,6 +105,7 @@ public class DeliveryInfoService {
 
   // Get all DeliveryInfos with filter and paging
   @Cacheable(value = CACHE_FILTER_PAGING)
+  @Transactional(readOnly = true)
   public Page<DeliveryInfoResponse> getAllDeliveryInfosWithPaging(
       DeliveryInfoFilterRequest filter, int page, int size) {
     Pageable pageable = PageRequest.of(page, size, Sort.by("deliveryInfoId").descending());

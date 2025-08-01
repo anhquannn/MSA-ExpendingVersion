@@ -29,7 +29,8 @@ public class SecurityConfig {
     "/shipment/cities",
     "/shipment/districts/{cityCode}",
     "/shipment/wards/{districtCode}",
-    "/address"
+    "/address",
+    "/product/filter"
   };
 
   @Autowired private CustomJwtDecoder customJwtDecoder;

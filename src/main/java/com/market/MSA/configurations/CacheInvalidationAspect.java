@@ -96,11 +96,6 @@ public class CacheInvalidationAspect {
     for (String cacheName : cacheNamesToEvict) {
       Cache cache = cacheManager.getCache(cacheName);
       if (cache != null) {
-        log.debug(
-            "Evicting cache '{}' due to data mutation in {}.{}",
-            cacheName,
-            targetClass.getSimpleName(),
-            method.getName());
         cache.clear(); // Xóa cache
       }
     }

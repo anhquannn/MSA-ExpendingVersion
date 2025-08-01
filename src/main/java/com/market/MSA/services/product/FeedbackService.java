@@ -87,16 +87,7 @@ public class FeedbackService {
             feedback.getOrderDetail().getOrder().getOrderId(),
             points);
 
-        log.info(
-            "Successfully awarded {} points to user {} for feedback {}",
-            points,
-            feedback.getUser().getUserId(),
-            savedFeedback.getFeedbackId());
       } catch (Exception e) {
-        log.error(
-            "Failed to award points for feedback {}: {}",
-            savedFeedback.getFeedbackId(),
-            e.getMessage());
         // Lỗi ở đây không được ném ra để không làm hỏng (rollback) việc tạo feedback.
         // Có thể triển khai cơ chế thử lại (retry) hoặc đưa vào hàng đợi (queue) để xử lý sau.
       }
@@ -153,6 +144,7 @@ public class FeedbackService {
   }
 
   @Cacheable("feedbacks_list")
+  @Transactional(readOnly = true)
   public List<FeedbackResponse> getAllFeedbacks(FeedbackFilterRequest request) {
     return feedbackRepository
         .filter(
@@ -168,6 +160,7 @@ public class FeedbackService {
   }
 
   @Cacheable("feedbacks_paging")
+  @Transactional(readOnly = true)
   public Page<FeedbackResponse> getAllFeedbacksWithPaging(FeedbackFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

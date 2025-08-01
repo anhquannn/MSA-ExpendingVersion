@@ -79,6 +79,7 @@ public class UserAddressService {
   }
 
   @Cacheable("all_user_addresses")
+  @Transactional(readOnly = true)
   public List<UserAddressResponse> getAll() {
     return userAddressRepository.findAll().stream()
         .map(userAddressMappper::toUserAddressResponse)
@@ -86,6 +87,7 @@ public class UserAddressService {
   }
 
   @Cacheable("user_addresses_list")
+  @Transactional(readOnly = true)
   public List<UserAddressResponse> getAllUserAddresses(UserAddressFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return userAddressRepository.filter(request.getUserId(), sort).stream()
@@ -93,7 +95,8 @@ public class UserAddressService {
         .collect(Collectors.toList());
   }
 
-  //  @Cacheable("user_addresses_paging")
+  @Cacheable("user_addresses_paging")
+  @Transactional(readOnly = true)
   public Page<UserAddressResponse> getAllUserAddressesWithPaging(UserAddressFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

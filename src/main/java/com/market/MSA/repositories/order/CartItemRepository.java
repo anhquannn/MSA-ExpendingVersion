@@ -3,6 +3,7 @@ package com.market.MSA.repositories.order;
 import com.market.MSA.models.order.CartItem;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -38,19 +39,23 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
   @Query(
       "SELECT c FROM CartItem c WHERE c.cart.cartId = :cartId AND c.product.productId = :productId")
+  @EntityGraph(attributePaths = {"product", "cart"})
   Optional<CartItem> findByCart_CartIdAndProduct_ProductId(
       @Param("cartId") Long cartId, @Param("productId") Long productId);
 
   @Query(
       "SELECT c FROM CartItem c WHERE c.cart.cartId = :cartId AND c.product.productId = :productId AND c.isFreeItem = true")
+  @EntityGraph(attributePaths = {"product", "cart"})
   Optional<CartItem> findByCart_CartIdAndProduct_ProductIdAndIsFreeItemTrue(
       @Param("cartId") Long cartId, @Param("productId") Long productId);
 
   @Query("SELECT c FROM CartItem c WHERE c.cart.cartId = :cartId AND c.isSelected = :isSelected")
+  @EntityGraph(attributePaths = {"product", "cart"})
   List<CartItem> findByCart_CartIdAndIsSelected(
       @Param("cartId") Long cartId, @Param("isSelected") boolean isSelected);
 
   @Query("SELECT c FROM CartItem c WHERE c.cart.cartId = :cartId")
+  @EntityGraph(attributePaths = {"product", "cart"})
   List<CartItem> findByCart_CartId(@Param("cartId") Long cartId);
 
   @Query(

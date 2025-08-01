@@ -80,6 +80,7 @@ public class InventoryService {
   }
 
   @Cacheable("all_inventories")
+  @Transactional(readOnly = true)
   public List<InventoryResponse> getAll() {
     return inventoryRepository.findAll().stream()
         .map(inventoryMapper::toInventoryResponse)
@@ -87,6 +88,7 @@ public class InventoryService {
   }
 
   @Cacheable("inventories_list")
+  @Transactional(readOnly = true)
   public List<InventoryResponse> getAllInventories(InventoryFilterRequest request) {
     return inventoryRepository
         .filter(request.getKeyword(), request.getBranchId(), request.getUserId())
@@ -96,6 +98,7 @@ public class InventoryService {
   }
 
   @Cacheable("inventories_paging")
+  @Transactional(readOnly = true)
   public Page<InventoryResponse> getAllInventoriesWithPaging(InventoryFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

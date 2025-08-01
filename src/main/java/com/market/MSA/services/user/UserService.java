@@ -288,6 +288,7 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
+  @Transactional(readOnly = true)
   public UserResponse getMyInfo() {
     var context = SecurityContextHolder.getContext();
     String email = context.getAuthentication().getName();
@@ -299,7 +300,7 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
-  //  @PreAuthorize("hasRole('ADMIN')")
+  @Transactional(readOnly = true)
   public List<UserResponse> getUsers() {
     List<User> users = userRepository.findAll();
     return users.stream().map(userMapper::toUserResponse).toList();
@@ -311,18 +312,19 @@ public class UserService {
         .orElseThrow(() -> new RuntimeException("User not found"));
   }
 
-  // @PostAuthorize("returnObject.username == authentication.name")
+  @Transactional(readOnly = true)
   public UserResponse getUserByID(long userId) {
-    log.info("In method get user by ID");
     User user = getUserEntityByID(userId);
     return userMapper.toUserResponse(user);
   }
 
+  @Transactional(readOnly = true)
   public UserResponse getUserByEmail(String email) {
     Optional<User> user = userRepository.findByEmail(email);
     return user.map(UserResponse::fromUser).orElse(null);
   }
 
+  @Transactional(readOnly = true)
   public UserResponse getUserByGoogleID(String googleID) {
     Optional<User> user = userRepository.findByGoogleId(googleID);
     return user.map(UserResponse::fromUser).orElse(null);
@@ -449,6 +451,7 @@ public class UserService {
   }
 
   @Cacheable("get_users_roles")
+  @Transactional(readOnly = true)
   public Page<UserResponse> getAllUsersByRoleWithPagination(
       String role, String keyword, int page, int size) {
     if (role == null || role.trim().isEmpty()) {
@@ -468,6 +471,7 @@ public class UserService {
     return userPage.map(userMapper::toUserResponse);
   }
 
+  @Transactional(readOnly = true)
   public List<UserResponse> getAllUsersByRole(String role, String keyword) {
     if (role == null || role.trim().isEmpty()) {
       throw new AppException(ErrorCode.INVALID_INPUT);
@@ -481,6 +485,7 @@ public class UserService {
         .collect(Collectors.toList());
   }
 
+  @Transactional(readOnly = true)
   public Page<UserResponse> getManagersByInventoryIdWithPagination(
       Long inventoryId, int page, int size) {
     if (inventoryId == null) {

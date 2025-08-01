@@ -67,6 +67,7 @@ public class OutboundService {
   }
 
   @Cacheable("all_outbound_transfers")
+  @Transactional(readOnly = true)
   public List<OutboundResponse> getAll() {
     return outboundTransferRepository.findAll().stream()
         .map(outboundMapper::toOutboundResponse)
@@ -74,6 +75,7 @@ public class OutboundService {
   }
 
   @Cacheable("outbound_transfers_paging")
+  @Transactional(readOnly = true)
   public Page<OutboundResponse> getAllWithPaging(OutboundFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

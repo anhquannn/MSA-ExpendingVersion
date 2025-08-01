@@ -32,6 +32,7 @@ public class DeliveryInfoResponse {
   String metadata;
   OrderStatus status;
   LocalDateTime deliveryDate;
+  String shipmentCode;
 
   Long orderId;
 }

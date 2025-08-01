@@ -36,12 +36,18 @@ public class AutoBundlePromotionService {
    */
   @Transactional
   public void generateInactivePromotions() {
-    List<Product> mains = productRepository.findByAbcClassification(ABCClassification.A);
+    List<Product> mains =
+        productRepository.findByAbcClassification(ABCClassification.A).stream()
+            .filter(p -> p.getDiscountTriggerDays() > 30)
+            .toList();
     if (mains.isEmpty()) {
       return;
     }
 
-    List<Product> frees = productRepository.findByABCAndNotExempt(ABCClassification.C);
+    List<Product> frees =
+        productRepository.findByABCAndNotExempt(ABCClassification.C).stream()
+            .filter(p -> p.getDiscountTriggerDays() > 30)
+            .toList();
     if (frees.isEmpty()) {
       return;
     }

@@ -22,7 +22,9 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "carts")
+@Table(
+    name = "carts",
+    indexes = {@Index(name = "idx_cart", columnList = "cart_id")})
 public class Cart {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

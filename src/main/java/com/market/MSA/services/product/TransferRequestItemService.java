@@ -91,6 +91,7 @@ public class TransferRequestItemService {
   }
 
   @Cacheable("all_transfer_request_items")
+  @Transactional(readOnly = true)
   public List<TransferResponseItem> getAll() {
     return transferRequestItemRepository.findAll().stream()
         .map(transferRequestItemMapper::toTransferResponseItem)
@@ -98,6 +99,7 @@ public class TransferRequestItemService {
   }
 
   @Cacheable("transfer_request_items_list")
+  @Transactional(readOnly = true)
   public List<TransferResponseItem> getAllTransferRequestItems(
       TransferRequestItemFilterRequest request) {
     return transferRequestItemRepository
@@ -108,6 +110,7 @@ public class TransferRequestItemService {
   }
 
   @Cacheable("transfer_request_items_paging")
+  @Transactional(readOnly = true)
   public Page<TransferResponseItem> getAllTransferRequestItemsWithPaging(
       TransferRequestItemFilterRequest request) {
 

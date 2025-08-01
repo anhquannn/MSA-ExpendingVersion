@@ -191,6 +191,7 @@ public class BranchService {
   }
 
   @Cacheable(value = "branches_list")
+  @Transactional(readOnly = true)
   public List<BranchResponse> getAllBranches(BranchFilterRequest request) {
     return branchRepository
         .filter(request.getKeyword(), request.getProductId(), request.getUserId())
@@ -207,6 +208,7 @@ public class BranchService {
   }
 
   @Cacheable("branches_paging")
+  @Transactional(readOnly = true)
   public Page<BranchResponse> getAllBranchesWithPaging(BranchFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

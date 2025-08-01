@@ -18,6 +18,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -106,6 +107,8 @@ public class InventoryCheckRequestService {
             .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_CHECK_REQUEST_NOT_FOUND)));
   }
 
+  @Transactional(readOnly = true)
+  @Cacheable("inventory_check_request_list")
   public List<InventoryCheckRequestResponse> filter(InventoryCheckRequestFilterRequest req) {
     return icrRepository
         .filter(req.getKeyword(), req.getInventoryId(), req.getSurveyorId(), req.getStatus())
@@ -115,6 +118,8 @@ public class InventoryCheckRequestService {
         .collect(Collectors.toList());
   }
 
+  @Transactional(readOnly = true)
+  @Cacheable("inventory_check_request_paging")
   public Page<InventoryCheckRequestResponse> filterPaging(InventoryCheckRequestFilterRequest req) {
     Sort sort = Sort.by(Sort.Direction.fromString(req.getSortDirection()), req.getSortBy());
     Pageable pageable = PageRequest.of(req.getPage() - 1, req.getPageSize(), sort);

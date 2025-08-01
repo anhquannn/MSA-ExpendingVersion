@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +22,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
           + "(:phoneNumber IS NULL OR o.user.phoneNumber = :phoneNumber) AND "
           + "(:fromDate IS NULL OR o.orderDate >= :fromDate) AND "
           + "(:toDate IS NULL OR o.orderDate <= :toDate)")
+  @EntityGraph(attributePaths = {"user", "branch", "orderDetails", "orderDetails.product"})
   Page<Order> filterWithPaging(
       @Param("status") OrderStatus status,
       @Param("userId") Long userId,
@@ -38,6 +40,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
           + "(:phoneNumber IS NULL OR o.user.phoneNumber = :phoneNumber) AND "
           + "(:fromDate IS NULL OR o.orderDate >= :fromDate) AND "
           + "(:toDate IS NULL OR o.orderDate <= :toDate)")
+  @EntityGraph(attributePaths = {"user", "branch", "orderDetails", "orderDetails.product"})
   List<Order> filter(
       @Param("status") OrderStatus status,
       @Param("userId") Long userId,

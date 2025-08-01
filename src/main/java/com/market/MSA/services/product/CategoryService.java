@@ -96,6 +96,7 @@ public class CategoryService {
   }
 
   @Cacheable("categories_list")
+  @Transactional(readOnly = true)
   public List<CategoryResponse> getAllCategories(CategoryFilterRequest request) {
     return categoryRepository.filter(request.getName(), request.getParentId()).stream()
         .map(categoryMapper::toCategoryResponse)
@@ -103,6 +104,7 @@ public class CategoryService {
   }
 
   @Cacheable("categories_paging")
+  @Transactional(readOnly = true)
   public Page<CategoryResponse> getAllCategoriesWithPaging(CategoryFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

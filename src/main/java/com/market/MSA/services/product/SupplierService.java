@@ -94,6 +94,7 @@ public class SupplierService {
   }
 
   @Cacheable("suppliers_list")
+  @Transactional(readOnly = true)
   public List<SupplierResponse> getAllSuppliers(SupplierFilterRequest request) {
     return supplierRepository.filter(request.getKeyword()).stream()
         .map(supplierMapper::toSupplierResponse)
@@ -101,6 +102,7 @@ public class SupplierService {
   }
 
   @Cacheable("suppliers_paging")
+  @Transactional(readOnly = true)
   public Page<SupplierResponse> getAllSuppliersWithPaging(SupplierFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

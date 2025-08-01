@@ -41,22 +41,16 @@ public class AutoTransferService {
   // Check kỹ tồn kho có trong HEAD rồi mới tạo TransferRequest.
   @Transactional(rollbackFor = Exception.class)
   public List<Transfer> processLowStock() {
-    log.info("Starting auto transfer process...");
-
     // 1. Xác định kho HEAD (có branchId = 1). Mặc định hệ thống luôn có.
     Inventory headInventory =
         inventoryRepository
             .findByBranch_BranchId(1L)
             .orElseThrow(() -> new IllegalStateException("HEAD inventory (branchId=1) not found"));
 
-    log.info("Found HEAD inventory: {}", headInventory.getInventoryId());
-
     // 2. Lấy danh sách tồn kho thấp hơn ngưỡng tối thiểu.
     List<InventoryProduct> allInventoryProducts =
         inventoryProductRepository.filter(
             null, null, null, true, null, null, null, Sort.unsorted());
-
-    log.info("Total active inventory products: {}", allInventoryProducts.size());
 
     List<InventoryProduct> lowStocks =
         allInventoryProducts.stream()
@@ -76,10 +70,8 @@ public class AutoTransferService {
             .toList();
 
     if (lowStocks.isEmpty()) {
-      log.info("No low stock items found");
       return new ArrayList<>();
     }
-    log.info("Found {} low stock items", lowStocks.size());
 
     // 3. Gom nhóm theo kho đích để tạo 1 yêu cầu/vận chuyển/kho.
     Map<Inventory, List<InventoryProduct>> groupedByInventory =
@@ -95,8 +87,6 @@ public class AutoTransferService {
                 })
             .collect(Collectors.groupingBy(InventoryProduct::getInventory));
 
-    log.info("Grouped into {} destination inventories", groupedByInventory.size());
-
     int totalTransfersProcessed = 0;
     int totalItemsCreated = 0;
     List<Transfer> createdTransfers = new ArrayList<>();
@@ -104,22 +94,13 @@ public class AutoTransferService {
     for (Map.Entry<Inventory, List<InventoryProduct>> entry : groupedByInventory.entrySet()) {
       Inventory destInv = entry.getKey();
       List<InventoryProduct> productsNeedingTransfer = entry.getValue();
-      log.info(
-          "Processing destination inventory ID: {} with {} products",
-          destInv.getInventoryId(),
-          productsNeedingTransfer.size());
 
       // 4. Tìm manager của kho đích làm requester
       User requesterUser = destInv.getBranch().getUsers().stream().findFirst().orElse(null);
 
       if (requesterUser == null) {
-        log.warn("No manager found for inventory ID: {}, skipping", destInv.getInventoryId());
         continue;
       }
-      log.info(
-          "Using requester user ID: {} for inventory: {}",
-          requesterUser.getUserId(),
-          destInv.getInventoryId());
 
       // 5. Kiểm tra xem đã có transfer PENDING nào cho kho này chưa
       List<Transfer> existingPendingTransfers =
@@ -139,10 +120,6 @@ public class AutoTransferService {
       if (!existingPendingTransfers.isEmpty()) {
         // Sử dụng transfer PENDING đã có
         transfer = existingPendingTransfers.getFirst();
-        log.info(
-            "Found existing PENDING transfer ID: {} for destination inventory: {}",
-            transfer.getTransferRequestId(),
-            destInv.getInventoryId());
       } else {
         // Tạo transfer mới
         transfer = new Transfer();
@@ -157,10 +134,6 @@ public class AutoTransferService {
         transfer.setCreatedAt(LocalDateTime.now());
         transfer.setTransferItems(new ArrayList<>());
         isNewTransfer = true;
-        log.info(
-            "Created new transfer from inventory ID: {} to inventory ID: {}",
-            headInventory.getInventoryId(),
-            destInv.getInventoryId());
       }
 
       // 6. Lấy danh sách sản phẩm đã có trong transfer này (để tránh trùng lặp)
@@ -174,14 +147,9 @@ public class AutoTransferService {
 
       for (InventoryProduct ip : productsNeedingTransfer) {
         Long productId = ip.getProduct().getProductId();
-        log.debug(
-            "Processing product: {} in inventory: {}",
-            productId,
-            ip.getInventory().getInventoryId());
 
         // 7. Kiểm tra xem sản phẩm này đã có trong transfer chưa
         if (existingProductIds.contains(productId)) {
-          log.info("Product {} already exists in transfer, skipping", productId);
           continue;
         }
 
@@ -206,21 +174,13 @@ public class AutoTransferService {
                 .anyMatch(item -> item.getProduct().getProductId().equals(productId));
 
         if (hasActiveTransferForProduct) {
-          log.info("Product {} has active transfer in progress, skipping", productId);
           continue;
         }
 
         // 9. Tính toán số lượng cần request
         int requestQty = Math.max(0, (ip.getMaxThreshold() / 2) - ip.getStockNumber());
-        log.info(
-            "Product: {}, MaxThreshold: {}, CurrentStock: {}, RequestQty: {}",
-            productId,
-            ip.getMaxThreshold(),
-            ip.getStockNumber(),
-            requestQty);
 
         if (requestQty == 0) {
-          log.info("Request quantity <= 0 for product: {}, skipping", productId);
           continue;
         }
 
@@ -238,14 +198,7 @@ public class AutoTransferService {
 
         int headStock = headProducts.stream().mapToInt(InventoryProduct::getStockNumber).sum();
 
-        log.info("HEAD stock for product {}: {}, Required: {}", productId, headStock, requestQty);
-
         if (headStock < requestQty) {
-          log.warn(
-              "Insufficient HEAD stock for product: {}, Available: {}, Required: {}",
-              productId,
-              headStock,
-              requestQty);
           continue;
         }
 
@@ -258,8 +211,6 @@ public class AutoTransferService {
         transferItems.add(item);
         existingProductIds.add(productId); // Thêm vào set để tránh trùng lặp trong cùng transfer
         itemsAddedForThisTransfer++;
-
-        log.info("Added transfer item - Product: {}, Quantity: {}", productId, requestQty);
       }
 
       // 12. Lưu transfer nếu có items mới hoặc có thay đổi
@@ -275,31 +226,13 @@ public class AutoTransferService {
         if (isNewTransfer) {
           try {
             notificationService.sendAutoTransferCreatedNotification(savedTransfer);
-            log.info(
-                "✅ Sent auto transfer notification for transfer ID: {}",
-                savedTransfer.getTransferRequestId());
-          } catch (Exception e) {
-            log.error(
-                "❌ Failed to send auto transfer notification for transfer ID: {}",
-                savedTransfer.getTransferRequestId(),
-                e);
+          } catch (Exception ignored) {
           }
         }
-
-        log.info(
-            "Saved transfer ID: {} with {} total items ({} new items added)",
-            savedTransfer.getTransferRequestId(),
-            savedTransfer.getTransferItems().size(),
-            itemsAddedForThisTransfer);
       } else {
         log.info("No new items to add for destination inventory: {}", destInv.getInventoryId());
       }
     }
-
-    log.info(
-        "Auto transfer process completed - Processed {} transfers with {} total new items",
-        totalTransfersProcessed,
-        totalItemsCreated);
 
     return createdTransfers;
   }

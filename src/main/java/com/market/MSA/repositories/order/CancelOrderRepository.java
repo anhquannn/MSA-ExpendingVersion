@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +22,7 @@ public interface CancelOrderRepository extends JpaRepository<CancelOrder, Long> 
           + "(:reason IS NULL OR LOWER(c.reason) LIKE LOWER(CONCAT('%', :reason, '%'))) AND "
           + "(:fromDate IS NULL OR c.cancelDate >= :fromDate) AND "
           + "(:toDate IS NULL OR c.cancelDate <= :toDate)")
+  @EntityGraph(attributePaths = {"order", "order.user"})
   Page<CancelOrder> filterWithPaging(
       @Param("orderId") Long orderId,
       @Param("userId") Long userId,
@@ -39,6 +41,7 @@ public interface CancelOrderRepository extends JpaRepository<CancelOrder, Long> 
           + "(:reason IS NULL OR LOWER(c.reason) LIKE LOWER(CONCAT('%', :reason, '%'))) AND "
           + "(:fromDate IS NULL OR c.cancelDate >= :fromDate) AND "
           + "(:toDate IS NULL OR c.cancelDate <= :toDate)")
+  @EntityGraph(attributePaths = {"order", "order.user"})
   List<CancelOrder> filter(
       @Param("orderId") Long orderId,
       @Param("userId") Long userId,

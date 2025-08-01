@@ -13,6 +13,8 @@ public enum OrderStatus {
   CANCELLING,
   CANCELLED,
   COMPLETED,
+  RETURNING,
+  RETURNED,
   FAILED;
 
   public static boolean isValidStatus(String status) {

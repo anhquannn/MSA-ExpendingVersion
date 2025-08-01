@@ -91,6 +91,7 @@ public class RewardPointTransactionService {
   }
 
   @Cacheable("all_reward_point_transactions")
+  @Transactional(readOnly = true)
   public List<RewardPointTransactionResponse> getAll() {
     return rewardPointTransactionRepository.findAll().stream()
         .map(rewardPointTransactionMapper::toRewardPointTransactionResponse)
@@ -98,6 +99,7 @@ public class RewardPointTransactionService {
   }
 
   @Cacheable("reward_point_transactions_list")
+  @Transactional(readOnly = true)
   public List<RewardPointTransactionResponse> getAllRewardPointTransactions(
       RewardPointTransactionFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
@@ -126,6 +128,7 @@ public class RewardPointTransactionService {
   }
 
   @Cacheable("reward_point_transactions_paging")
+  @Transactional(readOnly = true)
   public Page<RewardPointTransactionResponse> getAllRewardPointTransactionsWithPaging(
       RewardPointTransactionFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

@@ -123,6 +123,7 @@ public class CheckedHistoryService {
 
   // FILTER LIST
   @Cacheable("checked_histories_list")
+  @Transactional(readOnly = true)
   public List<CheckedHistoryResponse> getAllCheckedHistories(CheckedHistoryFilterRequest request) {
     return checkedHistoryRepository
         .filter(request.getKeyword(), request.getInventoryId(), request.getUserId())
@@ -133,6 +134,7 @@ public class CheckedHistoryService {
 
   // FILTER PAGE
   @Cacheable("checked_histories_paging")
+  @Transactional(readOnly = true)
   public Page<CheckedHistoryResponse> getAllCheckedHistoriesWithPaging(
       CheckedHistoryFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

@@ -14,7 +14,12 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 @Entity
-@Table(name = "cartItems")
+@Table(
+    name = "cartItems",
+    indexes = {
+      @Index(name = "idx_cart_item_selected", columnList = "is_selected"),
+      @Index(name = "idx_cart_item_free", columnList = "is_free_item")
+    })
 @Getter
 @Setter
 @Builder

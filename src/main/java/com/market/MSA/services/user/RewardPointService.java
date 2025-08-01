@@ -86,6 +86,7 @@ public class RewardPointService {
   }
 
   @Cacheable("reward_points_list")
+  @Transactional(readOnly = true)
   public List<RewardPointResponse> getAllRewardPoints(RewardPointFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return rewardPointRepository.filter(request.getUserId(), sort).stream()
@@ -94,6 +95,7 @@ public class RewardPointService {
   }
 
   @Cacheable("reward_points_paging")
+  @Transactional(readOnly = true)
   public Page<RewardPointResponse> getAllRewardPointsWithPaging(RewardPointFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

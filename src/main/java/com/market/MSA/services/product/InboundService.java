@@ -129,6 +129,7 @@ public class InboundService {
   }
 
   @Cacheable("all_inbound_transfers")
+  @Transactional(readOnly = true)
   public List<InboundResponse> getAll() {
     return inboundTransferRepository.findAll().stream()
         .map(inboundMapper::toInboundResponse)
@@ -136,6 +137,7 @@ public class InboundService {
   }
 
   @Cacheable("inbound_transfers_paging")
+  @Transactional(readOnly = true)
   public Page<InboundResponse> getAllWithPaging(InboundFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

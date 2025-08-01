@@ -83,6 +83,7 @@ public class ProductCombinationService {
   }
 
   @Cacheable("product-combinations")
+  @Transactional(readOnly = true)
   public List<ProductCombinationResponse> filter(ProductCombinationFilterRequest req) {
     return pcRepository.filter(req.getProductId1(), req.getProductId2()).stream()
         .map(pcMapper::toProductCombinationResponse)
@@ -90,6 +91,7 @@ public class ProductCombinationService {
   }
 
   @Cacheable("product-combinations-page")
+  @Transactional(readOnly = true)
   public Page<ProductCombinationResponse> filterPaging(ProductCombinationFilterRequest req) {
     Sort sort = Sort.by(Sort.Direction.fromString(req.getSortDirection()), req.getSortBy());
     Pageable pageable = PageRequest.of(req.getPage() - 1, req.getPageSize(), sort);
@@ -98,7 +100,8 @@ public class ProductCombinationService {
         .map(pcMapper::toProductCombinationResponse);
   }
 
-  //  @Cacheable("product-combinations-page-products")
+  @Cacheable("product-combinations-page-products")
+  @Transactional(readOnly = true)
   public Page<ProductResponse> filterPagingProducts(ProductCombinationFilterRequest req) {
     Sort sort = Sort.by(Sort.Direction.fromString(req.getSortDirection()), req.getSortBy());
     Pageable pageable = PageRequest.of(req.getPage() - 1, req.getPageSize(), sort);

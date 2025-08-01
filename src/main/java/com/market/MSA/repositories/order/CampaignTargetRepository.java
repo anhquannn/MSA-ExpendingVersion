@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -18,6 +19,7 @@ public interface CampaignTargetRepository extends JpaRepository<CampaignTarget, 
   Long countByCampaignId(@Param("campaignId") Long campaignId);
 
   @Query("SELECT ct FROM CampaignTarget ct WHERE ct.campaign.campaignId = :campaignId")
+  @EntityGraph(attributePaths = {"campaign"})
   List<CampaignTarget> findByCampaign_CampaignId(Long campaignId);
 
   boolean existsByCampaign_CampaignIdAndTargetTypeAndTargetId(
@@ -29,6 +31,7 @@ public interface CampaignTargetRepository extends JpaRepository<CampaignTarget, 
           + "(:campaignId IS NULL OR ct.campaign.campaignId = :campaignId) AND "
           + "(:targetType IS NULL OR ct.targetType = :targetType) AND "
           + "(:targetId IS NULL OR ct.targetId = :targetId)")
+  @EntityGraph(attributePaths = {"campaign"})
   Page<CampaignTarget> filterWithPaging(
       @Param("campaignId") Long campaignId,
       @Param("targetType") PromoScopeType targetType,
@@ -41,6 +44,7 @@ public interface CampaignTargetRepository extends JpaRepository<CampaignTarget, 
           + "(:campaignId IS NULL OR ct.campaign.campaignId = :campaignId) AND "
           + "(:targetType IS NULL OR ct.targetType = :targetType) AND "
           + "(:targetId IS NULL OR ct.targetId = :targetId)")
+  @EntityGraph(attributePaths = {"campaign"})
   List<CampaignTarget> filter(
       @Param("campaignId") Long campaignId,
       @Param("targetType") PromoScopeType targetType,

@@ -82,6 +82,7 @@ public class CampaignService {
   }
 
   @Cacheable("campaigns_list")
+  @Transactional(readOnly = true)
   public List<CampaignResponse> getAllCampaigns(CampaignFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return campaignRepository
@@ -98,6 +99,7 @@ public class CampaignService {
   }
 
   @Cacheable("campaigns_paging")
+  @Transactional(readOnly = true)
   public Page<CampaignResponse> getAllCampaignsWithPaging(CampaignFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     Pageable pageable =

@@ -24,10 +24,8 @@ public class FirebaseConfig {
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                 .build();
         FirebaseApp.initializeApp(options);
-        log.info("Initialized FirebaseApp");
       }
-    } catch (IOException e) {
-      log.error("Cannot initialize Firebase", e);
+    } catch (IOException ignored) {
     }
   }
 }

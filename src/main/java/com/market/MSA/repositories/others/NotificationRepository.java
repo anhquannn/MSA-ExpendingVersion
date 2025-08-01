@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,6 +23,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
           + "AND (:inventoryId IS NULL OR n.inventory.inventoryId = :inventoryId) "
           + "AND (:fromDate IS NULL OR n.notificationDate >= :fromDate) "
           + "AND (:toDate IS NULL OR n.notificationDate <= :toDate)")
+  @EntityGraph(attributePaths = {"user", "product", "order", "inventory"})
   Page<Notification> filterWithPaging(
       @Param("userId") Long userId,
       @Param("type") String type,
@@ -40,6 +42,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
           + "AND (:isRead IS NULL OR n.isRead = :isRead) "
           + "AND (:fromDate IS NULL OR n.notificationDate >= :fromDate) "
           + "AND (:toDate IS NULL OR n.notificationDate <= :toDate)")
+  @EntityGraph(attributePaths = {"user", "product", "order", "inventory"})
   Page<Notification> filter(
       @Param("type") String type,
       @Param("isRead") Boolean isRead,
@@ -57,6 +60,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
           + "AND (:inventoryId IS NULL OR n.inventory.inventoryId = :inventoryId) "
           + "AND (:fromDate IS NULL OR n.notificationDate >= :fromDate) "
           + "AND (:toDate IS NULL OR n.notificationDate <= :toDate)")
+  @EntityGraph(attributePaths = {"user", "product", "order", "inventory"})
   List<Notification> findAllByUserIdWithFiltersNoPaging(
       @Param("userId") Long userId,
       @Param("type") String type,
@@ -75,6 +79,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
           + "AND (:isRead IS NULL OR n.isRead = :isRead) "
           + "AND (:fromDate IS NULL OR n.notificationDate >= :fromDate) "
           + "AND (:toDate IS NULL OR n.notificationDate <= :toDate)")
+  @EntityGraph(attributePaths = {"user", "product", "order", "inventory"})
   List<Notification> findAllWithFiltersNoPaging(
       @Param("type") String type,
       @Param("isRead") Boolean isRead,

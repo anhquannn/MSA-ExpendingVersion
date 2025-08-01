@@ -16,11 +16,13 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -92,6 +94,8 @@ public class CampaignTargetService {
         .collect(Collectors.toList());
   }
 
+  @Transactional(readOnly = true)
+  @Cacheable("campaign_target_list")
   public List<CampaignTargetResponse> getCampaignTargets(CampaignTargetFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return campaignTargetRepository
@@ -101,6 +105,8 @@ public class CampaignTargetService {
         .collect(Collectors.toList());
   }
 
+  @Transactional(readOnly = true)
+  @Cacheable("campaign_target_paging")
   public Page<CampaignTargetResponse> getCampaignTargetsWithPaging(
       CampaignTargetFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

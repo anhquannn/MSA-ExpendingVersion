@@ -15,6 +15,12 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
   jackson:
     deserialization:
       adjust-dates-to-context-time-zone: false

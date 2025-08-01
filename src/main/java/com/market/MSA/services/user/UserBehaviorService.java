@@ -91,6 +91,7 @@ public class UserBehaviorService {
   }
 
   @Cacheable("all_user_behaviors")
+  @Transactional(readOnly = true)
   public List<UserBehaviorResponse> getAll() {
     return userBehaviorRepository.findAll().stream()
         .map(userBehaviorMapper::toUserBehaviorResponse)
@@ -98,6 +99,7 @@ public class UserBehaviorService {
   }
 
   @Cacheable("user_behaviors_list")
+  @Transactional(readOnly = true)
   public List<UserBehaviorResponse> getAllUserBehaviors(UserBehaviorFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
@@ -107,6 +109,7 @@ public class UserBehaviorService {
   }
 
   @Cacheable("user_behaviors_paging")
+  @Transactional(readOnly = true)
   public Page<UserBehaviorResponse> getAllUserBehaviorsWithPaging(
       UserBehaviorFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

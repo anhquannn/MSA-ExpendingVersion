@@ -18,7 +18,6 @@ import com.market.MSA.requests.product.PromotionRequest;
 import com.market.MSA.responses.product.PromotionResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import com.market.MSA.services.others.NotificationService;
-import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,6 +31,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /** Service quản lý Promotion: CRUD + APIs lấy danh sách + logic tặng sản phẩm C. */
 @Service
@@ -63,13 +63,21 @@ public class PromotionService {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
 
+    // Validate discount trigger days for both products > 30
+    Product mainProduct =
+        entityFinderService.findByIdOrThrow(
+            productRepository, request.getProductMainId(), ErrorCode.PRODUCT_NOT_FOUND);
+    Product freeProduct =
+        entityFinderService.findByIdOrThrow(
+            productRepository, request.getProductFreeId(), ErrorCode.PRODUCT_NOT_FOUND);
+    if (mainProduct.getDiscountTriggerDays() <= 30 || freeProduct.getDiscountTriggerDays() <= 30) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
+
     Promotion promotion = promotionMapper.toPromotion(request);
-    promotion.setProductMain(
-        entityFinderService.findByIdOrThrow(
-            productRepository, request.getProductMainId(), ErrorCode.PRODUCT_NOT_FOUND));
-    promotion.setProductFree(
-        entityFinderService.findByIdOrThrow(
-            productRepository, request.getProductFreeId(), ErrorCode.PRODUCT_NOT_FOUND));
+    // Gán lại product sau khi đã validate
+    promotion.setProductMain(mainProduct);
+    promotion.setProductFree(freeProduct);
 
     promotion.setStatus(Optional.ofNullable(request.getStatus()).orElse(PromocodeStatus.INACTIVE));
     promotion = promotionRepository.save(promotion);
@@ -91,6 +99,12 @@ public class PromotionService {
     promotion.setProductFree(
         entityFinderService.findByIdOrThrow(
             productRepository, request.getProductFreeId(), ErrorCode.PRODUCT_NOT_FOUND));
+
+    // Validate discount trigger days for both products > 30
+    if (promotion.getProductMain().getDiscountTriggerDays() <= 30
+        || promotion.getProductFree().getDiscountTriggerDays() <= 30) {
+      throw new AppException(ErrorCode.INVALID_INPUT);
+    }
 
     // Kiểm tra trùng lặp (productMain + productFree) khi cập nhật
     boolean duplicateExists =
@@ -129,6 +143,7 @@ public class PromotionService {
 
   /* ================= LIST ================= */
   @Cacheable("all_promotions")
+  @Transactional(readOnly = true)
   public List<PromotionResponse> getAll() {
     return promotionRepository.findAll(Sort.by(Sort.Direction.DESC, "startDate")).stream()
         .map(promotionMapper::toPromotionResponse)
@@ -136,6 +151,7 @@ public class PromotionService {
   }
 
   @Cacheable("promotions_list")
+  @Transactional(readOnly = true)
   public List<PromotionResponse> getAllPromotions(PromotionFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return promotionRepository.filter(request.getKeyword(), request.getStatus(), sort).stream()
@@ -144,6 +160,7 @@ public class PromotionService {
   }
 
   @Cacheable("promotions_paging")
+  @Transactional(readOnly = true)
   public Page<PromotionResponse> getAllPromotionsWithPaging(PromotionFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     PageRequest pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
@@ -162,14 +179,12 @@ public class PromotionService {
   public void applyBundlePromotions(Long cartId) {
     // Kiểm tra tham số đầu vào
     if (cartId == null) {
-      log.warn("Cart ID không hợp lệ");
       return;
     }
 
     // Lấy tất cả sản phẩm trong giỏ hàng
     List<CartItem> items = cartItemRepository.findByCart_CartId(cartId);
     if (items.isEmpty()) {
-      log.debug("Giỏ hàng rỗng, không có gì để áp dụng khuyến mãi");
       return;
     }
 
@@ -219,12 +234,30 @@ public class PromotionService {
           CartItem freeItem = existingFreeItem.get();
           boolean needsUpdate = false;
 
+          // Nếu main bỏ chọn nhưng free vẫn được chọn -> biến free thành sản phẩm thường và cập
+          // nhật giá thực
+          if (!item.isSelected() && freeItem.isSelected()) {
+            freeItem.setFreeItem(false);
+            double realPrice = freeProduct.getPrice();
+            freeItem.setPrice(realPrice);
+            needsUpdate = true;
+          }
+
+          // Nếu main được chọn lại và freeItem trước đó đã trở thành sản phẩm thường -> đưa về 0đ
+          if (item.isSelected() && !freeItem.isFreeItem()) {
+            freeItem.setFreeItem(true);
+            freeItem.setPrice(0.0);
+            // Đồng bộ trạng thái chọn với main (free phải được tặng kèm)
+            freeItem.setSelected(item.isSelected());
+            // Số lượng cũng đồng bộ phía dưới nhưng đảm bảo giá đã về 0
+            needsUpdate = true;
+          }
+
           // Đồng bộ trạng thái chọn với sản phẩm chính
           if (freeItem.isSelected() != item.isSelected()) {
             freeItem.setSelected(item.isSelected());
             needsUpdate = true;
           }
-
           // Đồng bộ số lượng với sản phẩm chính
           if (freeItem.getQuantity() != item.getQuantity()) {
             freeItem.setQuantity(item.getQuantity());
@@ -244,7 +277,6 @@ public class PromotionService {
         // - Không nằm trong danh sách miễn khuyến mãi
         if (freeProduct.getAbcClassification() != ABCClassification.C
             || freeProduct.isExemptFromPromotion()) {
-          log.debug("Sản phẩm {} không đủ điều kiện làm quà tặng", freeProduct.getProductId());
           continue;
         }
 

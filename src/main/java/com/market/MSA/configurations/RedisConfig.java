@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -95,10 +94,10 @@ public class RedisConfig {
     public PageModule() {
       addDeserializer(
           PageImpl.class,
-          new JsonDeserializer<PageImpl>() {
+          new JsonDeserializer<>() {
             @Override
             public PageImpl<?> deserialize(JsonParser p, DeserializationContext ctxt)
-                throws IOException, JsonProcessingException {
+                throws IOException {
               JsonNode node = p.getCodec().readTree(p);
 
               JsonNode content = node.get("content");

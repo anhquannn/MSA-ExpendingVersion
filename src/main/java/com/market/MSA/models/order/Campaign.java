@@ -22,6 +22,7 @@ import lombok.experimental.FieldDefaults;
     name = "campaigns",
     indexes = {
       @Index(name = "idx_campaign", columnList = "name"),
+      @Index(name = "idx_campaign_scope", columnList = "scope_type"),
       @Index(name = "idx_campaign_dates", columnList = "start_date, end_date")
     })
 public class Campaign {

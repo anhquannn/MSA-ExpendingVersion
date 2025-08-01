@@ -23,6 +23,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -121,14 +122,16 @@ public class TransferRequestService {
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_NOT_FOUND)));
   }
 
-  // @Cacheable("all_transfer_requests")
+  @Cacheable("all_transfer_requests")
+  @Transactional(readOnly = true)
   public List<TransferResponse> getAll() {
     return transferRequestRepository.findAll().stream()
         .map(transferRequestMapper::toTransferResponse)
         .collect(Collectors.toList());
   }
 
-  // @Cacheable("transfer_requests_list")
+  @Cacheable("transfer_requests_list")
+  @Transactional(readOnly = true)
   public List<TransferResponse> getAllTransferRequests(TransferRequestFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
@@ -303,11 +306,7 @@ public class TransferRequestService {
     // Send notification to manager about approval
     try {
       notificationService.sendTransferApprovedNotification(updatedTransfer.getTransferRequestId());
-    } catch (Exception e) {
-      log.warn(
-          "Failed to send transfer approved notification for transfer #{}",
-          updatedTransfer.getTransferRequestId(),
-          e);
+    } catch (Exception ignored) {
     }
 
     return transferRequestMapper.toTransferResponse(updatedTransfer);
@@ -335,11 +334,7 @@ public class TransferRequestService {
     try {
       notificationService.sendTransferRejectedNotification(
           updatedTransfer.getTransferRequestId(), note);
-    } catch (Exception e) {
-      log.warn(
-          "Failed to send transfer rejected notification for transfer #{}",
-          updatedTransfer.getTransferRequestId(),
-          e);
+    } catch (Exception ignored) {
     }
 
     return transferRequestMapper.toTransferResponse(updatedTransfer);

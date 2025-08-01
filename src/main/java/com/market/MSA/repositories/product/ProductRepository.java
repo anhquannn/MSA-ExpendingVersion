@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,6 +21,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
           + "AND (COALESCE(:categoryIds, NULL) IS NULL OR p.category.categoryId IN :categoryIds) "
           + "AND (:supplierId IS NULL OR p.supplier.supplierId = :supplierId) "
           + "AND (:keyword IS NULL OR :keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+  @EntityGraph(attributePaths = {"category", "supplier"})
   Page<Product> findByBranchAndFilters(
       @Param("branchId") Long branchId,
       @Param("categoryIds") List<Long> categoryIds,
@@ -49,6 +51,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
           + "     OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) "
           + "     OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
           + "AND (COALESCE(:excludeProductIds, NULL) IS NULL OR p.productId NOT IN :excludeProductIds)")
+  @EntityGraph(attributePaths = {"category", "supplier"})
   Page<Product> filterWithPaging(
       @Param("branchId") Long branchId,
       @Param("categoryIds") List<Long> categoryIds,

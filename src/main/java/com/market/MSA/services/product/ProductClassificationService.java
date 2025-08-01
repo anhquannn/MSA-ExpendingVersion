@@ -58,6 +58,5 @@ public class ProductClassificationService {
       product.setLastClassificationDate(LocalDateTime.now());
       productRepository.save(product);
     }
-    log.info("ABC classification finished for {} products", revenueList.size());
   }
 }

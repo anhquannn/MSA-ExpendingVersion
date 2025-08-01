@@ -35,6 +35,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -189,13 +190,29 @@ public class OrderService {
       }
     }
 
-    // 9. Xử lý chi tiết đơn hàng (từng sản phẩm).
+    // 9. Xử lý chi tiết đơn hàng (từng sản phẩm) – tối ưu: bulk fetch & batch save
+    // Lấy tất cả productId duy nhất
+    List<Long> productIds =
+        cartItems.stream().map(ci -> ci.getProduct().getProductId()).distinct().toList();
+
+    // Bulk fetch Product entities một lần
+    Map<Long, Product> productMap =
+        productService
+            .getProductRepository() // thêm phương thức getter trong ProductService trả về repo
+            .findAllById(productIds)
+            .stream()
+            .collect(Collectors.toMap(Product::getProductId, p -> p));
+
+    List<OrderDetail> orderDetailsBatch = new ArrayList<>();
+
     for (CartItemResponse cartItem : cartItems) {
-      Product product = productService.findProductById(cartItem.getProduct().getProductId());
-      // Xác định đơn giá và cờ miễn phí dựa trên thông tin giỏ hàng
+      Product product = productMap.get(cartItem.getProduct().getProductId());
+      if (product == null) {
+        throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+      }
       boolean freeItem = cartItem.isFreeItem();
       double unitPrice = freeItem ? 0 : product.getPrice();
-      // Tạo 'OrderDetail' cho mỗi sản phẩm trong giỏ hàng.
+
       OrderDetail orderDetail =
           OrderDetail.builder()
               .order(order)
@@ -207,14 +224,16 @@ public class OrderService {
               .totalPrice(cartItem.getQuantity() * unitPrice)
               .isFreeItem(freeItem)
               .build();
-      // Lưu chi tiết đơn hàng.
-      orderDetailRepository.save(orderDetail);
-      // Cập nhật (trừ) số lượng tồn kho.
+      orderDetailsBatch.add(orderDetail);
+
+      // Cập nhật tồn kho & doanh thu (có thể song song sau này)
       inventoryProductService.updateInventoryProduct(
           branchId, product.getProductId(), cartItem.getQuantity());
-      // Cập nhật tổng doanh thu cho sản phẩm.
       productService.updateTotalRevenue(product.getProductId(), cartItem.getQuantity());
     }
+
+    // Batch insert OrderDetail
+    orderDetailRepository.saveAll(orderDetailsBatch);
 
     // 10. Xóa các sản phẩm đã đặt hàng khỏi giỏ hàng.
     cartItemService.clearCart(cartId);
@@ -456,6 +475,7 @@ public class OrderService {
       key =
           "{#request.branchId, #request.userId, #request.status, #request.phoneNumber, "
               + "#request.sortBy, #request.sortDirection}")
+  @Transactional(readOnly = true)
   public List<OrderResponse> getAllOrders(OrderFilterRequest request) {
     // Validate sort direction
     Sort.Direction direction;
@@ -494,6 +514,7 @@ public class OrderService {
       key =
           "{#request.branchId, #request.userId, #request.status, #request.phoneNumber, "
               + "#request.page, #request.pageSize, #request.sortBy, #request.sortDirection}")
+  @Transactional(readOnly = true)
   public Page<OrderResponse> getAllOrdersWithPaging(OrderFilterRequest request) {
     // Convert from 1-based to 0-based page index
     int page = request.getPage() > 0 ? request.getPage() - 1 : 0;
@@ -552,8 +573,7 @@ public class OrderService {
       String subject = "Xác nhận đơn hàng - Chi tiết đơn hàng của bạn";
       String emailBody = buildOrderConfirmationEmail(order);
       emailService.sendEmail(userEmail, subject, emailBody);
-    } catch (Exception e) {
-      log.error("Failed to send order details email for order: {}", order.getOrderId(), e);
+    } catch (Exception ignored) {
     }
   }
 

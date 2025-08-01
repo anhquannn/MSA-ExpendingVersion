@@ -82,6 +82,7 @@ public class TrendingProductService {
   }
 
   @Cacheable("all_trending_products")
+  @Transactional(readOnly = true)
   public List<TrendingProductResponse> getAll() {
     return trendingProductRepository.findAll().stream()
         .map(trendingProductMapper::toTrendingProductResponse)
@@ -90,6 +91,7 @@ public class TrendingProductService {
 
   // Lấy tất cả TrendingProduct (phân trang)
   @Cacheable("trending_products_list")
+  @Transactional(readOnly = true)
   public List<TrendingProductResponse> getAllTrendingProducts(
       TrendingProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
@@ -99,6 +101,7 @@ public class TrendingProductService {
   }
 
   @Cacheable("trending_products_paging")
+  @Transactional(readOnly = true)
   public Page<TrendingProductResponse> getAllTrendingProductsWithPaging(
       TrendingProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

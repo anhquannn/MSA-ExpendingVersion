@@ -157,7 +157,7 @@ public class InventoryProductService {
     return inventoryProductMapper.toInventoryProductResponse(inventoryProduct);
   }
 
-  //  @Cacheable(value = "inventory_products", key = "'stock_' + #branchId + '_' + #productId")
+  @Cacheable(value = "inventory_products", key = "'stock_' + #branchId + '_' + #productId")
   public int getTotalStockInBranch(Long branchId, Long productId) {
     Inventory inventory =
         inventoryRepository
@@ -274,6 +274,7 @@ public class InventoryProductService {
   }
 
   /** Lấy thống kê tổng quan về kho của một chi nhánh */
+  @Transactional(readOnly = true)
   public InventoryStatisticsResponse getInventoryStatistics(Long branchId) {
     // Tìm inventory của branch
     Inventory inventory =
@@ -306,6 +307,7 @@ public class InventoryProductService {
   }
 
   @Cacheable("all_inventory_products")
+  @Transactional(readOnly = true)
   public List<InventoryProductResponse> getAll() {
     return inventoryProductRepository.findAll().stream()
         .map(inventoryProductMapper::toInventoryProductResponse)
@@ -313,6 +315,7 @@ public class InventoryProductService {
   }
 
   @Cacheable("inventory_products_paging")
+  @Transactional(readOnly = true)
   public List<InventoryProductResponse> getAllInventoryProducts(
       InventoryProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
@@ -333,6 +336,7 @@ public class InventoryProductService {
   }
 
   @Cacheable("inventory_products_list")
+  @Transactional(readOnly = true)
   public Page<InventoryProductResponse> getAllInventoryProductsWithPaging(
       InventoryProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

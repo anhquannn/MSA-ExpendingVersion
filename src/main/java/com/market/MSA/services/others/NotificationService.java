@@ -33,6 +33,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -249,6 +250,7 @@ public class NotificationService {
     }
   }
 
+  @Async("emailTaskExecutor")
   @Transactional
   public void sendProductNotificationToAllCustomers(Long productId, boolean sendToAll) {
     if (!sendToAll) {
@@ -279,6 +281,7 @@ public class NotificationService {
     }
   }
 
+  @Async("emailTaskExecutor")
   @Transactional
   public void sendOrderCreatedNotification(Long orderId) {
     // Get order
@@ -299,6 +302,7 @@ public class NotificationService {
     createNotification(request);
   }
 
+  @Async("emailTaskExecutor")
   @Transactional
   public void sendOrderCancelledNotification(Long orderId) {
     // Get order
@@ -319,6 +323,7 @@ public class NotificationService {
     createNotification(request);
   }
 
+  @Async("emailTaskExecutor")
   @Transactional
   public void notifyUser(Long userId, String message) {
     NotificationRequest req =
@@ -331,6 +336,8 @@ public class NotificationService {
     createNotification(req);
   }
 
+  @Async("emailTaskExecutor")
+  @Transactional
   public void sendLowStockNotification(
       Long inventoryId, Long productId, int currentStock, int threshold) {
     // Get inventory and product
@@ -369,6 +376,7 @@ public class NotificationService {
     }
   }
 
+  @Async("emailTaskExecutor")
   @Transactional
   public void checkAndNotifyLowStock() {
     // Default threshold for low stock warning
@@ -411,6 +419,7 @@ public class NotificationService {
    * Send notification when a transfer request is created Notifies both admin (approver) and manager
    * (requester)
    */
+  @Async("emailTaskExecutor")
   @Transactional
   public void sendTransferCreatedNotification(Long transferId) {
     try {
@@ -438,31 +447,31 @@ public class NotificationService {
       }
 
       // Notify manager (requester)
-      if (transfer.getRequester() != null
-          && !transfer.getRequester().getUserId().equals(transfer.getApprover().getUserId())) {
-        NotificationRequest managerRequest =
-            NotificationRequest.builder()
-                .userId(transfer.getRequester().getUserId())
-                .message(
-                    String.format(
-                        "📤 Yêu cầu chuyển kho đã tạo: Yêu cầu chuyển kho #%d của bạn từ %s đến %s đã được tạo và đang chờ duyệt.",
-                        transfer.getTransferRequestId(),
-                        transfer.getFromInventory().getName(),
-                        transfer.getToInventory().getName()))
-                .notificationType("TRANSFER_CREATED")
-                .notificationDate(LocalDateTime.now())
-                .isRead(false)
-                .build();
-        createNotification(managerRequest);
+      if (transfer.getRequester() != null) {
+        assert transfer.getApprover() != null;
+        if (!transfer.getRequester().getUserId().equals(transfer.getApprover().getUserId())) {
+          NotificationRequest managerRequest =
+              NotificationRequest.builder()
+                  .userId(transfer.getRequester().getUserId())
+                  .message(
+                      String.format(
+                          "📤 Yêu cầu chuyển kho đã tạo: Yêu cầu chuyển kho #%d của bạn từ %s đến %s đã được tạo và đang chờ duyệt.",
+                          transfer.getTransferRequestId(),
+                          transfer.getFromInventory().getName(),
+                          transfer.getToInventory().getName()))
+                  .notificationType("TRANSFER_CREATED")
+                  .notificationDate(LocalDateTime.now())
+                  .isRead(false)
+                  .build();
+          createNotification(managerRequest);
+        }
       }
-
-      log.info("Sent transfer created notifications for transfer #{}", transferId);
-    } catch (Exception e) {
-      log.error("Error sending transfer created notification for transfer #{}", transferId, e);
+    } catch (Exception ignored) {
     }
   }
 
   /** Send notification when a transfer request is approved Notifies the manager (requester) */
+  @Async("emailTaskExecutor")
   @Transactional
   public void sendTransferApprovedNotification(Long transferId) {
     try {
@@ -486,14 +495,12 @@ public class NotificationService {
                 .build();
         createNotification(request);
       }
-
-      log.info("Sent transfer approved notification for transfer #{}", transferId);
-    } catch (Exception e) {
-      log.error("Error sending transfer approved notification for transfer #{}", transferId, e);
+    } catch (Exception ignored) {
     }
   }
 
   /** Send notification when a transfer request is rejected Notifies the manager (requester) */
+  @Async("emailTaskExecutor")
   @Transactional
   public void sendTransferRejectedNotification(Long transferId, String reason) {
     try {
@@ -523,14 +530,12 @@ public class NotificationService {
                 .build();
         createNotification(request);
       }
-
-      log.info("Sent transfer rejected notification for transfer #{}", transferId);
-    } catch (Exception e) {
-      log.error("Error sending transfer rejected notification for transfer #{}", transferId, e);
+    } catch (Exception ignored) {
     }
   }
 
   /** Send notification for auto-created transfer requests Used by AutoTransferJob */
+  @Async("emailTaskExecutor")
   @Transactional
   public void sendAutoTransferCreatedNotification(Transfer transfer) {
     try {
@@ -554,30 +559,25 @@ public class NotificationService {
       }
 
       // Notify manager (requester)
-      if (transfer.getRequester() != null
-          && !transfer.getRequester().getUserId().equals(transfer.getApprover().getUserId())) {
-        NotificationRequest managerRequest =
-            NotificationRequest.builder()
-                .userId(transfer.getRequester().getUserId())
-                .message(
-                    String.format(
-                        "🤖 Yêu cầu chuyển kho tự động: Hệ thống đã tự động tạo yêu cầu chuyển kho #%d cho kho %s do tồn kho thấp. Yêu cầu đang chờ duyệt.",
-                        transfer.getTransferRequestId(), transfer.getToInventory().getName()))
-                .notificationType("AUTO_TRANSFER_CREATED")
-                .notificationDate(LocalDateTime.now())
-                .isRead(false)
-                .build();
-        createNotification(managerRequest);
+      if (transfer.getRequester() != null) {
+        assert transfer.getApprover() != null;
+        if (!transfer.getRequester().getUserId().equals(transfer.getApprover().getUserId())) {
+          NotificationRequest managerRequest =
+              NotificationRequest.builder()
+                  .userId(transfer.getRequester().getUserId())
+                  .message(
+                      String.format(
+                          "🤖 Yêu cầu chuyển kho tự động: Hệ thống đã tự động tạo yêu cầu chuyển kho #%d cho kho %s do tồn kho thấp. Yêu cầu đang chờ duyệt.",
+                          transfer.getTransferRequestId(), transfer.getToInventory().getName()))
+                  .notificationType("AUTO_TRANSFER_CREATED")
+                  .notificationDate(LocalDateTime.now())
+                  .isRead(false)
+                  .build();
+          createNotification(managerRequest);
+        }
       }
+    } catch (Exception ignored) {
 
-      log.info(
-          "Sent auto transfer created notifications for transfer #{}",
-          transfer.getTransferRequestId());
-    } catch (Exception e) {
-      log.error(
-          "Error sending auto transfer created notification for transfer #{}",
-          transfer.getTransferRequestId(),
-          e);
     }
   }
 

@@ -73,7 +73,6 @@ public class GoshipService {
           restTemplate.exchange(url, method, requestEntity, String.class);
 
       String responseBody = response.getBody();
-      log.info(responseBody.toString());
       if (responseBody == null || responseBody.trim().isEmpty()) {
         throw new AppException(ErrorCode.PARSE_SHIPPO_RESPONSE_ERROR);
       }
@@ -224,7 +223,7 @@ public class GoshipService {
 
     // Lưu mã vận đơn để phục vụ webhook update
     if (shipmentResponse != null) {
-      String shipmentCode = String.valueOf(shipmentResponse.getCode());
+      String shipmentCode = String.valueOf(shipmentResponse.getId());
       deliveryInfo.setShipmentCode(shipmentCode);
       deliveryInfoRepository.save(deliveryInfo);
     }
@@ -261,25 +260,39 @@ public class GoshipService {
   }
 
   // Ánh xạ mã trạng thái số của Goship sang OrderStatus
-  OrderStatus mapGoshipStatusCodeToOrderStatus(int code) {
+  public OrderStatus mapGoshipStatusCodeToOrderStatus(int code) {
     return switch (code) {
-      case 901, 902 -> OrderStatus.PENDING;
-      case 903, 904, 907, 908 -> OrderStatus.DELIVERING;
-      case 910 -> OrderStatus.SHIPPED;
-      case 905, 906 -> OrderStatus.CANCELLED;
-      default -> OrderStatus.PENDING;
+      case 900 -> OrderStatus.PENDING; // Đơn mới
+      case 901, 902 -> OrderStatus.PAYING; // Chờ lấy hàng / Bưu tá đang đến
+      case 903 -> OrderStatus.PAID; // Đã lấy hàng
+      case 904, 918, 919 -> OrderStatus.DELIVERING; // Đang giao / lưu kho / vận chuyển
+      case 905 -> OrderStatus.SHIPPED; // Giao thành công
+      case 906, 915, 917 -> OrderStatus.FAILED; // Giao thất bại / chậm / thất lạc
+      case 907 -> OrderStatus.RETURNING; // Đang chuyển hoàn
+      case 908 -> OrderStatus.RETURNED; // Đã chuyển hoàn xong
+      case 909, 910, 912 -> OrderStatus.PAID; // Đã đối soát, khách, COD
+      case 911 -> OrderStatus.COMPLETED; // Đã trả COD
+      case 913 -> OrderStatus.COMPLETED; // Hoàn thành
+      case 914, 1000 -> OrderStatus.CANCELLED; // Đơn hủy hoặc lỗi
+      case 916 -> OrderStatus.SHIPPED; // Giao một phần
+      default -> OrderStatus.PENDING; // Mặc định
     };
   }
 
   // Hàm ánh xạ trạng thái Goship sang OrderStatus
-  OrderStatus mapGoshipStatusToOrderStatus(String goshipStatus) {
+  public OrderStatus mapGoshipStatusToOrderStatus(String goshipStatus) {
     return switch (goshipStatus.toUpperCase()) {
       case "PENDING" -> OrderStatus.PENDING;
-      case "ACCEPTED" -> OrderStatus.DELIVERING;
-      case "IN_TRANSIT" -> OrderStatus.DELIVERING;
-      case "DELIVERED" -> OrderStatus.SHIPPED;
+      case "WAITING_FOR_PICKUP", "ON_PICKUP_WAY" -> OrderStatus.PAYING;
+      case "PICKED", "IN_WAREHOUSE", "IN_TRANSIT" -> OrderStatus.DELIVERING;
+      case "DELIVERING" -> OrderStatus.DELIVERING;
+      case "DELIVERED", "PARTIALLY_DELIVERED" -> OrderStatus.SHIPPED;
+      case "RETURNING" -> OrderStatus.RETURNING;
+      case "RETURNED" -> OrderStatus.RETURNED;
+      case "FAILED", "LOST" -> OrderStatus.FAILED;
       case "CANCELED" -> OrderStatus.CANCELLED;
-      default -> OrderStatus.PENDING; // Trạng thái mặc định
+      case "COMPLETED" -> OrderStatus.COMPLETED;
+      default -> OrderStatus.PENDING;
     };
   }
 
@@ -296,7 +309,6 @@ public class GoshipService {
             HttpMethod.GET,
             null,
             ShipmentListResponse.class);
-    log.info(response.toString());
     return response.getData();
   }
 

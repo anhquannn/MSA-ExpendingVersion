@@ -86,6 +86,7 @@ public class ProductImageService {
   }
 
   @Cacheable("all_product_images")
+  @Transactional(readOnly = true)
   public List<ProductImageResponse> getAll() {
     return productImageRepository.findAll().stream()
         .map(productImageMapper::toProductImageResponse)
@@ -93,6 +94,7 @@ public class ProductImageService {
   }
 
   @Cacheable("product_images_list")
+  @Transactional(readOnly = true)
   public List<ProductImageResponse> getAllProductImages(ProductImageFilterRequest request) {
     return productImageRepository.filter(request.getProductId()).stream()
         .map(productImageMapper::toProductImageResponse)
@@ -100,6 +102,7 @@ public class ProductImageService {
   }
 
   @Cacheable("product_images_paging")
+  @Transactional(readOnly = true)
   public Page<ProductImageResponse> getAllProductImagesWithPaging(
       ProductImageFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

@@ -59,28 +59,27 @@ String formatDateTime(DateTime dateTime) {
       "${dateTime.minute.toString().padLeft(2, '0')}:"
       "${dateTime.second.toString().padLeft(2, '0')}";
 }
+
 List<Color> generatePastelGradientFromId(int id) {
   final baseHue = (id * 43) % 360;
-  final random = Random(id); 
+  final random = Random(id);
 
   Color pastelWithGoodContrast(double hueOffset) {
     final hue = (baseHue + hueOffset) % 360;
-    final saturation = random.nextDouble() * 0.3 + 0.5; 
-    final lightness = random.nextDouble() * 0.2 + 0.25; 
+    final saturation = random.nextDouble() * 0.3 + 0.5;
+    final lightness = random.nextDouble() * 0.2 + 0.25;
 
     return HSLColor.fromAHSL(1.0, hue, saturation, lightness).toColor();
   }
 
-  return [
-    pastelWithGoodContrast(0),
-    pastelWithGoodContrast(30),
-  ];
+  return [pastelWithGoodContrast(0), pastelWithGoodContrast(30)];
 }
 
 String formatCurrencyVN(double amount) {
   final formatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
   return formatter.format(amount);
 }
+
 class Debouncer {
   final int milliseconds;
   Timer? _timer;
@@ -106,9 +105,11 @@ String formatDateString(String dateString) {
     return '';
   }
 }
-customPrint(String data){
-   print('[✅ DEBUG] ${data.toString()}');
+
+customPrint(String data) {
+  print('[✅ DEBUG] ${data.toString()}');
 }
+
 enum OrderStatus {
   pending,
   paying,
@@ -119,7 +120,9 @@ enum OrderStatus {
   cancelled,
   completed,
   failed,
+  returnOrder,
 }
+
 extension OrderStatusExtension on OrderStatus {
   String get name => toString().split('.').last.toUpperCase();
 
@@ -143,6 +146,8 @@ extension OrderStatusExtension on OrderStatus {
         return 'Hoàn thành';
       case OrderStatus.failed:
         return 'Thất bại';
+      case OrderStatus.returnOrder:
+        return 'Trả hàng';
     }
   }
 
@@ -156,11 +161,8 @@ extension OrderStatusExtension on OrderStatus {
     }
   }
 }
-enum PromoCodeStatusEnum {
-  active,
-  inactive,
-  expired,
-}
+
+enum PromoCodeStatusEnum { active, inactive, expired }
 
 extension PromoCodeStatusExtension on PromoCodeStatusEnum {
   String get name => toString().split('.').last.toUpperCase();
@@ -207,4 +209,3 @@ final List<String> femaleAvatars = [
   'assets/images/avt_women8.jpg',
   'assets/images/avt_women9.jpg',
 ];
-

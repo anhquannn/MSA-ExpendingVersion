@@ -22,6 +22,8 @@ import 'package:msa/widget/custom_loading.dart';
 import 'package:msa/widget/custom_rating.dart';
 import 'package:rxdart/subjects.dart';
 
+import '../ui/return_product.dart';
+
 class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
   List<OrderDetailResponse>? orderDetail;
   final streamOrderDetail = BehaviorSubject<List<OrderDetailResponse>>();
@@ -117,7 +119,7 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
 
   onCheckStatus(OrderStatus status) {
     switch (status) {
-            case OrderStatus.completed:
+      case OrderStatus.completed:
         return true;
       case OrderStatus.pending:
         return true;
@@ -135,6 +137,8 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
         return false;
       case OrderStatus.failed:
         return false;
+      case OrderStatus.returnOrder:
+        return true;
     }
   }
 
@@ -270,20 +274,15 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
       true,
       null,
       onSubmit: () {
-        // Navigator.pushAndRemoveUntil(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => HomeScreen()),
-        //   (route) => false,
-        // );
-        contentKey.currentState?.callSubmit(); // Kích hoạt gọi onSubmit ở trên
+        contentKey.currentState?.callSubmit();
       },
       onClose: () {
-        Navigator.of(context).pop(); // Không gửi nếu chỉ đóng dialog
+        Navigator.of(context).pop();
       },
     );
   }
 
-  onReturnProducts({required BuildContext context}) async {
+  onCancelProducts({required BuildContext context}) async {
     final List<Map<String, dynamic>> products =
         orderDetail
             ?.map(
@@ -296,6 +295,15 @@ class OrderDetailBloc extends BaseBloc<OrderDetailScreen> {
         [];
 
     await showReturnDialog(context, products: products);
+  }
+
+  onReturnProducts({required BuildContext context}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReturnProductScreen(orderId: model?.orderId),
+      ),
+    );
   }
 
   showReturnDialog(

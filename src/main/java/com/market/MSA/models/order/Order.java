@@ -81,18 +81,22 @@ public class Order {
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("order-details")
+  @Builder.Default
   List<OrderDetail> orderDetails = new ArrayList<>();
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("order-notifications")
+  @Builder.Default
   List<Notification> notifications = new ArrayList<>();
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("order-reward-transactions")
+  @Builder.Default
   List<RewardPointTransaction> rewardPointTransactions = new ArrayList<>();
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("order-promo-usages")
+  @Builder.Default
   List<PromoCodeUsage> promoCodeUsages = new ArrayList<>();
 
   @ManyToMany
@@ -101,5 +105,12 @@ public class Order {
       joinColumns = @JoinColumn(name = "order_id"),
       inverseJoinColumns = @JoinColumn(name = "promo_code_id"))
   @JsonManagedReference("promoCode-orders")
+  @Builder.Default
   List<PromoCode> promoCodes = new ArrayList<>();
+
+  // Return / Exchange requests for this order
+  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("order-return-orders")
+  @Builder.Default
+  List<ReturnOrder> returnOrders = new ArrayList<>();
 }

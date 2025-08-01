@@ -99,6 +99,14 @@ public enum ErrorCode {
   ORDER_DETAIL_ALREADY_RATED(171, "Order detail has already been rated", HttpStatus.BAD_REQUEST),
   INVALID_STATUS(172, "Invalid status", HttpStatus.BAD_REQUEST),
   PROMOTION_NOT_FOUND(173, "Promotion not found", HttpStatus.NOT_FOUND),
+
+  // Return Order related errors
+  RETURN_ORDER_NOT_FOUND(174, "Return order not found", HttpStatus.NOT_FOUND),
+  INVALID_ORDER_STATUS(175, "Invalid order status for return", HttpStatus.BAD_REQUEST),
+  UNAUTHORIZED_ACCESS(176, "Unauthorized access", HttpStatus.FORBIDDEN),
+  INVALID_RETURN_QUANTITY(177, "Invalid return quantity", HttpStatus.BAD_REQUEST),
+  RETURN_PERIOD_EXPIRED(178, "Return period has expired", HttpStatus.BAD_REQUEST),
+  CREATE_SHIPMENT_FAILED(179, "Failed to create shipment", HttpStatus.INTERNAL_SERVER_ERROR),
   ;
 
   private final int code;

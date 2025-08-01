@@ -534,6 +534,159 @@ public class NotificationService {
     }
   }
 
+  /** Send notification when a return order is created - Notifies admin and branch manager */
+  @Async("emailTaskExecutor")
+  @Transactional
+  public void sendReturnOrderCreatedNotification(Long returnOrderId, Long branchId) {
+    try {
+      // Notify admin (userId = 1)
+      NotificationRequest adminRequest =
+          NotificationRequest.builder()
+              .userId(1L) // Admin user ID
+              .message(
+                  String.format(
+                      "📦 Yêu cầu trả hàng mới: Khách hàng đã tạo yêu cầu trả hàng #%d. Vui lòng xem xét và xử lý.",
+                      returnOrderId))
+              .notificationType("RETURN_ORDER_CREATED")
+              .notificationDate(LocalDateTime.now())
+              .isRead(false)
+              .build();
+      createNotification(adminRequest);
+
+      // Notify branch manager based on branchId
+      Long managerId = getBranchManagerId(branchId);
+      if (managerId != null && !managerId.equals(1L)) {
+        NotificationRequest managerRequest =
+            NotificationRequest.builder()
+                .userId(managerId)
+                .message(
+                    String.format(
+                        "📦 Yêu cầu trả hàng mới: Có yêu cầu trả hàng #%d cho chi nhánh của bạn. Vui lòng xem xét.",
+                        returnOrderId))
+                .notificationType("RETURN_ORDER_CREATED")
+                .notificationDate(LocalDateTime.now())
+                .isRead(false)
+                .build();
+        createNotification(managerRequest);
+      }
+    } catch (Exception e) {
+      log.error(
+          "Failed to send return order created notification for returnOrderId: {}",
+          returnOrderId,
+          e);
+    }
+  }
+
+  /** Send notification when a return order is approved - Notifies customer */
+  @Async("emailTaskExecutor")
+  @Transactional
+  public void sendReturnOrderApprovedNotification(
+      Long returnOrderId, Long customerId, String reason) {
+    try {
+      String message =
+          String.format(
+              "✅ Yêu cầu trả hàng được chấp nhận: Yêu cầu trả hàng #%d của bạn đã được phê duyệt.",
+              returnOrderId);
+
+      if (reason != null && !reason.trim().isEmpty()) {
+        message += " Ghi chú: " + reason;
+      }
+      message += " Vui lòng chuẩn bị hàng để gửi trả.";
+
+      NotificationRequest request =
+          NotificationRequest.builder()
+              .userId(customerId)
+              .message(message)
+              .notificationType("RETURN_ORDER_APPROVED")
+              .notificationDate(LocalDateTime.now())
+              .isRead(false)
+              .build();
+      createNotification(request);
+    } catch (Exception e) {
+      log.error(
+          "Failed to send return order approved notification for returnOrderId: {}",
+          returnOrderId,
+          e);
+    }
+  }
+
+  /** Send notification when a return order is rejected - Notifies customer */
+  @Async("emailTaskExecutor")
+  @Transactional
+  public void sendReturnOrderRejectedNotification(
+      Long returnOrderId, Long customerId, String reason) {
+    try {
+      String message =
+          String.format(
+              "❌ Yêu cầu trả hàng bị từ chối: Yêu cầu trả hàng #%d của bạn đã bị từ chối.",
+              returnOrderId);
+
+      if (reason != null && !reason.trim().isEmpty()) {
+        message += " Lý do: " + reason;
+      }
+
+      NotificationRequest request =
+          NotificationRequest.builder()
+              .userId(customerId)
+              .message(message)
+              .notificationType("RETURN_ORDER_REJECTED")
+              .notificationDate(LocalDateTime.now())
+              .isRead(false)
+              .build();
+      createNotification(request);
+    } catch (Exception e) {
+      log.error(
+          "Failed to send return order rejected notification for returnOrderId: {}",
+          returnOrderId,
+          e);
+    }
+  }
+
+  /** Send notification when return items are received and processed - Notifies customer */
+  @Async("emailTaskExecutor")
+  @Transactional
+  public void sendReturnOrderCompletedNotification(
+      Long returnOrderId, Long customerId, String refundInfo) {
+    try {
+      String message =
+          String.format(
+              "🎉 Trả hàng hoàn tất: Yêu cầu trả hàng #%d đã được xử lý thành công.",
+              returnOrderId);
+
+      if (refundInfo != null && !refundInfo.trim().isEmpty()) {
+        message += " " + refundInfo;
+      }
+
+      NotificationRequest request =
+          NotificationRequest.builder()
+              .userId(customerId)
+              .message(message)
+              .notificationType("RETURN_ORDER_COMPLETED")
+              .notificationDate(LocalDateTime.now())
+              .isRead(false)
+              .build();
+      createNotification(request);
+    } catch (Exception e) {
+      log.error(
+          "Failed to send return order completed notification for returnOrderId: {}",
+          returnOrderId,
+          e);
+    }
+  }
+
+  /** Helper method to get branch manager ID based on branchId */
+  private Long getBranchManagerId(Long branchId) {
+    // Map branchId to manager userId
+    // Branch 1 -> Manager 1 (userId might be 2), Branch 2 -> Manager 2 (userId might be 3), etc.
+    // This mapping should be based on your actual user data
+    return switch (branchId.intValue()) {
+      case 1 -> 2L; // Manager of branch 1
+      case 2 -> 3L; // Manager of branch 2
+      case 3 -> 4L; // Manager of branch 3
+      default -> null;
+    };
+  }
+
   /** Send notification for auto-created transfer requests Used by AutoTransferJob */
   @Async("emailTaskExecutor")
   @Transactional
@@ -598,6 +751,10 @@ public class NotificationService {
           case "TRANSFER_REJECTED" -> "Chuyển kho bị từ chối";
           case "AUTO_TRANSFER_CREATED" -> "Chuyển kho tự động";
           case "LOW_STOCK" -> "Cảnh báo tồn kho";
+          case "RETURN_ORDER_CREATED" -> "Yêu cầu trả hàng";
+          case "RETURN_ORDER_APPROVED" -> "Trả hàng được duyệt";
+          case "RETURN_ORDER_REJECTED" -> "Trả hàng bị từ chối";
+          case "RETURN_ORDER_COMPLETED" -> "Trả hàng hoàn tất";
           default -> "Thông báo";
         };
     Map<String, String> data =

@@ -1,11 +1,14 @@
 package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.product.Product;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -64,4 +67,10 @@ public class OrderDetail {
       foreignKey = @ForeignKey(name = "fk_order_detail_product"))
   @JsonBackReference("product-order-details")
   Product product;
+
+  // Return items referencing this order detail
+  @OneToMany(mappedBy = "orderDetail", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("order-detail-return-items")
+  @Builder.Default
+  List<ReturnOrderItem> returnOrderItems = new ArrayList<>();
 }

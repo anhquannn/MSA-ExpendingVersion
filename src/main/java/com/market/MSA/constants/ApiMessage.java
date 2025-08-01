@@ -191,10 +191,19 @@ public enum ApiMessage {
 
   // Return Order messages
   RETURN_ORDER_CREATED("Return order created successfully"),
-  RETURN_ORDER_UPDATED("Return order updated successfully"),
-  RETURN_ORDER_DELETED("Return order deleted successfully"),
+  RETURN_ORDER_STATUS_UPDATED("Return order status updated successfully"),
   RETURN_ORDER_RETRIEVED("Return order retrieved successfully"),
-  ALL_RETURN_ORDERS_RETRIEVED("All return orders retrieved successfully"),
+  USER_RETURN_ORDERS_RETRIEVED("User return orders retrieved successfully"),
+  BRANCH_RETURN_ORDERS_RETRIEVED("Branch return orders retrieved successfully"),
+  RETURN_ORDER_APPROVED("Return order approved and inbound transfer created successfully"),
+  RETURN_ORDER_REJECTED("Return order rejected successfully"),
+  RETURN_ORDERS_FILTERED_PAGING("Return orders filtered with paging successfully"),
+  RETURN_ORDERS_FILTERED("Return orders filtered successfully"),
+
+  // Cancel Order messages (for backward compatibility)
+  RETURN_ORDER_UPDATED("Cancel order updated successfully"),
+  RETURN_ORDER_DELETED("Cancel order deleted successfully"),
+  ALL_RETURN_ORDERS_RETRIEVED("All cancel orders retrieved successfully"),
 
   // Trending Product messages
   TRENDING_PRODUCT_CREATED("Trending product created successfully"),

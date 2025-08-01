@@ -75,6 +75,7 @@ public class User {
       inverseJoinColumns =
           @JoinColumn(name = "role_id", foreignKey = @ForeignKey(name = "fk_user_role_role")))
   @JsonManagedReference("user-roles")
+  @Builder.Default
   Set<Role> roles = new HashSet<>();
 
   @ManyToMany
@@ -85,30 +86,37 @@ public class User {
       inverseJoinColumns =
           @JoinColumn(name = "branch_id", foreignKey = @ForeignKey(name = "fk_user_branch_branch")))
   @JsonManagedReference("user-branches")
+  @Builder.Default
   List<Branch> branches = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-feedbacks")
+  @Builder.Default
   List<Feedback> feedbacks = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-checked-histories")
+  @Builder.Default
   List<CheckedHistory> checkedHistories = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-requested-inbounds")
+  @Builder.Default
   List<InboundTransfer> inboundTransfers = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-approved-outbounds")
+  @Builder.Default
   List<OutboundTransfer> outTransfers = new ArrayList<>();
 
   @OneToMany(mappedBy = "requester", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-requested-transfers")
+  @Builder.Default
   List<Transfer> fromTransfers = new ArrayList<>();
 
   @OneToMany(mappedBy = "approver", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-approved-transfers")
+  @Builder.Default
   List<Transfer> toTransfers = new ArrayList<>();
 
   @OneToOne(
@@ -121,41 +129,57 @@ public class User {
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-payments")
+  @Builder.Default
   List<Payment> payments = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-orders")
+  @Builder.Default
   List<Order> orders = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-notifications")
+  @Builder.Default
   List<Notification> notifications = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-behaviors")
+  @Builder.Default
   List<UserBehavior> userBehaviors = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-reward-points")
+  @Builder.Default
   List<RewardPoint> rewardPoints = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-reward-transactions")
+  @Builder.Default
   List<RewardPointTransaction> rewardPointTransactions = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-addresses")
+  @Builder.Default
   List<UserAddress> userAddresses = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("user-promo-usages")
+  @Builder.Default
   List<PromoCodeUsage> promoCodeUsages = new ArrayList<>();
 
   @OneToMany(mappedBy = "surveyor", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("icr-surveyor")
+  @Builder.Default
   List<InventoryCheckRequest> inventoryCheckRequestS = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("icr-user")
+  @Builder.Default
   List<InventoryCheckRequest> inventoryCheckRequests = new ArrayList<>();
+
+  // Return orders created by this user
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("user-return-orders")
+  @Builder.Default
+  List<com.market.MSA.models.order.ReturnOrder> returnOrders = new ArrayList<>();
 }

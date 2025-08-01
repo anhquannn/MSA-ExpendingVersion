@@ -231,6 +231,81 @@ public class GoshipService {
     return shipmentResponse;
   }
 
+  /**
+   * Tạo shipment cho return order - từ customer address về branch
+   *
+   * @param returnOrderId ID của return order
+   * @param deliveryInfo Thông tin địa chỉ giao hàng gốc (nơi customer nhận hàng)
+   * @param branchId ID của branch (nơi nhận hàng trả về)
+   * @param rate Loại dịch vụ vận chuyển
+   * @return ShipmentResponse
+   */
+  public ShipmentResponse createReturnShipment(
+      Long returnOrderId, DeliveryInfo deliveryInfo, Long branchId, String rate) {
+    Branch branch =
+        entityFinderService.findByIdOrThrow(branchRepository, branchId, ErrorCode.BRANCH_NOT_FOUND);
+
+    // Create address from (customer address - từ DeliveryInfo)
+    AddressRequest addressFrom =
+        AddressRequest.builder()
+            .name(deliveryInfo.getOrder().getUser().getFullName())
+            .phone(deliveryInfo.getOrder().getUser().getPhoneNumber())
+            .street(deliveryInfo.getStreet())
+            .ward(deliveryInfo.getWardCode())
+            .district(deliveryInfo.getDistrictCode())
+            .city(deliveryInfo.getCityCode())
+            .build();
+
+    // Create address to (branch address - nơi nhận hàng trả về)
+    AddressRequest addressTo =
+        AddressRequest.builder()
+            .name(branch.getName())
+            .phone(branch.getPhone())
+            .street(branch.getStreet())
+            .ward(branch.getWardCode())
+            .district(branch.getDistrictCode())
+            .city(branch.getCityCode())
+            .build();
+
+    // Create parcel cho return shipment
+    ParcelRequest parcel =
+        ParcelRequest.builder()
+            .cod("0") // Return shipment thường không có COD
+            .height("15")
+            .length("15")
+            .width("15")
+            .weight("10")
+            .metadata("Hàng trả về - Return shipment")
+            .build();
+
+    // Create shipment request
+    ShipmentApiRequest shipmentRequest =
+        ShipmentApiRequest.builder()
+            .rate(rate)
+            .payer(1) // Branch trả phí vận chuyển cho return
+            .address_from(addressFrom)
+            .address_to(addressTo)
+            .parcel(parcel)
+            .build();
+
+    ShipmentRequest request = ShipmentRequest.builder().shipment(shipmentRequest).build();
+
+    try {
+      ShipmentResponse shipmentResponse =
+          callApi(API_URL + "/shipments", HttpMethod.POST, request, ShipmentResponse.class);
+
+      log.info(
+          "Created return shipment with ID: {} for return order: {}",
+          shipmentResponse != null ? shipmentResponse.getId() : "null",
+          returnOrderId);
+
+      return shipmentResponse;
+    } catch (Exception e) {
+      log.error("Failed to create return shipment for return order: {}", returnOrderId, e);
+      throw new AppException(ErrorCode.CREATE_SHIPMENT_FAILED);
+    }
+  }
+
   // Xử lý webhook từ Goshipvoid
   public boolean processWebhook(String payload) {
     try {

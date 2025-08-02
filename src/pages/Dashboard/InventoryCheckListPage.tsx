@@ -11,6 +11,16 @@ import Modal from '../../components/common/Modal';
 
 const statusOptions: ProductStatus[] = ['PENDING', 'IN_PROGRESS', 'RECEIVED', 'CANCELLED'];
 
+const getStatusLabel = (status: ProductStatus) => {
+  switch (status) {
+    case 'PENDING': return 'Chờ xử lý';
+    case 'IN_PROGRESS': return 'Đang xử lý';
+    case 'RECEIVED': return 'Đã nhận';
+    case 'CANCELLED': return 'Đã hủy';
+    default: return status;
+  }
+};
+
 const InventoryCheckListPage: React.FC = () => {
   /*** STATE ***/
   const [data, setData] = useState<InventoryCheckRequestResponse[]>([]);
@@ -71,6 +81,18 @@ const InventoryCheckListPage: React.FC = () => {
             Chờ xử lý
           </span>
         );
+      case 'IN_PROGRESS':
+        return (
+          <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            Đang xử lý
+          </span>
+        );
+      case 'CANCELLED':
+        return (
+          <span className="bg-red-100 text-red-800 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            Đã hủy
+          </span>
+        );
       case 'EXPIRED':
         return (
           <span className="bg-red-100 text-red-700 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
@@ -117,7 +139,7 @@ const InventoryCheckListPage: React.FC = () => {
           <option value="">Tất cả trạng thái</option>
           {statusOptions.map((st) => (
             <option key={st} value={st}>
-              {st}
+              {getStatusLabel(st)}
             </option>
           ))}
         </select>
@@ -131,7 +153,7 @@ const InventoryCheckListPage: React.FC = () => {
           className="px-3 py-2 bg-gray-200 rounded"
           onClick={() => setFilter({ page: 1, pageSize: 20 })}
         >
-          Reset
+          Đặt lại
         </button>
       </div>
 
@@ -169,7 +191,7 @@ const InventoryCheckListPage: React.FC = () => {
                       className="px-3 py-1 bg-green-600 text-white rounded"
                       onClick={() => handleStatusChange(row)}
                     >
-                      Đánh dấu RECEIVED
+                      Đánh dấu đã nhận
                     </button>
                   )}
                 </td>

@@ -541,7 +541,7 @@ const OrdersPage = () => {
             }}
             className="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition duration-200"
           >
-            Reset Lọc
+            Đặt lại
           </button>
         </div>
       </div>

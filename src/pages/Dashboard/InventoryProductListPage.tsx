@@ -272,6 +272,8 @@ const productList = pagedData?.content ?? [];
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sản phẩm</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Danh mục</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đơn vị</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Khối lượng</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Giá bán</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Tồn kho</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Đã kiểm</th>
@@ -328,11 +330,15 @@ const productList = pagedData?.content ?? [];
                       </td>
                       {/* Category */}
                       <td className="px-6 py-4 text-sm text-gray-500">{item.product.category.name}</td>
+                      {/* Unit */}
+                      <td className="px-6 py-4 text-sm text-gray-500">{item.product.unit}</td>
+                      {/* NetWeight */}
+                      <td className="px-6 py-4 text-sm text-gray-500">{item.product.netWeight}</td>
                       {/* Price */}
                       <td className="px-6 py-4 text-right text-sm text-gray-900">{formatCurrency(item.currentPrice)}</td>
                       {/* Stock */}
                       <td className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
-                        {item.stockNumber} {item.product.unit}
+                        {item.stockNumber} 
                       </td>
                       {/* Checked */}
                       <td className="px-6 py-4 text-right text-sm text-gray-900">

@@ -140,7 +140,7 @@ const BranchManagementPage: React.FC = () => {
             onClick={() => setFilters(prev => ({ ...prev, keyword: '', productId: undefined }))}
             className="col-span-full md:col-auto bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md"
           >
-            Reset
+            Đặt lại
           </button>
       </div>
 

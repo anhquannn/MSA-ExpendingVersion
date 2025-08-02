@@ -217,7 +217,7 @@ const PromotionManagementPage: React.FC = () => {
           }}
           className="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded-md"
         >
-          Reset
+          Đặt lại
         </button>
         <div />
       </div>
@@ -240,7 +240,14 @@ const PromotionManagementPage: React.FC = () => {
         <table className="min-w-full">
           <thead>
             <tr className="bg-gray-100 text-left">
-              <th className="p-3">ID</th><th className="p-3">SP chính</th><th className="p-3">SP tặng</th><th className="p-3">Phần trăm</th><th className="p-3">Trạng thái</th><th className="p-3">Hành động</th>
+              <th className="p-3">ID</th>
+              <th className="p-3">SP chính</th>
+              <th className="p-3">SP tặng</th>
+              <th className="p-3">Phần trăm</th>
+              <th className="p-3">Bắt đầu</th>
+              <th className="p-3">Kết thúc</th>
+              <th className="p-3">Trạng thái</th>
+              <th className="p-3">Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -250,6 +257,8 @@ const PromotionManagementPage: React.FC = () => {
                 <td className="p-3">{p.productMain.name}</td>
                 <td className="p-3">{p.productFree.name}</td>
                 <td className="p-3">{p.discountPercentage}%</td>
+                <td className="p-3 whitespace-nowrap">{new Date(p.startDate).toLocaleString('vi-VN')}</td>
+                <td className="p-3 whitespace-nowrap">{new Date(p.endDate).toLocaleString('vi-VN')}</td>
                 <td className="p-3">{renderStatusBadge(p.status)}</td>
                 <td className="p-3 space-x-2">
                   <button className="text-blue-600" onClick={() => { setEditingPromotion(p); setIsModalOpen(true); }}>Sửa</button>

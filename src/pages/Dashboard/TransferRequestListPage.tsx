@@ -36,6 +36,16 @@ const TransferRequestListPage: React.FC = () => {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'PENDING': return 'Chờ duyệt';
+      case 'APPROVED': return 'Đã duyệt';
+      case 'REJECTED': return 'Từ chối';
+      case 'COMPLETED': return 'Hoàn thành';
+      default: return status;
+    }
+  };
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <header className="mb-6">
@@ -43,7 +53,58 @@ const TransferRequestListPage: React.FC = () => {
         <p className="text-gray-500 mt-1">Quản lý và theo dõi các yêu cầu vận chuyển giữa các chi nhánh.</p>
       </header>
 
-      {/* TODO: Add filter inputs here */}
+      {/* Filter Section */}
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Trạng Thái</label>
+            <select
+              value={filters.status || ''}
+              onChange={(e) => handleFilterChange({ status: e.target.value || undefined })}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="PENDING">Chờ duyệt</option>
+              <option value="APPROVED">Đã duyệt</option>
+              <option value="REJECTED">Từ chối</option>
+              <option value="COMPLETED">Hoàn thành</option>
+            </select>
+          </div>
+
+          {/* From Date Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Từ ngày</label>
+            <input
+              type="date"
+              value={filters.fromDate?.split('T')[0] || ''}
+              onChange={(e) => handleFilterChange({ fromDate: e.target.value ? `${e.target.value}T00:00:00` : undefined })}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* To Date Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Đến ngày</label>
+            <input
+              type="date"
+              value={filters.toDate?.split('T')[0] || ''}
+              onChange={(e) => handleFilterChange({ toDate: e.target.value ? `${e.target.value}T23:59:59` : undefined })}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Clear Filters Button */}
+          <div className="flex items-end">
+            <button
+              onClick={() => setFilters({ page: 1, pageSize: 10, sortBy: 'createdAt', sortDirection: 'DESC' })}
+              className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors"
+            >
+              Đặt lại bộ lọc
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
@@ -78,7 +139,7 @@ const TransferRequestListPage: React.FC = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusChip(req.status)}`}>
-                    {req.status.toUpperCase()}
+                    {getStatusLabel(req.status)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">{new Date(req.createdAt).toLocaleString('vi-VN')}</td>
@@ -91,11 +152,25 @@ const TransferRequestListPage: React.FC = () => {
             ))}
           </tbody>
         </table>
-        {totalPages > 1 && (
-            <div className="flex justify-center my-6">
-              <Pagination currentPage={filters.page ?? 1} totalPages={totalPages} onPageChange={handlePageChange} />
+        {/* Pagination and Stats */}
+        <div className="bg-gray-50 px-6 py-3 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Hiển thị <span className="font-medium">{((filters.page ?? 1) - 1) * (filters.pageSize ?? 10) + 1}</span> đến{' '}
+              <span className="font-medium">
+                {Math.min((filters.page ?? 1) * (filters.pageSize ?? 10), data?.totalElements ?? 0)}
+              </span>{' '}
+              trong tổng số <span className="font-medium">{data?.totalElements ?? 0}</span> yêu cầu
             </div>
-          )}
+            <div className="flex justify-center">
+              <Pagination 
+                currentPage={filters.page ?? 1} 
+                totalPages={totalPages} 
+                onPageChange={handlePageChange} 
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

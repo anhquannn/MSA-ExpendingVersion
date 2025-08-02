@@ -17,16 +17,12 @@ import SignupPage from './pages/auth/SignupPage';
 
 // --- Dashboard Components ---
 import DashboardLayout from './components/common/Dashboard/Layout';
-import DashboardHome from './pages/Dashboard/DashboardHome';
 import OrdersPage from './pages/Dashboard/OrdersPage';
 import UsersPage from './pages/Dashboard/UsersPage';
-import RevenueStatsPage from './pages/Dashboard/RevenueStatsPage';
 import ProductsPage from './pages/Dashboard/ProductsPage';
 import CombosPage from './pages/Dashboard/CombosPage';
 import UserDetailPage from './pages/Dashboard/UserDetailPage';
-import ProductDetailPage from './pages/Dashboard/ProductDetailPage';
 import BranchManagementPage from './pages/Dashboard/BranchManagementPage';
-import BranchDetailPage from './pages/Dashboard/BranchDetailPage';
 import NotificationScreen from './components/NotificationScreen';
 import SettingsPage from './pages/Dashboard/SettingsPage';
 import ProductUpsertPage from './pages/Dashboard/ProductUpsertPage';
@@ -48,6 +44,7 @@ import { InventoryProductListPage } from './pages/Dashboard/InventoryProductList
 import DashboardNewPage from './pages/Dashboard/DashboardHome.new';
 import TransferRequestDetailPage from './pages/Dashboard/TransferRequestDetailPage';
 import { CheckedHistoryPage } from './pages/Dashboard/CheckedHistoryPage';
+import ReturnOrdersPage from './pages/Dashboard/ReturnOrdersPage';
 
 LocalStorageManager.init();
 
@@ -100,6 +97,7 @@ function App() {
           {/* Dashboard Nested Routes */}
           <Route index element={<DashboardNewPage branchId={1} />} />
           <Route path="orders" element={<OrdersPage />} />
+          <Route path="return-orders" element={<ReturnOrdersPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="combos" element={<CombosPage />} />

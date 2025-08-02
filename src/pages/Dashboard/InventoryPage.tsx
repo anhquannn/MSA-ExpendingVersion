@@ -168,7 +168,7 @@ export const InventoryListPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <input type="text" name="keyword" placeholder="Tìm theo tên kho..." value={filters.keyword || ''} onChange={handleFilterChange} className="p-2 border rounded-md" />
-        <button onClick={()=>setFilters(f=>({ ...f, keyword:'', page:1 }))} className="px-3 py-2 bg-gray-200 rounded-md">Reset</button>
+        <button onClick={()=>setFilters(f=>({ ...f, keyword:'', page:1 }))} className="px-3 py-2 bg-gray-200 rounded-md">Đặt lại</button>
         <button onClick={handleOpenAddModal} className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition h-full">
           + Thêm Kho Hàng
         </button>

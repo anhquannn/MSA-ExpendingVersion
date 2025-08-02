@@ -193,7 +193,7 @@ const UsersPage: React.FC = () => {
           onClick={handleResetFilter}
           className="px-3 py-2 rounded-md bg-gray-300 hover:bg-gray-400"
         >
-          Reset
+          Đặt lại
         </button>
       </div>
 

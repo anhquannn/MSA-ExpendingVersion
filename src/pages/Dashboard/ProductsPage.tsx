@@ -170,11 +170,29 @@ const ProductsPage: React.FC = () => {
           <option value="C">C</option>
         </select>
         <label className="inline-flex items-center space-x-1">
-          <input type="checkbox" name="isPromotional" checked={filters.isPromotional ?? false} onChange={e=>setFilters(prev=>({...prev,isPromotional:e.target.checked?true:undefined}))}/>
+          <input 
+            type="checkbox" 
+            name="isPromotional" 
+            checked={filters.isPromotional ?? false} 
+            onChange={e => setFilters(prev => ({
+              ...prev, 
+              isPromotional: e.target.checked ? true : undefined,
+              page: 1 // Reset to first page when filter changes
+            }))}
+          />
           <span>Đang KM</span>
         </label>
         <label className="inline-flex items-center space-x-1">
-          <input type="checkbox" name="isExemptFromPromotion" checked={filters.isExemptFromPromotion ?? false} onChange={e=>setFilters(prev=>({...prev,isExemptFromPromotion:e.target.checked?true:undefined}))}/>
+          <input 
+            type="checkbox" 
+            name="isExemptFromPromotion" 
+            checked={filters.isExemptFromPromotion ?? false} 
+            onChange={e => setFilters(prev => ({
+              ...prev, 
+              isExemptFromPromotion: e.target.checked ? true : undefined,
+              page: 1 // Reset to first page when filter changes
+            }))}
+          />
           <span>Loại trừ KM</span>
         </label>
         <input
@@ -186,10 +204,21 @@ const ProductsPage: React.FC = () => {
           className="w-full p-2 border rounded-md"
         />
         <button
-          onClick={() => setFilters(prev => ({ ...prev, keyword: '', categoryId: undefined, supplierId: undefined, minPrice: undefined, maxPrice: undefined, page: 1 }))}
+          onClick={() => setFilters(prev => ({ 
+            ...prev, 
+            keyword: '', 
+            categoryId: undefined, 
+            supplierId: undefined, 
+            abcClassification: undefined,
+            isPromotional: undefined,
+            isExemptFromPromotion: undefined,
+            minPrice: undefined, 
+            maxPrice: undefined, 
+            page: 1 
+          }))}
           className="w-full md:w-auto px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
         >
-          Reset
+          Đặt lại
         </button>
       </div>
 

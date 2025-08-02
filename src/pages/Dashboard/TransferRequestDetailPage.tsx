@@ -349,26 +349,6 @@ const TransferRequestDetailPage: React.FC<TransferRequestDetailProps> = () => {
             </table>
           </div>
         </div>
-
-        {normalizedStatus === 'PENDING' && (
-          <div className="flex justify-end space-x-2 mt-6">
-            <button
-              onClick={handleApprove}
-              className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700"
-              disabled={approveMutation.isPending}
-            >
-              {approveMutation.isPending ? 'Đang xử lý...' : 'Phê duyệt'}
-            </button>
-            <button
-              onClick={handleReject}
-              className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
-              disabled={rejectMutation.isPending}
-            >
-              {rejectMutation.isPending ? 'Đang xử lý...' : 'Từ chối'}
-            </button>
-          </div>
-        )}
-
       </div>
     </div>
   );

@@ -20,6 +20,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   const navItems = [
     { name: 'Trang Chủ', icon: '🏠', path: '/dashboard' },
     { name: 'Đơn Hàng', icon: '📦', path: '/dashboard/orders' },
+    { name: 'Đơn Trả Hàng', icon: '↩️', path: '/dashboard/return-orders' },
+    { name: 'Yêu Cầu Vận Kho', icon: '🚚', path: '/dashboard/transfer-requests' },
     { name: 'Người Dùng', icon: '👤', path: '/dashboard/users' },
     { name: 'Kho Hàng', icon: '📝', path: '/dashboard/inventory' },
     { name: 'Lịch Kiểm Kho', icon: '📋', path: '/dashboard/inventory-checks' },

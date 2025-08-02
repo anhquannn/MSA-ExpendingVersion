@@ -162,7 +162,7 @@ const CategoryManagementPage: React.FC = () => {
                     onClick={() => setFilters(prev => ({ ...prev, name: '' }))}
                     className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
                 >
-                    Reset
+                    Đặt lại
                 </button>
             </div>
 

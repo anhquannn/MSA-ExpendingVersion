@@ -138,8 +138,9 @@ interface DashboardHomeNewProps {
 const DashboardHomeNew: React.FC<DashboardHomeNewProps> = ({ branchId }) => {
   const [showLowStock, setShowLowStock] = useState(false);
   const { data: lowStockCount = 0, isLoading: lowStockLoading } = useQuery({
-    queryKey: ['lowStockCount'],
-    queryFn: () => lowStockService.getLowStockCount(),
+    queryKey: ['lowStockCount', 1],
+    queryFn: () => lowStockService.getLowStockCount(1),
+    enabled: 1 !== undefined,
   });
   const [productModalId, setProductModalId] = useState<number | null>(null);
   const [selectedProductBranchId, setSelectedProductBranchId] = useState<number | undefined>(undefined);
@@ -574,7 +575,11 @@ const DashboardHomeNew: React.FC<DashboardHomeNewProps> = ({ branchId }) => {
       </div>
       {/* Low stock modal */}
       {showLowStock && (
-        <LowStockModal open={showLowStock} onClose={() => setShowLowStock(false)} />
+        <LowStockModal 
+          open={showLowStock} 
+          onClose={() => setShowLowStock(false)} 
+          branchId={selectedBranchId}
+        />
       )}
       {/* Product statistics modal */}
       {productModalId !== null && (

@@ -7,7 +7,6 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,7 +21,6 @@ public interface InboundRepository extends JpaRepository<InboundTransfer, Long> 
           + "(:userId IS NULL OR i.user.userId = :userId) AND "
           + "(:inventoryId IS NULL OR i.inventory.inventoryId = :inventoryId) AND "
           + "(:transferId IS NULL OR i.transfer.transferRequestId = :transferId)")
-  @EntityGraph(attributePaths = {"user", "inventory", "transfer"})
   Page<InboundTransfer> filterWithPaging(
       @Param("status") ProductStatus status,
       @Param("fromDate") LocalDateTime fromDate,
@@ -41,7 +39,6 @@ public interface InboundRepository extends JpaRepository<InboundTransfer, Long> 
           + "(:userId IS NULL OR i.user.userId = :userId) AND "
           + "(:inventoryId IS NULL OR i.inventory.inventoryId = :inventoryId) AND "
           + "(:transferId IS NULL OR i.transfer.transferRequestId = :transferId)")
-  @EntityGraph(attributePaths = {"user", "inventory", "transfer"})
   List<InboundTransfer> filter(
       @Param("status") ProductStatus status,
       @Param("fromDate") LocalDateTime fromDate,

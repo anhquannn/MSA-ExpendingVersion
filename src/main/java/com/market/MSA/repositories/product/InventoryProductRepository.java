@@ -22,7 +22,6 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
           + "(:isDiscounted IS NULL OR ip.isDiscounted = :isDiscounted) AND "
           + "(:fromDate IS NULL OR ip.expDate >= :fromDate) AND "
           + "(:toDate IS NULL OR ip.expDate <= :toDate)")
-  @EntityGraph(attributePaths = {"product", "inventory", "inventory.branch"})
   Page<InventoryProduct> filterWithPaging(
       @Param("productId") Long productId,
       @Param("inventoryId") Long inventoryId,
@@ -45,7 +44,6 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
           + "(:minStock IS NULL OR ip.stockNumber >= :minStock) AND "
           + "(:maxStock IS NULL OR ip.stockNumber <= :maxStock) AND "
           + "(:isLowStock IS NULL OR :isLowStock = false OR ip.stockNumber <= ip.minThreshold)")
-  @EntityGraph(attributePaths = {"product", "inventory", "inventory.branch"})
   Page<InventoryProduct> filterWithPagingAndStock(
       @Param("productId") Long productId,
       @Param("inventoryId") Long inventoryId,
@@ -68,7 +66,6 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
           + "(:isDiscounted IS NULL OR ip.isDiscounted = :isDiscounted) AND "
           + "(:fromDate IS NULL OR ip.expDate >= :fromDate) AND "
           + "(:toDate IS NULL OR ip.expDate <= :toDate)")
-  @EntityGraph(attributePaths = {"product", "inventory", "inventory.branch"})
   List<InventoryProduct> filter(
       @Param("productId") Long productId,
       @Param("inventoryId") Long inventoryId,

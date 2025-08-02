@@ -2,7 +2,6 @@ package com.market.MSA.repositories.order;
 
 import com.market.MSA.models.order.ReturnOrderItem;
 import java.util.List;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,11 +9,9 @@ import org.springframework.data.repository.query.Param;
 public interface ReturnOrderItemRepository extends JpaRepository<ReturnOrderItem, Long> {
 
   // Find return order items by return order
-  @EntityGraph(attributePaths = {"orderDetail", "orderDetail.product", "images"})
   List<ReturnOrderItem> findByReturnOrderReturnOrderId(Long returnOrderId);
 
   // Find return order items by order detail
-  @EntityGraph(attributePaths = {"returnOrder", "images"})
   List<ReturnOrderItem> findByOrderDetailOrderDetailId(Long orderDetailId);
 
   // Check if an order detail already has return items
@@ -27,7 +24,6 @@ public interface ReturnOrderItemRepository extends JpaRepository<ReturnOrderItem
 
   // Find return order items by product
   @Query("SELECT roi FROM ReturnOrderItem roi WHERE roi.orderDetail.product.productId = :productId")
-  @EntityGraph(attributePaths = {"returnOrder", "orderDetail", "images"})
   List<ReturnOrderItem> findByProductId(@Param("productId") Long productId);
 
   // Count return items by return order

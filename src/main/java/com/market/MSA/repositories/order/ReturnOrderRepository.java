@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,14 +20,6 @@ public interface ReturnOrderRepository extends JpaRepository<ReturnOrder, Long> 
           + "(:branchId IS NULL OR ro.order.branch.branchId = :branchId) AND "
           + "(:fromDate IS NULL OR ro.createdAt >= :fromDate) AND "
           + "(:toDate IS NULL OR ro.createdAt <= :toDate)")
-  @EntityGraph(
-      attributePaths = {
-        "order",
-        "user",
-        "returnOrderItems",
-        "returnOrderItems.orderDetail",
-        "returnOrderItems.images"
-      })
   Page<ReturnOrder> filterWithPaging(
       @Param("status") ReturnStatus status,
       @Param("userId") Long userId,
@@ -46,14 +37,6 @@ public interface ReturnOrderRepository extends JpaRepository<ReturnOrder, Long> 
           + "(:branchId IS NULL OR ro.order.branch.branchId = :branchId) AND "
           + "(:fromDate IS NULL OR ro.createdAt >= :fromDate) AND "
           + "(:toDate IS NULL OR ro.createdAt <= :toDate)")
-  @EntityGraph(
-      attributePaths = {
-        "order",
-        "user",
-        "returnOrderItems",
-        "returnOrderItems.orderDetail",
-        "returnOrderItems.images"
-      })
   List<ReturnOrder> filter(
       @Param("status") ReturnStatus status,
       @Param("userId") Long userId,
@@ -63,46 +46,16 @@ public interface ReturnOrderRepository extends JpaRepository<ReturnOrder, Long> 
       @Param("toDate") LocalDateTime toDate);
 
   // Find return orders by user
-  @EntityGraph(
-      attributePaths = {
-        "order",
-        "returnOrderItems",
-        "returnOrderItems.orderDetail",
-        "returnOrderItems.images"
-      })
   List<ReturnOrder> findByUserUserId(Long userId);
 
   // Find return orders by order
-  @EntityGraph(
-      attributePaths = {
-        "user",
-        "returnOrderItems",
-        "returnOrderItems.orderDetail",
-        "returnOrderItems.images"
-      })
   List<ReturnOrder> findByOrderOrderId(Long orderId);
 
   // Find return orders by status
-  @EntityGraph(
-      attributePaths = {
-        "order",
-        "user",
-        "returnOrderItems",
-        "returnOrderItems.orderDetail",
-        "returnOrderItems.images"
-      })
   List<ReturnOrder> findByStatus(ReturnStatus status);
 
   // Find return orders by branch (through order)
   @Query("SELECT ro FROM ReturnOrder ro WHERE ro.order.branch.branchId = :branchId")
-  @EntityGraph(
-      attributePaths = {
-        "order",
-        "user",
-        "returnOrderItems",
-        "returnOrderItems.orderDetail",
-        "returnOrderItems.images"
-      })
   List<ReturnOrder> findByBranchId(@Param("branchId") Long branchId);
 
   // Count return orders by status
@@ -114,14 +67,6 @@ public interface ReturnOrderRepository extends JpaRepository<ReturnOrder, Long> 
   // Find pending return orders for a specific branch
   @Query(
       "SELECT ro FROM ReturnOrder ro WHERE ro.order.branch.branchId = :branchId AND ro.status = :status")
-  @EntityGraph(
-      attributePaths = {
-        "order",
-        "user",
-        "returnOrderItems",
-        "returnOrderItems.orderDetail",
-        "returnOrderItems.images"
-      })
   List<ReturnOrder> findByBranchIdAndStatus(
       @Param("branchId") Long branchId, @Param("status") ReturnStatus status);
 }

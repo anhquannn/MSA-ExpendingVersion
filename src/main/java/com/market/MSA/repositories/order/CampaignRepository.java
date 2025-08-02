@@ -7,7 +7,6 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -25,7 +24,6 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long> {
           + "(:keyword IS NULL OR "
           + "LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
           + "LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-  @EntityGraph(attributePaths = {"targets", "promoCodes"})
   Page<Campaign> filterWithPaging(
       @Param("name") String name,
       @Param("status") PromocodeStatus status,
@@ -44,7 +42,6 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long> {
           + "(:keyword IS NULL OR "
           + "LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
           + "LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-  @EntityGraph(attributePaths = {"targets", "promoCodes"})
   List<Campaign> filter(
       @Param("name") String name,
       @Param("status") PromocodeStatus status,

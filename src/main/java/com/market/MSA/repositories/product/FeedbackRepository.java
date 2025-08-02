@@ -21,7 +21,6 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
           + "(:maxRating IS NULL OR f.rating <= :maxRating) AND "
           + "(:fromDate IS NULL OR f.createdAt >= :fromDate) AND "
           + "(:toDate IS NULL OR f.createdAt <= :toDate)")
-  @EntityGraph(attributePaths = {"user", "product"})
   List<Feedback> filter(
       @Param("productId") Long productId,
       @Param("userId") Long userId,
@@ -38,7 +37,6 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
           + "(:maxRating IS NULL OR f.rating <= :maxRating) AND "
           + "(:fromDate IS NULL OR f.createdAt >= :fromDate) AND "
           + "(:toDate IS NULL OR f.createdAt <= :toDate)")
-  @EntityGraph(attributePaths = {"user", "product"})
   Page<Feedback> filterWithPaging(
       @Param("productId") Long productId,
       @Param("userId") Long userId,

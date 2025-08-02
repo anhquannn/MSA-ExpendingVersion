@@ -7,7 +7,6 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,7 +21,6 @@ public interface TransferRequestRepository extends JpaRepository<Transfer, Long>
           + "(:status IS NULL OR t.status = :status) AND "
           + "(:fromDate IS NULL OR t.createdAt >= :fromDate) AND "
           + "(:toDate IS NULL OR t.createdAt <= :toDate)")
-  @EntityGraph(attributePaths = {"requester", "approver", "fromInventory", "toInventory"})
   Page<Transfer> filterWithPaging(
       @Param("requesterId") Long requesterId,
       @Param("approverId") Long approverId,
@@ -42,7 +40,6 @@ public interface TransferRequestRepository extends JpaRepository<Transfer, Long>
           + "(:status IS NULL OR t.status = :status) AND "
           + "(:fromDate IS NULL OR t.createdAt >= :fromDate) AND "
           + "(:toDate IS NULL OR t.createdAt <= :toDate)")
-  @EntityGraph(attributePaths = {"requester", "approver", "fromInventory", "toInventory"})
   List<Transfer> filter(
       @Param("requesterId") Long requesterId,
       @Param("approverId") Long approverId,

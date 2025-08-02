@@ -93,7 +93,6 @@ public class ReturnOrderController {
    * /return-order/branch/{branchId}
    */
   @GetMapping("/branch/{branchId}")
-  @PreAuthorize("@customSecurity.isAdminOrManager()")
   public ApiResponse<java.util.List<ReturnOrderResponse>> getReturnOrdersByBranch(
       @PathVariable Long branchId, @RequestParam(required = false) String status) {
 
@@ -111,7 +110,6 @@ public class ReturnOrderController {
    * /return-order/{returnOrderId}/approve
    */
   @PutMapping("/{returnOrderId}/approve")
-  @PreAuthorize("@customSecurity.isAdminOrManager()")
   public ApiResponse<ReturnOrderResponse> approveReturnOrder(
       @PathVariable Long returnOrderId, @RequestParam(required = false) String reason) {
 
@@ -125,7 +123,6 @@ public class ReturnOrderController {
 
   /** Reject return order (Admin/Manager only) Endpoint: PUT /return-order/{returnOrderId}/reject */
   @PutMapping("/{returnOrderId}/reject")
-  @PreAuthorize("@customSecurity.isAdminOrManager()")
   public ApiResponse<ReturnOrderResponse> rejectReturnOrder(
       @PathVariable Long returnOrderId, @RequestParam String reason) {
 
@@ -139,7 +136,6 @@ public class ReturnOrderController {
 
   /** Lọc return orders với phân trang Endpoint: POST /return-order/filter/paging */
   @PostMapping("/filter/paging")
-  @PreAuthorize("@customSecurity.isAdminOrManager()")
   public ApiResponse<Page<ReturnOrderResponse>> filterReturnOrdersWithPaging(
       @RequestBody @Valid ReturnOrderFilterRequest request) {
 
@@ -153,7 +149,6 @@ public class ReturnOrderController {
 
   /** Lọc return orders không phân trang Endpoint: POST /return-order/filter */
   @PostMapping("/filter")
-  @PreAuthorize("@customSecurity.isAdminOrManager()")
   public ApiResponse<java.util.List<ReturnOrderResponse>> filterReturnOrders(
       @RequestBody @Valid ReturnOrderFilterRequest request) {
 

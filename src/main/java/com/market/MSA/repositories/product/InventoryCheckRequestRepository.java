@@ -5,7 +5,6 @@ import com.market.MSA.models.product.InventoryCheckRequest;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,7 +18,6 @@ public interface InventoryCheckRequestRepository
           + "AND (:surveyorId IS NULL OR icr.surveyor.userId = :surveyorId) "
           + "AND (:status IS NULL OR icr.status = :status) "
           + "AND (:keyword IS NULL OR :keyword = '' OR LOWER(icr.note) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-  @EntityGraph(attributePaths = {"inventory", "surveyor"})
   List<InventoryCheckRequest> filter(
       @Param("keyword") String keyword,
       @Param("inventoryId") Long inventoryId,
@@ -32,7 +30,6 @@ public interface InventoryCheckRequestRepository
           + "AND (:surveyorId IS NULL OR icr.surveyor.userId = :surveyorId) "
           + "AND (:status IS NULL OR icr.status = :status) "
           + "AND (:keyword IS NULL OR :keyword = '' OR LOWER(icr.note) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-  @EntityGraph(attributePaths = {"inventory", "surveyor"})
   Page<InventoryCheckRequest> filterWithPaging(
       @Param("keyword") String keyword,
       @Param("inventoryId") Long inventoryId,

@@ -25,7 +25,6 @@ public interface BranchRepository extends JpaRepository<Branch, Long> {
           + "LOWER(b.phone) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
           + "(:productId IS NULL OR ip.product.productId = :productId) AND "
           + "(:userId IS NULL OR u.userId = :userId)")
-  @EntityGraph(attributePaths = {"inventory", "inventory.inventoryProducts", "users"})
   List<Branch> filter(
       @Param("keyword") String keyword,
       @Param("productId") Long productId,
@@ -45,7 +44,6 @@ public interface BranchRepository extends JpaRepository<Branch, Long> {
           + "LOWER(b.phone) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
           + "(:productId IS NULL OR ip.product.productId = :productId) AND "
           + "(:userId IS NULL OR u.userId = :userId)")
-  @EntityGraph(attributePaths = {"inventory", "inventory.inventoryProducts", "users"})
   Page<Branch> filterWithPaging(
       @Param("keyword") String keyword,
       @Param("productId") Long productId,

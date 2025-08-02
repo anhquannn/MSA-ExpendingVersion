@@ -150,7 +150,7 @@ public class TransferRequestService {
         .collect(Collectors.toList());
   }
 
-  // @Cacheable("transfer_requests_paging")
+  @Cacheable("transfer_requests_paging")
   public Page<TransferResponse> getAllTransferRequestsWithPaging(
       TransferRequestFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

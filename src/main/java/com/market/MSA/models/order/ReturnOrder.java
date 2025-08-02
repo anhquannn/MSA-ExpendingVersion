@@ -3,6 +3,7 @@ package com.market.MSA.models.order;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.constants.ReturnStatus;
+import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.Fetch;
 
 @Getter
 @Setter
@@ -44,7 +46,7 @@ public class ReturnOrder {
       nullable = false,
       foreignKey = @ForeignKey(name = "fk_return_order_user"))
   @JsonBackReference("user-return-orders")
-  com.market.MSA.models.user.User user;
+  User user;
 
   BigDecimal refundAmount;
 
@@ -60,6 +62,7 @@ public class ReturnOrder {
   LocalDateTime updatedAt;
 
   @OneToMany(mappedBy = "returnOrder", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Fetch(org.hibernate.annotations.FetchMode.SUBSELECT)
   @JsonManagedReference("return-order-items")
   @Builder.Default
   List<ReturnOrderItem> returnOrderItems = new ArrayList<>();

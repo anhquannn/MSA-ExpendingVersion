@@ -3,14 +3,12 @@ package com.market.MSA.repositories.order;
 import com.market.MSA.models.order.OrderDetail;
 import java.time.LocalDateTime;
 import java.util.List;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, Long> {
 
-  @EntityGraph(attributePaths = {"product", "order", "order.branch"})
   List<OrderDetail> findByOrder_OrderId(long orderId);
 
   @Query(

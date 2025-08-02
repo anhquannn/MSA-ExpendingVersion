@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,7 +17,6 @@ public interface PromoCodeUsageRepository extends JpaRepository<PromoCodeUsage, 
           + "(:promoCodeId IS NULL OR u.promoCode.promoCodeId = :promoCodeId) AND "
           + "(:fromDate IS NULL OR u.usedAt >= :fromDate) AND "
           + "(:toDate IS NULL OR u.usedAt <= :toDate)")
-  @EntityGraph(attributePaths = {"user", "promoCode"})
   Page<PromoCodeUsage> filterWithPaging(
       @Param("userId") Long userId,
       @Param("promoCodeId") Long promoCodeId,
@@ -32,7 +30,6 @@ public interface PromoCodeUsageRepository extends JpaRepository<PromoCodeUsage, 
           + "(:promoCodeId IS NULL OR u.promoCode.promoCodeId = :promoCodeId) AND "
           + "(:fromDate IS NULL OR u.usedAt >= :fromDate) AND "
           + "(:toDate IS NULL OR u.usedAt <= :toDate)")
-  @EntityGraph(attributePaths = {"user", "promoCode"})
   List<PromoCodeUsage> filter(
       @Param("userId") Long userId,
       @Param("promoCodeId") Long promoCodeId,

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.Fetch;
 
 @Getter
 @Setter
@@ -50,6 +51,7 @@ public class ReturnOrderItem {
       cascade = CascadeType.ALL,
       orphanRemoval = true,
       fetch = FetchType.LAZY)
+  @Fetch(org.hibernate.annotations.FetchMode.SUBSELECT)
   @JsonManagedReference("return-item-images")
   @Builder.Default
   List<ReturnItemImage> images = new ArrayList<>();

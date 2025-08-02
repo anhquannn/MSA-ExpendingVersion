@@ -8,7 +8,6 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -26,7 +25,6 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
           + "(:campaignId IS NULL OR p.campaign.campaignId = :campaignId) AND "
           + "(:fromDate IS NULL OR p.startDate >= :fromDate) AND "
           + "(:toDate IS NULL OR p.endDate <= :toDate)")
-  @EntityGraph(attributePaths = {"campaign"})
   Page<PromoCode> filterWithPaging(
       @Param("keyword") String keyword,
       @Param("status") PromocodeStatus status,
@@ -44,7 +42,6 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
           + "(:campaignId IS NULL OR p.campaign.campaignId = :campaignId) AND "
           + "(:fromDate IS NULL OR p.startDate >= :fromDate) AND "
           + "(:toDate IS NULL OR p.endDate <= :toDate)")
-  @EntityGraph(attributePaths = {"campaign"})
   List<PromoCode> filter(
       @Param("keyword") String keyword,
       @Param("status") PromocodeStatus status,
@@ -103,7 +100,6 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
           + "    )"
           + "  )"
           + ")")
-  @EntityGraph(attributePaths = {"campaign"})
   Page<PromoCode> filterWithPagingAndCart(
       @Param("keyword") String keyword,
       @Param("status") PromocodeStatus status,
@@ -163,7 +159,6 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
           + "    )"
           + "  )"
           + ")")
-  @EntityGraph(attributePaths = {"campaign"})
   List<PromoCode> filterWithCart(
       @Param("keyword") String keyword,
       @Param("status") PromocodeStatus status,
@@ -213,7 +208,6 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
           + "    )"
           + "  )"
           + ")")
-  @EntityGraph(attributePaths = {"campaign"})
   List<PromoCode> findApplicablePromoCodesForCart(
       @Param("cartId") Long cartId, @Param("status") PromocodeStatus status);
 
@@ -259,7 +253,6 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
           + "    )"
           + "  )"
           + ")")
-  @EntityGraph(attributePaths = {"campaign"})
   List<PromoCode> findActivePromoCodesForCart(@Param("cartId") Long cartId);
 
   // New method to find unused promo codes by cart's user
@@ -272,7 +265,6 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
           + "  WHERE pcu.promoCode.promoCodeId = p.promoCodeId "
           + "    AND pcu.user.userId = cart.user.userId"
           + ")")
-  @EntityGraph(attributePaths = {"campaign"})
   List<PromoCode> findUnusedPromoCodesByCart(
       @Param("cartId") Long cartId, @Param("status") PromocodeStatus status);
 
@@ -286,7 +278,6 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
           + "  WHERE pcu.promoCode.promoCodeId = p.promoCodeId "
           + "    AND pcu.user.userId = cart.user.userId"
           + ")")
-  @EntityGraph(attributePaths = {"campaign"})
   Page<PromoCode> findUnusedPromoCodesByCartWithPaging(
       @Param("cartId") Long cartId, @Param("status") PromocodeStatus status, Pageable pageable);
 

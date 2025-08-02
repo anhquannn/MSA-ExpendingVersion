@@ -132,12 +132,6 @@ public class InventoryProductController {
             .sortDirection(sortDirection)
             .build();
 
-    // Handle isLowStock parameter by setting maxStock for low stock filtering
-    if (isLowStock != null && isLowStock) {
-      // Consider items with stock <= 10 as low stock
-      request.setMaxStock(10.0);
-    }
-
     return ApiResponse.<Page<InventoryProductResponse>>builder()
         .result(inventoryProductService.getAllInventoryProductsWithPaging(request))
         .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())

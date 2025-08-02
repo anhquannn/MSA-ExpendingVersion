@@ -43,7 +43,9 @@ public interface InventoryProductRepository extends JpaRepository<InventoryProdu
           + "(:toDate IS NULL OR ip.expDate <= :toDate) AND "
           + "(:minStock IS NULL OR ip.stockNumber >= :minStock) AND "
           + "(:maxStock IS NULL OR ip.stockNumber <= :maxStock) AND "
-          + "(:isLowStock IS NULL OR :isLowStock = false OR ip.stockNumber <= ip.minThreshold)")
+          + "(:isLowStock IS NULL OR "
+          + "(:isLowStock = true AND ip.stockNumber <= ip.minThreshold) OR "
+          + "(:isLowStock = false AND ip.stockNumber > ip.minThreshold))")
   Page<InventoryProduct> filterWithPagingAndStock(
       @Param("productId") Long productId,
       @Param("inventoryId") Long inventoryId,

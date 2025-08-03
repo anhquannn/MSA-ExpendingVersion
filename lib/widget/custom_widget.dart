@@ -177,19 +177,29 @@ Widget customItemProductCustomer(
                         topRight: Radius.circular(10),
                       ),
                     ),
-                    clipBehavior: Clip.hardEdge, // Đảm bảo ảnh bo góc
+                    clipBehavior: Clip.hardEdge,
                     child: Image.network(
                       model.image ?? imgProductDefault,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
                         return Image.asset(imgBranch, fit: BoxFit.contain);
                       },
+                      // errorBuilder: (context, error, stackTrace) {
+                      //   print('Image load error: $error');
+                      //   return Column(
+                      //     children: [
+                      //       Image.asset(imgBranch, fit: BoxFit.contain),
+                      //       Text('Error: $error'),
+                      //     ],
+                      //   );
+                      // },
                     ),
+                    // child: Text(model.image ?? ''),
                   ),
                 ),
 
                 // Thẻ giảm giá
-                isDiscount==true
+                isDiscount == true
                     ? Positioned(
                       top: 3,
                       right: 3,
@@ -224,9 +234,7 @@ Widget customItemProductCustomer(
           ),
           Container(
             height: 100,
-            decoration: BoxDecoration(
-              color: Color(0xFFE6F4EA),
-            ),
+            decoration: BoxDecoration(color: Color(0xFFE6F4EA)),
             padding: EdgeInsets.all(8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,7 +245,9 @@ Widget customItemProductCustomer(
                   maxFontSize: 18,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                (model.branchCurrentPrice != 0&& model.branchCurrentPrice !=null &&isDiscount==true)
+                (model.branchCurrentPrice != 0 &&
+                        model.branchCurrentPrice != null &&
+                        isDiscount == true)
                     ? AutoSizeText(
                       formatCurrencyVN((model.branchCurrentPrice ?? 0)),
                       minFontSize: 10,

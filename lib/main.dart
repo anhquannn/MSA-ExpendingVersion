@@ -26,7 +26,10 @@ Future<void> main() async {
   await requestNotificationPermission();
   await Firebase.initializeApp();
   await getFcmToken();
-  
+    await Supabase.initialize(
+    url: 'https://lmtqwglnnbgsrxhelpxz.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtdHF3Z2xubmJnc3J4aGVscHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU3MTI1NzIsImV4cCI6MjA2MTI4ODU3Mn0.5D6-g10oFKgB5eJw7jbJPGtOsr2BmrYnm5pTpfjA_J0',
+  );
   await initializeNotifications();
   FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
     alert: true,

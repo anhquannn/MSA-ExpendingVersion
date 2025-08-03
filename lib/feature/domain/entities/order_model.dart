@@ -15,7 +15,7 @@ class OrderModel {
   CartModel? cart;
   UserModel? user;
   DeliveryInfoModel? deliveryInfo;
-  List<ReturnOrderModel>? returnOrders;
+  List<CancelOrderModel>? returnOrders;
   List<PaymentModel>? payments;
   List<PromoCodeModel>? promoCodes;
   List<OrderDetailModel>? orderDetails;
@@ -54,9 +54,9 @@ class OrderModel {
             : null,
     returnOrders:
         json['returnOrders'] != null
-            ? List<ReturnOrderModel>.from(
+            ? List<CancelOrderModel>.from(
               (json['returnOrders'] as List).map(
-                (x) => ReturnOrderModel.fromJson(x),
+                (x) => CancelOrderModel.fromJson(x),
               ),
             )
             : null,
@@ -402,7 +402,7 @@ class OrderDetailModel {
   };
 }
 
-class ReturnOrderModel {
+class CancelOrderModel {
   int? cancelOrderId;
   DateTime? cancelDate;
   String? status;
@@ -410,7 +410,7 @@ class ReturnOrderModel {
   double? refundAmount;
   OrderModel? order;
 
-  ReturnOrderModel({
+  CancelOrderModel({
     this.cancelOrderId,
     this.cancelDate,
     this.status,
@@ -419,9 +419,9 @@ class ReturnOrderModel {
     this.order,
   });
 
-  factory ReturnOrderModel.fromJson(
+  factory CancelOrderModel.fromJson(
     Map<String, dynamic> json,
-  ) => ReturnOrderModel(
+  ) => CancelOrderModel(
     cancelOrderId: json['cancelOrderId'] as int?,
     cancelDate:
         json['cancelDate'] != null ? DateTime.parse(json['cancelDate']) : null,

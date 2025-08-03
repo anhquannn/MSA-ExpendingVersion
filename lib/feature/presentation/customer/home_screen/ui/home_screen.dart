@@ -948,7 +948,7 @@ class _OrderTabState extends State<OrderTab>
                   controller: _tabController,
                   children:
                       orderStatuses.map((status) {
-                        return StreamBuilder<List<OrderResponse>>(
+                        return StreamBuilder(
                           stream: getStreamByStatus(status),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
@@ -963,7 +963,6 @@ class _OrderTabState extends State<OrderTab>
                             }
 
                             if (snapshot.hasError) {
-                              // ❌ Xử lý lỗi nếu có
                               return Center(
                                 child: Text('Đã xảy ra lỗi: ${snapshot.error}'),
                               );
@@ -1009,7 +1008,7 @@ class _OrderTabState extends State<OrderTab>
   }
 
   /// Lấy stream tương ứng theo OrderStatus
-  Stream<List<OrderResponse>> getStreamByStatus(OrderStatus status) {
+  Stream<dynamic> getStreamByStatus(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
         return widget.bloc.streamPending.stream;
@@ -1029,6 +1028,8 @@ class _OrderTabState extends State<OrderTab>
         return widget.bloc.streamCancelled.stream;
       case OrderStatus.failed:
         return widget.bloc.streamFailed.stream;
+        case OrderStatus.returnOrder:
+        return widget.bloc.streamReturn.stream;
     }
   }
 
@@ -1196,6 +1197,8 @@ class _OrderTabState extends State<OrderTab>
         return _buildText('Đơn hàng đang được xử lí');
       case OrderStatus.failed:
         return _buildText('Giao hàng thất bại');
+      // case OrderStatus.returnOrder:
+      //   return 'Trả hàng';
       default:
         return const SizedBox(); // hoặc có thể custom thêm
     }
@@ -1243,68 +1246,6 @@ class _OrderTabState extends State<OrderTab>
             SizedBox(width: 20),
             Icon(Icons.arrow_forward_ios, color: Colors.white),
           ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSuccessButtons(
-    BuildContext? context,
-    HomeScreenBloc bloc,
-    OrderResponse model,
-  ) {
-    return InkWell(
-      onTap: () {
-        // bloc.onTapOrderDetail(context!, model);
-      },
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            flex: 5,
-            child: Container(
-              decoration: BoxDecoration(
-                color: toHexToColor(primaryButtonColor),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(10),
-                ),
-              ),
-              child: Center(
-                child: customAutoSizeText(
-                  12,
-                  18,
-                  'Mua lại',
-                  textColor: Colors.white,
-                  isBold: true,
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 5,
-            child: InkWell(
-              onTap: () {
-                // bloc.onCreateRate();
-              },
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.blueGrey,
-                  borderRadius: BorderRadius.only(
-                    bottomRight: Radius.circular(10),
-                  ),
-                ),
-                child: Center(
-                  child: customAutoSizeText(
-                    12,
-                    18,
-                    'Đánh giá',
-                    textColor: Colors.white,
-                    isBold: true,
-                  ),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

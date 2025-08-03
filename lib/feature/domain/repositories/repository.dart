@@ -14,6 +14,7 @@ import 'package:msa/feature/data/model/request/product_conbine_model_request.dar
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/product_get_all_request_model.dart';
 import 'package:msa/feature/data/model/request/promocode_request_model.dart';
+import 'package:msa/feature/data/model/request/return_order_response_model.dart';
 import 'package:msa/feature/data/model/request/supplier_filter_request.dart';
 import 'package:msa/feature/data/model/request/update_notification_request.dart';
 import 'package:msa/feature/data/model/request/user_address_request.dart';
@@ -35,6 +36,9 @@ import 'package:msa/feature/data/repositories/reward_points_connection.dart';
 import 'package:msa/feature/data/repositories/supplier_connection.dart';
 import 'package:msa/feature/data/repositories/user_connection.dart';
 import 'package:msa/feature/domain/entities/address_model.dart';
+
+import '../../data/model/request/return_order_filter_request.dart';
+import '../../data/model/request/return_order_request.dart';
 
 class Repository {
   static onRefresh(String accessToken) =>
@@ -195,4 +199,9 @@ class Repository {
 
   static Future<FilterProductResponse?> onGetInfoFilter({int? cateId}) =>
       ProductRepositoryImpl.onGetInfoFilter(cateId: cateId);
+
+  static createReturnOrder(ReturnOrderRequest model) =>
+      ReturnOrderConnection.createReturnOrder(model);
+
+      static getAllReturnOrder(ReturnOrderFilterRequest model) =>ReturnOrderConnection.getAllReturnOrder( model);
 }

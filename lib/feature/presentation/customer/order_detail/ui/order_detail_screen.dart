@@ -507,7 +507,7 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
             height: 45,
             child: customButton(
               () {
-                bloc.onReturnProducts(context: bContext);
+                bloc.onCancelProducts(context: bContext);
               },
               AppSize.w(0.4),
               40,
@@ -544,6 +544,8 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
           child: _buildComplete(bContext, bloc),
         );
       case OrderStatus.failed:
+        return Container();
+      case OrderStatus.returnOrder:
         return Container();
     }
   }

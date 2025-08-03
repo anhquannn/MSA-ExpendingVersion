@@ -100,7 +100,9 @@ final String getAllBranch = 'branch';
 final String getUrlVnPay = 'payment/vnpay/';
 final String getListOrder = 'order/paging';
 final String orderDetail = 'order-detail/order/';
-final String cancelOrder = 'return-order';
+final String cancelOrder = 'cancel-order';
+final String returnOrder = 'return-order';
+final String listReturnOrder = 'return-order/filter/paging';
 
 //____________________________________GOSHIP____________________________________
 final String getCities = 'shipment/cities';

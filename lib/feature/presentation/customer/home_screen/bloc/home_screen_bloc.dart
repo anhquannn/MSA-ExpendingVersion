@@ -14,6 +14,8 @@ import 'package:msa/feature/data/model/request/get_branch_request_model.dart';
 import 'package:msa/feature/data/model/request/order_paging_request_model.dart';
 import 'package:msa/feature/data/model/request/product_filter_request.dart';
 import 'package:msa/feature/data/model/request/promocode_request_model.dart';
+import 'package:msa/feature/data/model/request/return_order_filter_request.dart'
+    show ReturnOrderFilterRequest;
 import 'package:msa/feature/data/model/request/update_notification_request.dart';
 import 'package:msa/feature/data/model/response/branch_response_response.dart';
 import 'package:msa/feature/data/model/response/get_order_response_model.dart';
@@ -47,6 +49,7 @@ import 'package:msa/widget/custom_loading.dart';
 import 'package:rxdart/rxdart.dart';
 import '../../../../../widget/custom_customer_lead.dart';
 import '../../../../data/datasources/local/starage.dart';
+import '../../../../data/model/request/return_order_response_model.dart';
 import '../ui/home_screen.dart';
 import 'package:get/get.dart';
 
@@ -87,6 +90,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
   List<OrderResponse> listCancelled = [];
   List<OrderResponse> listCompleted = [];
   List<OrderResponse> listFailed = [];
+  List<ReturnOrderModel> listReturn = [];
 
   /// ==== Streams ====
   final BehaviorSubject<UserModel> streamUserModel =
@@ -121,6 +125,8 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       BehaviorSubject<List<OrderResponse>>();
   final BehaviorSubject<List<OrderResponse>> streamFailed =
       BehaviorSubject<List<OrderResponse>>();
+  final BehaviorSubject<List<ReturnOrderModel>> streamReturn =
+      BehaviorSubject<List<ReturnOrderModel>>();
 
   final BehaviorSubject<List<NotificationModel>> streamListNotificationRead =
       BehaviorSubject<List<NotificationModel>>();
@@ -131,6 +137,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
 
   double reward = 0;
   final streamReward = BehaviorSubject<double>();
+  int pageReturnOrder = 1;
 
   /// ==== UI Flags ====
   bool _isManuallyScrolling = false;
@@ -697,44 +704,58 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
       status: status,
     );
 
-    final response = await Repository.onGetListOrder(model);
+    final modelReturn = ReturnOrderFilterRequest(
+      page: pageReturnOrder,
+      userId: Storage.userModelGlobal?.userId,
+    );
+
+    List<OrderResponse>? response = [];
+    List<ReturnOrderModel>? returnResponse = [];
+    if (status == OrderStatus.returnOrder) {
+      returnResponse = await Repository.getAllReturnOrder(modelReturn);
+    } else {
+      response = await Repository.onGetListOrder(model);
+    }
 
     switch (status) {
       case OrderStatus.pending:
-        listPending = response;
+        listPending = response ?? [];
         streamPending.add(listPending);
         break;
       case OrderStatus.paying:
-        listPaying = response;
+        listPaying = response ?? [];
         streamPaying.add(listPaying);
         break;
       case OrderStatus.paid:
-        listPaid = response;
+        listPaid = response ?? [];
         streamPaid.add(listPaid);
         break;
       case OrderStatus.delivering:
-        listDelivering = response;
+        listDelivering = response ?? [];
         streamDelivering.add(listDelivering);
         break;
       case OrderStatus.shipped:
-        listShipped = response;
+        listShipped = response ?? [];
         streamShipped.add(listShipped);
         break;
       case OrderStatus.cancelling:
-        listCancelling = response;
+        listCancelling = response ?? [];
         streamCancelling.add(listCancelling);
         break;
       case OrderStatus.cancelled:
-        listCancelled = response;
+        listCancelled = response ?? [];
         streamCancelled.add(listCancelled);
         break;
       case OrderStatus.completed:
-        listCompleted = response;
+        listCompleted = response ?? [];
         streamCompleted.add(listCompleted);
         break;
       case OrderStatus.failed:
-        listFailed = response;
+        listFailed = response ?? [];
         streamFailed.add(listFailed);
+      case OrderStatus.returnOrder:
+        listReturn = returnResponse ?? [];
+        streamReturn.add(listReturn);
         break;
     }
   }

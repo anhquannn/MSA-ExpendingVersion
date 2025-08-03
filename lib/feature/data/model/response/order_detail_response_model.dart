@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:msa/feature/domain/entities/order_model.dart';
 import 'package:msa/feature/domain/entities/product_model.dart';
 
@@ -13,6 +14,10 @@ class OrderDetailResponse {
   OrderModel? order;
   bool? rated;
   List<OrderDetailResponse>? freeItems;
+  int? quantityReturn;
+  String? reasonReturn;
+  bool? isSelectReturn;
+  TextEditingController? returnReason;
 
   OrderDetailResponse({
     this.orderDetailId,
@@ -26,6 +31,10 @@ class OrderDetailResponse {
     this.order,
     this.rated,
     this.freeItems,
+    int? quantityReturn,
+    this.reasonReturn,
+    this.isSelectReturn,
+    this.returnReason
   });
 
   factory OrderDetailResponse.fromJson(Map<String, dynamic> json) {
@@ -37,20 +46,20 @@ class OrderDetailResponse {
       image: json['image'],
       name: json['name'],
       status: json['status'],
-      product: json['product'] != null
-          ? ProductModel.fromJson(json['product'])
-          : null,
-      order: json['order'] != null
-          ? OrderModel.fromJson(json['order'])
-          : null,
+      product:
+          json['product'] != null
+              ? ProductModel.fromJson(json['product'])
+              : null,
+      order: json['order'] != null ? OrderModel.fromJson(json['order']) : null,
       rated: json['rated'],
-      freeItems: json['freeItems'] != null
-          ? List<OrderDetailResponse>.from(
-              json['freeItems'].map(
-                (item) => OrderDetailResponse.fromJson(item),
-              ),
-            )
-          : null,
+      freeItems:
+          json['freeItems'] != null
+              ? List<OrderDetailResponse>.from(
+                json['freeItems'].map(
+                  (item) => OrderDetailResponse.fromJson(item),
+                ),
+              )
+              : null,
     );
   }
 

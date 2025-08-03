@@ -159,7 +159,7 @@ class ProductFilterBloc extends BaseBloc<ProductFilterScreen> {
     Navigator.push(
       viewContext,
       MaterialPageRoute(
-        builder: (context) => ProductDetailCustomerScreen(productModel: model),
+        builder: (context) => ProductDetailCustomerScreen(productModel: model, productId: model.productId,),
       ),
     );
   }

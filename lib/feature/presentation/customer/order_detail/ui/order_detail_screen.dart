@@ -308,7 +308,7 @@ class OrderDetailScreen extends BaseView<OrderDetailBloc> {
           MaterialPageRoute(
             builder:
                 (bContext) =>
-                    ProductDetailCustomerScreen(productId: product?.productId),
+                    ProductDetailCustomerScreen(productId: product?.productId, productModel: product,),
           ),
         );
       },

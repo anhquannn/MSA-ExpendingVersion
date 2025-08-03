@@ -617,7 +617,7 @@ class HomeScreenBloc extends BaseBloc<HomeScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     const totalItems = 4;
-    const cartIndex = 2;
+    const cartIndex = 1;
     final bottomBarHeight = 60.0;
     final RenderBox? cartBox =
         cartKey.currentContext?.findRenderObject() as RenderBox?;

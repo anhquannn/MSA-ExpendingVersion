@@ -297,7 +297,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                 context,
                 MaterialPageRoute(
                   builder:
-                      (_) => ProductDetailCustomerScreen(productModel: product),
+                      (_) => ProductDetailCustomerScreen(productModel: product, productId: product.productId,),
                 ),
               );
             },
@@ -337,7 +337,7 @@ class ProductDetailCustomerScreen extends BaseView<ProductDetailBloc> {
                   MaterialPageRoute(
                     builder:
                         (_) =>
-                            ProductDetailCustomerScreen(productModel: product),
+                            ProductDetailCustomerScreen(productModel: product, productId: product.productId,),
                   ),
                 );
               },

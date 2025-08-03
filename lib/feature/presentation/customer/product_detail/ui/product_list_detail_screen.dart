@@ -100,7 +100,7 @@ class ProductListDetailScreen extends BaseView<ProductListDetailBloc> {
                               builder:
                                   (bContext) => ProductDetailCustomerScreen(
                                     productId: product.productId,
-                                    
+                                    productModel: product,
                                   ),
                             ),
                           );

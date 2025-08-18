@@ -13,10 +13,10 @@ import com.market.MSA.repositories.product.InventoryRepository;
 import com.market.MSA.repositories.product.ProductRepository;
 import com.market.MSA.requests.filters.InventoryProductFilterRequest;
 import com.market.MSA.requests.product.InventoryProductRequest;
-import com.market.MSA.responses.product.FeedbackResponse;
 import com.market.MSA.responses.product.InventoryProductResponse;
 import com.market.MSA.responses.product.InventoryStatisticsResponse;
 import com.market.MSA.services.others.EntityFinderService;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -41,12 +41,11 @@ public class InventoryProductService {
   final InventoryRepository inventoryRepository;
   final InventoryProductMapper inventoryProductMapper;
   final ProductRepository productRepository;
-  final ProductService productService;
   final InventoryService inventoryService;
 
   @Transactional
   public InventoryProductResponse createInventoryProduct(InventoryProductRequest request) {
-    // Get the inventory and product
+    // Lấy thông tin kho và sản phẩm từ CSDL.
     Inventory inventory =
         entityFinderService.findByIdOrThrow(
             inventoryRepository, request.getInventoryId(), ErrorCode.INVENTORY_NOT_FOUND);
@@ -54,42 +53,45 @@ public class InventoryProductService {
         entityFinderService.findByIdOrThrow(
             productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND);
 
-    // Check if there's an existing inventory product for this product in the same inventory
+    // Kiểm tra xem sản phẩm này đã tồn tại trong kho này chưa.
     List<InventoryProduct> existingProducts =
         inventoryProductRepository.filter(
-            inventory.getInventoryId(), product.getProductId(), null, null, null, null, null, null);
+            product.getProductId(), inventory.getInventoryId(), null, true, null, null, null, null);
 
     if (!existingProducts.isEmpty()) {
-      // Check if any existing product has remaining stock
+      // Nếu đã tồn tại, kiểm tra xem có bản ghi nào còn hàng không.
       boolean hasStock = existingProducts.stream().anyMatch(ip -> ip.getStockNumber() > 0);
 
       if (hasStock) {
+        // Nếu còn hàng, không cho phép tạo mới để tránh trùng lặp, yêu cầu cập nhật bản ghi cũ.
         throw new AppException(ErrorCode.INVENTORY_PRODUCT_EXISTS_WITH_STOCK);
       }
 
-      // If no stock, we can update the existing record instead of creating a new one
+      // Nếu không còn hàng, cho phép cập nhật bản ghi cũ với thông tin mới (nhập hàng mới).
       InventoryProduct existingProduct = existingProducts.getFirst();
       existingProduct.setStockNumber(request.getStockNumber());
       existingProduct.setExpDate(request.getExpDate());
       existingProduct.setCurrentPrice(product.getPrice());
+      existingProduct.setMinThreshold(request.getMinThreshold());
+      existingProduct.setMaxThreshold(request.getMaxThreshold());
       existingProduct.setDiscounted(false);
       existingProduct.setActive(true);
 
-      updateStockLevel(existingProduct);
+      updateStockLevel(existingProduct); // Cập nhật lại mức tồn kho.
 
       return inventoryProductMapper.toInventoryProductResponse(
           inventoryProductRepository.save(existingProduct));
     }
 
-    // Create new inventory product
+    // Nếu chưa tồn tại, tạo mới một bản ghi InventoryProduct.
     InventoryProduct inventoryProduct =
         InventoryProduct.builder()
             .inventory(inventory)
             .product(product)
             .stockNumber(request.getStockNumber())
-            .stockLevel(calculateStockLevel(request.getStockNumber()))
+            .stockLevel(calculateStockLevel(request.getStockNumber())) // Tính mức tồn kho
             .expDate(request.getExpDate())
-            .currentPrice(product.getPrice())
+            .currentPrice(product.getPrice()) // Lấy giá gốc của sản phẩm
             .isActive(true)
             .isDiscounted(false)
             .build();
@@ -100,13 +102,12 @@ public class InventoryProductService {
 
   @Transactional
   public InventoryProductResponse updateInventoryProduct(Long id, InventoryProductRequest request) {
-    // Get existing inventory product
     InventoryProduct inventoryProduct =
         inventoryProductRepository
             .findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_PRODUCT_NOT_FOUND));
 
-    // Get the new inventory and product
+    // Lấy thông tin kho và sản phẩm mới (nếu có thay đổi).
     Inventory newInventory =
         entityFinderService.findByIdOrThrow(
             inventoryRepository, request.getInventoryId(), ErrorCode.INVENTORY_NOT_FOUND);
@@ -114,11 +115,25 @@ public class InventoryProductService {
         entityFinderService.findByIdOrThrow(
             productRepository, request.getProductId(), ErrorCode.PRODUCT_NOT_FOUND);
 
-    // Update inventory product
+    // Cập nhật các trường thông tin.
     inventoryProduct.setInventory(newInventory);
     inventoryProduct.setProduct(product);
     inventoryProduct.setStockNumber(request.getStockNumber());
     inventoryProduct.setStockLevel(request.getStockLevel());
+    inventoryProduct.setMinThreshold(request.getMinThreshold());
+    inventoryProduct.setMaxThreshold(request.getMaxThreshold());
+
+    Integer stockNumberChecked = request.getStockNumberChecked();
+
+    // Logic này dùng cho việc kiểm kê kho:
+    // Nếu số lượng kiểm kê thực tế (stockNumberChecked) được cung cấp.
+    if (stockNumberChecked != null) {
+      int stockNumber = request.getStockNumber(); // Số lượng trên hệ thống
+      // Tính toán và ghi nhận chênh lệch.
+      int stockNumberDifferent = Math.abs(stockNumber - stockNumberChecked);
+      inventoryProduct.setStockNumberChecked(stockNumberChecked);
+      inventoryProduct.setStockNumberDifferent(stockNumberDifferent);
+    }
 
     InventoryProduct updatedInventoryProduct = inventoryProductRepository.save(inventoryProduct);
     return inventoryProductMapper.toInventoryProductResponse(updatedInventoryProduct);
@@ -142,7 +157,7 @@ public class InventoryProductService {
     return inventoryProductMapper.toInventoryProductResponse(inventoryProduct);
   }
 
-//  @Cacheable(value = "inventory_products", key = "'stock_' + #branchId + '_' + #productId")
+  @Cacheable(value = "inventory_products", key = "'stock_' + #branchId + '_' + #productId")
   public int getTotalStockInBranch(Long branchId, Long productId) {
     Inventory inventory =
         inventoryRepository
@@ -158,11 +173,11 @@ public class InventoryProductService {
 
   private String calculateStockLevel(int stockNumber) {
     if (stockNumber < 50) {
-      return "low";
+      return "LOW";
     } else if (stockNumber <= 300) {
-      return "medium";
+      return "MEDIUM";
     } else {
-      return "high";
+      return "HIGH";
     }
   }
 
@@ -177,21 +192,20 @@ public class InventoryProductService {
 
   @Transactional
   public void restoreStock(Order order) {
-    // Get branch ID from order
     Long branchId = order.getBranch().getBranchId();
 
-    // Iterate through order details and restore stock for each product
+    // Duyệt qua từng sản phẩm trong đơn hàng.
     for (OrderDetail orderDetail : order.getOrderDetails()) {
       Long productId = orderDetail.getProduct().getProductId();
       int quantity = orderDetail.getQuantity();
 
-      // Find the inventory for the branch
+      // Tìm kho của chi nhánh.
       Inventory inventory =
           inventoryRepository
               .findByBranch_BranchId(branchId)
               .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
 
-      // Find inventory products for this inventory and product
+      // Tìm sản phẩm trong kho đó.
       List<InventoryProduct> inventoryProducts =
           inventoryProductRepository.filter(
               productId, inventory.getInventoryId(), null, null, null, null, null, null);
@@ -200,32 +214,34 @@ public class InventoryProductService {
         throw new AppException(ErrorCode.INVENTORY_PRODUCT_NOT_FOUND);
       }
 
-      // Restore stock to the first inventory product found
+      // Cộng trả lại số lượng đã hủy vào tồn kho.
       InventoryProduct inventoryProduct = inventoryProducts.getFirst();
       inventoryProduct.setStockNumber(inventoryProduct.getStockNumber() + quantity);
-
-      // Update stock level
       updateStockLevel(inventoryProduct);
-
       inventoryProductRepository.save(inventoryProduct);
 
-      // Decrease total revenue in product
-      productService.updateTotalRevenue(productId, -quantity);
+      // Giảm doanh thu đã ghi nhận cho sản phẩm.
+      Product product =
+          productRepository
+              .findById(productId)
+              .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+      product.setTotalRevenue(product.getTotalRevenue() - quantity);
+      productRepository.save(product);
 
-      // Decrease total revenue in inventory
+      // Giảm tổng doanh thu trong kho.
       inventoryService.updateTotalRevenue(inventory.getInventoryId(), -quantity);
     }
   }
 
   @Transactional
   public void updateInventoryProduct(Long branchId, Long productId, int quantity) {
-    // Find the inventory for the branch
+    // Tìm kho của chi nhánh.
     Inventory inventory =
         inventoryRepository
             .findByBranch_BranchId(branchId)
             .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
 
-    // Find inventory products for this inventory and product
+    // Tìm sản phẩm trong kho.
     List<InventoryProduct> inventoryProducts =
         inventoryProductRepository.filter(
             productId, inventory.getInventoryId(), null, null, null, null, null, null);
@@ -233,31 +249,32 @@ public class InventoryProductService {
     if (inventoryProducts.isEmpty()) {
       throw new AppException(ErrorCode.INVENTORY_PRODUCT_NOT_FOUND);
     }
-
-    // Update stock for the first inventory product found
     InventoryProduct inventoryProduct = inventoryProducts.getFirst();
 
-    // Check if there's enough stock
+    // Kiểm tra xem có đủ hàng để bán không.
     if (inventoryProduct.getStockNumber() < quantity) {
       throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
     }
 
-    // Deduct stock
+    // Trừ số lượng đã bán khỏi tồn kho.
     inventoryProduct.setStockNumber(inventoryProduct.getStockNumber() - quantity);
-
-    // Update stock level
     updateStockLevel(inventoryProduct);
-
     inventoryProductRepository.save(inventoryProduct);
 
-    // Update total revenue in inventory
+    // Tăng tổng doanh thu trong kho.
     inventoryService.updateTotalRevenue(inventory.getInventoryId(), quantity);
 
-    // Update total revenue in product
-    productService.updateTotalRevenue(productId, quantity);
+    // Tăng tổng doanh thu cho sản phẩm.
+    Product product =
+        productRepository
+            .findById(productId)
+            .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+    product.setTotalRevenue(product.getTotalRevenue() + quantity);
+    productRepository.save(product);
   }
 
   /** Lấy thống kê tổng quan về kho của một chi nhánh */
+  @Transactional(readOnly = true)
   public InventoryStatisticsResponse getInventoryStatistics(Long branchId) {
     // Tìm inventory của branch
     Inventory inventory =
@@ -283,9 +300,6 @@ public class InventoryProductService {
         .build();
   }
 
-  @Cacheable(
-      value = "inventory_products",
-      key = "'availability_' + #branchId + '_' + #productId + '_' + #quantity")
   public boolean checkStockAvailability(Long branchId, Long productId, int quantity) {
     Integer totalStock =
         inventoryProductRepository.getTotalStockByBranchAndProduct(branchId, productId);
@@ -293,12 +307,15 @@ public class InventoryProductService {
   }
 
   @Cacheable("all_inventory_products")
+  @Transactional(readOnly = true)
   public List<InventoryProductResponse> getAll() {
-    return inventoryProductRepository.findAll().stream().map(inventoryProductMapper::toInventoryProductResponse).collect(Collectors.toList());
+    return inventoryProductRepository.findAll().stream()
+        .map(inventoryProductMapper::toInventoryProductResponse)
+        .collect(Collectors.toList());
   }
 
-
-  @Cacheable(value = "inventory_products", key = "#request.hashCode()")
+  @Cacheable("inventory_products_paging")
+  @Transactional(readOnly = true)
   public List<InventoryProductResponse> getAllInventoryProducts(
       InventoryProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
@@ -318,7 +335,8 @@ public class InventoryProductService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable(value = "inventory_products", key = "'paged_' + #request.hashCode()")
+  @Cacheable("inventory_products_list")
+  @Transactional(readOnly = true)
   public Page<InventoryProductResponse> getAllInventoryProductsWithPaging(
       InventoryProductFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
@@ -330,17 +348,66 @@ public class InventoryProductService {
             request.getPageSize(),
             sort);
 
-    // Apply filters
-    return inventoryProductRepository
-        .filterWithPaging(
-            request.getProductId(),
-            request.getInventoryId(),
-            request.getBatchNumber(),
-            request.isActive(),
-            request.isDiscounted(),
-            request.getFromDate(),
-            request.getToDate(),
-            pageable)
-        .map(inventoryProductMapper::toInventoryProductResponse);
+    // Check if stock filtering is needed
+    if (request.getMinStock() != null
+        || request.getMaxStock() != null
+        || (request.getIsLowStock() != null && request.getIsLowStock())) {
+      // Use stock filtering method
+      return inventoryProductRepository
+          .filterWithPagingAndStock(
+              request.getProductId(),
+              request.getInventoryId(),
+              request.getBatchNumber(),
+              request.isActive(),
+              request.isDiscounted(),
+              request.getFromDate(),
+              request.getToDate(),
+              request.getMinStock(),
+              request.getMaxStock(),
+              request.getIsLowStock(),
+              pageable)
+          .map(inventoryProductMapper::toInventoryProductResponse);
+    } else {
+      // Use regular filtering method
+      return inventoryProductRepository
+          .filterWithPaging(
+              request.getProductId(),
+              request.getInventoryId(),
+              request.getBatchNumber(),
+              request.isActive(),
+              request.isDiscounted(),
+              request.getFromDate(),
+              request.getToDate(),
+              pageable)
+          .map(inventoryProductMapper::toInventoryProductResponse);
+    }
+  }
+
+  public double getBranchCurrentPrice(Long branchId, Long productId) {
+    // Lấy inventory của chi nhánh
+    Inventory inventory =
+        inventoryRepository
+            .findByBranch_BranchId(branchId)
+            .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
+
+    // Ưu tiên lấy giá ở InventoryProduct (ví dụ hàng giảm giá, cận date, v.v.)
+    List<InventoryProduct> inventoryProducts =
+        inventoryProductRepository.filter(
+            productId, inventory.getInventoryId(), null, true, null, null, null, null);
+
+    return inventoryProducts.stream()
+        // Chỉ xét các sản phẩm còn tồn kho
+        .filter(ip -> ip.getStockNumber() > 0)
+        // Sắp xếp theo currentPrice tăng dần để lấy giá tốt nhất cho khách
+        .sorted(Comparator.comparingDouble(InventoryProduct::getCurrentPrice))
+        .map(InventoryProduct::getCurrentPrice)
+        .findFirst()
+        // Nếu không có bản ghi tồn kho phù hợp thì fallback về giá gốc của Product
+        .orElseGet(
+            () ->
+                productRepository
+                    .findById(productId)
+                    .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND))
+                    .getPrice());
   }
 }

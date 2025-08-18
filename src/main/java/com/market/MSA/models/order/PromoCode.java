@@ -2,10 +2,10 @@ package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.PromocodeStatus;
 import com.market.MSA.validators.CampaignDateRangeConstraint;
 import com.market.MSA.validators.DateRangeConstraint;
 import com.market.MSA.validators.DiscountPercentageConstraint;
-import com.market.MSA.validators.PositiveAmountConstraint;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -39,26 +39,36 @@ public class PromoCode {
   Long promoCodeId;
 
   String name;
+
+  @Column(nullable = false)
   String code;
+
   String description;
+
+  @Column(nullable = false)
   LocalDateTime startDate;
+
+  @Column(nullable = false)
   LocalDateTime endDate;
-  String status;
+
+  @Enumerated(EnumType.STRING)
+  PromocodeStatus status;
 
   @DiscountPercentageConstraint double discountPercentage;
 
-  @PositiveAmountConstraint double minimumOrderValue;
-
   @ManyToOne
-  @JoinColumn(name = "campaignId", nullable = false)
-  @JsonBackReference("campaign-promocodes")
+  @JoinColumn(
+      name = "campaign_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_promo_code_campaign"))
+  @JsonBackReference("campaign-promoCodes")
   Campaign campaign;
 
   @OneToMany(mappedBy = "promoCode", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("promocode-usages")
+  @JsonManagedReference("promoCode-usages")
   List<PromoCodeUsage> promoCodeUsages = new ArrayList<>();
 
   @ManyToMany(mappedBy = "promoCodes")
-  @JsonBackReference("order-promocodes")
+  @JsonBackReference("promoCode-orders")
   List<Order> orders = new ArrayList<>();
 }

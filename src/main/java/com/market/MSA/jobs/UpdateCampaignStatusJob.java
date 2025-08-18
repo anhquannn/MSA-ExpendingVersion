@@ -1,7 +1,7 @@
 package com.market.MSA.jobs;
 
 import com.market.MSA.repositories.order.CampaignRepository;
-import java.util.Date;
+import java.time.LocalDateTime;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ public class UpdateCampaignStatusJob implements Job {
   @Override
   @Transactional
   public void execute(JobExecutionContext context) {
-    Date currentDate = new Date();
+    LocalDateTime currentDate = LocalDateTime.now();
     campaignRepository.updateActiveCampaigns(currentDate);
     campaignRepository.updateExpiredCampaigns(currentDate);
   }

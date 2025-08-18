@@ -1,183 +1,144 @@
 # MSA Project
 
-## Project Overview
+## Overview
 
-The MSA (Microservices Architecture) system is designed to manage all aspects of a multi-branch retail business. The system implements a role-based access control system with three main user roles: **Admin**, **Manager**, and **Customer**. Each role has specific permissions and responsibilities to ensure efficient business operations.
+MSA (Multi-Store Application) powers multi-branch retail operations with role-based access control and end-to-end business workflows: inventory, inter-branch transfers, orders, products/promotions, suppliers, branches, accounts, discount campaigns, customer support, product search, shipping addresses, dashboards, and notifications.
 
----
-
-## Role-Based Access Control
-
-### Admin Role
-- **Description**: Full system access with complete control over all branches and operations
-- **Key Responsibilities**:
-  - Manage all branches across the system
-  - Create and assign managers to branches
-  - Monitor overall business performance
-  - Access and manage all inventory across branches
-  - View and manage all orders across branches
-  - Configure system-wide settings and policies
-
-### Manager Role
-- **Description**: Branch-specific management with control over assigned branch operations
-- **Key Responsibilities**:
-  - Manage assigned branch inventory
-  - Monitor branch-specific orders
-  - Update branch information
-  - Manage branch staff
-  - View branch-specific reports and analytics
-  - Handle branch-specific customer support
-
-### Customer Role
-- **Description**: Regular user with access to shopping features for a specific branch
-- **Key Responsibilities**:
-  - Browse and purchase products from assigned branch
-  - Manage personal information
-  - View order history
-  - Apply discount codes
-  - Track order status
-  - Provide product reviews and ratings
+Key components:
+- Backend: Spring Boot, MySQL, Redis, Quartz Scheduler, MapStruct, FCM Notifications
+- Security: JWT authentication via HttpOnly Cookies (no tokens in localStorage)
+- Integrations: VNPay (payments), Goship (shipping – feature-flagged with robust fallback)
+- Deployment: Docker Compose
 
 ---
 
-## Core Features
+## Roles & Authorization
 
-### Branch Management
-- **Admin Features**:
-  - Create and configure new branches
-  - Assign managers to branches
-  - Monitor branch performance
-  - Manage branch inventory allocation
-- **Manager Features**:
-  - Update branch information
-  - Manage branch inventory
-  - View branch-specific reports
+- Admin: System-wide administration for branches, products, inventory, orders, accounts, discount campaigns, and reports. Reviews and approves transfer requests.
+- Manager: Manages a single branch, inventory, and branch orders; creates transfer requests and confirms receipts.
+- Surveyor: Performs physical stock audits and submits inventory check forms.
+- Customer: Shops, pays, tracks orders, and manages profile/addresses.
 
-### Inventory Management
-- **Admin Features**:
-  - Global inventory overview
-  - Manage product catalog
-  - Configure inventory policies
-- **Manager Features**:
-  - Manage branch-specific inventory
-  - Update product quantities
-  - Handle low stock alerts
-  - Process inventory adjustments
-
-### Order Management
-- **Admin Features**:
-  - View all orders across branches
-  - Generate system-wide reports
-  - Monitor order trends
-- **Manager Features**:
-  - Process branch-specific orders
-  - Update order status
-  - Handle order cancellations
-  - Generate branch-specific reports
-- **Customer Features**:
-  - Place orders from assigned branch
-  - Track order status
-  - View order history
-  - Apply discount codes
-
-### User Management
-- **Admin Features**:
-  - Create and manage manager accounts
-  - Assign roles and permissions
-  - Monitor user activities
-- **Manager Features**:
-  - View customer information
-  - Handle customer support
-  - Process customer requests
-- **Customer Features**:
-  - Manage personal information
-  - Update shipping addresses
-  - View purchase history
+Uses a Custom Security Service for flexible role checks, e.g. `@PreAuthorize("@customSecurity.isAdminOrManager()")` (no hardcoded MANAGER_1, MANAGER_2...).
 
 ---
 
-## Technical Features
-- Secure authentication and authorization using JWT
-- Redis caching for improved performance
-- MySQL database for data persistence
-- Docker containerization for easy deployment
-- RESTful API architecture
-- Role-based access control (RBAC)
+## Core Business Workflows
+
+### 1) Inventory & Stock Audits
+- Surveyor conducts physical counts and submits results to the system.
+- System compares physical vs. system quantities, computes variance, and generates reports for Admin/Manager.
+- When `StockNumber <= MinThreshold`, a Quartz job auto-creates a `TransferRequest` (assumes one `InventoryProduct` per product per warehouse), checking `BatchNumber` and `ExpiryDate`.
+- Surveyor can proactively submit pre-audit requests to Managers for verification before inbound/outbound operations.
+
+### 2) Inter-branch Transfer
+- Manager raises (or Quartz auto-creates) a `TransferRequest` with product, quantity, and destination.
+- Admin inputs the approved quantity and approves/rejects.
+- On approval:
+  - Auto-create outbound shipment at source (status `shipped`) and decrement head-stock.
+  - Auto-create inbound receipt at destination (status `in_progress`).
+- Destination Manager verifies goods and marks `received`, which increments destination stock.
+- Full FCM notification coverage: creation, pending approval, approved/rejected, auto-created.
+
+### 3) Order Flow (Customer)
+- Customer: select products → apply coupon/loyalty points (if any) → `PreviewOrder` → `CreateOrder` → choose COD or VNPay → track shipment via UI/notifications → complete on delivery.
+- Admin: manage all orders and handle escalations.
+- Manager: manage orders for their branch.
+
+### 4) Products, ABC Classification & Auto-Promotions
+- Admin CRUD for products, variants, bundled/attached products, categories, suppliers.
+- ABC Classification: scheduled job processes `OrderDetails` revenue and assigns A (~80%), B (~15%), C (~5%) using Pareto; manual override allowed.
+- Auto-Promotion (attached products):
+  - When buying an A-class product, the system auto-selects a C-class product as a free item if `StockNumber > 2 * MinThreshold` and `ExpiryDate > 30 days`.
+  - Perishables (meat/fish) marked `IsExemptFromPromotion = true` are excluded.
+  - Cart updates set `IsFreeItem = true` when conditions are met.
+
+### 5) Suppliers, Branches, Accounts, Discount Campaigns
+- Suppliers: Admin maintains list, contacts, contracts, delivery history and quality metrics.
+- Branches: Admin creates/updates/deletes branches; allocates resources and targets.
+- Accounts: Admin creates/updates/deletes users and roles for Admin/Manager/Surveyor/Customer.
+- Discount campaigns & coupons: create for supplier/category scope, define conditions, and track effectiveness.
+
+### 6) Support, Search, Addresses, Dashboards, Notifications
+- Customer support: in-app chat/complaint flows with direct responses.
+- Product search: keyword, category, price, stock filters; detailed product view.
+- Shipping addresses: full CRUD and default selection.
+- Dashboards: Admin (global) and Manager (branch) views for inventory and sales insights.
+- Notifications: FCM push for orders, transfers, and promotions.
 
 ---
 
-## Setup and Installation
+## Security & Authentication
+- JWT stored in HttpOnly cookies (Secure, SameSite=Lax) to mitigate XSS; no localStorage usage.
+- Spring Security filter extracts JWT from cookies and sets the authentication context.
+- Login/Logout endpoints set/clear cookies automatically.
 
-1. **Clone the repository**
-    ```bash
-    git clone https://github.com/your-repository/msa-project.git
-    ```
+---
 
-2. **Install dependencies**
-    Follow the setup instructions specific to the services in the `msa-project` directory.
+## Representative APIs (short list)
+- Return Orders: create, view, filter with paging, approve/reject; Goship integration (feature-flag `goship.enabled` with mock fallback on disable/failure).
+- Transfer Requests: manual creation/approval/rejection and Quartz auto-creation; outbound/inbound docs and inventory updates.
+- Orders: preview, create, payment via COD/VNPay, status tracking; loyalty/coupons.
+- Inventory: audits, variance reports, low-stock alerts.
+- Products: CRUD, ABC classification (cron), auto-promotion (attached free items with exemptions).
+- Users/Roles: Admin/Manager/Surveyor/Customer; cookie-based auth.
+- Notifications: FCM by role/event.
 
-3. **Run the application**
-    Start the necessary services using Docker Compose.
+Note: For exact endpoints/DTOs/responses, see the corresponding `Controller` and `Service` classes.
 
-## Running with Docker Compose
+---
 
-This project includes Docker Compose configuration to run the application with Redis and MySQL.
+## Run with Docker Compose
 
-### Prerequisites
+Requirements: Docker, Docker Compose, Git.
 
-- Docker and Docker Compose installed on your machine
-- Git (to clone the repository)
+1) Clone the repository and open the project folder:
+```
+git clone https://github.com/anhquannn/MSA-ExpendingVersion.git
+cd MSA_EV
+```
 
-### Steps to Run
+2) Start the services:
+```
+docker-compose up -d
+```
 
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   cd MSA_EV
-   ```
+3) Check status and logs:
+```
+docker-compose ps
+docker-compose logs -f app
+```
 
-2. Build and start the containers:
-   ```
-   docker-compose up -d
-   ```
-
-3. Check the status of the containers:
-   ```
-   docker-compose ps
-   ```
-
-4. View logs of the application:
-   ```
-   docker-compose logs -f app
-   ```
-
-5. Stop the containers:
-   ```
-   docker-compose down
-   ```
+4) Stop services:
+```
+docker-compose down
+```
 
 ### Services
+- app: Spring Boot on port 1081
+- redis: Redis 6379
+- db: MySQL 3306
 
-- **app**: Spring Boot application running on port 1081
-- **redis**: Redis server running on port 6379
-- **db**: MySQL database running on port 3306
+### Environment (from docker-compose.yml)
+- SPRING_REDIS_HOST=redis
+- SPRING_REDIS_PORT=6379
+- SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/market_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+- SPRING_DATASOURCE_USERNAME=root
+- SPRING_DATASOURCE_PASSWORD=secret
+- MYSQL_ROOT_PASSWORD=secret
+- MYSQL_DATABASE=market_db
 
-### Environment Variables
+Volumes: `redis-data`, `mysql-data` for persistent storage.
 
-The following environment variables are set in the docker-compose.yml file:
+---
 
-- `SPRING_REDIS_HOST`: Redis host (default: redis)
-- `SPRING_REDIS_PORT`: Redis port (default: 6379)
-- `SPRING_DATASOURCE_URL`: MySQL connection URL
-- `SPRING_DATASOURCE_USERNAME`: MySQL username (default: root)
-- `SPRING_DATASOURCE_PASSWORD`: MySQL password (default: password)
-
-### Volumes
-
-- `redis-data`: Persistent storage for Redis data
-- `mysql-data`: Persistent storage for MySQL data
+## Important Configuration
+- Cookie Auth: frontend uses `withCredentials`; backend sets/clears cookies on login/logout.
+- Goship: `goship.enabled=false` by default (dev). Enable in production for real API; mock fallback prevents approval flow failures.
+- Quartz: scheduled job to auto-create `TransferRequest` when stock hits `MinThreshold`.
+- ABC Cron: scheduled classification from `OrderDetails` with optional manual overrides.
 
 ---
 
 ## Contributing
-We welcome contributions! If you'd like to contribute, please fork the repository, make changes, and submit a pull request.
+Contributions are welcome! Please branch off, commit your changes, and open a Pull Request. Describe the impacted business flow, related APIs, and any required migrations.

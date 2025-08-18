@@ -2,6 +2,7 @@ package com.market.MSA.models.product;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,11 +20,16 @@ public class TrendingProduct {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long trendId;
 
+  @PositiveOrZero(message = "Điểm xu hướng phải >= 0")
   double trendScore;
+
   LocalDateTime timestamp;
 
   @ManyToOne
-  @JoinColumn(name = "productId", nullable = false)
+  @JoinColumn(
+      name = "product_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_trending_product"))
   @JsonBackReference("product-trending")
   Product product;
 }

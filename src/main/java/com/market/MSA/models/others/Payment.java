@@ -1,10 +1,11 @@
 package com.market.MSA.models.others;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.order.Order;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -28,7 +29,8 @@ import lombok.experimental.FieldDefaults;
       @Index(name = "idx_payment_order", columnList = "order_id"),
       @Index(name = "idx_payment_date", columnList = "paymentDate"),
       @Index(name = "idx_payment_method", columnList = "paymentMethod"),
-      @Index(name = "idx_payment_status", columnList = "status")
+      @Index(name = "idx_payment_status", columnList = "status"),
+      @Index(name = "idx_payment_expiry", columnList = "expiryAt")
     })
 public class Payment {
   @Id
@@ -37,8 +39,13 @@ public class Payment {
 
   String paymentMethod;
   String paymentDate;
-  String status;
+
+  @Enumerated(EnumType.STRING)
+  OrderStatus status;
+
+  @PositiveOrZero(message = "Tổng giá phải >= 0")
   double grandTotal;
+
   String transactionId;
 
   String bankCode;
@@ -46,18 +53,23 @@ public class Payment {
   String responseCode;
   LocalDateTime updateDate;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "userId", nullable = false, foreignKey = @ForeignKey(name = "fk_payment_user"))
-  @JsonBackReference("user-payments")
-  @NotNull(message = "User is required")
-  User user;
+  // payment will expire at this time if still in PAYING status
+  LocalDateTime expiryAt;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(
-      name = "orderId",
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_payment_user"))
+  @JsonBackReference("user-payments")
+  User user;
+
+  @OneToOne
+  @JoinColumn(
+      name = "order_id",
       nullable = false,
       unique = true,
       foreignKey = @ForeignKey(name = "fk_payment_order"))
-  @JsonBackReference("order-payments")
+  @JsonBackReference("order-payment")
   Order order;
 }

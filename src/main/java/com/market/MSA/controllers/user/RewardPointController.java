@@ -4,7 +4,6 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.RewardPointFilterRequest;
 import com.market.MSA.requests.user.RewardPointRequest;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.product.TransferResponseItem;
 import com.market.MSA.responses.user.RewardPointResponse;
 import com.market.MSA.services.user.RewardPointService;
 import jakarta.validation.Valid;
@@ -62,26 +61,26 @@ public class RewardPointController {
   @GetMapping
   public ApiResponse<List<RewardPointResponse>> getAll() {
     return ApiResponse.<List<RewardPointResponse>>builder()
-            .result(rewardPointService.getAll())
-            .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
-            .build();
+        .result(rewardPointService.getAll())
+        .message(ApiMessage.ALL_REWARD_POINTS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
   public ApiResponse<List<RewardPointResponse>> getAllRewardPoint(
-      @RequestBody RewardPointFilterRequest request) {
+      @RequestBody @Valid RewardPointFilterRequest request) {
     return ApiResponse.<List<RewardPointResponse>>builder()
         .result(rewardPointService.getAllRewardPoints(request))
-        .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
+        .message(ApiMessage.ALL_REWARD_POINTS_RETRIEVED.getMessage())
         .build();
   }
 
   @PostMapping("/paging")
   public ApiResponse<Page<RewardPointResponse>> getAllRewardPointWithPaging(
-      @RequestBody RewardPointFilterRequest request) {
+      @RequestBody @Valid RewardPointFilterRequest request) {
     return ApiResponse.<Page<RewardPointResponse>>builder()
         .result(rewardPointService.getAllRewardPointsWithPaging(request))
-        .message(ApiMessage.REWARD_POINT_RETRIEVED.getMessage())
+        .message(ApiMessage.ALL_REWARD_POINTS_RETRIEVED.getMessage())
         .build();
   }
 
@@ -105,10 +104,11 @@ public class RewardPointController {
   @PostMapping("/redeem")
   public ApiResponse<RewardPointResponse> redeemPoints(
       @RequestParam Long userId,
+      @RequestParam Long orderId,
       @RequestParam double pointsToRedeem,
       @RequestParam(required = false) String description) {
     return ApiResponse.<RewardPointResponse>builder()
-        .result(rewardPointService.redeemPoints(userId, pointsToRedeem, description))
+        .result(rewardPointService.redeemPoints(userId, orderId, pointsToRedeem, description))
         .message(ApiMessage.POINTS_REDEEMED.getMessage())
         .build();
   }

@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 public class BranchFilterRequest {
   String keyword;
   Long productId;
+  Long userId;
 
   // Sorting
   @Builder.Default String sortBy = "branchId";

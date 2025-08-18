@@ -112,6 +112,7 @@ public class AuthenticationService {
             .expirationTime(
                 new Date(Instant.now().plus(expirationTime, ChronoUnit.HOURS).toEpochMilli()))
             .jwtID(UUID.randomUUID().toString())
+            .claim("userId", user.getUserId())
             .claim("scope", buildScope(user))
             .claim("token_type", tokenType)
             .build();
@@ -227,9 +228,5 @@ public class AuthenticationService {
 
   public long getValidDuration() {
     return VALID_DURATION;
-  }
-
-  public long getRefreshableDuration() {
-    return REFRESHABLE_DURATION;
   }
 }

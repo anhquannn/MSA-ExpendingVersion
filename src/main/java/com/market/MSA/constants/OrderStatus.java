@@ -1,40 +1,39 @@
 package com.market.MSA.constants;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
 
 @Getter
 public enum OrderStatus {
-  ORDER_STATUS_1("pending"),
-  ORDER_STATUS_2("paying"),
-  ORDER_STATUS_3("paid"),
-  ORDER_STATUS_4("delivering"),
-  ORDER_STATUS_5("shipped"),
-  ORDER_STATUS_6("canceling"),
-  ORDER_STATUS_7("cancel"),
-  ORDER_STATUS_8("success"),
-  ORDER_STATUS_9("failed");
+  PENDING,
+  PAYING,
+  PAID,
+  DELIVERING,
+  SHIPPED,
+  CANCELLING,
+  CANCELLED,
+  COMPLETED,
+  RETURNING,
+  RETURNED,
+  FAILED;
 
-  private final String status;
-
-  OrderStatus(String status) {
-    this.status = status;
-  }
-
-  /**
-   * Check if a given status string is a valid order status
-   *
-   * @param status The status string to check
-   * @return true if valid, false otherwise
-   */
   public static boolean isValidStatus(String status) {
     if (status == null) {
       return false;
     }
-    for (OrderStatus orderStatus : values()) {
-      if (orderStatus.getStatus().equalsIgnoreCase(status)) {
+    for (OrderStatus os : values()) {
+      if (os.name().equalsIgnoreCase(status)) {
         return true;
       }
     }
     return false;
+  }
+
+  @JsonCreator
+  public static OrderStatus from(String status) {
+    if (!isValidStatus(status)) {
+      throw new IllegalArgumentException("Invalid order status: " + status);
+    }
+    return OrderStatus.valueOf(status.toUpperCase());
   }
 }

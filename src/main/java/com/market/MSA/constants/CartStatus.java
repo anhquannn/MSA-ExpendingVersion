@@ -1,15 +1,23 @@
 package com.market.MSA.constants;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
 
 @Getter
 public enum CartStatus {
-  CART_STATUS_1("active"),
-  ;
+  ACTIVE,
+  INACTIVE;
 
-  private final String status;
-
-  CartStatus(String status) {
-    this.status = status;
+  @JsonCreator
+  public static CartStatus from(String value) {
+    if (value == null) {
+      return null;
+    }
+    for (CartStatus cs : values()) {
+      if (cs.name().equalsIgnoreCase(value)) {
+        return cs;
+      }
+    }
+    throw new IllegalArgumentException("Invalid CartStatus: " + value);
   }
 }

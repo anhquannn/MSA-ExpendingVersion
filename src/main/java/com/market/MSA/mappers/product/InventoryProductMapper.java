@@ -6,15 +6,18 @@ import com.market.MSA.responses.product.InventoryProductResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.stereotype.Component;
 
 @Mapper(
     componentModel = "spring",
-    uses = {ProductMapper.class, InventoryMapper.class})
+    uses = {ProductMapper.class, InventoryMapper.class},
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface InventoryProductMapper {
   InventoryProduct toInventoryProduct(InventoryProductRequest request);
 
+  @Mapping(source = "currentPrice", target = "branchCurrentPrice")
   InventoryProductResponse toInventoryProductResponse(InventoryProduct inventoryProduct);
 
   @Mapping(target = "inventoryProductId", ignore = true)

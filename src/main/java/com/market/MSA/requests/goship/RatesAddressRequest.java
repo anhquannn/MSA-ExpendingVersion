@@ -11,4 +11,5 @@ import lombok.experimental.FieldDefaults;
 public class RatesAddressRequest {
   String city;
   String district;
+  String ward;
 }

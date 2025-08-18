@@ -1,14 +1,9 @@
 package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import com.market.MSA.constants.OrderStatus;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -37,13 +32,22 @@ public class CancelOrder {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long cancelOrderId;
 
+  @Column(nullable = false)
   LocalDateTime cancelDate;
-  String status;
-  String reason;
-  double refundAmount;
 
-  @ManyToOne
-  @JoinColumn(name = "orderId", nullable = false)
-  @JsonBackReference("order-cancel-orders")
+  @Enumerated(EnumType.STRING)
+  OrderStatus status;
+
+  String reason;
+
+  @PositiveOrZero double refundAmount;
+
+  @OneToOne
+  @JoinColumn(
+      name = "order_id",
+      nullable = false,
+      unique = true,
+      foreignKey = @ForeignKey(name = "fk_cancel_order_order"))
+  @JsonBackReference("order-cancel-order")
   Order order;
 }

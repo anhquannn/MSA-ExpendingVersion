@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +32,9 @@ public class CampaignService {
   final CampaignMapper campaignMapper;
 
   @Transactional
+  @CacheEvict(
+      value = {"all_campaigns", "campaigns_list", "campaigns_paging"},
+      allEntries = true)
   public CampaignResponse createCampaign(CampaignRequest request) {
     Campaign campaign = campaignMapper.toCampaign(request);
     Campaign savedCampaign = campaignRepository.save(campaign);
@@ -38,6 +42,9 @@ public class CampaignService {
   }
 
   @Transactional
+  @CacheEvict(
+      value = {"all_campaigns", "campaigns_list", "campaigns_paging"},
+      allEntries = true)
   public CampaignResponse updateCampaign(Long id, CampaignRequest request) {
     Campaign campaign =
         campaignRepository
@@ -49,6 +56,9 @@ public class CampaignService {
   }
 
   @Transactional
+  @CacheEvict(
+      value = {"all_campaigns", "campaigns_list", "campaigns_paging"},
+      allEntries = true)
   public boolean deleteCampaign(Long id) {
     if (!campaignRepository.existsById(id)) {
       throw new AppException(ErrorCode.CAMPAIGN_NOT_FOUND);
@@ -63,12 +73,16 @@ public class CampaignService {
         .map(campaignMapper::toCampaignResponse)
         .orElseThrow(() -> new AppException(ErrorCode.CAMPAIGN_NOT_FOUND));
   }
+
   @Cacheable("all_campaigns")
   public List<CampaignResponse> getAll() {
-      return campaignRepository.findAll().stream().map(campaignMapper::toCampaignResponse).collect(Collectors.toList());
+    return campaignRepository.findAll().stream()
+        .map(campaignMapper::toCampaignResponse)
+        .collect(Collectors.toList());
   }
 
-  @Cacheable("campaigns")
+  @Cacheable("campaigns_list")
+  @Transactional(readOnly = true)
   public List<CampaignResponse> getAllCampaigns(CampaignFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     return campaignRepository
@@ -84,7 +98,8 @@ public class CampaignService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("campaigns")
+  @Cacheable("campaigns_paging")
+  @Transactional(readOnly = true)
   public Page<CampaignResponse> getAllCampaignsWithPaging(CampaignFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
     Pageable pageable =

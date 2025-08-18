@@ -4,7 +4,6 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.CategoryFilterRequest;
 import com.market.MSA.requests.product.CategoryRequest;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.product.BranchResponse;
 import com.market.MSA.responses.product.CategoryResponse;
 import com.market.MSA.services.product.CategoryService;
 import jakarta.validation.Valid;
@@ -13,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +30,7 @@ public class CategoryController {
 
   CategoryService categoryService;
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ApiResponse<CategoryResponse> createCategory(@RequestBody @Valid CategoryRequest request) {
     return ApiResponse.<CategoryResponse>builder()
@@ -38,6 +39,7 @@ public class CategoryController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{id}")
   public ApiResponse<CategoryResponse> updateCategory(
       @PathVariable Long id, @RequestBody @Valid CategoryRequest request) {
@@ -47,6 +49,7 @@ public class CategoryController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{id}")
   public ApiResponse<Boolean> deleteCategory(@PathVariable Long id) {
     Boolean result = categoryService.deleteCategory(id);
@@ -67,14 +70,14 @@ public class CategoryController {
   @GetMapping
   public ApiResponse<List<CategoryResponse>> getAll() {
     return ApiResponse.<List<CategoryResponse>>builder()
-            .result(categoryService.getAll())
-            .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())
-            .build();
+        .result(categoryService.getAll())
+        .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
   public ApiResponse<List<CategoryResponse>> getAllCategories(
-      @Valid CategoryFilterRequest request) {
+      @RequestBody @Valid CategoryFilterRequest request) {
     return ApiResponse.<List<CategoryResponse>>builder()
         .result(categoryService.getAllCategories(request))
         .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())
@@ -83,7 +86,7 @@ public class CategoryController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<CategoryResponse>> getAllCategoriesWithPaging(
-      @Valid CategoryFilterRequest request) {
+      @RequestBody @Valid CategoryFilterRequest request) {
     return ApiResponse.<Page<CategoryResponse>>builder()
         .result(categoryService.getAllCategoriesWithPaging(request))
         .message(ApiMessage.ALL_CATEGORIES_RETRIEVED.getMessage())

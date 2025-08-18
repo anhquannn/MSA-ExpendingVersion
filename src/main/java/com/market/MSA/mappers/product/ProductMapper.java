@@ -6,14 +6,19 @@ import com.market.MSA.responses.product.ProductResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface ProductMapper {
   Product toProduct(ProductRequest request);
 
-  @Mapping(target = "orderDetails", ignore = true)
+  @Mapping(target = "productImageResponses", source = "images")
+  @Mapping(target = "isPromotional", source = "promotional")
+  @Mapping(target = "isExemptFromPromotion", source = "exemptFromPromotion")
   ProductResponse toProductResponse(Product product);
 
   // Cập nhật sản phẩm từ request

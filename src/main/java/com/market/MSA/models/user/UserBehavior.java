@@ -31,12 +31,18 @@ public class UserBehavior {
   LocalDateTime timestamp;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_user_behavior_user"))
   @JsonBackReference("user-behaviors")
   User user;
 
   @ManyToOne
-  @JoinColumn(name = "productId", nullable = false)
+  @JoinColumn(
+      name = "product_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_user_behavior_product"))
   @JsonBackReference("product-behaviors")
   Product product;
 }

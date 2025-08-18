@@ -3,6 +3,7 @@ package com.market.MSA.configurations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -18,20 +19,28 @@ public class SecurityConfig {
   private final String[] PUBLIC_ENDPOINTS = {
     "/user/register",
     "/user/login",
+    "/user/admin/login",
     "/user/verify-otp",
     "/user/login/google",
     "/user/refresh",
+    "/user/device/{deviceId}",
     "/user/reset-password/{email}",
     "/payment/vnpay/callback",
+    "/shipment/cities",
+    "/shipment/districts/{cityCode}",
+    "/shipment/wards/{districtCode}",
+    "/address",
+    "/product/filter"
   };
 
   @Autowired private CustomJwtDecoder customJwtDecoder;
 
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.authorizeHttpRequests(
-        request ->
-            request.requestMatchers(PUBLIC_ENDPOINTS).permitAll().anyRequest().authenticated());
+    http.cors(Customizer.withDefaults())
+        .authorizeHttpRequests(
+            request ->
+                request.requestMatchers(PUBLIC_ENDPOINTS).permitAll().anyRequest().authenticated());
 
     http.oauth2ResourceServer(
         oauth2 ->

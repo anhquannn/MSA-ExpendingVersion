@@ -11,7 +11,6 @@ import com.market.MSA.repositories.order.PromoCodeRepository;
 import com.market.MSA.repositories.order.PromoCodeUsageRepository;
 import com.market.MSA.requests.filters.PromoCodeUsageFilterRequest;
 import com.market.MSA.requests.order.PromoCodeUsageRequest;
-import com.market.MSA.responses.order.PromoCodeResponse;
 import com.market.MSA.responses.order.PromoCodeUsageResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -52,6 +51,7 @@ public class PromoCodeUsageService {
     PromoCodeUsage promoCodeUsage = promoCodeUsageMapper.toUsage(request);
     promoCodeUsage.setPromoCode(promoCode);
     promoCodeUsage.setOrder(order);
+    promoCodeUsage.setUser(order.getUser());
 
     if (request.getUsedAt() == null) {
       promoCodeUsage.setUsedAt(java.time.LocalDateTime.now());
@@ -106,11 +106,13 @@ public class PromoCodeUsageService {
 
   @Cacheable("all_promo_code_usages")
   public List<PromoCodeUsageResponse> getAll() {
-    return promoCodeUsageRepository.findAll().stream().map(promoCodeUsageMapper::toResponse).collect(Collectors.toList());
+    return promoCodeUsageRepository.findAll().stream()
+        .map(promoCodeUsageMapper::toResponse)
+        .collect(Collectors.toList());
   }
 
   @Transactional(readOnly = true)
-  @Cacheable("promo_code_usages")
+  @Cacheable("promo_code_usages_list")
   public List<PromoCodeUsageResponse> getAllPromoCodeUsages(PromoCodeUsageFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
@@ -127,7 +129,7 @@ public class PromoCodeUsageService {
   }
 
   @Transactional(readOnly = true)
-  @Cacheable("promo_code_usages")
+  @Cacheable("promo_code_usages_paging")
   public Page<PromoCodeUsageResponse> getAllPromoCodeUsagesWithPaging(
       PromoCodeUsageFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

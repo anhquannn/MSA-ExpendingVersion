@@ -4,7 +4,6 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.FeedbackFilterRequest;
 import com.market.MSA.requests.product.FeedbackRequest;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.product.CategoryResponse;
 import com.market.MSA.responses.product.FeedbackResponse;
 import com.market.MSA.services.product.FeedbackService;
 import jakarta.validation.Valid;
@@ -13,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class FeedbackController {
   FeedbackService feedbackService;
 
+  @PreAuthorize("hasRole('CUSTOMER')")
   @PostMapping
   public ApiResponse<FeedbackResponse> createFeedback(@RequestBody @Valid FeedbackRequest request) {
     return ApiResponse.<FeedbackResponse>builder()
@@ -37,6 +38,7 @@ public class FeedbackController {
         .build();
   }
 
+  @PreAuthorize("hasRole('CUSTOMER')")
   @PutMapping("/{id}")
   public ApiResponse<FeedbackResponse> updateFeedback(
       @PathVariable Long id, @RequestBody @Valid FeedbackRequest request) {
@@ -46,6 +48,7 @@ public class FeedbackController {
         .build();
   }
 
+  @PreAuthorize("hasRole('CUSTOMER')")
   @DeleteMapping("/{id}")
   public ApiResponse<Boolean> deleteFeedback(@PathVariable Long id) {
     Boolean result = feedbackService.deleteFeedback(id);
@@ -66,13 +69,14 @@ public class FeedbackController {
   @GetMapping
   public ApiResponse<List<FeedbackResponse>> getAll() {
     return ApiResponse.<List<FeedbackResponse>>builder()
-            .result(feedbackService.getAll())
-            .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())
-            .build();
+        .result(feedbackService.getAll())
+        .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
-  public ApiResponse<List<FeedbackResponse>> getAllFeedbacks(@Valid FeedbackFilterRequest request) {
+  public ApiResponse<List<FeedbackResponse>> getAllFeedbacks(
+      @RequestBody @Valid FeedbackFilterRequest request) {
     return ApiResponse.<List<FeedbackResponse>>builder()
         .result(feedbackService.getAllFeedbacks(request))
         .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())
@@ -81,7 +85,7 @@ public class FeedbackController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<FeedbackResponse>> getAllFeedbacksWithPaging(
-      @Valid FeedbackFilterRequest request) {
+      @RequestBody @Valid FeedbackFilterRequest request) {
     return ApiResponse.<Page<FeedbackResponse>>builder()
         .result(feedbackService.getAllFeedbacksWithPaging(request))
         .message(ApiMessage.ALL_FEEDBACKS_RETRIEVED.getMessage())

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.market.MSA.models.others.Notification;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
@@ -25,7 +26,8 @@ public class Inventory {
   String name;
   String address;
   String contact;
-  double totalRevenue;
+
+  @PositiveOrZero double totalRevenue;
 
   @OneToOne
   @JoinColumn(name = "branchId", nullable = false, unique = true)
@@ -47,4 +49,20 @@ public class Inventory {
   @OneToMany(mappedBy = "toInventory", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("inventory-to-transfers")
   List<Transfer> toTransfers = new ArrayList<>();
+
+  @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("inventory-inbounds")
+  List<InboundTransfer> inboundTransfers = new ArrayList<>();
+
+  @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("inventory-outbounds")
+  List<OutboundTransfer> outboundTransfers = new ArrayList<>();
+
+  @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("inventory-checked-histories")
+  List<CheckedHistory> checkedHistories = new ArrayList<>();
+
+  @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("icr-inventory")
+  List<InventoryCheckRequest> inventoryCheckRequests = new ArrayList<>();
 }

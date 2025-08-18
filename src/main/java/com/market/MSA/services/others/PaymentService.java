@@ -11,7 +11,6 @@ import com.market.MSA.repositories.others.PaymentRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.PaymentFilterRequest;
 import com.market.MSA.requests.others.PaymentRequest;
-import com.market.MSA.responses.others.NotificationResponse;
 import com.market.MSA.responses.others.PaymentResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URLEncoder;
@@ -60,10 +59,6 @@ public class PaymentService {
   @NonFinal
   @Value("${vnpay.returnUrl}")
   protected String vnp_ReturnUrl;
-
-  @NonFinal
-  @Value("${vnpay.apiUrl}")
-  protected String vnp_apiUrl;
 
   @Transactional
   public PaymentResponse createPayment(PaymentRequest request) {
@@ -115,7 +110,9 @@ public class PaymentService {
 
   @Cacheable("all_payments")
   public List<PaymentResponse> getAll() {
-    return paymentRepository.findAll().stream().map(paymentMapper::toPaymentResponse).collect(Collectors.toList());
+    return paymentRepository.findAll().stream()
+        .map(paymentMapper::toPaymentResponse)
+        .collect(Collectors.toList());
   }
 
   @Cacheable("payments")
@@ -138,6 +135,7 @@ public class PaymentService {
         .filter(
             request.getUserId(),
             request.getOrderId(),
+            request.getOrderIds(),
             request.getStatus(),
             request.getPaymentMethod(),
             fromDate,
@@ -174,6 +172,7 @@ public class PaymentService {
         .filterWithPaging(
             request.getUserId(),
             request.getOrderId(),
+            request.getOrderIds(),
             request.getStatus(),
             request.getPaymentMethod(),
             fromDate,
@@ -195,9 +194,10 @@ public class PaymentService {
             .user(order.getUser())
             .grandTotal(order.getGrandTotal())
             .paymentMethod("vnpay")
-            .status(OrderStatus.ORDER_STATUS_2.getStatus())
+            .status(OrderStatus.PAYING)
             .transactionId(String.valueOf(orderId))
             .paymentDate(new Date().toString())
+            .expiryAt(java.time.LocalDateTime.now().plusMinutes(15))
             .build();
     paymentRepository.save(payment);
 
@@ -280,8 +280,6 @@ public class PaymentService {
     String vnp_TransactionNo = params.get("vnp_TransactionNo");
     String vnp_BankCode = params.get("vnp_BankCode");
     String vnp_PayDate = params.get("vnp_PayDate");
-    String vnp_Amount = params.get("vnp_Amount");
-    String vnp_SecureHash = params.get("vnp_SecureHash");
 
     // Find payment by transaction ID
     Payment payment =
@@ -291,16 +289,16 @@ public class PaymentService {
 
     // Update payment status
     if ("00".equals(vnp_ResponseCode)) {
-      payment.setStatus(OrderStatus.ORDER_STATUS_3.getStatus());
+      payment.setStatus(OrderStatus.PAID);
     } else {
-      payment.setStatus(OrderStatus.ORDER_STATUS_9.getStatus());
+      payment.setStatus(OrderStatus.FAILED);
     }
 
     // Update order status
     Order order =
         entityFinderService.findByIdOrThrow(
             orderRepository, Long.parseLong(vnp_TxnRef), ErrorCode.ORDER_NOT_FOUND);
-    order.setStatus(OrderStatus.ORDER_STATUS_3.getStatus());
+    order.setStatus(OrderStatus.PAID);
     orderRepository.save(order);
 
     // Update payment details

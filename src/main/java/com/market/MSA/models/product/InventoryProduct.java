@@ -49,15 +49,32 @@ public class InventoryProduct {
   @PositiveOrZero(message = "Stock number must be positive or zero")
   int stockNumber;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "inventoryId", nullable = false)
+  @StockNumberConstraint
+  @PositiveOrZero(message = "Stock number must be positive or zero")
+  Integer stockNumberChecked;
+
+  @StockNumberConstraint
+  @PositiveOrZero(message = "Stock number must be positive or zero")
+  int stockNumberDifferent;
+
+  @PositiveOrZero(message = "Min threshold must be positive or zero")
+  int minThreshold;
+
+  @PositiveOrZero(message = "Max threshold must be positive or zero")
+  int maxThreshold;
+
+  @ManyToOne
+  @JoinColumn(
+      name = "inventory_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_invproduct_inventory"))
   @JsonBackReference("inventory-products")
   @NotNull(message = "Inventory is required")
   Inventory inventory;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne
   @JoinColumn(
-      name = "productId",
+      name = "product_id",
       nullable = false,
       foreignKey = @ForeignKey(name = "fk_invproduct_product"))
   @JsonBackReference("product-inventories")

@@ -35,8 +35,17 @@ public class Branch {
   String district;
   String city;
 
+  @Column(nullable = false)
+  String cityCode;
+
+  @Column(nullable = false)
+  String districtCode;
+
+  @Column(nullable = false)
+  String wardCode;
+
   @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("branch-orders")
+  @JsonManagedReference("order-branches")
   List<Order> orders = new ArrayList<>();
 
   @OneToOne(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)

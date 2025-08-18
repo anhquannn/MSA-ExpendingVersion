@@ -11,13 +11,13 @@ import org.springframework.data.repository.query.Param;
 public interface CategoryRepository extends JpaRepository<Category, Long> {
   @Query(
       "SELECT c FROM Category c WHERE "
-          + "(:name IS NULL OR c.name LIKE %:name%) AND "
+          + "(:name IS NULL OR :name = '' OR LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND "
           + "(:parentId IS NULL OR c.parentCategory.categoryId = :parentId)")
   List<Category> filter(@Param("name") String name, @Param("parentId") Long parentId);
 
   @Query(
       "SELECT c FROM Category c WHERE "
-          + "(:name IS NULL OR c.name LIKE %:name%) AND "
+          + "(:name IS NULL OR :name = '' OR LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND "
           + "(:parentId IS NULL OR c.parentCategory.categoryId = :parentId)")
   Page<Category> filterWithPaging(
       @Param("name") String name, @Param("parentId") Long parentId, Pageable pageable);

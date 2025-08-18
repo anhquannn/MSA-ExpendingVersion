@@ -5,7 +5,6 @@ import com.market.MSA.requests.filters.InventoryProductFilterRequest;
 import com.market.MSA.requests.product.InventoryProductRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.InventoryProductResponse;
-import com.market.MSA.responses.product.InventoryResponse;
 import com.market.MSA.responses.product.InventoryStatisticsResponse;
 import com.market.MSA.services.product.InventoryProductService;
 import jakarta.validation.Valid;
@@ -79,9 +78,9 @@ public class InventoryProductController {
   @GetMapping
   public ApiResponse<List<InventoryProductResponse>> getAll() {
     return ApiResponse.<List<InventoryProductResponse>>builder()
-            .result(inventoryProductService.getAll())
-            .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())
-            .build();
+        .result(inventoryProductService.getAll())
+        .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
@@ -95,7 +94,44 @@ public class InventoryProductController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<InventoryProductResponse>> filterInventoryProductsWithPaging(
-      @Valid @RequestBody InventoryProductFilterRequest request) {
+      @RequestBody @Valid InventoryProductFilterRequest request) {
+    return ApiResponse.<Page<InventoryProductResponse>>builder()
+        .result(inventoryProductService.getAllInventoryProductsWithPaging(request))
+        .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @GetMapping("/paging")
+  public ApiResponse<Page<InventoryProductResponse>> filterInventoryProductsWithPagingQuery(
+      @RequestParam(required = false) Long inventoryId,
+      @RequestParam(required = false) Long productId,
+      @RequestParam(required = false) Boolean isActive,
+      @RequestParam(required = false) Boolean isDiscounted,
+      @RequestParam(required = false) Boolean isLowStock,
+      @RequestParam(required = false) String batchNumber,
+      @RequestParam(required = false) Double minStock,
+      @RequestParam(required = false) Double maxStock,
+      @RequestParam(defaultValue = "1") int page,
+      @RequestParam(defaultValue = "10") int pageSize,
+      @RequestParam(defaultValue = "stockNumber") String sortBy,
+      @RequestParam(defaultValue = "DESC") String sortDirection) {
+
+    InventoryProductFilterRequest request =
+        InventoryProductFilterRequest.builder()
+            .inventoryId(inventoryId)
+            .productId(productId)
+            .isActive(isActive != null ? isActive : true)
+            .isDiscounted(isDiscounted != null ? isDiscounted : false)
+            .batchNumber(batchNumber)
+            .minStock(minStock)
+            .maxStock(maxStock)
+            .isLowStock(isLowStock)
+            .page(page)
+            .pageSize(pageSize)
+            .sortBy(sortBy)
+            .sortDirection(sortDirection)
+            .build();
+
     return ApiResponse.<Page<InventoryProductResponse>>builder()
         .result(inventoryProductService.getAllInventoryProductsWithPaging(request))
         .message(ApiMessage.ALL_INVENTORY_PRODUCTS_RETRIEVED.getMessage())

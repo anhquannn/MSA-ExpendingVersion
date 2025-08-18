@@ -1,5 +1,6 @@
 package com.market.MSA.requests.filters;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -14,7 +15,11 @@ public class PromoCodeUsageFilterRequest {
   Long promoCodeId;
   Long orderId;
   Long userId;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime fromDate;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime toDate;
 
   // Sorting

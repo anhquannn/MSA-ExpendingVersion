@@ -1,13 +1,7 @@
 package com.market.MSA.models.product;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -31,9 +25,13 @@ public class Supplier {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long supplierId;
 
+  @Column(nullable = false)
   String name;
+
   String address;
   String contact;
+
+  @Column(columnDefinition = "TEXT")
   String image;
 
   @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)

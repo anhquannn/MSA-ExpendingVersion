@@ -1,5 +1,6 @@
 package com.market.MSA.repositories.order;
 
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.order.Order;
 import com.market.MSA.models.product.Branch;
 import java.time.LocalDateTime;
@@ -21,7 +22,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
           + "(:fromDate IS NULL OR o.orderDate >= :fromDate) AND "
           + "(:toDate IS NULL OR o.orderDate <= :toDate)")
   Page<Order> filterWithPaging(
-      @Param("status") String status,
+      @Param("status") OrderStatus status,
       @Param("userId") Long userId,
       @Param("branchId") Long branchId,
       @Param("phoneNumber") String phoneNumber,
@@ -38,7 +39,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
           + "(:fromDate IS NULL OR o.orderDate >= :fromDate) AND "
           + "(:toDate IS NULL OR o.orderDate <= :toDate)")
   List<Order> filter(
-      @Param("status") String status,
+      @Param("status") OrderStatus status,
       @Param("userId") Long userId,
       @Param("branchId") Long branchId,
       @Param("phoneNumber") String phoneNumber,
@@ -47,41 +48,42 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       Sort sort);
 
   @Query(
-      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month")
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.status = com.market.MSA.constants.OrderStatus.COMPLETED")
   Double calculateMonthlyRevenue(@Param("year") int year, @Param("month") int month);
 
-  @Query("SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year")
+  @Query(
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND o.status = com.market.MSA.constants.OrderStatus.COMPLETED")
   Double calculateYearlyRevenue(@Param("year") int year);
 
   @Query(
-      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.branch.branchId = :branchId")
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.branch.branchId = :branchId AND o.status = com.market.MSA.constants.OrderStatus.COMPLETED")
   Double calculateMonthlyRevenueByBranch(
       @Param("year") int year, @Param("month") int month, @Param("branchId") Long branchId);
 
   @Query(
-      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND o.branch.branchId = :branchId")
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND o.branch.branchId = :branchId AND o.status = com.market.MSA.constants.OrderStatus.COMPLETED")
   Double calculateYearlyRevenueByBranch(@Param("year") int year, @Param("branchId") Long branchId);
 
   @Query(
-      "SELECT COUNT(o) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month")
+      "SELECT COUNT(o) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.status = com.market.MSA.constants.OrderStatus.COMPLETED")
   Long countByMonth(@Param("year") int year, @Param("month") int month);
 
   @Query(
-      "SELECT COUNT(o) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.branch.branchId = :branchId")
+      "SELECT COUNT(o) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.branch.branchId = :branchId AND o.status = com.market.MSA.constants.OrderStatus.COMPLETED")
   Long countByMonthAndBranch(
       @Param("year") int year, @Param("month") int month, @Param("branchId") Long branchId);
 
   @Query(
-      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.user.userId = :userId")
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.user.userId = :userId AND o.status = com.market.MSA.constants.OrderStatus.COMPLETED")
   Double calculateMonthlyRevenueByUser(
       @Param("year") int year, @Param("month") int month, @Param("userId") Long userId);
 
   @Query(
-      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND o.user.userId = :userId")
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND o.user.userId = :userId AND o.status = com.market.MSA.constants.OrderStatus.COMPLETED")
   Double calculateYearlyRevenueByUser(@Param("year") int year, @Param("userId") Long userId);
 
   @Query(
-      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.branch.branchId = :branchId AND o.user.userId = :userId")
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND MONTH(o.orderDate) = :month AND o.branch.branchId = :branchId AND o.user.userId = :userId AND o.status = com.market.MSA.constants.OrderStatus.COMPLETED")
   Double calculateMonthlyRevenueByBranchAndUser(
       @Param("year") int year,
       @Param("month") int month,
@@ -89,9 +91,25 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       @Param("userId") Long userId);
 
   @Query(
-      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND o.branch.branchId = :branchId AND o.user.userId = :userId")
+      "SELECT COALESCE(SUM(o.grandTotal), 0) FROM Order o WHERE YEAR(o.orderDate) = :year AND o.branch.branchId = :branchId AND o.user.userId = :userId AND o.status = com.market.MSA.constants.OrderStatus.COMPLETED")
   Double calculateYearlyRevenueByBranchAndUser(
       @Param("year") int year, @Param("branchId") Long branchId, @Param("userId") Long userId);
 
   Long branch(Branch branch);
+
+  @Query(
+      """
+	SELECT o.user.userId, o.user.fullName, SUM(o.grandTotal) AS total
+	FROM Order o
+	WHERE o.status = com.market.MSA.constants.OrderStatus.COMPLETED
+	AND o.orderDate BETWEEN :start AND :end
+	AND (:branchId IS NULL OR o.branch.branchId = :branchId)
+	GROUP BY o.user.userId, o.user.fullName
+	ORDER BY total DESC
+	""")
+  List<Object[]> findTopCustomers(
+      @Param("branchId") Long branchId,
+      @Param("start") java.time.LocalDateTime start,
+      @Param("end") java.time.LocalDateTime end,
+      org.springframework.data.domain.Pageable pageable);
 }

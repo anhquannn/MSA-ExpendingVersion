@@ -5,7 +5,6 @@ import com.market.MSA.requests.filters.CampaignFilterRequest;
 import com.market.MSA.requests.order.CampaignRequest;
 import com.market.MSA.responses.order.CampaignResponse;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.product.TrendingProductResponse;
 import com.market.MSA.services.order.CampaignService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -13,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class CampaignController {
   CampaignService campaignService;
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   ApiResponse<CampaignResponse> createCampaign(@RequestBody @Valid CampaignRequest request) {
     return ApiResponse.<CampaignResponse>builder()
@@ -30,6 +31,7 @@ public class CampaignController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{campaignId}")
   ApiResponse<CampaignResponse> updateCampaign(
       @PathVariable Long campaignId, @RequestBody @Valid CampaignRequest request) {
@@ -39,6 +41,7 @@ public class CampaignController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{campaignId}")
   ApiResponse<Boolean> deleteCampaign(@PathVariable Long campaignId) {
     return ApiResponse.<Boolean>builder()
@@ -58,13 +61,14 @@ public class CampaignController {
   @GetMapping
   public ApiResponse<List<CampaignResponse>> getAll() {
     return ApiResponse.<List<CampaignResponse>>builder()
-            .result(campaignService.getAll())
-            .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())
-            .build();
+        .result(campaignService.getAll())
+        .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
-  ApiResponse<List<CampaignResponse>> getAllCampaigns(@Valid CampaignFilterRequest request) {
+  ApiResponse<List<CampaignResponse>> getAllCampaigns(
+      @RequestBody @Valid CampaignFilterRequest request) {
     return ApiResponse.<List<CampaignResponse>>builder()
         .result(campaignService.getAllCampaigns(request))
         .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())
@@ -73,7 +77,7 @@ public class CampaignController {
 
   @PostMapping("/paging")
   ApiResponse<Page<CampaignResponse>> getAllCampaignsWithPaging(
-      @Valid CampaignFilterRequest request) {
+      @RequestBody @Valid CampaignFilterRequest request) {
     return ApiResponse.<Page<CampaignResponse>>builder()
         .result(campaignService.getAllCampaignsWithPaging(request))
         .message(ApiMessage.ALL_CAMPAIGNS_RETRIEVED.getMessage())

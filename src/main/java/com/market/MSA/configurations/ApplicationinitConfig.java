@@ -74,6 +74,9 @@ public class ApplicationinitConfig {
                             .ward("Default Ward")
                             .district("Default District")
                             .city("Default City")
+                            .cityCode("700000")
+                            .wardCode("9218")
+                            .districtCode("700400")
                             .build();
 
                     // Create inventory
@@ -98,11 +101,30 @@ public class ApplicationinitConfig {
 
                     // Save the branch (will cascade to inventory due to CascadeType.ALL)
                     branch = branchRepository.save(branch);
-                    log.info(
-                        "Created branch with ID: {} and inventory with ID: {}",
-                        branch.getBranchId(),
-                        branch.getInventory().getInventoryId());
                     return branch;
+                  });
+
+      // Create CUSTOMER permission if not exists
+      Permission customerPermission =
+          permissionRepository
+              .findByName("CUSTOMER_ACCESS")
+              .orElseGet(
+                  () ->
+                      permissionRepository.save(
+                          Permission.builder()
+                              .name("CUSTOMER_ACCESS")
+                              .description("Truy cập dành cho khách hàng")
+                              .build()));
+
+      // Create CUSTOMER role with permission if not exists
+      Role customerRole =
+          roleRepository
+              .findByName("CUSTOMER")
+              .orElseGet(
+                  () -> {
+                    Role role = Role.builder().name("CUSTOMER").description("Khách hàng").build();
+                    role.setPermissions(Set.of(customerPermission));
+                    return roleRepository.save(role);
                   });
 
       // Create admin user if not exists
@@ -127,6 +149,46 @@ public class ApplicationinitConfig {
         }
         defaultBranch.getUsers().add(adminUser);
         branchRepository.save(defaultBranch);
+      }
+
+      // Create SURVEYOR permission if not exists
+      Permission surveyorPermission =
+          permissionRepository
+              .findByName("SURVEYOR_ACCESS")
+              .orElseGet(
+                  () ->
+                      permissionRepository.save(
+                          Permission.builder()
+                              .name("SURVEYOR_ACCESS")
+                              .description("Truy cập dành cho nhân viên khảo sát")
+                              .build()));
+
+      // Create SURVEYOR role with permission if not exists
+      Role surveyorRole =
+          roleRepository
+              .findByName("SURVEYOR")
+              .orElseGet(
+                  () -> {
+                    Role role =
+                        Role.builder().name("SURVEYOR").description("Nhân viên khảo sát").build();
+                    role.setPermissions(Set.of(surveyorPermission));
+                    return roleRepository.save(role);
+                  });
+
+      // Create surveyor user if not exists
+      if (userRepository.findByEmail("surveyor@example.com").isEmpty()) {
+        User surveyorUser =
+            User.builder()
+                .email("surveyor@example.com")
+                .password(passwordEncoder.encode("surveyor123"))
+                .fullName("Surveyor")
+                .phoneNumber("0987654321")
+                .build();
+
+        surveyorUser.setRoles(Set.of(surveyorRole));
+
+        // Save the surveyor user
+        userRepository.save(surveyorUser);
       }
     };
   }

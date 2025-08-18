@@ -8,7 +8,6 @@ import com.market.MSA.repositories.product.BranchRepository;
 import com.market.MSA.repositories.product.InventoryRepository;
 import com.market.MSA.requests.filters.InventoryFilterRequest;
 import com.market.MSA.requests.product.InventoryRequest;
-import com.market.MSA.responses.product.InventoryProductResponse;
 import com.market.MSA.responses.product.InventoryResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -51,9 +50,11 @@ public class InventoryService {
         inventoryRepository
             .findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
-    inventory.setBranch(
-        entityFinderService.findByIdOrThrow(
-            branchRepository, inventoryRequest.getBranchId(), ErrorCode.BRANCH_NOT_FOUND));
+    if (inventoryRequest.getBranchId() != null) {
+      inventory.setBranch(
+          entityFinderService.findByIdOrThrow(
+              branchRepository, inventoryRequest.getBranchId(), ErrorCode.BRANCH_NOT_FOUND));
+    }
 
     inventoryMapper.updateInventory(inventoryRequest, inventory);
 
@@ -70,7 +71,6 @@ public class InventoryService {
     return true;
   }
 
-  @Transactional
   public InventoryResponse getInventoryById(Long id) {
     Inventory inventory =
         inventoryRepository
@@ -80,25 +80,33 @@ public class InventoryService {
   }
 
   @Cacheable("all_inventories")
+  @Transactional(readOnly = true)
   public List<InventoryResponse> getAll() {
-    return inventoryRepository.findAll().stream().map(inventoryMapper::toInventoryResponse).collect(Collectors.toList());
-  }
-
-  @Cacheable("inventories")
-  public List<InventoryResponse> getAllInventories(InventoryFilterRequest request) {
-    return inventoryRepository.filter(request.getKeyword(), request.getBranchId()).stream()
+    return inventoryRepository.findAll().stream()
         .map(inventoryMapper::toInventoryResponse)
         .collect(Collectors.toList());
   }
 
-  @Cacheable("inventories")
+  @Cacheable("inventories_list")
+  @Transactional(readOnly = true)
+  public List<InventoryResponse> getAllInventories(InventoryFilterRequest request) {
+    return inventoryRepository
+        .filter(request.getKeyword(), request.getBranchId(), request.getUserId())
+        .stream()
+        .map(inventoryMapper::toInventoryResponse)
+        .collect(Collectors.toList());
+  }
+
+  @Cacheable("inventories_paging")
+  @Transactional(readOnly = true)
   public Page<InventoryResponse> getAllInventoriesWithPaging(InventoryFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
     Pageable pageable = PageRequest.of(request.getPage() - 1, request.getPageSize(), sort);
 
     return inventoryRepository
-        .filterWithPaging(request.getKeyword(), request.getBranchId(), pageable)
+        .filterWithPaging(
+            request.getKeyword(), request.getBranchId(), request.getUserId(), pageable)
         .map(inventoryMapper::toInventoryResponse);
   }
 

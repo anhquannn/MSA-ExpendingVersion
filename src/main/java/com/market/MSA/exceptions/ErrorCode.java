@@ -82,6 +82,31 @@ public enum ErrorCode {
       157, "Inventory product with stock already exists!", HttpStatus.BAD_REQUEST),
   INVALID_REFRESH_TOKEN(158, "Invalid refresh token!", HttpStatus.BAD_REQUEST),
   PROMO_CODE_ALREADY_USED(159, "Promo code already used!", HttpStatus.BAD_REQUEST),
+  ADDRESS_NOT_FOUND(160, "Address not found!", HttpStatus.NOT_FOUND),
+  RATES_NOT_FOUND(161, "Cannot find rates!", HttpStatus.NOT_FOUND),
+  OUTBOUND_TRANSFER_NOT_FOUND(162, "Outbound transfer not found!", HttpStatus.NOT_FOUND),
+  INBOUND_TRANSFER_NOT_FOUND(163, "Inbound transfer not found!", HttpStatus.NOT_FOUND),
+  CHECKED_HISTORY_NOT_FOUND(164, "Checked history not found!", HttpStatus.NOT_FOUND),
+  INVALID_BATCH_OR_EXPDATE(165, "Invalid batch or expdate!", HttpStatus.BAD_REQUEST),
+
+  INVENTORY_CHECK_REQUEST_NOT_FOUND(
+      166, "Inventory check request not found!", HttpStatus.NOT_FOUND),
+  PRODUCT_COMBINATION_NOT_FOUND(167, "Product combination not found!", HttpStatus.NOT_FOUND),
+  CAMPAIGN_TARGET_NOT_FOUND(168, "Campaign target not found!", HttpStatus.NOT_FOUND),
+  PROMO_CODE_NOT_APPLICABLE(
+      169, "Promo code is not applicable to the selected items", HttpStatus.BAD_REQUEST),
+  DUPLICATE_CAMPAIGN_TARGET(170, "Campaign already has a target", HttpStatus.BAD_REQUEST),
+  ORDER_DETAIL_ALREADY_RATED(171, "Order detail has already been rated", HttpStatus.BAD_REQUEST),
+  INVALID_STATUS(172, "Invalid status", HttpStatus.BAD_REQUEST),
+  PROMOTION_NOT_FOUND(173, "Promotion not found", HttpStatus.NOT_FOUND),
+
+  // Return Order related errors
+  RETURN_ORDER_NOT_FOUND(174, "Return order not found", HttpStatus.NOT_FOUND),
+  INVALID_ORDER_STATUS(175, "Invalid order status for return", HttpStatus.BAD_REQUEST),
+  UNAUTHORIZED_ACCESS(176, "Unauthorized access", HttpStatus.FORBIDDEN),
+  INVALID_RETURN_QUANTITY(177, "Invalid return quantity", HttpStatus.BAD_REQUEST),
+  RETURN_PERIOD_EXPIRED(178, "Return period has expired", HttpStatus.BAD_REQUEST),
+  CREATE_SHIPMENT_FAILED(179, "Failed to create shipment", HttpStatus.INTERNAL_SERVER_ERROR),
   ;
 
   private final int code;

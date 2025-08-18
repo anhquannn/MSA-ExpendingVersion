@@ -1,7 +1,7 @@
 package com.market.MSA.jobs;
 
 import com.market.MSA.repositories.order.PromoCodeRepository;
-import java.util.Date;
+import java.time.LocalDateTime;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ public class UpdatePromoCodeStatusJob implements Job {
   @Override
   @Transactional
   public void execute(JobExecutionContext context) {
-    Date currentDate = new Date();
+    LocalDateTime currentDate = LocalDateTime.now();
     promoCodeRepository.updateActivePromoCodes(currentDate);
     promoCodeRepository.updateExpiredPromoCodes(currentDate);
   }

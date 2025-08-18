@@ -1,8 +1,8 @@
 package com.market.MSA.repositories.order;
 
+import com.market.MSA.constants.PromocodeStatus;
 import com.market.MSA.models.order.PromoCode;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -18,16 +18,16 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
 
   @Query(
       "SELECT p FROM PromoCode p WHERE "
-          + "(:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND "
+          + "(:keyword IS NULL OR :keyword = '' OR "
+          + "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
           + "(:status IS NULL OR p.status = :status) AND "
-          + "(:code IS NULL OR LOWER(p.code) LIKE LOWER(CONCAT('%', :code, '%'))) AND "
           + "(:campaignId IS NULL OR p.campaign.campaignId = :campaignId) AND "
           + "(:fromDate IS NULL OR p.startDate >= :fromDate) AND "
           + "(:toDate IS NULL OR p.endDate <= :toDate)")
   Page<PromoCode> filterWithPaging(
-      @Param("name") String name,
-      @Param("status") String status,
-      @Param("code") String code,
+      @Param("keyword") String keyword,
+      @Param("status") PromocodeStatus status,
       @Param("campaignId") Long campaignId,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
@@ -35,32 +35,263 @@ public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
 
   @Query(
       "SELECT p FROM PromoCode p WHERE "
-          + "(:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND "
+          + "(:keyword IS NULL OR :keyword = '' OR "
+          + "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
           + "(:status IS NULL OR p.status = :status) AND "
-          + "(:code IS NULL OR LOWER(p.code) LIKE LOWER(CONCAT('%', :code, '%'))) AND "
           + "(:campaignId IS NULL OR p.campaign.campaignId = :campaignId) AND "
           + "(:fromDate IS NULL OR p.startDate >= :fromDate) AND "
           + "(:toDate IS NULL OR p.endDate <= :toDate)")
   List<PromoCode> filter(
-      @Param("name") String name,
-      @Param("status") String status,
-      @Param("code") String code,
+      @Param("keyword") String keyword,
+      @Param("status") PromocodeStatus status,
       @Param("campaignId") Long campaignId,
       @Param("fromDate") LocalDateTime fromDate,
       @Param("toDate") LocalDateTime toDate,
       Sort sort);
+
+  // Enhanced query with cartId filter and unused promo codes
+  @Query(
+      "SELECT DISTINCT p FROM PromoCode p "
+          + "LEFT JOIN p.campaign c "
+          + "WHERE "
+          + "(:keyword IS NULL OR :keyword = '' OR "
+          + "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
+          + "(:status IS NULL OR p.status = :status) AND "
+          + "(:campaignId IS NULL OR c.campaignId = :campaignId) AND "
+          + "(:fromDate IS NULL OR p.startDate >= :fromDate) AND "
+          + "(:toDate IS NULL OR p.endDate <= :toDate) AND "
+          + "(:cartId IS NULL OR NOT EXISTS ("
+          + "  SELECT 1 FROM PromoCodeUsage pcu "
+          + "  JOIN Cart cart ON cart.cartId = :cartId "
+          + "  WHERE pcu.promoCode.promoCodeId = p.promoCodeId "
+          + "    AND pcu.user.userId = cart.user.userId"
+          + ")) AND ("
+          + "  :cartId IS NULL OR "
+          + "  c IS NULL OR "
+          + "  c.scopeType = 'ALL' OR "
+          + "  ("
+          + "    c.scopeType = 'CATEGORY' AND "
+          + "    ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      JOIN ci.product p2 "
+          + "      JOIN CampaignTarget ct2 ON ct2.campaign.campaignId = c.campaignId "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true "
+          + "        AND ct2.targetType = 'CATEGORY' "
+          + "        AND ct2.targetId = p2.category.categoryId"
+          + "    ) = ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true"
+          + "    )"
+          + "  ) OR "
+          + "  ("
+          + "    c.scopeType = 'SUPPLIER' AND "
+          + "    ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      JOIN ci.product p3 "
+          + "      JOIN CampaignTarget ct3 ON ct3.campaign.campaignId = c.campaignId "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true "
+          + "        AND ct3.targetType = 'SUPPLIER' "
+          + "        AND ct3.targetId = p3.supplier.supplierId"
+          + "    ) = ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true"
+          + "    )"
+          + "  )"
+          + ")")
+  Page<PromoCode> filterWithPagingAndCart(
+      @Param("keyword") String keyword,
+      @Param("status") PromocodeStatus status,
+      @Param("campaignId") Long campaignId,
+      @Param("fromDate") LocalDateTime fromDate,
+      @Param("toDate") LocalDateTime toDate,
+      @Param("cartId") Long cartId,
+      Pageable pageable);
+
+  // Enhanced query with cartId filter (List version)
+  @Query(
+      "SELECT DISTINCT p FROM PromoCode p "
+          + "LEFT JOIN p.campaign c "
+          + "WHERE "
+          + "(:keyword IS NULL OR :keyword = '' OR "
+          + "LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+          + "LOWER(p.code) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
+          + "(:status IS NULL OR p.status = :status) AND "
+          + "(:campaignId IS NULL OR c.campaignId = :campaignId) AND "
+          + "(:fromDate IS NULL OR p.startDate >= :fromDate) AND "
+          + "(:toDate IS NULL OR p.endDate <= :toDate) AND "
+          + "(:cartId IS NULL OR NOT EXISTS ("
+          + "  SELECT 1 FROM PromoCodeUsage pcu "
+          + "  JOIN Cart cart ON cart.cartId = :cartId "
+          + "  WHERE pcu.promoCode.promoCodeId = p.promoCodeId "
+          + "    AND pcu.user.userId = cart.user.userId"
+          + ")) AND ("
+          + "  :cartId IS NULL OR "
+          + "  c IS NULL OR "
+          + "  c.scopeType = 'ALL' OR "
+          + "  ("
+          + "    c.scopeType = 'CATEGORY' AND "
+          + "    ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      JOIN ci.product p2 "
+          + "      JOIN CampaignTarget ct2 ON ct2.campaign.campaignId = c.campaignId "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true "
+          + "        AND ct2.targetType = 'CATEGORY' "
+          + "        AND ct2.targetId = p2.category.categoryId"
+          + "    ) = ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true"
+          + "    )"
+          + "  ) OR "
+          + "  ("
+          + "    c.scopeType = 'SUPPLIER' AND "
+          + "    ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      JOIN ci.product p3 "
+          + "      JOIN CampaignTarget ct3 ON ct3.campaign.campaignId = c.campaignId "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true "
+          + "        AND ct3.targetType = 'SUPPLIER' "
+          + "        AND ct3.targetId = p3.supplier.supplierId"
+          + "    ) = ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true"
+          + "    )"
+          + "  )"
+          + ")")
+  List<PromoCode> filterWithCart(
+      @Param("keyword") String keyword,
+      @Param("status") PromocodeStatus status,
+      @Param("campaignId") Long campaignId,
+      @Param("fromDate") LocalDateTime fromDate,
+      @Param("toDate") LocalDateTime toDate,
+      @Param("cartId") Long cartId,
+      Sort sort);
+
+  // Enhanced version with unused filter
+  @Query(
+      "SELECT DISTINCT p FROM PromoCode p "
+          + "WHERE p.status = :status "
+          + "AND (:cartId IS NULL OR NOT EXISTS ("
+          + "  SELECT 1 FROM PromoCodeUsage pcu "
+          + "  JOIN Cart cart ON cart.cartId = :cartId "
+          + "  WHERE pcu.promoCode.promoCodeId = p.promoCodeId "
+          + "    AND pcu.user.userId = cart.user.userId"
+          + ")) AND ("
+          + "  :cartId IS NULL OR "
+          + "  p.campaign IS NULL OR "
+          + "  p.campaign.scopeType = 'ALL' OR "
+          + "  ("
+          + "    p.campaign.scopeType = 'CATEGORY' AND "
+          + "    ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      JOIN ci.product prod "
+          + "      JOIN CampaignTarget ct ON ct.campaign.campaignId = p.campaign.campaignId "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true "
+          + "        AND ct.targetType = 'CATEGORY' AND ct.targetId = prod.category.categoryId"
+          + "    ) = ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true"
+          + "    )"
+          + "  ) OR "
+          + "  ("
+          + "    p.campaign.scopeType = 'SUPPLIER' AND "
+          + "    ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      JOIN ci.product prod "
+          + "      JOIN CampaignTarget ct ON ct.campaign.campaignId = p.campaign.campaignId "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true "
+          + "        AND ct.targetType = 'SUPPLIER' AND ct.targetId = prod.supplier.supplierId"
+          + "    ) = ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true"
+          + "    )"
+          + "  )"
+          + ")")
+  List<PromoCode> findApplicablePromoCodesForCart(
+      @Param("cartId") Long cartId, @Param("status") PromocodeStatus status);
+
+  // For getting all active promo codes for a cart that haven't been used by user
+  @Query(
+      "SELECT DISTINCT p FROM PromoCode p "
+          + "WHERE p.status = 'ACTIVE' "
+          + "AND p.startDate <= CURRENT_TIMESTAMP "
+          + "AND p.endDate >= CURRENT_TIMESTAMP "
+          + "AND (:cartId IS NULL OR NOT EXISTS ("
+          + "  SELECT 1 FROM PromoCodeUsage pcu "
+          + "  JOIN Cart cart ON cart.cartId = :cartId "
+          + "  WHERE pcu.promoCode.promoCodeId = p.promoCodeId "
+          + "    AND pcu.user.userId = cart.user.userId"
+          + ")) AND ("
+          + "  :cartId IS NULL OR "
+          + "  p.campaign IS NULL OR "
+          + "  p.campaign.scopeType = 'ALL' OR "
+          + "  ("
+          + "    p.campaign.scopeType = 'CATEGORY' AND "
+          + "    ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      JOIN ci.product prod "
+          + "      JOIN CampaignTarget ct ON ct.campaign.campaignId = p.campaign.campaignId "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true "
+          + "        AND ct.targetType = 'CATEGORY' AND ct.targetId = prod.category.categoryId"
+          + "    ) = ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true"
+          + "    )"
+          + "  ) OR "
+          + "  ("
+          + "    p.campaign.scopeType = 'SUPPLIER' AND "
+          + "    ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      JOIN ci.product prod "
+          + "      JOIN CampaignTarget ct ON ct.campaign.campaignId = p.campaign.campaignId "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true "
+          + "        AND ct.targetType = 'SUPPLIER' AND ct.targetId = prod.supplier.supplierId"
+          + "    ) = ("
+          + "      SELECT COUNT(ci) FROM CartItem ci "
+          + "      WHERE ci.cart.cartId = :cartId AND ci.isSelected = true"
+          + "    )"
+          + "  )"
+          + ")")
+  List<PromoCode> findActivePromoCodesForCart(@Param("cartId") Long cartId);
+
+  // New method to find unused promo codes by cart's user
+  @Query(
+      "SELECT DISTINCT p FROM PromoCode p "
+          + "WHERE (:status IS NULL OR p.status = :status) "
+          + "AND NOT EXISTS ("
+          + "  SELECT 1 FROM PromoCodeUsage pcu "
+          + "  JOIN Cart cart ON cart.cartId = :cartId "
+          + "  WHERE pcu.promoCode.promoCodeId = p.promoCodeId "
+          + "    AND pcu.user.userId = cart.user.userId"
+          + ")")
+  List<PromoCode> findUnusedPromoCodesByCart(
+      @Param("cartId") Long cartId, @Param("status") PromocodeStatus status);
+
+  // New method to find unused promo codes by cart's user with pagination
+  @Query(
+      "SELECT DISTINCT p FROM PromoCode p "
+          + "WHERE (:status IS NULL OR p.status = :status) "
+          + "AND NOT EXISTS ("
+          + "  SELECT 1 FROM PromoCodeUsage pcu "
+          + "  JOIN Cart cart ON cart.cartId = :cartId "
+          + "  WHERE pcu.promoCode.promoCodeId = p.promoCodeId "
+          + "    AND pcu.user.userId = cart.user.userId"
+          + ")")
+  Page<PromoCode> findUnusedPromoCodesByCartWithPaging(
+      @Param("cartId") Long cartId, @Param("status") PromocodeStatus status, Pageable pageable);
 
   Optional<PromoCode> findByCode(String code);
 
   @Modifying
   @Transactional
   @Query(
-      "UPDATE PromoCode p SET p.status = 'active' WHERE p.startDate <= :currentDate AND p.endDate > :currentDate AND p.status != 'active'")
-  void updateActivePromoCodes(Date currentDate);
+      "UPDATE PromoCode p SET p.status = 'ACTIVE' WHERE p.startDate <= :currentDate AND p.endDate > :currentDate AND p.status != 'ACTIVE'")
+  void updateActivePromoCodes(LocalDateTime currentDate);
 
   @Modifying
   @Transactional
   @Query(
-      "UPDATE PromoCode p SET p.status = 'expired' WHERE p.endDate <= :currentDate AND p.status != 'expired'")
-  void updateExpiredPromoCodes(Date currentDate);
+      "UPDATE PromoCode p SET p.status = 'EXPIRED' WHERE p.endDate <= :currentDate AND p.status != 'EXPIRED'")
+  void updateExpiredPromoCodes(LocalDateTime currentDate);
 }

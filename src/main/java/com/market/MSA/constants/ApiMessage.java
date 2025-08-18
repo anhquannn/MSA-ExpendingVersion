@@ -39,7 +39,6 @@ public enum ApiMessage {
   // Transfer request messages
   TRANSFER_REQUEST_CREATED("Transfer request created successfully"),
   TRANSFER_REQUEST_UPDATED("Transfer request updated successfully"),
-
   TRANSFER_REQUEST_APPROVED("Transfer request approved"),
   TRANSFER_REQUEST_REJECTED("Transfer request rejected"),
   TRANSFER_REQUEST_DELETED("Transfer request deleted successfully"),
@@ -69,7 +68,6 @@ public enum ApiMessage {
   CART_ITEMS_SELECTION_UPDATED("Cart items selection updated"),
   CART_CLEARED("Cart cleared"),
   CART_TOTAL_CALCULATED("Cart total calculated successfully"),
-
   ADD_CART_ITEM("Add cart item successfully"),
 
   // Branch messages
@@ -118,6 +116,13 @@ public enum ApiMessage {
   SUPPLIER_RETRIEVED("Supplier retrieved successfully"),
   ALL_SUPPLIERS_RETRIEVED("All suppliers retrieved successfully"),
 
+  // Checked History messages
+  CHECKED_HISTORY_CREATED("Checked history created successfully"),
+  CHECKED_HISTORY_UPDATED("Checked history updated successfully"),
+  CHECKED_HISTORY_DELETED("Checked history deleted successfully"),
+  CHECKED_HISTORY_RETRIEVED("Checked history retrieved successfully"),
+  ALL_CHECKED_HISTORIES_RETRIEVED("All checked histories retrieved successfully"),
+
   // Permission messages
   PERMISSION_CREATED("Permission created successfully"),
   PERMISSION_UPDATED("Permission updated successfully"),
@@ -147,8 +152,8 @@ public enum ApiMessage {
   ALL_ORDERS_RETRIEVED("All orders retrieved successfully"),
   ORDER_CANCELLED("Order cancelled successfully"),
   ORDER_SUMMARY_RETRIEVED("Order summary retrieved successfully"),
-
   REVENUE_STATISTICS_RETRIEVED("Revenue statistics retrieved successfully"),
+  PRODUCT_SALES_STATISTICS_RETRIEVED("Product sales statistics retrieved successfully"),
 
   // Order Detail messages
   ORDER_DETAIL_CREATED("Order detail created successfully"),
@@ -178,12 +183,27 @@ public enum ApiMessage {
   CAMPAIGN_RETRIEVED("Campaign retrieved successfully"),
   ALL_CAMPAIGNS_RETRIEVED("All campaigns retrieved successfully"),
 
+  CAMPAIGN_TARGET_CREATED("Campaign target created successfully"),
+  CAMPAIGN_TARGET_UPDATED("Campaign target updated successfully"),
+  CAMPAIGN_TARGET_DELETED("Campaign target deleted successfully"),
+  CAMPAIGN_TARGET_RETRIEVED("Campaign target retrieved successfully"),
+  ALL_CAMPAIGN_TARGETS_RETRIEVED("All campaign targets retrieved successfully"),
+
   // Return Order messages
   RETURN_ORDER_CREATED("Return order created successfully"),
-  RETURN_ORDER_UPDATED("Return order updated successfully"),
-  RETURN_ORDER_DELETED("Return order deleted successfully"),
+  RETURN_ORDER_STATUS_UPDATED("Return order status updated successfully"),
   RETURN_ORDER_RETRIEVED("Return order retrieved successfully"),
-  ALL_RETURN_ORDERS_RETRIEVED("All return orders retrieved successfully"),
+  USER_RETURN_ORDERS_RETRIEVED("User return orders retrieved successfully"),
+  BRANCH_RETURN_ORDERS_RETRIEVED("Branch return orders retrieved successfully"),
+  RETURN_ORDER_APPROVED("Return order approved and inbound transfer created successfully"),
+  RETURN_ORDER_REJECTED("Return order rejected successfully"),
+  RETURN_ORDERS_FILTERED_PAGING("Return orders filtered with paging successfully"),
+  RETURN_ORDERS_FILTERED("Return orders filtered successfully"),
+
+  // Cancel Order messages (for backward compatibility)
+  RETURN_ORDER_UPDATED("Cancel order updated successfully"),
+  RETURN_ORDER_DELETED("Cancel order deleted successfully"),
+  ALL_RETURN_ORDERS_RETRIEVED("All cancel orders retrieved successfully"),
 
   // Trending Product messages
   TRENDING_PRODUCT_CREATED("Trending product created successfully"),
@@ -251,7 +271,52 @@ public enum ApiMessage {
   PROMO_CODE_USAGE_DELETED("Promo code usage deleted successfully"),
   PROMO_CODE_USAGE_RETRIEVED("Promo code usage retrieved successfully"),
   ALL_PROMO_CODE_USAGES_RETRIEVED("All promo code usages retrieved successfully"),
-  ;
+
+  // Address messages
+  ADDRESS_CREATED("Address created successfully"),
+  ADDRESS_UPDATED("Address updated successfully"),
+  ADDRESS_DELETED("Address deleted successfully"),
+  ADDRESS_RETRIEVED("Address retrieved successfully"),
+  ALL_ADDRESSES_RETRIEVED("All addresses retrieved successfully"),
+
+  // Inbound Transfer messages
+  INBOUND_CREATED("Inbound transfer created successfully"),
+  INBOUND_UPDATED("Inbound transfer updated successfully"),
+  INBOUND_DELETED("Inbound transfer deleted successfully"),
+  INBOUND_RETRIEVED("Inbound transfer retrieved successfully"),
+  ALL_INBOUNDS_RETRIEVED("All inbound transfers retrieved successfully"),
+
+  // Outbound Transfer messages
+  OUTBOUND_CREATED("Outbound transfer created successfully"),
+  OUTBOUND_UPDATED("Outbound transfer updated successfully"),
+  OUTBOUND_DELETED("Outbound transfer deleted successfully"),
+  OUTBOUND_RETRIEVED("Outbound transfer retrieved successfully"),
+  ALL_OUTBOUNDS_RETRIEVED("All outbound transfers retrieved successfully"),
+
+  // Inventory Check Request messages
+  INVENTORY_CHECK_REQUEST_CREATED("Inventory check request created successfully"),
+  INVENTORY_CHECK_REQUEST_STATUS_UPDATED("Inventory check request status updated successfully"),
+  INVENTORY_CHECK_REQUEST_UPDATED("Inventory check request updated successfully"),
+  INVENTORY_CHECK_REQUEST_DELETED("Inventory check request deleted successfully"),
+  INVENTORY_CHECK_REQUEST_RETRIEVED("Inventory check request retrieved successfully"),
+  ALL_INVENTORY_CHECK_REQUESTS_RETRIEVED("All inventory check requests retrieved successfully"),
+
+  // Product Combination messages
+  PRODUCT_COMBINATION_CREATED("Product combination created successfully"),
+  PRODUCT_COMBINATION_UPDATED("Product combination updated successfully"),
+  PRODUCT_COMBINATION_DELETED("Product combination deleted successfully"),
+  PRODUCT_COMBINATION_RETRIEVED("Product combination retrieved successfully"),
+  ALL_PRODUCT_COMBINATIONS_RETRIEVED("All product combinations retrieved successfully"),
+
+  // Promotion messages
+  PROMOTION_CREATED("Promotion created successfully"),
+  PROMOTION_UPDATED("Promotion updated successfully"),
+  PROMOTION_DELETED("Promotion deleted successfully"),
+  PROMOTION_RETRIEVED("Promotion retrieved successfully"),
+  ALL_PROMOTIONS_RETRIEVED("All promotions retrieved successfully"),
+  PROMOTION_FILTERED_LIST_RETRIEVED("Filtered promotions list retrieved successfully"),
+  PROMOTION_PAGING_RETRIEVED("Promotions paging retrieved successfully"),
+  PROMOTION_APPLIED("Promotions applied successfully");
 
   private final String message;
 

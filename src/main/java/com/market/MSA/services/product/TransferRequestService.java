@@ -4,22 +4,20 @@ import com.market.MSA.constants.ProductStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.product.TransferRequestMapper;
-import com.market.MSA.models.product.Inventory;
-import com.market.MSA.models.product.InventoryProduct;
-import com.market.MSA.models.product.Transfer;
-import com.market.MSA.models.product.TransferItem;
+import com.market.MSA.models.product.*;
+import com.market.MSA.repositories.product.InboundRepository;
 import com.market.MSA.repositories.product.InventoryProductRepository;
 import com.market.MSA.repositories.product.InventoryRepository;
+import com.market.MSA.repositories.product.OutboundRepository;
 import com.market.MSA.repositories.product.TransferRequestRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.TransferRequestFilterRequest;
 import com.market.MSA.requests.product.TransferRequest;
 import com.market.MSA.responses.product.TransferResponse;
-import com.market.MSA.responses.product.TransferResponseItem;
 import com.market.MSA.services.others.EntityFinderService;
+import com.market.MSA.services.others.NotificationService;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +43,9 @@ public class TransferRequestService {
   final TransferRequestRepository transferRequestRepository;
   final InventoryProductRepository inventoryProductRepository;
   final InventoryProductService inventoryProductService;
+  final OutboundRepository outboundRepository;
+  final InboundRepository inboundRepository;
+  final NotificationService notificationService;
 
   @Transactional
   public TransferResponse createTransferRequest(TransferRequest transferRequest) {
@@ -62,9 +63,20 @@ public class TransferRequestService {
             userRepository, transferRequest.getRequesterId(), ErrorCode.USER_NOT_EXISTED));
     transfer.setApprover(
         entityFinderService.findByIdOrThrow(userRepository, 1L, ErrorCode.USER_NOT_EXISTED));
+    transfer.setStatus(ProductStatus.PENDING);
     transfer.setCreatedAt(LocalDateTime.now());
 
     Transfer saveTransfer = transferRequestRepository.save(transfer);
+
+    // Send notification to admin and manager
+    try {
+      notificationService.sendTransferCreatedNotification(saveTransfer.getTransferRequestId());
+    } catch (Exception e) {
+      log.warn(
+          "Failed to send transfer created notification for transfer #{}",
+          saveTransfer.getTransferRequestId(),
+          e);
+    }
 
     return transferRequestMapper.toTransferResponse(saveTransfer);
   }
@@ -77,9 +89,7 @@ public class TransferRequestService {
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_NOT_FOUND));
     transfer.setFromInventory(
         entityFinderService.findByIdOrThrow(
-            inventoryRepository,
-            transferRequest.getFromInventoryId(),
-            ErrorCode.INVENTORY_NOT_FOUND));
+            inventoryRepository, 1L, ErrorCode.INVENTORY_NOT_FOUND));
     transfer.setToInventory(
         entityFinderService.findByIdOrThrow(
             inventoryRepository,
@@ -89,8 +99,8 @@ public class TransferRequestService {
         entityFinderService.findByIdOrThrow(
             userRepository, transferRequest.getRequesterId(), ErrorCode.USER_NOT_EXISTED));
     transfer.setApprover(
-        entityFinderService.findByIdOrThrow(
-            userRepository, transferRequest.getApproverId(), ErrorCode.USER_NOT_EXISTED));
+        entityFinderService.findByIdOrThrow(userRepository, 1L, ErrorCode.USER_NOT_EXISTED));
+    transfer.setUpdatedAt(LocalDateTime.now());
 
     transferRequestMapper.updateTransferRequest(transferRequest, transfer);
     Transfer updatedTransfer = transferRequestRepository.save(transfer);
@@ -113,11 +123,15 @@ public class TransferRequestService {
   }
 
   @Cacheable("all_transfer_requests")
+  @Transactional(readOnly = true)
   public List<TransferResponse> getAll() {
-    return transferRequestRepository.findAll().stream().map(transferRequestMapper::toTransferResponse).collect(Collectors.toList());
+    return transferRequestRepository.findAll().stream()
+        .map(transferRequestMapper::toTransferResponse)
+        .collect(Collectors.toList());
   }
 
-  @Cacheable("transfer_requests")
+  @Cacheable("transfer_requests_list")
+  @Transactional(readOnly = true)
   public List<TransferResponse> getAllTransferRequests(TransferRequestFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
@@ -136,7 +150,7 @@ public class TransferRequestService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("transfer_requests")
+  @Cacheable("transfer_requests_paging")
   public Page<TransferResponse> getAllTransferRequestsWithPaging(
       TransferRequestFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
@@ -158,25 +172,27 @@ public class TransferRequestService {
 
   @Transactional
   public TransferResponse approveTransferRequest(Long transferId) {
+    // 1. Tìm yêu cầu chuyển kho.
     Transfer transfer =
         transferRequestRepository
             .findById(transferId)
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_NOT_FOUND));
 
-    // Check if request is already processed
-    if (!ProductStatus.PENDING.getValue().equals(transfer.getStatus())) {
+    // 2. Chỉ duyệt được các yêu cầu đang ở trạng thái "Chờ xử lý" (PENDING).
+    if (!ProductStatus.PENDING.equals(transfer.getStatus())) {
       throw new AppException(ErrorCode.TRANSFER_REQUEST_ALREADY_PROCESSED);
     }
 
-    // Get central inventory (branch 1)
+    // 3. Lấy thông tin kho nguồn (thường là kho trung tâm) và kho đích.
     Inventory centralInventory =
         inventoryRepository
             .findByBranch_BranchId(1L)
             .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
+    Inventory destinationInventory = transfer.getToInventory();
 
-    // Process each transfer item
+    // 4. Duyệt qua từng sản phẩm trong yêu cầu.
     for (TransferItem item : transfer.getTransferItems()) {
-      // Check if product exists in central inventory
+      // 4.1. Tìm sản phẩm trong kho nguồn.
       List<InventoryProduct> centralInventoryProducts =
           inventoryProductRepository.filter(
               item.getProduct().getProductId(),
@@ -187,118 +203,111 @@ public class TransferRequestService {
               null,
               null,
               null);
+      if (centralInventoryProducts.isEmpty()) throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
 
-      if (centralInventoryProducts.isEmpty()) {
-        throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
-      }
-
-      // Get the source inventory product (first one with available stock)
+      // 4.2. Tìm sản phẩm còn hàng đầu tiên để xuất.
       InventoryProduct centralInventoryProduct =
           centralInventoryProducts.stream()
               .filter(ip -> ip.getStockNumber() > 0)
               .findFirst()
               .orElse(centralInventoryProducts.getFirst());
 
-      // Get the expDate from the source inventory product
+      // 4.3. Lấy thông tin lô và HSD của lô hàng sẽ xuất đi.
       LocalDateTime sourceExpDate = centralInventoryProduct.getExpDate();
+      String sourceBatchNumber = centralInventoryProduct.getBatchNumber();
 
-      // Check if we should use this inventory product or create a new one
-      if (centralInventoryProduct.getStockNumber() == 0) {
-        // If stock is zero, we can reuse this inventory product
-        // No need to update expDate as it's already set
-      } else if (sourceExpDate != null) {
-        // If there's an expDate, check if we need to create a new inventory product
-        // Find if there's already an inventory product with the same expDate and zero stock
-        Optional<InventoryProduct> existingZeroStock =
-            centralInventoryProducts.stream()
-                .filter(ip -> ip.getStockNumber() == 0 && sourceExpDate.equals(ip.getExpDate()))
-                .findFirst();
+      // 4.4. Chuẩn bị bản ghi sản phẩm tại kho đích.
+      if (!destinationInventory.getInventoryId().equals(centralInventory.getInventoryId())) {
+        List<InventoryProduct> destInventoryProducts =
+            inventoryProductRepository.filter(
+                item.getProduct().getProductId(),
+                destinationInventory.getInventoryId(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
 
-        if (existingZeroStock.isPresent()) {
-          // Use the existing zero-stock item with matching expDate
-          centralInventoryProduct = existingZeroStock.get();
-        } else if (centralInventoryProducts.stream()
-                .filter(ip -> sourceExpDate.equals(ip.getExpDate()) && ip.getStockNumber() > 0)
-                .count()
-            > 1) {
-          // If there are multiple inventory products with the same expDate and positive stock,
-          // create a new one to maintain batch separation
-          InventoryProduct newProduct =
+        if (destInventoryProducts.isEmpty()) {
+          // Nếu sản phẩm chưa từng có ở kho đích, tạo một bản ghi mới với số lượng = 0,
+          // sẵn sàng để nhận hàng. Lô và HSD sẽ giống kho nguồn.
+          inventoryProductRepository.save(
               InventoryProduct.builder()
-                  .inventory(centralInventory)
+                  .inventory(destinationInventory)
                   .product(item.getProduct())
                   .expDate(sourceExpDate)
+                  .batchNumber(sourceBatchNumber)
                   .stockNumber(0)
                   .currentPrice(centralInventoryProduct.getCurrentPrice())
                   .isActive(true)
                   .isDiscounted(centralInventoryProduct.isDiscounted())
-                  .build();
-
-          // Save the new product
-          centralInventoryProduct = inventoryProductRepository.save(newProduct);
+                  .build());
+        } else {
+          // Nếu đã có, kiểm tra xem có thể nhận hàng vào lô hiện tại không.
+          InventoryProduct destInventoryProduct = destInventoryProducts.getFirst();
+          boolean batchDiff =
+              (sourceBatchNumber != null
+                      && !sourceBatchNumber.equals(destInventoryProduct.getBatchNumber()))
+                  || (sourceBatchNumber == null && destInventoryProduct.getBatchNumber() != null);
+          boolean expDiff =
+              (sourceExpDate != null && !sourceExpDate.equals(destInventoryProduct.getExpDate()))
+                  || (sourceExpDate == null && destInventoryProduct.getExpDate() != null);
+          if (destInventoryProduct.getStockNumber() > 0 && (batchDiff || expDiff)) {
+            // Nếu kho đích đang có hàng của một lô khác, không cho phép trộn lẫn.
+            throw new AppException(ErrorCode.INVALID_BATCH_OR_EXPDATE);
+          }
         }
       }
 
-      // Check if central inventory has enough stock
+      // 4.5. Kiểm tra xem kho nguồn có đủ hàng không.
       if (centralInventoryProduct.getStockNumber() < item.getQuantityRequested()) {
         throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
       }
 
-      // Deduct stock from central inventory
+      // 4.6. TRỪ TỒN KHO tại kho nguồn.
       centralInventoryProduct.setStockNumber(
           centralInventoryProduct.getStockNumber() - item.getQuantityRequested());
       inventoryProductRepository.save(centralInventoryProduct);
-
-      // Add stock to destination inventory
-      InventoryProduct finalCentralInventoryProduct = centralInventoryProduct;
-      InventoryProduct destinationInventoryProduct =
-          inventoryProductRepository
-              .filter(
-                  item.getProduct().getProductId(),
-                  transfer.getToInventory().getInventoryId(),
-                  null,
-                  null,
-                  null,
-                  null,
-                  null,
-                  null)
-              .stream()
-              .filter(
-                  ip ->
-                      sourceExpDate == null
-                          ? ip.getExpDate() == null
-                          : (ip.getExpDate() != null && ip.getExpDate().equals(sourceExpDate)))
-              .findFirst()
-              .orElseGet(
-                  () -> {
-                    InventoryProduct newProduct =
-                        InventoryProduct.builder()
-                            .inventory(transfer.getToInventory())
-                            .product(item.getProduct())
-                            .expDate(sourceExpDate)
-                            .stockNumber(0)
-                            .currentPrice(finalCentralInventoryProduct.getCurrentPrice())
-                            .isActive(true)
-                            .isDiscounted(finalCentralInventoryProduct.isDiscounted())
-                            .build();
-                    return inventoryProductRepository.save(newProduct);
-                  });
-
-      destinationInventoryProduct.setStockNumber(
-          destinationInventoryProduct.getStockNumber() + item.getQuantityTransferred());
-      inventoryProductRepository.save(destinationInventoryProduct);
-
-      // Update transferred quantity
-      item.setQuantityTransferred(item.getQuantityTransferred());
-
       inventoryProductService.updateStockLevel(centralInventoryProduct);
-      inventoryProductService.updateStockLevel(destinationInventoryProduct);
+
+      // CHÚ Ý: Tồn kho tại kho đích CHƯA được cộng. Việc này sẽ được thực hiện khi kho đích xác
+      // nhận nhận hàng.
+
+      // 4.7. Ghi nhận số lượng đã thực sự chuyển.
+      item.setQuantityTransferred(item.getQuantityRequested());
     }
 
-    // Update transfer request status
-    transfer.setStatus(ProductStatus.APPROVED.getValue());
+    // 5. Cập nhật trạng thái yêu cầu thành "Đã duyệt" (APPROVED).
+    transfer.setStatus(ProductStatus.APPROVED);
     transfer.setUpdatedAt(LocalDateTime.now());
     Transfer updatedTransfer = transferRequestRepository.save(transfer);
+
+    // 6. Tạo bản ghi xuất kho (Outbound) cho kho nguồn.
+    outboundRepository.save(
+        OutboundTransfer.builder()
+            .status(ProductStatus.SHIPPED)
+            .outboundTransferDate(LocalDateTime.now())
+            .inventory(updatedTransfer.getFromInventory())
+            .user(updatedTransfer.getApprover())
+            .transfer(updatedTransfer)
+            .build());
+
+    // 7. Tạo bản ghi nhận kho (Inbound) cho kho đích, ở trạng thái chờ nhận.
+    inboundRepository.save(
+        InboundTransfer.builder()
+            .status(ProductStatus.IN_PROGRESS)
+            .inboundTransferDate(LocalDateTime.now())
+            .inventory(updatedTransfer.getToInventory())
+            .user(updatedTransfer.getRequester())
+            .transfer(updatedTransfer)
+            .build());
+
+    // Send notification to manager about approval
+    try {
+      notificationService.sendTransferApprovedNotification(updatedTransfer.getTransferRequestId());
+    } catch (Exception ignored) {
+    }
 
     return transferRequestMapper.toTransferResponse(updatedTransfer);
   }
@@ -310,16 +319,23 @@ public class TransferRequestService {
             .findById(transferId)
             .orElseThrow(() -> new AppException(ErrorCode.TRANSFER_REQUEST_NOT_FOUND));
 
-    // Check if request is already processed
-    if (!ProductStatus.PENDING.getValue().equals(transfer.getStatus())) {
+    // Chỉ từ chối được các yêu cầu đang chờ xử lý.
+    if (!ProductStatus.PENDING.equals(transfer.getStatus())) {
       throw new AppException(ErrorCode.TRANSFER_REQUEST_ALREADY_PROCESSED);
     }
 
-    // Update transfer request status
-    transfer.setStatus(ProductStatus.REJECTED.getValue());
+    // Cập nhật trạng thái thành "Đã từ chối" (REJECTED) và ghi lại lý do.
+    transfer.setStatus(ProductStatus.REJECTED);
     transfer.setNote(note);
     transfer.setUpdatedAt(LocalDateTime.now());
     Transfer updatedTransfer = transferRequestRepository.save(transfer);
+
+    // Send notification to manager about rejection
+    try {
+      notificationService.sendTransferRejectedNotification(
+          updatedTransfer.getTransferRequestId(), note);
+    } catch (Exception ignored) {
+    }
 
     return transferRequestMapper.toTransferResponse(updatedTransfer);
   }

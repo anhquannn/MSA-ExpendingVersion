@@ -6,11 +6,13 @@ import com.market.MSA.responses.product.InventoryResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.stereotype.Component;
 
 @Mapper(
     componentModel = "spring",
-    uses = {BranchMapper.class})
+    uses = {BranchMapper.class},
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface InventoryMapper {
   Inventory toInventory(InventoryRequest request);

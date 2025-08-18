@@ -1,5 +1,6 @@
 package com.market.MSA.requests.product;
 
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,7 +13,8 @@ public class InventoryRequest {
   String name;
   String address;
   String contact;
-  double totalRevenue;
+
+  @PositiveOrZero double totalRevenue;
 
   Long branchId;
 }

@@ -14,8 +14,14 @@ import lombok.experimental.FieldDefaults;
 public class InventoryProductResponse implements Serializable {
   private static final long serialVersionUID = 1L;
   Long inventoryProductId;
+
   int stockNumber;
+  Integer stockNumberChecked;
+  int stockNumberDifferent;
   double currentPrice;
+
+  // giá hiện tại tại chi nhánh (để đồng bộ với ProductResponse)
+  double branchCurrentPrice;
 
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime expDate;
@@ -30,6 +36,8 @@ public class InventoryProductResponse implements Serializable {
   boolean isDiscounted;
   String batchNumber;
   String stockLevel;
+  int minThreshold;
+  int maxThreshold;
 
   ProductResponse product;
   InventoryResponse inventory;

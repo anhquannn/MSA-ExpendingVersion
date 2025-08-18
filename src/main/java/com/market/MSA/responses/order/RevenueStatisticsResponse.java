@@ -1,5 +1,6 @@
 package com.market.MSA.responses.order;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -43,4 +44,13 @@ public class RevenueStatisticsResponse {
 
   /** Combined branch and user yearly revenue (if both branchId and userId are provided) */
   private Double branchUserYearlyRevenue;
+
+  /** Top selling products list */
+  private List<TopSellingProductResponse> topSellingProducts;
+
+  /** List of monthly revenue data (within selected period) */
+  private List<MonthlyRevenueDataResponse> revenues;
+
+  /** Expiring and low stock products list */
+  private List<ExpiringProductResponse> expiringLowStockProducts;
 }

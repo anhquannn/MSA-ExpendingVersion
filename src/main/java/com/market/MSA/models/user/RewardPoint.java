@@ -2,6 +2,7 @@ package com.market.MSA.models.user;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,13 +20,19 @@ public class RewardPoint {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long rewardPointId;
 
-  double points;
-  double totalEarned;
-  double totalRedeemed;
+  @PositiveOrZero double points;
+
+  @PositiveOrZero double totalEarned;
+
+  @PositiveOrZero double totalRedeemed;
+
   LocalDateTime updatedAt;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_reward_point_user"))
   @JsonBackReference("user-reward-points")
   User user;
 }

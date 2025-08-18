@@ -1,14 +1,14 @@
 package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.product.Product;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,20 +31,46 @@ public class OrderDetail {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long orderDetailId;
 
+  @Positive(message = "Số lượng phải > 0")
   int quantity;
+
   String name;
-  String status;
+
+  @Enumerated(EnumType.STRING)
+  OrderStatus status;
+
+  @PositiveOrZero(message = "Đơn giá phải >= 0")
   double unitPrice;
+
+  @PositiveOrZero(message = "Tổng giá phải >= 0")
   double totalPrice;
+
   String image;
+  boolean rated;
+
+  // Indicates whether this order detail is a free promotional item
+  @Column(name = "is_free_item")
+  boolean isFreeItem;
 
   @ManyToOne
-  @JoinColumn(name = "orderId", nullable = false)
+  @JoinColumn(
+      name = "order_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_order_detail_order"))
   @JsonBackReference("order-details")
   Order order;
 
   @ManyToOne
-  @JoinColumn(name = "productId", nullable = false)
+  @JoinColumn(
+      name = "product_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_order_detail_product"))
   @JsonBackReference("product-order-details")
   Product product;
+
+  // Return items referencing this order detail
+  @OneToMany(mappedBy = "orderDetail", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("order-detail-return-items")
+  @Builder.Default
+  List<ReturnOrderItem> returnOrderItems = new ArrayList<>();
 }

@@ -24,6 +24,16 @@ public class QuartzConfig {
     this.beanFactory = beanFactory;
   }
 
+  //  | Mô tả                        | Cron Expression        |
+  //          | ---------------------------- | ---------------------- |
+  //          | **Mỗi 5 phút**               | `"0 0/5 * * * ?"`      |
+  //          | **Mỗi 10 phút**              | `"0 0/10 * * * ?"`     |
+  //          | **Mỗi giờ**                  | `"0 0 * * * ?"`        |
+  //          | **Mỗi ngày lúc 01:00 sáng**  | `"0 0 1 * * ?"`        |
+  //          | **Mỗi thứ 2 lúc 09:00 sáng** | `"0 0 9 ? * MON"`      |
+  //          | **Mỗi ngày làm việc 08:30**  | `"0 30 8 ? * MON-FRI"` |
+  //          | **Mỗi 15 giây (demo)**       | `"0/15 * * * * ?"`     |
+
   @Bean
   public JobFactory jobFactory() {
     return new SpringBeanJobFactory() {
@@ -59,23 +69,26 @@ public class QuartzConfig {
       JobDetail createTrendingProductDataJobDetail,
       Trigger createTrendingProductDataTrigger,
       JobDetail lowStockCheckJobDetail,
-      Trigger lowStockCheckTrigger) {
+      Trigger lowStockCheckTrigger,
+      JobDetail paymentTimeoutJobDetail,
+      Trigger paymentTimeoutTrigger,
+      JobDetail productDiscountJobDetail,
+      Trigger productDiscountTrigger) { // Xóa 2 dòng autoTransferJob
     return args -> {
       Scheduler scheduler = schedulerFactoryBean.getScheduler();
 
-      // Đăng ký các job và trigger
       scheduler.scheduleJob(updateExpiryTimeJobDetail, updateExpiryTimeTrigger);
       scheduler.scheduleJob(updatePromoCodeStatusJobDetail, updatePromoCodeStatusTrigger);
       scheduler.scheduleJob(updateCampaignStatusJobDetail, updateCampaignStatusTrigger);
       scheduler.scheduleJob(createTrendingProductDataJobDetail, createTrendingProductDataTrigger);
       scheduler.scheduleJob(lowStockCheckJobDetail, lowStockCheckTrigger);
+      scheduler.scheduleJob(paymentTimeoutJobDetail, paymentTimeoutTrigger);
+      scheduler.scheduleJob(productDiscountJobDetail, productDiscountTrigger);
 
-      // Khởi động scheduler (nếu chưa tự động chạy)
       if (!scheduler.isStarted()) {
         scheduler.start();
       }
-
-      Thread.sleep(5000); // Chờ 5 giây để kiểm tra
+      Thread.sleep(5000);
     };
   }
 
@@ -171,5 +184,122 @@ public class QuartzConfig {
         .withSchedule(
             SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(60).repeatForever())
         .build();
+  }
+
+  @Bean
+  public JobDetail paymentTimeoutJobDetail() {
+    return JobBuilder.newJob(PaymentTimeoutScheduler.class)
+        .withIdentity("paymentTimeoutJob")
+        .storeDurably()
+        .build();
+  }
+
+  @Bean
+  public Trigger paymentTimeoutTrigger() {
+    return TriggerBuilder.newTrigger()
+        .forJob(paymentTimeoutJobDetail())
+        .withIdentity("paymentTimeoutTrigger")
+        .withSchedule(
+            SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(5).repeatForever())
+        .build();
+  }
+
+  @Bean
+  public JobDetail productDiscountJobDetail() {
+    return JobBuilder.newJob(ProductDiscountScheduler.class)
+        .withIdentity("productDiscountJob")
+        .storeDurably()
+        .build();
+  }
+
+  @Bean
+  public Trigger productDiscountTrigger() {
+    return TriggerBuilder.newTrigger()
+        .forJob(productDiscountJobDetail())
+        .withIdentity("productDiscountTrigger")
+        .withSchedule(
+            CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                .withMisfireHandlingInstructionFireAndProceed())
+        .build();
+  }
+
+  // ================= Auto Transfer Stock Job =================
+  @Bean
+  public JobDetail autoTransferJobDetail() {
+    return JobBuilder.newJob(AutoTransferJob.class)
+        .withIdentity("autoTransferJob")
+        .storeDurably()
+        .build();
+  }
+
+  @Bean
+  public Trigger autoTransferTrigger() {
+    return TriggerBuilder.newTrigger()
+        .forJob(autoTransferJobDetail())
+        .withIdentity("autoTransferTrigger")
+        .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(1).repeatForever())
+        .build();
+  }
+
+  // ================= Auto Bundle Promotion Job =================
+  @Bean
+  public JobDetail autoBundlePromotionJobDetail() {
+    return JobBuilder.newJob(com.market.MSA.jobs.AutoBundlePromotionJob.class)
+        .withIdentity("autoBundlePromotionJob")
+        .storeDurably()
+        .build();
+  }
+
+  @Bean
+  public Trigger autoBundlePromotionTrigger() {
+    return TriggerBuilder.newTrigger()
+        .forJob(autoBundlePromotionJobDetail())
+        .withIdentity("autoBundlePromotionTrigger")
+        // Chạy hàng ngày lúc 01:00
+        .withSchedule(
+            CronScheduleBuilder.cronSchedule("0 0 1 * * ?")
+                .withMisfireHandlingInstructionFireAndProceed())
+        .build();
+  }
+
+  // ================= ABC Classification Job =================
+  @Bean
+  public JobDetail productABCClassificationJobDetail() {
+    return JobBuilder.newJob(ProductABCClassificationJob.class)
+        .withIdentity("productABCClassificationJob")
+        .storeDurably()
+        .build();
+  }
+
+  @Bean
+  public Trigger productABCClassificationTrigger() {
+    return TriggerBuilder.newTrigger()
+        .forJob(productABCClassificationJobDetail())
+        .withIdentity("productABCClassificationTrigger")
+        .withSchedule(
+            CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
+                .withMisfireHandlingInstructionFireAndProceed())
+        .build();
+  }
+
+  // ================= Extra Jobs Scheduler =================
+  @Bean
+  public ApplicationRunner extraJobsScheduler(
+      SchedulerFactoryBean schedulerFactoryBean,
+      JobDetail autoTransferJobDetail,
+      Trigger autoTransferTrigger,
+      JobDetail productABCClassificationJobDetail,
+      Trigger productABCClassificationTrigger,
+      JobDetail autoBundlePromotionJobDetail,
+      Trigger autoBundlePromotionTrigger) {
+    return args -> {
+      Scheduler scheduler = schedulerFactoryBean.getScheduler();
+      scheduler.scheduleJob(autoTransferJobDetail, autoTransferTrigger);
+      scheduler.scheduleJob(productABCClassificationJobDetail, productABCClassificationTrigger);
+      scheduler.scheduleJob(autoBundlePromotionJobDetail, autoBundlePromotionTrigger);
+      if (!scheduler.isStarted()) {
+        scheduler.start();
+      }
+    };
   }
 }

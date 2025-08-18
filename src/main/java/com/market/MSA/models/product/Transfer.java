@@ -2,6 +2,7 @@ package com.market.MSA.models.product;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.ProductStatus;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -31,26 +32,37 @@ public class Transfer {
   Long transferRequestId;
 
   @ManyToOne
-  @JoinColumn(name = "fromInventoryId", nullable = false)
+  @JoinColumn(
+      name = "from_inventory_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_transfer_from_inventory"))
   @JsonBackReference("inventory-from-transfers")
   Inventory fromInventory;
 
   @ManyToOne
-  @JoinColumn(name = "toInventoryId", nullable = false)
+  @JoinColumn(
+      name = "to_inventory_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_transfer_to_inventory"))
   @JsonBackReference("inventory-to-transfers")
   Inventory toInventory;
 
   @ManyToOne
-  @JoinColumn(name = "requesterId", nullable = false)
+  @JoinColumn(
+      name = "requester_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_transfer_requester"))
   @JsonBackReference("user-requested-transfers")
   User requester;
 
   @ManyToOne
-  @JoinColumn(name = "approverId")
+  @JoinColumn(name = "approver_id", foreignKey = @ForeignKey(name = "fk_transfer_approver"))
   @JsonBackReference("user-approved-transfers")
   User approver;
 
-  String status;
+  @Enumerated(EnumType.STRING)
+  ProductStatus status;
+
   String note;
   LocalDateTime createdAt;
   LocalDateTime updatedAt;
@@ -58,4 +70,12 @@ public class Transfer {
   @OneToMany(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("transfer-details")
   List<TransferItem> transferItems = new ArrayList<>();
+
+  @OneToOne(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("transfer-inbound")
+  InboundTransfer inboundTransfer;
+
+  @OneToOne(mappedBy = "transfer", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("transfer-outbound")
+  OutboundTransfer outboundTransfer;
 }

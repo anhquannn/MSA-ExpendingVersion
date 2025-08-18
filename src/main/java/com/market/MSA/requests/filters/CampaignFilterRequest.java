@@ -1,5 +1,7 @@
 package com.market.MSA.requests.filters;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.market.MSA.constants.PromocodeStatus;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -12,13 +14,18 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CampaignFilterRequest {
   String name;
-  String status;
+  PromocodeStatus status;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime fromDate;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime toDate;
+
   String keyword;
 
   // Sorting
-  @Builder.Default String sortBy = "endDate";
+  @Builder.Default String sortBy = "startDate";
 
   @Builder.Default String sortDirection = "DESC";
 

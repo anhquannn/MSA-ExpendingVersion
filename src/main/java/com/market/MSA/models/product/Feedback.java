@@ -1,16 +1,10 @@
 package com.market.MSA.models.product;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.market.MSA.models.order.OrderDetail;
 import com.market.MSA.models.user.User;
 import com.market.MSA.validators.RatingConstraint;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -39,19 +33,33 @@ public class Feedback {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long feedbackId;
 
-  String comment;
+  String comments;
 
   @RatingConstraint int rating;
 
   LocalDateTime createdAt;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_feedback_user"))
   @JsonBackReference("user-feedbacks")
   User user;
 
   @ManyToOne
-  @JoinColumn(name = "productId", nullable = false)
+  @JoinColumn(
+      name = "product_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_feedback_product"))
   @JsonBackReference("product-feedbacks")
   Product product;
+
+  @OneToOne
+  @JoinColumn(
+      name = "order_detail_id",
+      unique = true,
+      foreignKey = @ForeignKey(name = "fk_feedback_order_detail"))
+  @JsonBackReference("orderDetail-feedback")
+  OrderDetail orderDetail;
 }

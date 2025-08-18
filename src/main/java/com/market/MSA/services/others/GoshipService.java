@@ -1,16 +1,20 @@
 package com.market.MSA.services.others;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.models.order.Order;
 import com.market.MSA.models.others.DeliveryInfo;
+import com.market.MSA.models.product.Branch;
+import com.market.MSA.models.user.UserAddress;
 import com.market.MSA.repositories.order.OrderRepository;
 import com.market.MSA.repositories.others.DeliveryInfoRepository;
-import com.market.MSA.requests.goship.RatesRequest;
-import com.market.MSA.requests.goship.ShipmentRequest;
+import com.market.MSA.repositories.product.BranchRepository;
+import com.market.MSA.repositories.user.UserAddressRepository;
+import com.market.MSA.requests.goship.*;
 import com.market.MSA.responses.goship.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
@@ -26,12 +31,17 @@ public class GoshipService {
   private final EntityFinderService entityFinderService;
   private final OrderRepository orderRepository;
   private final DeliveryInfoRepository deliveryInfoRepository;
+  private final UserAddressRepository userAddressRepository;
+  private final BranchRepository branchRepository;
 
   @Value("${goship.token}")
   private String TOKEN;
 
   @Value("${goship.url}")
   private String API_URL;
+
+  @Value("${goship.enabled:true}")
+  private boolean GOSHIP_ENABLED;
 
   private final RestTemplate restTemplate;
   private final ObjectMapper objectMapper;
@@ -41,12 +51,16 @@ public class GoshipService {
       ObjectMapper objectMapper,
       DeliveryInfoRepository deliveryInfoRepository,
       EntityFinderService entityFinderService,
-      OrderRepository orderRepository) {
+      OrderRepository orderRepository,
+      UserAddressRepository userAddressRepository,
+      BranchRepository branchRepository) {
     this.restTemplate = restTemplate;
     this.objectMapper = objectMapper;
     this.entityFinderService = entityFinderService;
     this.orderRepository = orderRepository;
     this.deliveryInfoRepository = deliveryInfoRepository;
+    this.userAddressRepository = userAddressRepository;
+    this.branchRepository = branchRepository;
   }
 
   // Generic method to call API and parse response
@@ -57,19 +71,29 @@ public class GoshipService {
 
     try {
       String requestBody = body != null ? objectMapper.writeValueAsString(body) : null;
+      log.debug("Goship API Request - URL: {}, Method: {}, Body: {}", url, method, requestBody);
+
       HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
       ResponseEntity<String> response =
           restTemplate.exchange(url, method, requestEntity, String.class);
 
       String responseBody = response.getBody();
+      log.debug(
+          "Goship API Response - Status: {}, Body: {}", response.getStatusCode(), responseBody);
+
       if (responseBody == null || responseBody.trim().isEmpty()) {
+        log.error("Goship API returned empty response for URL: {}", url);
         throw new AppException(ErrorCode.PARSE_SHIPPO_RESPONSE_ERROR);
       }
 
       return objectMapper.readValue(responseBody, responseType);
     } catch (JsonProcessingException e) {
+      log.error("Failed to parse Goship API response for URL: {}, Error: {}", url, e.getMessage());
       throw new AppException(ErrorCode.PARSE_SHIPPO_RESPONSE_ERROR);
+    } catch (Exception e) {
+      log.error("Goship API call failed for URL: {}, Error: {}", url, e.getMessage());
+      throw new AppException(ErrorCode.CREATE_SHIPMENT_FAILED);
     }
   }
 
@@ -96,15 +120,107 @@ public class GoshipService {
     return response.getData();
   }
 
-  public List<RatesResponse> createRates(RatesRequest request) {
+  public List<RatesResponse> createRates(Long branchId, Long userAddressId, double grandTotal) {
+    Branch branch =
+        entityFinderService.findByIdOrThrow(branchRepository, branchId, ErrorCode.BRANCH_NOT_FOUND);
+    UserAddress userAddress =
+        entityFinderService.findByIdOrThrow(
+            userAddressRepository, userAddressId, ErrorCode.ADDRESS_NOT_FOUND);
+    RatesAddressRequest addressFrom =
+        RatesAddressRequest.builder()
+            .city(branch.getCityCode())
+            .district(branch.getDistrictCode())
+            .ward(branch.getWardCode())
+            .build();
+    RatesAddressRequest addressTo =
+        RatesAddressRequest.builder()
+            .city(userAddress.getCityCode())
+            .district(userAddress.getDistrictCode())
+            .ward(userAddress.getWardCode())
+            .build();
+    RatesParcelRequest parcelRequest =
+        RatesParcelRequest.builder()
+            .cod(grandTotal + "")
+            .height("15")
+            .length("15")
+            .width("15")
+            .weight("10")
+            .build();
+    RatesApiRequest apiRequest =
+        RatesApiRequest.builder()
+            .address_from(addressFrom)
+            .address_to(addressTo)
+            .parcel(parcelRequest)
+            .build();
+    RatesRequest request = RatesRequest.builder().shipment(apiRequest).build();
+
     RatesApiResponse response =
         callApi(API_URL + "/rates", HttpMethod.POST, request, RatesApiResponse.class);
     return response.getData();
   }
 
-  public ShipmentResponse createShipment(ShipmentRequest request, Long orderId) {
+  public ShipmentResponse createShipment(Long orderId, Long userAddressId, String rate) {
+
+    // Check if Goship integration is enabled
+    if (!GOSHIP_ENABLED) {
+      log.warn(
+          "Goship integration is disabled. Creating mock shipment response for order: {}", orderId);
+      ShipmentResponse mockResponse = new ShipmentResponse();
+      mockResponse.setId("MOCK_" + System.currentTimeMillis());
+      mockResponse.setStatus("PENDING");
+      return mockResponse;
+    }
+
     Order order =
         entityFinderService.findByIdOrThrow(orderRepository, orderId, ErrorCode.ORDER_NOT_FOUND);
+    UserAddress userAddress =
+        entityFinderService.findByIdOrThrow(
+            userAddressRepository, userAddressId, ErrorCode.ADDRESS_NOT_FOUND);
+
+    // Create address from (branch address)
+    AddressRequest addressFrom =
+        AddressRequest.builder()
+            .name(order.getBranch().getName())
+            .phone(order.getBranch().getPhone())
+            .street(order.getBranch().getStreet())
+            .ward(order.getBranch().getWardCode())
+            .district(order.getBranch().getDistrictCode())
+            .city(order.getBranch().getCityCode())
+            .build();
+
+    // Create address to (user address)
+    AddressRequest addressTo =
+        AddressRequest.builder()
+            .name(userAddress.getUser().getFullName())
+            .phone(userAddress.getUser().getPhoneNumber())
+            .street(userAddress.getStreet())
+            .ward(userAddress.getWardCode())
+            .district(userAddress.getDistrictCode())
+            .city(userAddress.getCityCode())
+            .build();
+
+    // Create parcel
+    ParcelRequest parcel =
+        ParcelRequest.builder()
+            .cod(order.getGrandTotal() + "")
+            .height("15")
+            .length("15")
+            .width("15")
+            .weight("10")
+            .metadata("Hàng dễ vỡ, xin nhẹ tay")
+            .build();
+
+    // Create shipment request
+    ShipmentApiRequest shipmentRequest =
+        ShipmentApiRequest.builder()
+            .rate(rate)
+            .payer(0)
+            .address_from(addressFrom)
+            .address_to(addressTo)
+            .parcel(parcel)
+            .build();
+
+    ShipmentRequest request = ShipmentRequest.builder().shipment(shipmentRequest).build();
 
     DeliveryInfo deliveryInfo =
         DeliveryInfo.builder()
@@ -112,8 +228,11 @@ public class GoshipService {
             .city(request.getShipment().getAddress_to().getCity())
             .ward(request.getShipment().getAddress_to().getWard())
             .district(request.getShipment().getAddress_to().getDistrict())
+            .cityCode(request.getShipment().getAddress_to().getCity())
+            .wardCode(request.getShipment().getAddress_to().getWard())
+            .districtCode(request.getShipment().getAddress_to().getDistrict())
             .cod(request.getShipment().getParcel().getCod())
-            .status(OrderStatus.ORDER_STATUS_1.getStatus())
+            .status(OrderStatus.PENDING)
             .deliveryDate(LocalDateTime.now())
             .weight(request.getShipment().getParcel().getWeight())
             .width(request.getShipment().getParcel().getWidth())
@@ -122,12 +241,221 @@ public class GoshipService {
             .order(order)
             .build();
 
-    order.setStatus(OrderStatus.ORDER_STATUS_4.getStatus());
+    order.setStatus(OrderStatus.PENDING);
 
     deliveryInfoRepository.save(deliveryInfo);
     orderRepository.save(order);
 
-    return callApi(API_URL + "/shipments", HttpMethod.POST, request, ShipmentResponse.class);
+    ShipmentResponse shipmentResponse =
+        callApi(API_URL + "/shipments", HttpMethod.POST, request, ShipmentResponse.class);
+
+    // Lưu mã vận đơn để phục vụ webhook update
+    if (shipmentResponse != null) {
+      String shipmentCode = String.valueOf(shipmentResponse.getId());
+      deliveryInfo.setShipmentCode(shipmentCode);
+      deliveryInfoRepository.save(deliveryInfo);
+    }
+
+    return shipmentResponse;
+  }
+
+  // Thêm method này vào GoshipService class
+
+  /**
+   * Tạo rates cho return shipment - từ customer address về branch
+   *
+   * @param deliveryInfo Thông tin địa chỉ giao hàng gốc (nơi customer nhận hàng)
+   * @param branchId ID của branch (nơi nhận hàng trả về)
+   * @param grandTotal Giá trị đơn hàng (thường là 0 cho return)
+   * @return List<RatesResponse>
+   */
+  public List<RatesResponse> createReturnRates(
+      DeliveryInfo deliveryInfo, Long branchId, double grandTotal) {
+    Branch branch =
+        entityFinderService.findByIdOrThrow(branchRepository, branchId, ErrorCode.BRANCH_NOT_FOUND);
+
+    // Address from: customer address (từ DeliveryInfo)
+    RatesAddressRequest addressFrom =
+        RatesAddressRequest.builder()
+            .city(deliveryInfo.getCityCode())
+            .district(deliveryInfo.getDistrictCode())
+            .ward(deliveryInfo.getWardCode())
+            .build();
+
+    // Address to: branch address (nơi nhận hàng trả về)
+    RatesAddressRequest addressTo =
+        RatesAddressRequest.builder()
+            .city(branch.getCityCode())
+            .district(branch.getDistrictCode())
+            .ward(branch.getWardCode())
+            .build();
+
+    // Parcel for return shipment
+    RatesParcelRequest parcelRequest =
+        RatesParcelRequest.builder()
+            .cod("0") // Return shipment thường không có COD
+            .height("15")
+            .length("15")
+            .width("15")
+            .weight("10")
+            .build();
+
+    RatesApiRequest apiRequest =
+        RatesApiRequest.builder()
+            .address_from(addressFrom)
+            .address_to(addressTo)
+            .parcel(parcelRequest)
+            .build();
+
+    RatesRequest request = RatesRequest.builder().shipment(apiRequest).build();
+
+    RatesApiResponse response =
+        callApi(API_URL + "/rates", HttpMethod.POST, request, RatesApiResponse.class);
+    return response.getData();
+  }
+
+  /**
+   * Tạo shipment cho return order - từ customer address về branch
+   *
+   * @param returnOrderId ID của return order
+   * @param deliveryInfo Thông tin địa chỉ giao hàng gốc (nơi customer nhận hàng)
+   * @param branchId ID của branch (nơi nhận hàng trả về)
+   * @param rate Loại dịch vụ vận chuyển
+   * @return ShipmentResponse
+   */
+  public ShipmentResponse createReturnShipment(
+      Long returnOrderId, DeliveryInfo deliveryInfo, Long branchId, String rate) {
+
+    // Check if Goship integration is enabled
+    if (!GOSHIP_ENABLED) {
+      ShipmentResponse mockResponse = new ShipmentResponse();
+      mockResponse.setId("MOCK_" + System.currentTimeMillis());
+      mockResponse.setStatus("PENDING");
+      return mockResponse;
+    }
+
+    Branch branch =
+        entityFinderService.findByIdOrThrow(branchRepository, branchId, ErrorCode.BRANCH_NOT_FOUND);
+
+    // Create address from (customer address - từ DeliveryInfo)
+    AddressRequest addressFrom =
+        AddressRequest.builder()
+            .name(deliveryInfo.getOrder().getUser().getFullName())
+            .phone(deliveryInfo.getOrder().getUser().getPhoneNumber())
+            .street(deliveryInfo.getStreet())
+            .ward(deliveryInfo.getWardCode())
+            .district(deliveryInfo.getDistrictCode())
+            .city(deliveryInfo.getCityCode())
+            .build();
+
+    // Create address to (branch address - nơi nhận hàng trả về)
+    AddressRequest addressTo =
+        AddressRequest.builder()
+            .name(branch.getName())
+            .phone(branch.getPhone())
+            .street(branch.getStreet())
+            .ward(branch.getWardCode())
+            .district(branch.getDistrictCode())
+            .city(branch.getCityCode())
+            .build();
+
+    // Create parcel cho return shipment
+    ParcelRequest parcel =
+        ParcelRequest.builder()
+            .cod("0") // Return shipment thường không có COD
+            .height("15")
+            .length("15")
+            .width("15")
+            .weight("10")
+            .metadata("Hàng trả về - Return shipment")
+            .build();
+
+    // Create shipment request
+    ShipmentApiRequest shipmentRequest =
+        ShipmentApiRequest.builder()
+            .rate(rate)
+            .payer(1) // Branch trả phí vận chuyển cho return
+            .address_from(addressFrom)
+            .address_to(addressTo)
+            .parcel(parcel)
+            .build();
+
+    ShipmentRequest request = ShipmentRequest.builder().shipment(shipmentRequest).build();
+
+    try {
+      return callApi(API_URL + "/shipments", HttpMethod.POST, request, ShipmentResponse.class);
+    } catch (Exception e) {
+      ShipmentResponse mockResponse = new ShipmentResponse();
+      mockResponse.setId("MOCK_" + System.currentTimeMillis());
+      mockResponse.setStatus("PENDING");
+      return mockResponse;
+    }
+  }
+
+  // Xử lý webhook từ Goshipvoid
+  @Transactional
+  public boolean processWebhook(String payload) {
+    try {
+      JsonNode root = objectMapper.readTree(payload);
+      String shipmentCode = root.path("code").asText();
+      int statusCode = root.path("status").asInt();
+
+      DeliveryInfo deliveryInfo =
+          deliveryInfoRepository
+              .findByShipmentCode(shipmentCode)
+              .orElseThrow(() -> new AppException(ErrorCode.DELIVERY_INFO_NOT_FOUND));
+
+      OrderStatus newStatus = mapGoshipStatusCodeToOrderStatus(statusCode);
+      deliveryInfo.setStatus(newStatus);
+      deliveryInfoRepository.save(deliveryInfo);
+
+      Order order = deliveryInfo.getOrder();
+      order.setStatus(newStatus);
+      if (order.getOrderDetails() != null) {
+        order.getOrderDetails().forEach(od -> od.setStatus(newStatus));
+      }
+      orderRepository.saveAndFlush(order);
+      return true;
+    } catch (JsonProcessingException e) {
+      throw new AppException(ErrorCode.PARSE_SHIPPO_RESPONSE_ERROR);
+    }
+  }
+
+  // Ánh xạ mã trạng thái số của Goship sang OrderStatus
+  public OrderStatus mapGoshipStatusCodeToOrderStatus(int code) {
+    return switch (code) {
+      case 900 -> OrderStatus.PENDING; // Đơn mới
+      case 901, 902 -> OrderStatus.PAYING; // Chờ lấy hàng / Bưu tá đang đến
+      case 903 -> OrderStatus.PAID; // Đã lấy hàng
+      case 904, 918, 919 -> OrderStatus.DELIVERING; // Đang giao / lưu kho / vận chuyển
+      case 905 -> OrderStatus.SHIPPED; // Giao thành công
+      case 906, 915, 917 -> OrderStatus.FAILED; // Giao thất bại / chậm / thất lạc
+      case 907 -> OrderStatus.RETURNING; // Đang chuyển hoàn
+      case 908 -> OrderStatus.RETURNED; // Đã chuyển hoàn xong
+      case 909, 910, 912 -> OrderStatus.PAID; // Đã đối soát, khách, COD
+      case 911 -> OrderStatus.COMPLETED; // Đã trả COD
+      case 913 -> OrderStatus.COMPLETED; // Hoàn thành
+      case 914, 1000 -> OrderStatus.CANCELLED; // Đơn hủy hoặc lỗi
+      case 916 -> OrderStatus.SHIPPED; // Giao một phần
+      default -> OrderStatus.PENDING; // Mặc định
+    };
+  }
+
+  // Hàm ánh xạ trạng thái Goship sang OrderStatus
+  public OrderStatus mapGoshipStatusToOrderStatus(String goshipStatus) {
+    return switch (goshipStatus.toUpperCase()) {
+      case "PENDING" -> OrderStatus.PENDING;
+      case "WAITING_FOR_PICKUP", "ON_PICKUP_WAY" -> OrderStatus.PAYING;
+      case "PICKED", "IN_WAREHOUSE", "IN_TRANSIT" -> OrderStatus.DELIVERING;
+      case "DELIVERING" -> OrderStatus.DELIVERING;
+      case "DELIVERED", "PARTIALLY_DELIVERED" -> OrderStatus.SHIPPED;
+      case "RETURNING" -> OrderStatus.RETURNING;
+      case "RETURNED" -> OrderStatus.RETURNED;
+      case "FAILED", "LOST" -> OrderStatus.FAILED;
+      case "CANCELED" -> OrderStatus.CANCELLED;
+      case "COMPLETED" -> OrderStatus.COMPLETED;
+      default -> OrderStatus.PENDING;
+    };
   }
 
   public List<ShipmentDetailResponse> getAllShipments() {

@@ -5,31 +5,34 @@ import com.market.MSA.models.user.User;
 import com.market.MSA.requests.user.UpdateUserRequest;
 import com.market.MSA.requests.user.UserRequest;
 import com.market.MSA.responses.user.UserResponse;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.mapstruct.*;
 import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface UserMapper {
-  @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
   @Mapping(target = "branches", ignore = true)
+  @Mapping(target = "image", source = "image")
   User toUser(UserRequest request);
 
   @Mapping(target = "branches", ignore = true)
+  @Mapping(target = "image", source = "image")
   UserResponse toUserResponse(User user);
 
   @Mapping(target = "roles", source = "roles", qualifiedByName = "mapRoles")
   @Mapping(target = "userId", ignore = true)
+  @Mapping(target = "image", source = "image")
   void updateUser(@MappingTarget User user, UpdateUserRequest request);
 
   @Named("mapRoles")
   default Set<Role> mapRoles(List<Long> roleIds) {
     if (roleIds == null || roleIds.isEmpty()) {
-      return new HashSet<>();
+      return null; // returning null allows MapStruct to ignore this field and keep existing roles
     }
     return roleIds.stream()
         .map(

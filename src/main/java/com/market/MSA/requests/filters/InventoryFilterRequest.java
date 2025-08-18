@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 public class InventoryFilterRequest {
   String keyword;
   Long branchId;
+  Long userId;
 
   // Sorting
   @Builder.Default String sortBy = "inventoryId";

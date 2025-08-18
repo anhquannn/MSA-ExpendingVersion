@@ -3,7 +3,6 @@ package com.market.MSA.controllers.order;
 import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.PromoCodeUsageFilterRequest;
 import com.market.MSA.requests.order.PromoCodeUsageRequest;
-import com.market.MSA.responses.order.PromoCodeResponse;
 import com.market.MSA.responses.order.PromoCodeUsageResponse;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.services.order.PromoCodeUsageService;
@@ -62,14 +61,14 @@ public class PromoCodeUsageController {
   @GetMapping
   public ApiResponse<List<PromoCodeUsageResponse>> getAll() {
     return ApiResponse.<List<PromoCodeUsageResponse>>builder()
-            .result(promoCodeUsageService.getAll())
-            .message(ApiMessage.ALL_PROMO_CODE_USAGES_RETRIEVED.getMessage())
-            .build();
+        .result(promoCodeUsageService.getAll())
+        .message(ApiMessage.ALL_PROMO_CODE_USAGES_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
   public ApiResponse<List<PromoCodeUsageResponse>> getAllPromoCodeUsages(
-      @Valid PromoCodeUsageFilterRequest request) {
+      @RequestBody @Valid PromoCodeUsageFilterRequest request) {
     return ApiResponse.<List<PromoCodeUsageResponse>>builder()
         .result(promoCodeUsageService.getAllPromoCodeUsages(request))
         .message(ApiMessage.ALL_PROMO_CODE_USAGES_RETRIEVED.getMessage())
@@ -78,7 +77,7 @@ public class PromoCodeUsageController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<PromoCodeUsageResponse>> getAllPromoCodeUsagesWithPaging(
-      @Valid PromoCodeUsageFilterRequest request) {
+      @RequestBody @Valid PromoCodeUsageFilterRequest request) {
     return ApiResponse.<Page<PromoCodeUsageResponse>>builder()
         .result(promoCodeUsageService.getAllPromoCodeUsagesWithPaging(request))
         .message(ApiMessage.ALL_PROMO_CODE_USAGES_RETRIEVED.getMessage())

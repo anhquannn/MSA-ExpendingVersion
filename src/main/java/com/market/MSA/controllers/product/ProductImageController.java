@@ -4,7 +4,6 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.ProductImageFilterRequest;
 import com.market.MSA.requests.product.ProductImageRequest;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.product.InventoryProductResponse;
 import com.market.MSA.responses.product.ProductImageResponse;
 import com.market.MSA.services.product.ProductImageService;
 import jakarta.validation.Valid;
@@ -14,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProductImageController {
   ProductImageService productImageService;
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ApiResponse<ProductImageResponse> createProductImage(
       @RequestBody @Valid ProductImageRequest request) {
@@ -33,6 +34,7 @@ public class ProductImageController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{imageId}")
   public ApiResponse<ProductImageResponse> updateProductImage(
       @PathVariable long imageId, @RequestBody @Valid ProductImageRequest request) {
@@ -42,6 +44,7 @@ public class ProductImageController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{imageId}")
   public ApiResponse<Boolean> deleteProductImage(@PathVariable long imageId) {
     Boolean result = productImageService.deleteProductImage(imageId);
@@ -62,14 +65,14 @@ public class ProductImageController {
   @GetMapping
   public ApiResponse<List<ProductImageResponse>> getAll() {
     return ApiResponse.<List<ProductImageResponse>>builder()
-            .result(productImageService.getAll())
-            .message(ApiMessage.ALL_PRODUCT_IMAGES_RETRIEVED.getMessage())
-            .build();
+        .result(productImageService.getAll())
+        .message(ApiMessage.ALL_PRODUCT_IMAGES_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")
   public ApiResponse<List<ProductImageResponse>> getAllProductImages(
-      @Valid ProductImageFilterRequest request) {
+      @RequestBody @Valid ProductImageFilterRequest request) {
     return ApiResponse.<List<ProductImageResponse>>builder()
         .result(productImageService.getAllProductImages(request))
         .message(ApiMessage.ALL_PRODUCT_IMAGES_RETRIEVED.getMessage())
@@ -78,7 +81,7 @@ public class ProductImageController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<ProductImageResponse>> getAllProductImagesWithPaging(
-      @Valid ProductImageFilterRequest request) {
+      @RequestBody @Valid ProductImageFilterRequest request) {
     return ApiResponse.<Page<ProductImageResponse>>builder()
         .result(productImageService.getAllProductImagesWithPaging(request))
         .message(ApiMessage.ALL_PRODUCT_IMAGES_RETRIEVED.getMessage())

@@ -45,6 +45,15 @@ public class UserController {
         .build();
   }
 
+  @PutMapping("/device/{deviceId}/{userId}")
+  ApiResponse<UserResponse> updateDeviceId(
+      @PathVariable String deviceId, @PathVariable long userId) {
+    return ApiResponse.<UserResponse>builder()
+        .result(userService.updateDeviceId(deviceId, userId))
+        .message(ApiMessage.USER_UPDATED.getMessage())
+        .build();
+  }
+
   @PostMapping("/login")
   public ApiResponse<UserResponse> login(@RequestBody @Valid AuthenticationRequest request) {
     UserResponse userResponse = userService.validateCredentials(request);
@@ -59,6 +68,17 @@ public class UserController {
   @PostMapping("/admin/login")
   public ApiResponse<AuthenticationResponse> loginAdmin(
       @RequestBody @Valid AuthenticationRequest request) {
+    if (request.getFcmToken() != null && request.getPlatform() != null) {
+      return ApiResponse.<AuthenticationResponse>builder()
+          .result(
+              userService.loginAdmin(
+                  request.getEmail(),
+                  request.getPassword(),
+                  request.getFcmToken(),
+                  request.getPlatform()))
+          .message(ApiMessage.USER_LOGGED_IN.getMessage())
+          .build();
+    }
     return ApiResponse.<AuthenticationResponse>builder()
         .result(userService.loginAdmin(request.getEmail(), request.getPassword()))
         .message(ApiMessage.USER_LOGGED_IN.getMessage())
@@ -96,9 +116,10 @@ public class UserController {
   }
 
   @PostMapping("/login/google")
-  ApiResponse<AuthenticationResponse> loginWithGoogle(@RequestParam String accessToken) {
+  ApiResponse<AuthenticationResponse> loginWithGoogle(
+      @RequestBody @Valid GoogleLoginRequest request) {
     return ApiResponse.<AuthenticationResponse>builder()
-        .result(userService.loginWithGoogle(accessToken))
+        .result(userService.loginWithGoogle(request.getAccessToken()))
         .message(ApiMessage.GOOGLE_LOGIN_SUCCESSFUL.getMessage())
         .build();
   }
@@ -182,11 +203,48 @@ public class UserController {
         .build();
   }
 
+  @PutMapping("/admin/{userId}")
+  ApiResponse<UserResponse> updateUserWithoutPassword(
+      @PathVariable long userId, @RequestBody UpdateUserRequest request) {
+    return ApiResponse.<UserResponse>builder()
+        .result(userService.updateUserWithoutPassword(userId, request))
+        .message(ApiMessage.USER_UPDATED.getMessage())
+        .build();
+  }
+
+  @PutMapping("/password/{userId}")
+  ApiResponse<UserResponse> changePassword(
+      @PathVariable long userId, @RequestBody UpdatePasswordRequest request) {
+    return ApiResponse.<UserResponse>builder()
+        .result(
+            userService.changePassword(userId, request.getOldPassword(), request.getNewPassword()))
+        .message(ApiMessage.USER_UPDATED.getMessage())
+        .build();
+  }
+
+  @PutMapping("/profile/{userId}")
+  ApiResponse<UserResponse> updateProfile(
+      @PathVariable long userId, @RequestBody UpdateUserRequest request) {
+    return ApiResponse.<UserResponse>builder()
+        .result(userService.updateProfile(userId, request))
+        .message(ApiMessage.USER_UPDATED.getMessage())
+        .build();
+  }
+
   @PostMapping("/logout")
   ApiResponse<Void> logout(@RequestBody LogoutRequest request)
       throws JOSEException, ParseException {
     authenticationService.logout(request);
     return ApiResponse.<Void>builder().build();
+  }
+
+  @PostMapping("/surveyors")
+  public ApiResponse<UserResponse> createSurveyor(
+      @RequestBody @Valid SurveyorCreateRequest request) {
+    return ApiResponse.<UserResponse>builder()
+        .result(userService.createSurveyor(request))
+        .message(ApiMessage.USER_CREATED.getMessage())
+        .build();
   }
 
   @PostMapping("/refresh")
@@ -202,18 +260,20 @@ public class UserController {
   @GetMapping("/role/{role}/page")
   public ApiResponse<Page<UserResponse>> getAllUsersByRoleWithPagination(
       @PathVariable String role,
+      @RequestParam(required = false) String keyword,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size) {
     return ApiResponse.<Page<UserResponse>>builder()
-        .result(userService.getAllUsersByRoleWithPagination(role, page, size))
+        .result(userService.getAllUsersByRoleWithPagination(role, keyword, page, size))
         .message(ApiMessage.ALL_USERS_RETRIEVED.getMessage())
         .build();
   }
 
   @GetMapping("/role/{role}/all")
-  public ApiResponse<List<UserResponse>> getAllUsersByRole(@PathVariable String role) {
+  public ApiResponse<List<UserResponse>> getAllUsersByRole(
+      @PathVariable String role, @RequestParam(required = false) String keyword) {
     return ApiResponse.<List<UserResponse>>builder()
-        .result(userService.getAllUsersByRole(role))
+        .result(userService.getAllUsersByRole(role, keyword))
         .message(ApiMessage.ALL_USERS_RETRIEVED.getMessage())
         .build();
   }

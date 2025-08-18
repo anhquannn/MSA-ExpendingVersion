@@ -2,12 +2,13 @@ package com.market.MSA.models.product;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.ABCClassification;
 import com.market.MSA.models.order.CartItem;
 import com.market.MSA.models.order.OrderDetail;
 import com.market.MSA.models.others.Notification;
 import com.market.MSA.models.user.UserBehavior;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,9 +39,11 @@ public class Product {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long productId;
 
+  @Column(nullable = false, unique = true)
   String name;
 
-  @Positive double price;
+  @PositiveOrZero(message = "Giá sản phẩm phải >= 0")
+  double price;
 
   double discountPercentage;
   int discountTriggerDays;
@@ -49,17 +52,28 @@ public class Product {
   String specification;
   String description;
   LocalDateTime createdAt;
+  LocalDateTime lastClassificationDate;
 
-  @Positive double totalRevenue;
+  boolean isPromotional;
+  boolean isExemptFromPromotion;
+  ABCClassification abcClassification;
+
+  @PositiveOrZero double totalRevenue;
 
   @ManyToOne
-  @JoinColumn(name = "supplierId", nullable = false)
-  @JsonBackReference("product-supplier")
+  @JoinColumn(
+      name = "supplier_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_product_supplier"))
+  @JsonBackReference("supplier-products")
   Supplier supplier;
 
   @ManyToOne
-  @JoinColumn(name = "categoryId", nullable = false)
-  @JsonBackReference("product-category")
+  @JoinColumn(
+      name = "category_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_product_category"))
+  @JsonBackReference("product-categories")
   Category category;
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -97,4 +111,20 @@ public class Product {
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("product-trending")
   List<TrendingProduct> trendingProducts = new ArrayList<>();
+
+  @OneToMany(mappedBy = "product1", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("comb-product1")
+  List<ProductCombination> product1s = new ArrayList<>();
+
+  @OneToMany(mappedBy = "product2", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("comb-product2")
+  List<ProductCombination> product2s = new ArrayList<>();
+
+  @OneToMany(mappedBy = "productMain", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("promo-productMain")
+  List<Promotion> productMains = new ArrayList<>();
+
+  @OneToMany(mappedBy = "productFree", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("promo-productFree")
+  List<Promotion> productFrees = new ArrayList<>();
 }

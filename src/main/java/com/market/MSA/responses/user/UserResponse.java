@@ -24,7 +24,6 @@ public class UserResponse {
   String phoneNumber;
   LocalDateTime birthday;
   String password;
-  String address;
   String image;
   String deviceId;
   String googleId;
@@ -33,6 +32,8 @@ public class UserResponse {
 
   List<BranchResponse> branches;
 
+  // List<UserAddressResponse> userAddresses;
+
   public static UserResponse fromUser(User user) {
     return UserResponse.builder()
         .userId(user.getUserId())
@@ -40,8 +41,8 @@ public class UserResponse {
         .fullName(user.getFullName())
         .phoneNumber(user.getPhoneNumber())
         .birthday(user.getBirthday())
-        .address(user.getAddress())
         .googleId(user.getGoogleId())
+        .image(user.getImage())
         .build();
   }
 }

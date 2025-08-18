@@ -2,15 +2,7 @@ package com.market.MSA.models.product;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -34,12 +26,14 @@ public class Category {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long categoryId;
 
+  @Column(nullable = false)
   String name;
+
   String description;
 
   @ManyToOne
-  @JoinColumn(name = "parent_category_id")
-  @JsonBackReference("category-parent")
+  @JoinColumn(name = "parent_category_id", foreignKey = @ForeignKey(name = "fk_category_parent"))
+  @JsonBackReference("category-children")
   Category parentCategory;
 
   @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -47,6 +41,6 @@ public class Category {
   List<Category> subCategories = new ArrayList<>();
 
   @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("category-products")
+  @JsonManagedReference("product-categories")
   List<Product> products = new ArrayList<>();
 }

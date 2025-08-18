@@ -6,14 +6,17 @@ import com.market.MSA.requests.product.ProductRequest;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.responses.product.ProductFilterResponse;
 import com.market.MSA.responses.product.ProductResponse;
+import com.market.MSA.responses.product.ProductSalesStatisticsResponse;
 import com.market.MSA.services.product.ProductService;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProductController {
   ProductService productService;
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ApiResponse<ProductResponse> createProduct(
       @RequestBody @Valid ProductRequest request,
@@ -42,6 +46,7 @@ public class ProductController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{productId}")
   public ApiResponse<ProductResponse> updateProduct(
       @PathVariable long productId, @RequestBody @Valid ProductRequest request) {
@@ -51,6 +56,7 @@ public class ProductController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{productId}")
   public ApiResponse<Boolean> deleteProduct(@PathVariable long productId) {
     Boolean result = productService.deleteProduct(productId);
@@ -86,6 +92,25 @@ public class ProductController {
       @RequestParam(defaultValue = "asc") String sortDirection) {
     return ApiResponse.<Page<ProductResponse>>builder()
         .result(productService.getAllProductsInBranch(branchId, page, size, sortBy, sortDirection))
+        .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @GetMapping("/{productId}/sales-statistics")
+  public ApiResponse<ProductSalesStatisticsResponse> getProductSalesStatistics(
+      @PathVariable Long productId,
+      @RequestParam(defaultValue = "6") int months,
+      @RequestParam(required = false) Long branchId) {
+    return ApiResponse.<ProductSalesStatisticsResponse>builder()
+        .result(productService.getProductSalesStatistics(productId, branchId, months))
+        .message(ApiMessage.PRODUCT_SALES_STATISTICS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @GetMapping("/category/{categoryId}/filters")
+  public ApiResponse<Map<String, Object>> getFilterOptions(@PathVariable Long categoryId) {
+    return ApiResponse.<Map<String, Object>>builder()
+        .result(productService.getFilterOptions(categoryId))
         .message(ApiMessage.ALL_PRODUCTS_RETRIEVED.getMessage())
         .build();
   }

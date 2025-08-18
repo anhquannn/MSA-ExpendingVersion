@@ -6,13 +6,17 @@ import com.market.MSA.responses.order.PromoCodeResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface PromoCodeMapper {
   PromoCode toPromoCode(PromoCodeRequest request);
 
+  @Mapping(source = "campaign", target = "campaignResponse")
   PromoCodeResponse toPromoCodeResponse(PromoCode promoCode);
 
   @Mapping(target = "promoCodeId", ignore = true)

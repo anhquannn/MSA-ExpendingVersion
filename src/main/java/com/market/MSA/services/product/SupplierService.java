@@ -7,7 +7,6 @@ import com.market.MSA.models.product.Supplier;
 import com.market.MSA.repositories.product.SupplierRepository;
 import com.market.MSA.requests.filters.SupplierFilterRequest;
 import com.market.MSA.requests.product.SupplierRequest;
-import com.market.MSA.responses.product.ProductImageResponse;
 import com.market.MSA.responses.product.SupplierResponse;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,7 +14,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -31,6 +32,12 @@ public class SupplierService {
   final SupplierMapper supplierMapper;
 
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "all_suppliers", allEntries = true),
+        @CacheEvict(value = "suppliers_list", allEntries = true),
+        @CacheEvict(value = "suppliers_paging", allEntries = true)
+      })
   public SupplierResponse createSupplier(SupplierRequest request) {
     Supplier supplier = supplierMapper.toSupplier(request);
     supplier = supplierRepository.save(supplier);
@@ -38,6 +45,12 @@ public class SupplierService {
   }
 
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "all_suppliers", allEntries = true),
+        @CacheEvict(value = "suppliers_list", allEntries = true),
+        @CacheEvict(value = "suppliers_paging", allEntries = true)
+      })
   public SupplierResponse updateSupplier(Long supplierId, SupplierRequest request) {
     Supplier supplier =
         supplierRepository
@@ -51,6 +64,12 @@ public class SupplierService {
   }
 
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "all_suppliers", allEntries = true),
+        @CacheEvict(value = "suppliers_list", allEntries = true),
+        @CacheEvict(value = "suppliers_paging", allEntries = true)
+      })
   public boolean deleteSupplier(Long supplierId) {
     if (!supplierRepository.existsById(supplierId)) {
       throw new AppException(ErrorCode.SUPPLIER_NOT_FOUND);
@@ -59,7 +78,6 @@ public class SupplierService {
     return true;
   }
 
-  @Cacheable(value = "supplier", key = "#supplierId", unless = "#result == null")
   public SupplierResponse getSupplierById(Long supplierId) {
     Supplier supplier =
         supplierRepository
@@ -70,17 +88,21 @@ public class SupplierService {
 
   @Cacheable("all_suppliers")
   public List<SupplierResponse> getAll() {
-    return supplierRepository.findAll().stream().map(supplierMapper::toSupplierResponse).collect(Collectors.toList());
+    return supplierRepository.findAll().stream()
+        .map(supplierMapper::toSupplierResponse)
+        .collect(Collectors.toList());
   }
 
-  @Cacheable("suppliers")
+  @Cacheable("suppliers_list")
+  @Transactional(readOnly = true)
   public List<SupplierResponse> getAllSuppliers(SupplierFilterRequest request) {
     return supplierRepository.filter(request.getKeyword()).stream()
         .map(supplierMapper::toSupplierResponse)
         .collect(Collectors.toList());
   }
 
-  @Cacheable("suppliers")
+  @Cacheable("suppliers_paging")
+  @Transactional(readOnly = true)
   public Page<SupplierResponse> getAllSuppliersWithPaging(SupplierFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 

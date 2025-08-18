@@ -1,12 +1,9 @@
 package com.market.MSA.controllers.others;
 
 import com.market.MSA.constants.ApiMessage;
-import com.market.MSA.requests.goship.RatesRequest;
-import com.market.MSA.requests.goship.ShipmentRequest;
 import com.market.MSA.responses.goship.*;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.services.others.GoshipService;
-import jakarta.validation.Valid;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -47,19 +44,11 @@ public class GoshipController {
         .build();
   }
 
-  @PostMapping("/rates")
-  public ApiResponse<List<RatesResponse>> createRates(@RequestBody @Valid RatesRequest request) {
-    return ApiResponse.<List<RatesResponse>>builder()
-        .result(goshipService.createRates(request))
-        .message(ApiMessage.RATES_CREATED.getMessage())
-        .build();
-  }
-
-  @PostMapping("/{orderId}")
+  @PostMapping("/order/{orderId}/address/{userAddressId}/rate/{rate}")
   public ApiResponse<ShipmentResponse> createShipment(
-      @PathVariable Long orderId, @RequestBody @Valid ShipmentRequest request) {
+      @PathVariable Long orderId, @PathVariable Long userAddressId, @PathVariable String rate) {
     return ApiResponse.<ShipmentResponse>builder()
-        .result(goshipService.createShipment(request, orderId))
+        .result(goshipService.createShipment(orderId, userAddressId, rate))
         .message(ApiMessage.SHIPMENT_CREATED.getMessage())
         .build();
   }
@@ -87,6 +76,15 @@ public class GoshipController {
     return ApiResponse.<List<ShipmentDetailResponse>>builder()
         .result(goshipService.searchShipmentsByTimeRange(from, to))
         .message(ApiMessage.ALL_SHIPMENTS_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/webhook")
+  public ApiResponse<Boolean> handleWebhook(@RequestBody String payload) {
+    log.info("Nhận được webhook từ Goship: {}", payload);
+    return ApiResponse.<Boolean>builder()
+        .result(goshipService.processWebhook(payload))
+        .message(ApiMessage.SHIPMENT_RETRIEVED.getMessage())
         .build();
   }
 }

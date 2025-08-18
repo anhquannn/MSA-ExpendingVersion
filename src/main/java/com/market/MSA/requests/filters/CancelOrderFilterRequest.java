@@ -1,5 +1,7 @@
 package com.market.MSA.requests.filters;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.market.MSA.constants.OrderStatus;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -13,9 +15,13 @@ import lombok.experimental.FieldDefaults;
 public class CancelOrderFilterRequest {
   Long orderId;
   Long userId;
-  String status;
+  OrderStatus status;
   String reason;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime fromDate;
+
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime toDate;
 
   // Sorting

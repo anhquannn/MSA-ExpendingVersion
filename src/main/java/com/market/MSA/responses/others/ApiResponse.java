@@ -1,11 +1,9 @@
 package com.market.MSA.responses.others;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.Collections;
+import java.util.List;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Data
@@ -18,5 +16,17 @@ public class ApiResponse<T> {
   @Builder.Default private int code = 200;
 
   String message;
-  private T result;
+
+  @Setter private T result;
+
+  @SuppressWarnings("unchecked")
+  public T getResult() {
+    if (result != null) return result;
+
+    // Nếu T là một List, thì trả về emptyList, ngược lại trả về null
+    if (List.class.isAssignableFrom(Object.class)) { // Không có cách rõ ràng để kiểm tra T
+      return (T) Collections.emptyList(); // vẫn là unchecked cast
+    }
+    return null;
+  }
 }

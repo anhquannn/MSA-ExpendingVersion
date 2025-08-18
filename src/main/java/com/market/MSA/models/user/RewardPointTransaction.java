@@ -1,6 +1,7 @@
 package com.market.MSA.models.user;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.market.MSA.constants.RewardPointTransactionType;
 import com.market.MSA.models.order.Order;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -21,17 +22,26 @@ public class RewardPointTransaction {
   Long rewardPointTransactionId;
 
   double pointChange;
-  String type;
+
+  @Enumerated(EnumType.STRING)
+  RewardPointTransactionType type;
+
   String description;
   LocalDateTime createdAt;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_reward_point_transaction_user"))
   @JsonBackReference("user-reward-transactions")
   User user;
 
   @ManyToOne
-  @JoinColumn(name = "orderId", nullable = false)
+  @JoinColumn(
+      name = "order_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_reward_point_transaction_order"))
   @JsonBackReference("order-reward-transactions")
   Order order;
 }

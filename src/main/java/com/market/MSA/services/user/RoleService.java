@@ -41,6 +41,7 @@ public class RoleService {
     return roles.stream().map(roleMapper::toRoleResponse).toList();
   }
 
+  @Transactional
   public RoleResponse updateRole(long id, RoleRequest request) {
     Role role =
         roleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));

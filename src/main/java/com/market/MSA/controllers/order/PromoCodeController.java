@@ -1,9 +1,9 @@
 package com.market.MSA.controllers.order;
 
 import com.market.MSA.constants.ApiMessage;
+import com.market.MSA.constants.PromocodeStatus;
 import com.market.MSA.requests.filters.PromoCodeFilterRequest;
 import com.market.MSA.requests.order.PromoCodeRequest;
-import com.market.MSA.responses.order.OrderResponse;
 import com.market.MSA.responses.order.PromoCodeResponse;
 import com.market.MSA.responses.others.ApiResponse;
 import com.market.MSA.services.order.PromoCodeService;
@@ -13,14 +13,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/promo-code")
@@ -30,6 +27,7 @@ public class PromoCodeController {
   PromoCodeService promoCodeService;
 
   // Tạo PromoCode
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ApiResponse<PromoCodeResponse> createPromoCode(
       @RequestBody @Valid PromoCodeRequest request) {
@@ -40,6 +38,7 @@ public class PromoCodeController {
   }
 
   // Cập nhật PromoCode
+  @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{promoCodeId}")
   public ApiResponse<PromoCodeResponse> updatePromoCode(
       @PathVariable long promoCodeId, @RequestBody @Valid PromoCodeRequest request) {
@@ -50,6 +49,7 @@ public class PromoCodeController {
   }
 
   // Xóa PromoCode
+  @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{promoCodeId}")
   public ApiResponse<Boolean> deletePromoCode(@PathVariable long promoCodeId) {
     Boolean result = promoCodeService.deletePromoCode(promoCodeId);
@@ -81,27 +81,90 @@ public class PromoCodeController {
   @GetMapping
   public ApiResponse<List<PromoCodeResponse>> getAll() {
     return ApiResponse.<List<PromoCodeResponse>>builder()
-            .result(promoCodeService.getAll())
-            .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
-            .build();
+        .result(promoCodeService.getAll())
+        .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
+        .build();
   }
 
   // Lấy danh sách tất cả PromoCode (không phân trang)
-  @PostMapping("/list/user/{userId}")
+  @PostMapping("/list")
   public ApiResponse<List<PromoCodeResponse>> getAllPromoCodes(
-      @Valid PromoCodeFilterRequest request, @PathVariable Long userId) {
+      @RequestBody @Valid PromoCodeFilterRequest request) {
     return ApiResponse.<List<PromoCodeResponse>>builder()
-        .result(promoCodeService.getAllPromoCodes(request, userId))
+        .result(promoCodeService.getAllPromoCodes(request))
         .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
         .build();
   }
 
   // Lấy danh sách tất cả PromoCode (có phân trang)
-  @PostMapping("/paging/user/{userId}")
+  @PostMapping("/paging")
   public ApiResponse<Page<PromoCodeResponse>> getAllPromoCodesWithPaging(
-      @Valid PromoCodeFilterRequest request, @PathVariable Long userId) {
+      @RequestBody @Valid PromoCodeFilterRequest request) {
     return ApiResponse.<Page<PromoCodeResponse>>builder()
-        .result(promoCodeService.getAllPromoCodesWithPaging(request, userId))
+        .result(promoCodeService.getAllPromoCodesWithPaging(request))
+        .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @GetMapping("/cart/active")
+  public ApiResponse<List<PromoCodeResponse>> getActivePromoCodesForCart(
+      @RequestParam Long cartId, @RequestParam(required = false) Long userId) {
+    return ApiResponse.<List<PromoCodeResponse>>builder()
+        .result(promoCodeService.getActivePromoCodesForCart(cartId, userId))
+        .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @GetMapping("/cart/applicable")
+  public ApiResponse<List<PromoCodeResponse>> getApplicablePromoCodesForCart(
+      @RequestParam Long cartId,
+      @RequestParam PromocodeStatus status,
+      @RequestParam(required = false) Long userId) {
+    return ApiResponse.<List<PromoCodeResponse>>builder()
+        .result(promoCodeService.getApplicablePromoCodesForCart(cartId, status, userId))
+        .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/cart/list")
+  public ApiResponse<List<PromoCodeResponse>> filterPromoCodesWithCart(
+      @RequestBody @Valid PromoCodeFilterRequest request) {
+    return ApiResponse.<List<PromoCodeResponse>>builder()
+        .result(
+            promoCodeService.filterPromoCodesWithCart(
+                request.getKeyword(),
+                request.getStatus(),
+                request.getCampaignId(),
+                request.getFromDate(),
+                request.getToDate(),
+                request.getCartId(),
+                request.getUserId(),
+                Sort.by(
+                    Sort.Direction.fromString(request.getSortDirection()), request.getSortBy())))
+        .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
+        .build();
+  }
+
+  @PostMapping("/cart/paging")
+  public ApiResponse<Page<PromoCodeResponse>> filterPromoCodesWithPagingAndCart(
+      @RequestBody @Valid PromoCodeFilterRequest request) {
+    Pageable pageable =
+        PageRequest.of(
+            request.getPage() - 1,
+            request.getPageSize(),
+            Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy()));
+
+    return ApiResponse.<Page<PromoCodeResponse>>builder()
+        .result(
+            promoCodeService.filterPromoCodesWithPagingAndCart(
+                request.getKeyword(),
+                request.getStatus(),
+                request.getCampaignId(),
+                request.getFromDate(),
+                request.getToDate(),
+                request.getCartId(),
+                request.getUserId(),
+                pageable))
         .message(ApiMessage.ALL_PROMO_CODES_RETRIEVED.getMessage())
         .build();
   }

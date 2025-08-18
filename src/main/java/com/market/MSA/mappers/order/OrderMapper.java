@@ -1,14 +1,20 @@
 package com.market.MSA.mappers.order;
 
+import com.market.MSA.mappers.user.RoleMapper;
+import com.market.MSA.mappers.user.UserAddressMappper;
 import com.market.MSA.models.order.Order;
 import com.market.MSA.requests.order.OrderRequest;
 import com.market.MSA.responses.order.OrderResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    uses = {UserAddressMappper.class, RoleMapper.class},
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface OrderMapper {
 
@@ -16,6 +22,7 @@ public interface OrderMapper {
   Order toOrder(OrderRequest request);
 
   @Mapping(target = "branch.inventory", ignore = true)
+  @Mapping(target = "orderDetails.product.orderDetails", ignore = true)
   OrderResponse toOrderResponse(Order order);
 
   @Mapping(target = "orderId", ignore = true)

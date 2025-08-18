@@ -5,11 +5,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
+  boolean existsByUser_UserIdAndProduct_ProductId(Long userId, Long productId);
+
   @Query(
       "SELECT f FROM Feedback f WHERE "
           + "(:productId IS NULL OR f.product.productId = :productId) AND "
@@ -44,5 +47,8 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
       Pageable pageable);
 
   @Query("SELECT f.product.productId, AVG(f.rating) from Feedback f GROUP BY f.product.productId")
+  @EntityGraph(attributePaths = {"product"})
   List<Object[]> findAverageRatingsByProduct();
+
+  boolean existsByOrderDetail_OrderDetailId(Long orderDetailId);
 }

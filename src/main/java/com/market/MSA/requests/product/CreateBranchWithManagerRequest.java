@@ -1,4 +1,4 @@
-package com.market.MSA.requests.branch;
+package com.market.MSA.requests.product;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -31,6 +31,15 @@ public class CreateBranchWithManagerRequest {
 
   @NotBlank(message = "Branch city is required")
   private String branchCity;
+
+  @NotBlank(message = "Branch code ward is required")
+  private String branchWardCode;
+
+  @NotBlank(message = "Branch code district is required")
+  private String branchDistrictCode;
+
+  @NotBlank(message = "Branch code city is required")
+  private String branchCityCode;
 
   // Inventory fields
   @NotBlank(message = "Inventory name is required")

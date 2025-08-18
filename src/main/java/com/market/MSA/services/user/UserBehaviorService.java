@@ -9,7 +9,6 @@ import com.market.MSA.repositories.user.UserBehaviorRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.UserBehaviorFilterRequest;
 import com.market.MSA.requests.user.UserBehaviorRequest;
-import com.market.MSA.responses.user.RewardPointTransactionResponse;
 import com.market.MSA.responses.user.UserBehaviorResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.util.List;
@@ -92,11 +91,15 @@ public class UserBehaviorService {
   }
 
   @Cacheable("all_user_behaviors")
+  @Transactional(readOnly = true)
   public List<UserBehaviorResponse> getAll() {
-    return userBehaviorRepository.findAll().stream().map(userBehaviorMapper::toUserBehaviorResponse).collect(Collectors.toList());
+    return userBehaviorRepository.findAll().stream()
+        .map(userBehaviorMapper::toUserBehaviorResponse)
+        .collect(Collectors.toList());
   }
 
-  @Cacheable("user_behaviors")
+  @Cacheable("user_behaviors_list")
+  @Transactional(readOnly = true)
   public List<UserBehaviorResponse> getAllUserBehaviors(UserBehaviorFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
 
@@ -105,7 +108,8 @@ public class UserBehaviorService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("user_behaviors")
+  @Cacheable("user_behaviors_paging")
+  @Transactional(readOnly = true)
   public Page<UserBehaviorResponse> getAllUserBehaviorsWithPaging(
       UserBehaviorFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

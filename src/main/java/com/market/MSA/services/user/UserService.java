@@ -5,17 +5,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.user.UserMapper;
+import com.market.MSA.models.others.DeviceToken;
+import com.market.MSA.models.others.Platform;
 import com.market.MSA.models.user.Role;
 import com.market.MSA.models.user.User;
+import com.market.MSA.repositories.others.DeviceTokenRepository;
 import com.market.MSA.repositories.user.RoleRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.user.AuthenticationRequest;
+import com.market.MSA.requests.user.SurveyorCreateRequest;
 import com.market.MSA.requests.user.UpdateUserRequest;
 import com.market.MSA.requests.user.UserRequest;
 import com.market.MSA.responses.user.AuthenticationResponse;
 import com.market.MSA.responses.user.GoogleUser;
 import com.market.MSA.responses.user.UserResponse;
 import com.market.MSA.services.others.EmailService;
+import java.net.URI;
 import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.List;
@@ -27,10 +32,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,6 +44,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @RequiredArgsConstructor
@@ -50,13 +53,50 @@ import org.springframework.web.client.RestTemplate;
 public class UserService {
   static final String CHARACTERS =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()";
-
   final UserRepository userRepository;
   final UserMapper userMapper;
   final RoleRepository roleRepository;
   final EmailService emailService;
   final AuthenticationService authenticationService;
   final PasswordEncoder passwordEncoder;
+  final DeviceTokenRepository deviceTokenRepository;
+
+  @Transactional
+  public AuthenticationResponse loginAdmin(
+      String email, String password, String fcmToken, Platform platform) {
+    User user =
+        userRepository
+            .findByEmail(email)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+    if (!passwordEncoder.matches(password, user.getPassword())) {
+      throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+    }
+
+    // Save FCM token if provided
+    if (fcmToken != null && platform != null) {
+      DeviceToken deviceToken =
+          deviceTokenRepository
+              .findByToken(fcmToken)
+              .orElse(
+                  DeviceToken.builder()
+                      .userId(user.getUserId())
+                      .token(fcmToken)
+                      .platform(platform)
+                      .build());
+      deviceTokenRepository.save(deviceToken);
+    }
+
+    String accessToken = authenticationService.generateToken(user, false);
+    String refreshToken = authenticationService.generateToken(user, true);
+
+    return AuthenticationResponse.builder()
+        .accessToken(accessToken)
+        .refreshToken(refreshToken)
+        .expiresIn(authenticationService.getValidDuration() * 3600)
+        .authenticated(true)
+        .build();
+  }
 
   @Transactional
   public UserResponse registerUser(UserRequest request) {
@@ -74,7 +114,7 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
-//  @Cacheable(value = "users", key = "'email:' + #email")
+  @Cacheable(value = "users", key = "'email:' + #email")
   public UserResponse existsByEmail(String email) {
     User user =
         userRepository
@@ -83,7 +123,19 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
-//  @Cacheable(value = "users", key = "'auth:' + #request.email")
+  @Transactional
+  public UserResponse updateDeviceId(String deviceId, Long userId) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    user.setDeviceId(deviceId);
+    userRepository.save(user);
+    return userMapper.toUserResponse(user);
+  }
+
+  @Cacheable(value = "users", key = "'auth:' + #request.email")
+  @Transactional
   public UserResponse validateCredentials(AuthenticationRequest request) {
     User user =
         userRepository
@@ -106,6 +158,7 @@ public class UserService {
     CompletableFuture.runAsync(() -> emailService.resendOTP(email));
   }
 
+  @Transactional
   public AuthenticationResponse verifyOtp(String otp) {
     String email = emailService.validateOTP(otp);
     User user =
@@ -124,6 +177,7 @@ public class UserService {
         .build();
   }
 
+  @Transactional
   public AuthenticationResponse loginAdmin(String email, String password) {
     User user =
         userRepository
@@ -149,9 +203,13 @@ public class UserService {
   public AuthenticationResponse loginWithGoogle(String accessToken) {
     // Gọi API Google để lấy thông tin người dùng
     RestTemplate restTemplate = new RestTemplate();
-    String googleUrl = "https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + accessToken;
+    URI uri =
+        UriComponentsBuilder.fromUriString("https://www.googleapis.com/oauth2/v3/tokeninfo")
+            .queryParam("access_token", accessToken)
+            .build(true)
+            .toUri();
 
-    ResponseEntity<String> response = restTemplate.getForEntity(googleUrl, String.class);
+    ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
 
     if (response.getStatusCode() != HttpStatus.OK) {
       throw new AppException(ErrorCode.INVALID_GOOGLE_TOKEN);
@@ -217,11 +275,6 @@ public class UserService {
   }
 
   @Transactional
-//  @Caching(
-//      put = {
-//        @CachePut(value = "users", key = "'email:' + #request.email"),
-//        @CachePut(value = "users", key = "'id:' + #result.id", condition = "#result != null")
-//      })
   public UserResponse createUser(UserRequest request) {
     User user = userMapper.toUser(request);
     user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -235,10 +288,7 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
-//  @Cacheable(
-//      value = "users",
-//      key =
-//          "'me:' + T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
+  @Transactional(readOnly = true)
   public UserResponse getMyInfo() {
     var context = SecurityContextHolder.getContext();
     String email = context.getAuthentication().getName();
@@ -250,7 +300,7 @@ public class UserService {
     return userMapper.toUserResponse(user);
   }
 
-  //  @PreAuthorize("hasRole('ADMIN')")
+  @Transactional(readOnly = true)
   public List<UserResponse> getUsers() {
     List<User> users = userRepository.findAll();
     return users.stream().map(userMapper::toUserResponse).toList();
@@ -262,26 +312,25 @@ public class UserService {
         .orElseThrow(() -> new RuntimeException("User not found"));
   }
 
-  // @PostAuthorize("returnObject.username == authentication.name")
-//  @Cacheable(value = "users", key = "'id:' + #userId")
+  @Transactional(readOnly = true)
   public UserResponse getUserByID(long userId) {
-    log.info("In method get user by ID");
     User user = getUserEntityByID(userId);
     return userMapper.toUserResponse(user);
   }
 
-//  @Cacheable(value = "users", key = "'email:' + #email")
+  @Transactional(readOnly = true)
   public UserResponse getUserByEmail(String email) {
     Optional<User> user = userRepository.findByEmail(email);
     return user.map(UserResponse::fromUser).orElse(null);
   }
 
-//  @Cacheable(value = "users", key = "'google:' + #googleID")
+  @Transactional(readOnly = true)
   public UserResponse getUserByGoogleID(String googleID) {
     Optional<User> user = userRepository.findByGoogleId(googleID);
     return user.map(UserResponse::fromUser).orElse(null);
   }
 
+  @Transactional
   public String generateAndSetRandomPasswordByEmail(String email) {
     Optional<User> userOpt = userRepository.findByEmail(email);
     if (userOpt.isEmpty()) {
@@ -300,21 +349,32 @@ public class UserService {
   }
 
   @Transactional
-//  @Caching(
-//      evict = {
-//        @CacheEvict(value = "users", key = "'id:' + #userId"),
-//        @CacheEvict(
-//            value = "users",
-//            key = "'email:' + #result.email",
-//            condition = "#result != null"),
-//        @CacheEvict(value = "users", key = "'me:' + #result.email", condition = "#result != null"),
-//        @CacheEvict(value = "users", allEntries = true, condition = "#result != null")
-//      })
   public UserResponse updateUser(long userId, UpdateUserRequest request) {
     User user = getUserEntityByID(userId);
 
     userMapper.updateUser(user, request);
-    user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+    if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+      var roles = roleRepository.findAllById(request.getRoles());
+      user.setRoles(new HashSet<>(roles));
+    }
+
+    // Hash new password if provided
+    if (request.getPassword() != null && !request.getPassword().isBlank()) {
+      user.setPassword(passwordEncoder.encode(request.getPassword()));
+    }
+
+    // Save the updated user
+    user = userRepository.save(user);
+
+    return userMapper.toUserResponse(user);
+  }
+
+  @Transactional
+  public UserResponse updateUserWithoutPassword(long userId, UpdateUserRequest request) {
+    User user = getUserEntityByID(userId);
+
+    userMapper.updateUser(user, request);
 
     var roles = roleRepository.findAllById(request.getRoles());
     user.setRoles(new HashSet<>(roles));
@@ -324,17 +384,59 @@ public class UserService {
   }
 
   @Transactional
-//  @Caching(
-//      evict = {
-//        @CacheEvict(value = "users", key = "'id:' + #userId"),
-//        @CacheEvict(value = "users", allEntries = true)
-//      })
+  public UserResponse changePassword(Long userId, String oldPassword, String newPassword) {
+    User user = getUserEntityByID(userId);
+
+    if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+      throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+    }
+
+    user.setPassword(passwordEncoder.encode(newPassword));
+    userRepository.save(user);
+    return userMapper.toUserResponse(user);
+  }
+
+  @Transactional
+  public UserResponse updateProfile(Long userId, UpdateUserRequest request) {
+    User user = getUserEntityByID(userId);
+
+    // cập nhật các trường ngoại trừ roles, password (nếu Request.password null)
+    userMapper.updateUser(user, request);
+
+    // không đổi mật khẩu tại đây
+    userRepository.save(user);
+    return userMapper.toUserResponse(user);
+  }
+
+  @Transactional
   public boolean deleteUser(long userId) {
     if (!userRepository.existsById(userId)) {
       throw new AppException(ErrorCode.USER_NOT_EXISTED);
     }
     userRepository.deleteById(userId);
     return true;
+  }
+
+  public UserResponse createSurveyor(SurveyorCreateRequest request) {
+    if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+      throw new AppException(ErrorCode.USER_EXISTED);
+    }
+    Role surveyorRole =
+        roleRepository
+            .findByName("SURVEYOR")
+            .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+
+    User user =
+        User.builder()
+            .email(request.getEmail())
+            .fullName(request.getFullName())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .phoneNumber(request.getPhoneNumber())
+            .roles(Set.of(surveyorRole))
+            .build();
+
+    user = userRepository.save(user);
+    return userMapper.toUserResponse(user);
   }
 
   static String generateRandomPassword() {
@@ -348,8 +450,10 @@ public class UserService {
     return password.toString();
   }
 
-//  @Cacheable(value = "user_pages", key = "'role:' + #role + ':page:' + #page + ':size:' + #size")
-  public Page<UserResponse> getAllUsersByRoleWithPagination(String role, int page, int size) {
+  @Cacheable("get_users_roles")
+  @Transactional(readOnly = true)
+  public Page<UserResponse> getAllUsersByRoleWithPagination(
+      String role, String keyword, int page, int size) {
     if (role == null || role.trim().isEmpty()) {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
@@ -360,23 +464,28 @@ public class UserService {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
     Page<User> userPage =
-        userRepository.findByRoleWithPagination(role.toUpperCase(), PageRequest.of(page, size));
+        userRepository.searchByKeywordAndRole(
+            (keyword == null || keyword.trim().isEmpty()) ? null : keyword.trim().toLowerCase(),
+            role.toUpperCase(),
+            PageRequest.of(page, size));
     return userPage.map(userMapper::toUserResponse);
   }
 
-//  @Cacheable(value = "user_lists", key = "'role:all:' + #role")
-  public List<UserResponse> getAllUsersByRole(String role) {
+  @Transactional(readOnly = true)
+  public List<UserResponse> getAllUsersByRole(String role, String keyword) {
     if (role == null || role.trim().isEmpty()) {
       throw new AppException(ErrorCode.INVALID_INPUT);
     }
-    return userRepository.findAllByRole(role.toUpperCase()).stream()
+    return userRepository
+        .findAllByRoleAndKeyword(
+            role.toUpperCase(),
+            (keyword == null || keyword.trim().isEmpty()) ? null : keyword.trim())
+        .stream()
         .map(userMapper::toUserResponse)
         .collect(Collectors.toList());
   }
 
-//  @Cacheable(
-//      value = "user_pages",
-//      key = "'managers:inventory:' + #inventoryId + ':page:' + #page + ':size:' + #size")
+  @Transactional(readOnly = true)
   public Page<UserResponse> getManagersByInventoryIdWithPagination(
       Long inventoryId, int page, int size) {
     if (inventoryId == null) {
@@ -394,7 +503,6 @@ public class UserService {
     return userPage.map(userMapper::toUserResponse);
   }
 
-//  @Cacheable(value = "user_lists", key = "'managers:inventory:all:' + #inventoryId")
   public List<UserResponse> getAllManagersByInventoryId(Long inventoryId) {
     if (inventoryId == null) {
       throw new AppException(ErrorCode.INVALID_INPUT);

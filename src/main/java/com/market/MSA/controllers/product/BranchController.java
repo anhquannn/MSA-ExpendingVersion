@@ -1,11 +1,10 @@
 package com.market.MSA.controllers.product;
 
 import com.market.MSA.constants.ApiMessage;
-import com.market.MSA.requests.branch.CreateBranchWithManagerRequest;
 import com.market.MSA.requests.filters.BranchFilterRequest;
 import com.market.MSA.requests.product.BranchRequest;
+import com.market.MSA.requests.product.CreateBranchWithManagerRequest;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.others.PaymentResponse;
 import com.market.MSA.responses.product.BranchResponse;
 import com.market.MSA.services.product.BranchService;
 import jakarta.validation.Valid;
@@ -14,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,6 +40,7 @@ public class BranchController {
         .build();
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping("/admin")
   public ApiResponse<BranchResponse> createBranchWithManager(
       @RequestBody CreateBranchWithManagerRequest request) {
@@ -51,6 +52,7 @@ public class BranchController {
   }
 
   // Update Branch
+  @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{branchId}")
   public ApiResponse<BranchResponse> updateBranch(
       @PathVariable Long branchId, @RequestBody BranchRequest branchRequest) {
@@ -62,6 +64,7 @@ public class BranchController {
   }
 
   // Delete Branch
+  @PreAuthorize("hasRole('ADMIN')")
   @DeleteMapping("/{branchId}")
   public ApiResponse<Boolean> deleteBranch(@PathVariable Long branchId) {
     boolean result = branchService.deleteBranch(branchId);
@@ -90,16 +93,9 @@ public class BranchController {
         .build();
   }
 
-  @GetMapping
-  public ApiResponse<List<BranchResponse>> getAll() {
-    return ApiResponse.<List<BranchResponse>>builder()
-            .result(branchService.getAll())
-            .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())
-            .build();
-  }
-
   @PostMapping("/list")
-  public ApiResponse<List<BranchResponse>> getAllBranches(@Valid BranchFilterRequest request) {
+  public ApiResponse<List<BranchResponse>> getAllBranches(
+      @RequestBody @Valid BranchFilterRequest request) {
     return ApiResponse.<List<BranchResponse>>builder()
         .result(branchService.getAllBranches(request))
         .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())
@@ -116,7 +112,7 @@ public class BranchController {
 
   @PostMapping("/paging")
   public ApiResponse<Page<BranchResponse>> getAllBranchesWithPaging(
-      @Valid BranchFilterRequest request) {
+      @RequestBody @Valid BranchFilterRequest request) {
     return ApiResponse.<Page<BranchResponse>>builder()
         .result(branchService.getAllBranchesWithPaging(request))
         .message(ApiMessage.ALL_BRANCHES_RETRIEVED.getMessage())

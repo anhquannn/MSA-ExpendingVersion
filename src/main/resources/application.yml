@@ -2,14 +2,25 @@ spring:
   application:
     name: msa
   datasource:
-    url: jdbc:mysql://localhost:3306/msa_2
+    url: jdbc:mysql://hopper.proxy.rlwy.net:46172/railway
     username: root
-    password:
+    password: UGqcFyuKerMubpteuUSdbRXTMadUscxg
     driver-class-name: com.mysql.cj.jdbc.Driver
+#  datasource:
+#    url: jdbc:mysql://localhost:3306/msa
+#    username: root
+#    password:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
   jackson:
     deserialization:
       adjust-dates-to-context-time-zone: false
@@ -59,8 +70,8 @@ server:
 
 jwt:
   signerKey: FH7jrUqilRiuOZJnYs!B49FiV3BRG2EKW/xrC!BvuIHeQdy6fmnw3bZD3c2GycRDqbUYgL-Z4L6rkKMU8FrQzaLvzKQFOSZmhss2?37HqiCozilTgcQd-/iqfpQGwMLZ!OjQ-O8jVfhf73CxoPDR2bhg2LWIHluwxt293ezeX/Zc0ijLJyTCBIO!-QjdBlryikLZYxzzHj/gwz8-vguokfXzpQPJbw8e8VYfLTThTlqj8plRVm1BeuPzRJgDWsy?
-  valid-duration: 36000000000000000
-  refreshable-duration: 36000000000000000
+  valid-duration: 36
+  refreshable-duration: 360
 
 goship:
   token: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImNmMzdjOTljZGY3NjdmMGI2NWUyMTQ4NmRmOWRlYWQyZjk4ZjY3YmJhNGJmMDNhYjA5ZGQwMGM4YjMwNDkxOGM0MDkxZDgyNjMzNzg2N2RiIn0.eyJhdWQiOiIxNjYiLCJqdGkiOiJjZjM3Yzk5Y2RmNzY3ZjBiNjVlMjE0ODZkZjlkZWFkMmY5OGY2N2JiYTRiZjAzYWIwOWRkMDBjOGIzMDQ5MThjNDA5MWQ4MjYzMzc4NjdkYiIsImlhdCI6MTc0NTE0Njk1NSwibmJmIjoxNzQ1MTQ2OTU1LCJleHAiOjE3NzY2ODI5NTUsInN1YiI6IjM1MzkiLCJzY29wZXMiOltdfQ.BcSveRBtwtBi9QVQCdV5EE9e9fZ6B4tHmNsPf-OTMZ017WanwfKSTfEbawN-3m2wgUehyklRQpge3esjGTJha1hKaGK6DtviMFVVutyvkHTBG0l7UtSlNDDlkvgkSmpczShMnC0Mth5W33FzCrzHWRLyJgZkbPItabyZEmXtSR2VfzKBDyloMzDefX6U_BJgbLiSCyaLzA7UoDNVOCg5mRGR8axic23njWsIoCFzx-vHX_2hcKxx2meiAtHgSbYlB8oss_9O27qTEroBS5Rg61mqR_oSoXrBHBLBSvv5b2aiDsESqSpdB8za78Kbi95SQubTJ0uTLGTtoEXEPytWks3_mZtsK-1oLrpwBpx9M-bYlFU9IKu9JACLiA0KzQrcGI0SUVDvyrx4-hBYrT1E8XrSKuwoMYBscTDT-G7DW4Y6Rg_rJkE56PxVPiErqUOTnlzAoIgGXSjdV_NZS2GFGP5vX7wjjnzaEcXq-4gcJ5ZTJNqk-922RzwVO4zXdbJR9OfrOtCIdErjdbacs-6E5taTLyXYxyEczUxDyVxG8nuzIwuH0iKuVTnG1dt3tkt0IVheMcJSQVYUx74giW01V8mlgvVQbJwzQHFt2Kueid3VQSvOeOr6FpQLoycnrlrMeZTyDIX1WnepHoyawDrT7rgkJxKe2RiwQpX3UYPnJlo

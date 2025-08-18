@@ -4,31 +4,34 @@ import com.market.MSA.exceptions.AppException;
 import com.market.MSA.exceptions.ErrorCode;
 import com.market.MSA.mappers.product.InventoryProductMapper;
 import com.market.MSA.mappers.product.ProductMapper;
+import com.market.MSA.mappers.product.SupplierMapper;
 import com.market.MSA.models.product.Inventory;
 import com.market.MSA.models.product.InventoryProduct;
 import com.market.MSA.models.product.Product;
+import com.market.MSA.models.product.Promotion;
 import com.market.MSA.repositories.product.*;
 import com.market.MSA.requests.filters.ProductFilterRequest;
 import com.market.MSA.requests.product.ProductRequest;
-import com.market.MSA.responses.product.InventoryProductResponse;
-import com.market.MSA.responses.product.ProductFilterResponse;
+import com.market.MSA.responses.product.*;
+import com.market.MSA.responses.product.FreePromotionGroupResponse;
 import com.market.MSA.responses.product.ProductResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import com.market.MSA.services.others.NotificationService;
-import java.util.Collections;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.temporal.TemporalAdjusters;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,8 +40,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductService {
+  static final int MAX_FREE_PROMO_RESULTS = 50;
   final EntityFinderService entityFinderService;
-  final ProductRepository productRepository;
+  // Expose repository for bulk fetches in service layer (avoid extra N+1)
+  @Getter final ProductRepository productRepository;
+
   final SupplierRepository supplierRepository;
   final CategoryRepository categoryRepository;
   final ProductMapper productMapper;
@@ -46,11 +52,20 @@ public class ProductService {
   final InventoryRepository inventoryRepository;
   final InventoryProductRepository inventoryProductRepository;
   final InventoryProductMapper inventoryProductMapper;
+  final PromotionRepository promotionRepository;
+  final com.market.MSA.repositories.order.OrderDetailRepository orderDetailRepository;
+  final InventoryProductService inventoryProductService;
   static final String DEFAULT_SORT_BY = "price";
   static final String DEFAULT_SORT_DIRECTION = "asc";
+  final SupplierMapper supplierMapper;
 
-  @CacheEvict(value = "products", allEntries = true)
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "products", allEntries = true),
+        @CacheEvict(value = "filtered_products", allEntries = true),
+        @CacheEvict(value = "branch_products", allEntries = true)
+      })
   public ProductResponse createProduct(ProductRequest request, boolean sendNotificationToAll) {
     Product product = productMapper.toProduct(request);
     product.setSupplier(
@@ -59,6 +74,7 @@ public class ProductService {
     product.setCategory(
         entityFinderService.findByIdOrThrow(
             categoryRepository, request.getCategoryId(), ErrorCode.CATEGORY_NOT_FOUND));
+    product.setCreatedAt(LocalDateTime.now());
 
     Product savedProduct = productRepository.save(product);
 
@@ -69,13 +85,13 @@ public class ProductService {
     return productMapper.toProductResponse(savedProduct);
   }
 
+  @Transactional
   @Caching(
       evict = {
-        @CacheEvict(value = "product", key = "#id"),
-        @CacheEvict(value = "product_entity", key = "#id"),
-        @CacheEvict(value = "products", allEntries = true)
+        @CacheEvict(value = "products", allEntries = true),
+        @CacheEvict(value = "filtered_products", allEntries = true),
+        @CacheEvict(value = "branch_products", allEntries = true)
       })
-  @Transactional
   public ProductResponse updateProduct(Long id, ProductRequest request) {
     Product product =
         productRepository
@@ -93,17 +109,13 @@ public class ProductService {
     return productMapper.toProductResponse(updatedProduct);
   }
 
-  @CacheEvict(
-      value = {"product", "products"},
-      key = "#id",
-      allEntries = true)
+  @Transactional
   @Caching(
       evict = {
-        @CacheEvict(value = "product", key = "#id"),
-        @CacheEvict(value = "product_entity", key = "#id"),
-        @CacheEvict(value = "products", allEntries = true)
+        @CacheEvict(value = "products", allEntries = true),
+        @CacheEvict(value = "filtered_products", allEntries = true),
+        @CacheEvict(value = "branch_products", allEntries = true)
       })
-  @Transactional
   public boolean deleteProduct(Long id) {
     if (!productRepository.existsById(id)) {
       throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
@@ -112,16 +124,12 @@ public class ProductService {
     return true;
   }
 
-  @Cacheable(value = "product", key = "#id", unless = "#result == null")
   public ProductResponse getProductById(Long id) {
-    log.info("Fetching product from database with id: {}", id);
     Product product = findProductEntityById(id);
     return productMapper.toProductResponse(product);
   }
 
-  @Cacheable(value = "product_entity", key = "#id", unless = "#result == null")
   public Product findProductById(Long id) {
-    log.info("Fetching product entity from database with id: {}", id);
     return findProductEntityById(id);
   }
 
@@ -131,8 +139,13 @@ public class ProductService {
         .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
   }
 
-  @CacheEvict(value = "products", key = "#productId")
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "products", allEntries = true),
+        @CacheEvict(value = "filtered_products", allEntries = true),
+        @CacheEvict(value = "branch_products", allEntries = true)
+      })
   public void updateTotalRevenue(Long productId, int quantity) {
     Product product = findProductEntityById(productId);
     product.setTotalRevenue(product.getTotalRevenue() + quantity);
@@ -140,6 +153,7 @@ public class ProductService {
   }
 
   @Cacheable(value = "products", key = "'all_' + #page + '_' + #pageSize")
+  @Transactional(readOnly = true)
   public List<ProductResponse> getAllProducts(int page, int pageSize) {
     return productRepository.findAll().stream()
         .skip((long) (page - 1) * pageSize)
@@ -148,112 +162,20 @@ public class ProductService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable(
-      value = "filtered_products",
-      key =
-          "{#request.branchId, #request.categoryId, #request.supplierId, #request.unit, #request.netWeight, #request.minPrice, #request.maxPrice, #request.keyword, #request.page, #request.pageSize, #request.sortBy, #request.sortDirection}")
-  public ProductFilterResponse filterProducts(ProductFilterRequest request) {
-    // Set default values for pagination and sorting
-    String sortBy =
-        (request.getSortBy() != null && !request.getSortBy().isEmpty())
-            ? request.getSortBy()
-            : DEFAULT_SORT_BY;
-
-    String sortDirection =
-        (request.getSortDirection() != null && !request.getSortDirection().isEmpty())
-            ? request.getSortDirection()
-            : DEFAULT_SORT_DIRECTION;
-
-    // Create pageable with sorting
-    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
-    Pageable pageable =
-        PageRequest.of(
-            request.getPage() - 1, // Page numbers are 0-based in Spring
-            request.getPageSize(),
-            Sort.by(direction, sortBy));
-
-    // Check if branchId is provided to handle discounted products
-    if (request.getBranchId() != null) {
-      // First, get the inventory for the branch
-      Inventory inventory =
-          inventoryRepository
-              .findByBranch_BranchId(request.getBranchId())
-              .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
-
-      // Get paginated discounted products for this branch
-      int discountedPageSize = request.getPageSize() * 2; // Show more discounted items
-
-      // Create a separate sort for discounted products to handle field name differences
-      Sort discountedSort = Sort.by(direction, sortBy.equals("price") ? "currentPrice" : sortBy);
-
-      Pageable discountedPageable =
-          PageRequest.of(
-              request.getPage() - 1, // Align page numbers with regular products
-              discountedPageSize,
-              discountedSort);
-
-      // Get paginated discounted products
-      Page<InventoryProduct> discountedPage =
-          inventoryProductRepository.findByInventory_InventoryIdAndIsDiscountedTrue(
-              inventory.getInventoryId(), discountedPageable);
-
-      // Get the list of discounted product IDs to exclude from regular products
-      List<Long> discountedProductIds =
-          discountedPage.getContent().stream()
-              .map(ip -> ip.getProduct().getProductId())
-              .distinct()
-              .collect(Collectors.toList());
-
-      // Map the discounted inventory products to responses with pagination
-      Page<InventoryProductResponse> discountedProductsPage =
-          discountedPage.map(inventoryProductMapper::toInventoryProductResponse);
-
-      // Get filtered products excluding the discounted ones
-      Page<Product> products =
-          productRepository.filterWithPaging(
-              request.getBranchId(),
-              request.getCategoryId(),
-              request.getSupplierId(),
-              request.getUnit(),
-              request.getNetWeight(),
-              request.getMinPrice(),
-              request.getMaxPrice(),
-              request.getFromDate(),
-              request.getToDate(),
-              request.getKeyword(),
-              discountedProductIds, // Pass the list of discounted product IDs to exclude
-              pageable);
-
-      // Return both regular and discounted products with pagination
-      return ProductFilterResponse.fromPages(
-          products.map(productMapper::toProductResponse), discountedProductsPage);
-    } else {
-      // If no branchId is provided, just return the regular filtered products
-      Page<Product> products =
-          productRepository.filterWithPaging(
-              null, // branchId
-              request.getCategoryId(),
-              request.getSupplierId(),
-              request.getUnit(),
-              request.getNetWeight(),
-              request.getMinPrice(),
-              request.getMaxPrice(),
-              request.getFromDate(),
-              request.getToDate(),
-              request.getKeyword(),
-              Collections.emptyList(), // No products to exclude
-              pageable);
-
-      // Create an empty page for discounted products
-      Page<InventoryProductResponse> emptyDiscountedPage =
-          new org.springframework.data.domain.PageImpl<>(Collections.emptyList(), pageable, 0);
-
-      return ProductFilterResponse.fromPages(
-          products.map(productMapper::toProductResponse), emptyDiscountedPage);
-    }
+  public Map<String, Object> getFilterOptions(Long categoryId) {
+    Map<String, Object> map = new HashMap<>();
+    map.put("units", productRepository.findDistinctUnitsByCategoryId(categoryId));
+    map.put("netWeights", productRepository.findDistinctNetWeightsByCategoryId(categoryId));
+    map.put(
+        "suppliers",
+        productRepository.findDistinctSuppliersByCategoryId(categoryId).stream()
+            .map(supplierMapper::toSupplierResponse)
+            .toList());
+    return map;
   }
 
   @Cacheable(value = "branch_products", key = "{#branchId, #page, #size, #sortBy, #sortDirection}")
+  @Transactional(readOnly = true)
   public Page<ProductResponse> getAllProductsInBranch(
       Long branchId, int page, int size, String sortBy, String sortDirection) {
 
@@ -267,5 +189,265 @@ public class ProductService {
 
     // Convert to response DTOs
     return products.map(productMapper::toProductResponse);
+  }
+
+  @Cacheable(
+      value = "filtered_products",
+      key =
+          "{#request.branchId, #request.categoryIds, #request.supplierId, #request.unit, "
+              + "#request.netWeight, #request.minPrice, #request.maxPrice, #request.keyword, "
+              + "#request.page, #request.pageSize, #request.sortBy, #request.sortDirection}")
+  @Transactional(readOnly = true)
+  public ProductFilterResponse filterProducts(ProductFilterRequest request) {
+    // 0. Chuẩn hóa các tham số lọc để tránh truyền collection rỗng vào truy vấn (IN () sẽ trả về
+    // rỗng)
+    List<Long> categoryIdsFilter =
+        (request.getCategoryIds() == null || request.getCategoryIds().isEmpty())
+            ? null
+            : request.getCategoryIds();
+
+    // 1. Thiết lập giá trị mặc định cho phân trang và sắp xếp.
+    String sortBy =
+        (request.getSortBy() != null && !request.getSortBy().isEmpty())
+            ? request.getSortBy()
+            : DEFAULT_SORT_BY;
+    String sortDirection =
+        (request.getSortDirection() != null && !request.getSortDirection().isEmpty())
+            ? request.getSortDirection()
+            : DEFAULT_SORT_DIRECTION;
+    Sort.Direction direction = Sort.Direction.fromString(sortDirection.toUpperCase());
+    Pageable pageable =
+        PageRequest.of(request.getPage() - 1, request.getPageSize(), Sort.by(direction, sortBy));
+
+    // 2. Xử lý logic đặc biệt nếu có lọc theo chi nhánh (`branchId`).
+    if (request.getBranchId() != null) {
+      // 2.1. Lấy kho của chi nhánh.
+      Inventory inventory =
+          inventoryRepository
+              .findByBranch_BranchId(request.getBranchId())
+              .orElseThrow(() -> new AppException(ErrorCode.INVENTORY_NOT_FOUND));
+
+      // 2.2. Lấy các sản phẩm đang giảm giá tại chi nhánh này trước.
+      Pageable discountedPageable =
+          PageRequest.of(
+              request.getPage() - 1,
+              request.getPageSize() * 2,
+              Sort.by(direction, sortBy.equals("price") ? "currentPrice" : sortBy));
+      Page<InventoryProduct> discountedPage =
+          inventoryProductRepository.findByInventory_InventoryIdAndIsDiscountedTrue(
+              inventory.getInventoryId(), discountedPageable);
+
+      // 2.3. Lấy danh sách ID của các sản phẩm giảm giá để loại trừ chúng khỏi danh sách sản phẩm
+      // thường.
+      List<Long> discountedProductIds =
+          discountedPage.getContent().stream()
+              .map(ip -> ip.getProduct().getProductId())
+              .distinct()
+              .collect(Collectors.toList());
+      Page<InventoryProductResponse> discountedProductsPage =
+          discountedPage.map(inventoryProductMapper::toInventoryProductResponse);
+
+      // 2.4. Lấy danh sách sản phẩm thường, loại trừ các sản phẩm đã có trong danh sách giảm giá.
+      Page<Product> products =
+          productRepository.filterWithPaging(
+              request.getBranchId(),
+              categoryIdsFilter,
+              request.getSupplierId(),
+              request.getUnit(),
+              request.getNetWeight(),
+              request.getMinPrice(),
+              request.getMaxPrice(),
+              request.getFromDate(),
+              request.getToDate(),
+              request.getKeyword(),
+              discountedProductIds, // Loại trừ các ID này
+              request.getAbcClassification(),
+              request.getIsPromotional(),
+              request.getIsExemptFromPromotion(),
+              pageable);
+
+      // 2.5. Chuyển đổi sản phẩm thường sang response và thêm giá bán hiện tại của chi nhánh vào.
+      Page<ProductResponse> mappedProductsPage =
+          products.map(
+              prod -> {
+                ProductResponse resp = productMapper.toProductResponse(prod);
+                double curPrice =
+                    inventoryProductService.getBranchCurrentPrice(
+                        request.getBranchId(), prod.getProductId());
+                resp.setBranchCurrentPrice(curPrice);
+                return resp;
+              });
+
+      // 2.6. Áp dụng lại bộ lọc giá min/max trên giá thực tế của chi nhánh.
+      double minPrice =
+          request.getMinPrice() != null ? request.getMinPrice() : Double.NEGATIVE_INFINITY;
+      double maxPrice =
+          request.getMaxPrice() != null ? request.getMaxPrice() : Double.POSITIVE_INFINITY;
+      List<ProductResponse> filteredProducts =
+          mappedProductsPage.getContent().stream()
+              .filter(
+                  p ->
+                      p.getBranchCurrentPrice() >= minPrice
+                          && p.getBranchCurrentPrice() <= maxPrice)
+              .collect(Collectors.toList());
+      Page<ProductResponse> filteredProductsPage =
+          new PageImpl<>(filteredProducts, pageable, filteredProducts.size());
+
+      // 2.7. Lọc lại danh sách giảm giá theo giá (nếu có).
+      Page<InventoryProductResponse> mappedDiscountedPage = discountedProductsPage;
+      if (request.getMinPrice() != null || request.getMaxPrice() != null) {
+        List<InventoryProductResponse> filteredDisc =
+            discountedProductsPage.getContent().stream()
+                .filter(p -> p.getCurrentPrice() >= minPrice && p.getCurrentPrice() <= maxPrice)
+                .collect(Collectors.toList());
+        mappedDiscountedPage =
+            new PageImpl<>(filteredDisc, discountedPageable, filteredDisc.size());
+      }
+
+      // 2.8. Trả về kết quả bao gồm cả sản phẩm thường và sản phẩm giảm giá.
+      // 2.9. Lấy danh sách nhóm khuyến mãi bundle đang ACTIVE
+      List<FreePromotionGroupResponse> freeGroups = getActiveBundleGroups();
+      Page<FreePromotionGroupResponse> freeGroupPage =
+          new PageImpl<>(freeGroups, pageable, freeGroups.size());
+      return ProductFilterResponse.fromPages(
+          filteredProductsPage, mappedDiscountedPage, null, freeGroupPage);
+    } else {
+      // 3. Nếu không có `branchId`, chỉ lọc sản phẩm thông thường.
+      Page<Product> products =
+          productRepository.filterWithPaging(
+              null,
+              categoryIdsFilter,
+              request.getSupplierId(),
+              request.getUnit(),
+              request.getNetWeight(),
+              request.getMinPrice(),
+              request.getMaxPrice(),
+              request.getFromDate(),
+              request.getToDate(),
+              request.getKeyword(),
+              Collections.emptyList(),
+              request.getAbcClassification(),
+              request.getIsPromotional(),
+              request.getIsExemptFromPromotion(),
+              pageable);
+      Page<InventoryProductResponse> emptyDiscountedPage =
+          new PageImpl<>(Collections.emptyList(), pageable, 0);
+      List<FreePromotionGroupResponse> freeGroups = getActiveBundleGroups();
+      Page<FreePromotionGroupResponse> freeGroupPage =
+          new PageImpl<>(freeGroups, pageable, freeGroups.size());
+      return ProductFilterResponse.fromPages(
+          products.map(productMapper::toProductResponse), emptyDiscountedPage, null, freeGroupPage);
+    }
+  }
+
+  @Transactional(readOnly = true)
+  public ProductSalesStatisticsResponse getProductSalesStatistics(
+      Long productId, Long branchId, int months) {
+    if (months != 12) {
+      months = 6; // default to 6 if not 12
+    }
+
+    LocalDate endDate = LocalDate.now().withDayOfMonth(1).with(TemporalAdjusters.lastDayOfMonth());
+    LocalDate startDate = endDate.minusMonths(months - 1).withDayOfMonth(1);
+
+    List<Object[]> rows =
+        orderDetailRepository.findMonthlySalesByProduct(
+            productId, branchId, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+
+    Map<YearMonth, Long> qtyMap = new HashMap<>();
+    for (Object[] row : rows) {
+      Integer year = (Integer) row[0];
+      Integer month = (Integer) row[1];
+      Long qty = (Long) row[2];
+      qtyMap.put(YearMonth.of(year, month), qty);
+    }
+
+    List<MonthlySalesData> salesData = new ArrayList<>();
+    YearMonth current = YearMonth.from(endDate);
+    for (int i = months - 1; i >= 0; i--) {
+      YearMonth ym = current.minusMonths(i);
+      long qty = qtyMap.getOrDefault(ym, 0L);
+      salesData.add(
+          MonthlySalesData.builder()
+              .year(ym.getYear())
+              .month(ym.getMonthValue())
+              .quantity(qty)
+              .build());
+    }
+
+    // Determine stock info (default branchId = 1 if not provided)
+    Long branchToUse = (branchId != null) ? branchId : 1L;
+    Integer totalStock =
+        inventoryProductRepository.getTotalStockByBranchAndProduct(branchToUse, productId);
+    int stockNumber = totalStock != null ? totalStock : 0;
+
+    // earliest expiration date in this branch for product
+    java.util.Optional<InventoryProduct> earliestInv =
+        inventoryProductRepository
+            .findFirstByInventory_Branch_BranchIdAndProduct_ProductIdOrderByExpDateAsc(
+                branchToUse, productId);
+    java.time.LocalDateTime expDate = earliestInv.map(InventoryProduct::getExpDate).orElse(null);
+    String stockLevel;
+    if (stockNumber == 0) {
+      stockLevel = "OUT_OF_STOCK";
+    } else if (stockNumber < 50) {
+      stockLevel = "LOW";
+    } else if (stockNumber < 300) {
+      stockLevel = "MEDIUM";
+    } else {
+      stockLevel = "HIGH";
+    }
+
+    return ProductSalesStatisticsResponse.builder()
+        .sales(salesData)
+        .stockNumber(stockNumber)
+        .stockLevel(stockLevel)
+        .expDate(expDate)
+        .build();
+  }
+
+  /**
+   * Lấy danh sách sản phẩm của các khuyến mãi bundle đang ACTIVE (cả sản phẩm chính và sản phẩm
+   * tặng). Trả về tối đa MAX_FREE_PROMO_RESULTS phần tử để tránh trả về quá lớn.
+   */
+  List<FreePromotionGroupResponse> getActiveBundleGroups() {
+    LocalDateTime now = LocalDateTime.now();
+
+    // Lấy toàn bộ promotion ACTIVE trong khoảng thời gian hiệu lực
+    List<com.market.MSA.models.product.Promotion> activePromos =
+        promotionRepository.findAll().stream()
+            .filter(
+                p ->
+                    p.getStatus() == com.market.MSA.constants.PromocodeStatus.ACTIVE
+                        && (p.getStartDate() == null || !p.getStartDate().isAfter(now))
+                        && (p.getEndDate() == null || !p.getEndDate().isBefore(now)))
+            .toList();
+
+    Map<Long, FreePromotionGroupResponse> groupMap = new LinkedHashMap<>();
+
+    for (Promotion promo : activePromos) {
+      if (promo.getProductMain() == null) {
+        continue; // skip malformed promotion
+      }
+      Long mainId = promo.getProductMain().getProductId();
+
+      // Lấy hoặc khởi tạo group
+      FreePromotionGroupResponse group =
+          groupMap.computeIfAbsent(
+              mainId,
+              k ->
+                  FreePromotionGroupResponse.builder()
+                      .mainProduct(productMapper.toProductResponse(promo.getProductMain()))
+                      .freeProducts(new ArrayList<>())
+                      .build());
+
+      // Thêm sản phẩm free (nếu có)
+      if (promo.getProductFree() != null) {
+        ProductResponse freePr = productMapper.toProductResponse(promo.getProductFree());
+        group.getFreeProducts().add(freePr);
+      }
+    }
+    // Giới hạn số group trả về
+    return new ArrayList<>(groupMap.values()).stream().limit(MAX_FREE_PROMO_RESULTS).toList();
   }
 }

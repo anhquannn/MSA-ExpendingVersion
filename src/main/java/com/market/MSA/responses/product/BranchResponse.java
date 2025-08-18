@@ -21,6 +21,9 @@ public class BranchResponse {
   String ward;
   String district;
   String city;
+  String cityCode;
+  String districtCode;
+  String wardCode;
 
   InventoryResponse inventory;
 }

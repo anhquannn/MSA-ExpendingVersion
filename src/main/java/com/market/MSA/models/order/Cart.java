@@ -2,16 +2,9 @@ package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.CartStatus;
 import com.market.MSA.models.user.User;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -29,17 +22,24 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "carts")
+@Table(
+    name = "carts",
+    indexes = {@Index(name = "idx_cart", columnList = "cart_id")})
 public class Cart {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long cartId;
 
-  String status;
+  @Enumerated(EnumType.STRING)
+  CartStatus status;
 
-  @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
-  @JsonBackReference("user-carts")
+  @OneToOne
+  @JoinColumn(
+      name = "user_id",
+      nullable = false,
+      unique = true,
+      foreignKey = @ForeignKey(name = "fk_cart_user"))
+  @JsonBackReference("user-cart")
   User user;
 
   @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -47,6 +47,6 @@ public class Cart {
   List<CartItem> cartItems = new ArrayList<>();
 
   @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("cart-orders")
+  @JsonManagedReference("order-carts")
   List<Order> orders = new ArrayList<>();
 }

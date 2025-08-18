@@ -9,7 +9,6 @@ import com.market.MSA.repositories.user.RewardPointTransactionRepository;
 import com.market.MSA.repositories.user.UserRepository;
 import com.market.MSA.requests.filters.RewardPointTransactionFilterRequest;
 import com.market.MSA.requests.user.RewardPointTransactionRequest;
-import com.market.MSA.responses.user.RewardPointResponse;
 import com.market.MSA.responses.user.RewardPointTransactionResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import java.time.LocalDateTime;
@@ -32,11 +31,11 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class RewardPointTransactionService {
-  private final RewardPointTransactionMapper rewardPointTransactionMapper;
-  private final EntityFinderService entityFinderService;
-  private final UserRepository userRepository;
-  private final OrderRepository orderRepository;
-  private final RewardPointTransactionRepository rewardPointTransactionRepository;
+  final RewardPointTransactionMapper rewardPointTransactionMapper;
+  final EntityFinderService entityFinderService;
+  final UserRepository userRepository;
+  final OrderRepository orderRepository;
+  final RewardPointTransactionRepository rewardPointTransactionRepository;
 
   @Transactional
   public RewardPointTransactionResponse createRewardPointTransaction(
@@ -46,11 +45,13 @@ public class RewardPointTransactionService {
     rewardPointTransaction.setUser(
         entityFinderService.findByIdOrThrow(
             userRepository, rewardPointTransactionRequest.getUserId(), ErrorCode.USER_NOT_EXISTED));
-    rewardPointTransaction.setOrder(
-        entityFinderService.findByIdOrThrow(
-            orderRepository,
-            rewardPointTransactionRequest.getOrderId(),
-            ErrorCode.ORDER_NOT_FOUND));
+    if (rewardPointTransactionRequest.getOrderId() != null) {
+      rewardPointTransaction.setOrder(
+          entityFinderService.findByIdOrThrow(
+              orderRepository,
+              rewardPointTransactionRequest.getOrderId(),
+              ErrorCode.ORDER_NOT_FOUND));
+    }
     RewardPointTransaction savedRewardPointTransaction =
         rewardPointTransactionRepository.save(rewardPointTransaction);
     return rewardPointTransactionMapper.toRewardPointTransactionResponse(
@@ -90,11 +91,15 @@ public class RewardPointTransactionService {
   }
 
   @Cacheable("all_reward_point_transactions")
+  @Transactional(readOnly = true)
   public List<RewardPointTransactionResponse> getAll() {
-    return rewardPointTransactionRepository.findAll().stream().map(rewardPointTransactionMapper::toRewardPointTransactionResponse).collect(Collectors.toList());
+    return rewardPointTransactionRepository.findAll().stream()
+        .map(rewardPointTransactionMapper::toRewardPointTransactionResponse)
+        .collect(Collectors.toList());
   }
 
-  @Cacheable("reward_point_transactions")
+  @Cacheable("reward_point_transactions_list")
+  @Transactional(readOnly = true)
   public List<RewardPointTransactionResponse> getAllRewardPointTransactions(
       RewardPointTransactionFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
@@ -122,7 +127,8 @@ public class RewardPointTransactionService {
         .collect(Collectors.toList());
   }
 
-  @Cacheable("reward_point_transactions")
+  @Cacheable("reward_point_transactions_paging")
+  @Transactional(readOnly = true)
   public Page<RewardPointTransactionResponse> getAllRewardPointTransactionsWithPaging(
       RewardPointTransactionFilterRequest request) {
     Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());

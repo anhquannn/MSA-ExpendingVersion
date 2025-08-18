@@ -1,7 +1,10 @@
 package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.PromoScopeType;
+import com.market.MSA.constants.PromocodeStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +22,7 @@ import lombok.experimental.FieldDefaults;
     name = "campaigns",
     indexes = {
       @Index(name = "idx_campaign", columnList = "name"),
+      @Index(name = "idx_campaign_scope", columnList = "scope_type"),
       @Index(name = "idx_campaign_dates", columnList = "start_date, end_date")
     })
 public class Campaign {
@@ -26,13 +30,30 @@ public class Campaign {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long campaignId;
 
+  @Column(nullable = false)
   String name;
+
   String description;
-  String status;
+
+  @Enumerated(EnumType.STRING)
+  PromocodeStatus status;
+
+  @Column(nullable = false)
   LocalDateTime startDate;
+
+  @Column(nullable = false)
   LocalDateTime endDate;
 
+  @Enumerated(EnumType.STRING)
+  PromoScopeType scopeType = PromoScopeType.ALL;
+
+  @PositiveOrZero double minOrderValue;
+
   @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("campaign-promocodes")
+  @JsonManagedReference("campaign-targets")
+  List<CampaignTarget> targets = new ArrayList<>();
+
+  @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("campaign-promoCodes")
   List<PromoCode> promoCodes = new ArrayList<>();
 }

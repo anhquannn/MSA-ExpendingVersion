@@ -4,7 +4,6 @@ import com.market.MSA.constants.ApiMessage;
 import com.market.MSA.requests.filters.UserBehaviorFilterRequest;
 import com.market.MSA.requests.user.UserBehaviorRequest;
 import com.market.MSA.responses.others.ApiResponse;
-import com.market.MSA.responses.user.RewardPointTransactionResponse;
 import com.market.MSA.responses.user.UserBehaviorResponse;
 import com.market.MSA.services.user.UserBehaviorService;
 import jakarta.validation.Valid;
@@ -67,9 +66,9 @@ public class UserBehaviorController {
   @GetMapping
   public ApiResponse<List<UserBehaviorResponse>> getAll() {
     return ApiResponse.<List<UserBehaviorResponse>>builder()
-            .result(userBehaviorService.getAll())
-            .message(ApiMessage.ALL_USER_BEHAVIORS_RETRIEVED.getMessage())
-            .build();
+        .result(userBehaviorService.getAll())
+        .message(ApiMessage.ALL_USER_BEHAVIORS_RETRIEVED.getMessage())
+        .build();
   }
 
   @PostMapping("/list")

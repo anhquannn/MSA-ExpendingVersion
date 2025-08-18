@@ -22,4 +22,6 @@ public class FeedbackRequest {
 
   Long userId;
   Long productId;
+
+  Long orderDetailId;
 }

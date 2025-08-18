@@ -7,20 +7,22 @@ import com.market.MSA.responses.order.CartItemResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.stereotype.Component;
 
 @Mapper(
     componentModel = "spring",
-    uses = {ProductMapper.class, CartMapper.class})
+    uses = {ProductMapper.class, CartMapper.class},
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 @Component
 public interface CartItemMapper {
   CartItem toCartItem(CartItemRequest request);
 
   @Mapping(target = "cartItemId", source = "cartItemId")
   @Mapping(target = "isSelected", source = "selected")
+  @Mapping(target = "isFreeItem", source = "freeItem")
   @Mapping(target = "price", source = "price")
   @Mapping(target = "quantity", source = "quantity")
-  @Mapping(target = "product.orderDetails", ignore = true)
   @Mapping(target = "product", source = "product")
   @Mapping(target = "cart", source = "cart")
   CartItemResponse toCartItemResponse(CartItem cartItem);

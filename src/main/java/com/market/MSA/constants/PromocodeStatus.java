@@ -1,16 +1,24 @@
 package com.market.MSA.constants;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
 
 @Getter
 public enum PromocodeStatus {
-  PROMO_CODE_STATUS_1("active"),
-  PROMO_CODE_STATUS_2("expired"),
-  PROMO_CODE_STATUS_3("unavailable");
+  ACTIVE,
+  EXPIRED,
+  INACTIVE;
 
-  private final String status;
-
-  PromocodeStatus(String status) {
-    this.status = status;
+  @JsonCreator
+  public static PromocodeStatus from(String value) {
+    if (value == null) {
+      return null;
+    }
+    for (PromocodeStatus ps : values()) {
+      if (ps.name().equalsIgnoreCase(value)) {
+        return ps;
+      }
+    }
+    throw new IllegalArgumentException("Invalid PromocodeStatus: " + value);
   }
 }

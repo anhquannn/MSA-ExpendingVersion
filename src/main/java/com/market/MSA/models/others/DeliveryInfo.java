@@ -1,6 +1,7 @@
 package com.market.MSA.models.others;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.order.Order;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -29,17 +30,38 @@ public class DeliveryInfo {
   String ward;
   String district;
   String city;
+
+  @Column(nullable = false)
+  String cityCode;
+
+  @Column(nullable = false)
+  String districtCode;
+
+  @Column(nullable = false)
+  String wardCode;
+
   String cod;
   String weight;
   String width;
   String height;
   String length;
   String metadata;
-  String status;
+
+  // Goship shipment code to link webhook updates
+  String shipmentCode;
+
+  @Enumerated(EnumType.STRING)
+  OrderStatus status;
+
+  @Column(nullable = false)
   LocalDateTime deliveryDate;
 
   @OneToOne
-  @JoinColumn(name = "orderId", nullable = false, unique = true)
+  @JoinColumn(
+      name = "order_id",
+      nullable = false,
+      unique = true,
+      foreignKey = @ForeignKey(name = "fk_delivery_info_order"))
   @JsonBackReference("order-delivery-info")
   Order order;
 }

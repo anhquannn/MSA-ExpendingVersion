@@ -2,6 +2,7 @@ package com.market.MSA.models.order;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.models.others.DeliveryInfo;
 import com.market.MSA.models.others.Notification;
 import com.market.MSA.models.others.Payment;
@@ -9,6 +10,7 @@ import com.market.MSA.models.product.Branch;
 import com.market.MSA.models.user.RewardPointTransaction;
 import com.market.MSA.models.user.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,22 +44,26 @@ public class Order {
 
   LocalDateTime orderDate;
 
-  double grandTotal;
+  @PositiveOrZero double grandTotal;
 
-  String status;
+  @Enumerated(EnumType.STRING)
+  OrderStatus status;
 
   @ManyToOne
-  @JoinColumn(name = "branchId", nullable = false)
-  @JsonBackReference("order-branch")
+  @JoinColumn(
+      name = "branch_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_order_branch"))
+  @JsonBackReference("order-branches")
   Branch branch;
 
   @ManyToOne
-  @JoinColumn(name = "cartId", nullable = false)
-  @JsonBackReference("order-cart")
+  @JoinColumn(name = "cart_id", nullable = false, foreignKey = @ForeignKey(name = "fk_order_cart"))
+  @JsonBackReference("order-carts")
   Cart cart;
 
   @ManyToOne
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_order_user"))
   @JsonBackReference("user-orders")
   User user;
 
@@ -65,28 +71,32 @@ public class Order {
   @JsonManagedReference("order-delivery-info")
   DeliveryInfo deliveryInfo;
 
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("order-cancel-orders")
-  List<CancelOrder> cancelOrders = new ArrayList<>();
+  @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("order-cancel-order")
+  CancelOrder cancelOrder;
 
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonManagedReference("order-payments")
-  List<Payment> payments = new ArrayList<>();
+  @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("order-payment")
+  Payment payment;
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("order-details")
+  @Builder.Default
   List<OrderDetail> orderDetails = new ArrayList<>();
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("order-notifications")
+  @Builder.Default
   List<Notification> notifications = new ArrayList<>();
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("order-reward-transactions")
+  @Builder.Default
   List<RewardPointTransaction> rewardPointTransactions = new ArrayList<>();
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference("order-promo-usages")
+  @Builder.Default
   List<PromoCodeUsage> promoCodeUsages = new ArrayList<>();
 
   @ManyToMany
@@ -94,6 +104,13 @@ public class Order {
       name = "order_promocodes",
       joinColumns = @JoinColumn(name = "order_id"),
       inverseJoinColumns = @JoinColumn(name = "promo_code_id"))
-  @JsonManagedReference("order-promocodes")
+  @JsonManagedReference("promoCode-orders")
+  @Builder.Default
   List<PromoCode> promoCodes = new ArrayList<>();
+
+  // Return / Exchange requests for this order
+  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference("order-return-orders")
+  @Builder.Default
+  List<ReturnOrder> returnOrders = new ArrayList<>();
 }

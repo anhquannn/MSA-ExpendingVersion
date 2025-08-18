@@ -1,10 +1,9 @@
 package com.market.MSA.responses.order;
 
+import com.market.MSA.constants.OrderStatus;
 import com.market.MSA.responses.others.DeliveryInfoResponse;
-import com.market.MSA.responses.others.NotificationResponse;
 import com.market.MSA.responses.others.PaymentResponse;
 import com.market.MSA.responses.product.BranchResponse;
-import com.market.MSA.responses.user.RewardPointTransactionResponse;
 import com.market.MSA.responses.user.UserResponse;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,20 +24,14 @@ public class OrderResponse {
 
   LocalDateTime orderDate;
   double grandTotal;
-  double totalCost;
-  String status;
-  double discount;
+  OrderStatus status;
 
   BranchResponse branch;
   CartResponse cart;
   UserResponse user;
 
   DeliveryInfoResponse deliveryInfo;
-  List<CancelOrderResponse> cancelOrders;
   List<PaymentResponse> payments;
   List<PromoCodeResponse> promoCodes;
-  List<OrderDetailResponse> orderDetails;
-  List<NotificationResponse> notifications;
-  List<RewardPointTransactionResponse> rewardPointTransactions;
   List<PromoCodeUsageResponse> promoCodeUsages;
 }

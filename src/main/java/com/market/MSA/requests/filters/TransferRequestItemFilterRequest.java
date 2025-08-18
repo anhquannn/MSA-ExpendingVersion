@@ -16,9 +16,9 @@ public class TransferRequestItemFilterRequest {
   Double maxQuantity;
 
   // Sorting
-  @Builder.Default String sortBy = "createdAt";
+  //  @Builder.Default String sortBy = "minQuantity";
 
-  @Builder.Default String sortDirection = "DESC";
+  //  @Builder.Default String sortDirection = "DESC";
 
   // Pagination
   @Min(value = 1, message = "Page number must be greater than 0")

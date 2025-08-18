@@ -1,7 +1,8 @@
 package com.market.MSA.responses.order;
 
+import com.market.MSA.constants.PromoScopeType;
+import com.market.MSA.constants.PromocodeStatus;
 import java.time.LocalDateTime;
-import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,9 +16,10 @@ public class CampaignResponse {
 
   String name;
   String description;
-  String status;
+  PromocodeStatus status;
   LocalDateTime startDate;
   LocalDateTime endDate;
 
-  List<PromoCodeResponse> promoCodes;
+  PromoScopeType scopeType;
+  double minOrderValue;
 }

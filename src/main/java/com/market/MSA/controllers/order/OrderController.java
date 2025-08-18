@@ -16,6 +16,7 @@ import com.market.MSA.services.order.OrderService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -49,7 +50,8 @@ public class OrderController {
             request.getPromoCodes(),
             request.getUsePoints());
 
-    orderService.sendRecipe(response.getOrderId(), response.getUser().getEmail());
+    CompletableFuture.runAsync(
+        () -> orderService.sendRecipe(response.getOrderId(), response.getUser().getEmail()));
 
     return ApiResponse.<OrderResponse>builder()
         .result(response)

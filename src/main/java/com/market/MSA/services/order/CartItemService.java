@@ -17,8 +17,8 @@ import com.market.MSA.responses.order.CartItemResponse;
 import com.market.MSA.services.others.EntityFinderService;
 import com.market.MSA.services.product.InventoryProductService;
 import com.market.MSA.services.product.PromotionService;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -236,7 +236,8 @@ public class CartItemService {
   public List<CartItemResponse> getCartItemsByCartId(Long cartId) {
     // Ensure free items are synchronized based on current selections before returning list
     synchronizeBundleItems(cartId);
-    List<CartItem> cartItems = cartItemRepository.findByCart_CartIdAndIsSelected(cartId, true);
+    List<CartItem> cartItems =
+        cartItemRepository.findWithDetailsByCartIdAndIsSelected(cartId, true);
     return buildHierarchicalResponses(cartItems);
   }
 
@@ -245,7 +246,7 @@ public class CartItemService {
   public List<CartItemResponse> getAllCartItemsByCartId(Long cartId) {
     // Synchronize free items to reflect current state (selected and non-selected)
     synchronizeBundleItems(cartId);
-    List<CartItem> cartItems = cartItemRepository.findByCart_CartId(cartId);
+    List<CartItem> cartItems = cartItemRepository.findWithDetailsByCartId(cartId);
     return buildHierarchicalResponses(cartItems);
   }
 
@@ -267,28 +268,34 @@ public class CartItemService {
       }
     }
 
-    // attach free items to their main ones using promotion repository
+    // Pre-fetch active promotions for all main products to avoid N+1 queries
+    List<Long> mainIds = new ArrayList<>(mainMap.keySet());
+    Map<Long, List<Long>> mainToFreeMap = new HashMap<>();
+    if (!mainIds.isEmpty()) {
+      promotionRepository
+          .findActiveByProductMainIn(mainIds, java.time.LocalDateTime.now())
+          .forEach(
+              p ->
+                  mainToFreeMap
+                      .computeIfAbsent(p.getProductMain().getProductId(), k -> new ArrayList<>())
+                      .add(p.getProductFree().getProductId()));
+    }
+
+    // Attach free items to their corresponding main items
     for (CartItem freeItem : cartItems) {
-      if (freeItem.isFreeItem()) {
-        Long freeProductId = freeItem.getProduct().getProductId();
-        // find main product that gives this free product via active promotion
-        Long matchedMain = null;
-        for (Long mainId : mainMap.keySet()) {
-          boolean matched =
-              promotionRepository.findActiveByProductMain(mainId, LocalDateTime.now()).stream()
-                  .anyMatch(p -> p.getProductFree().getProductId().equals(freeProductId));
-          if (matched) {
-            matchedMain = mainId;
-            break;
-          }
+      if (!freeItem.isFreeItem()) continue;
+      Long freeProductId = freeItem.getProduct().getProductId();
+      Long matchedMain = null;
+      for (var entry : mainToFreeMap.entrySet()) {
+        if (entry.getValue().contains(freeProductId)) {
+          matchedMain = entry.getKey();
+          break;
         }
-        if (matchedMain != null) {
-          CartItemResponse parent = mainMap.get(matchedMain);
-          parent.getFreeItems().add(cartItemMapper.toCartItemResponse(freeItem));
-        } else {
-          // fallback standalone
-          result.add(cartItemMapper.toCartItemResponse(freeItem));
-        }
+      }
+      if (matchedMain != null) {
+        mainMap.get(matchedMain).getFreeItems().add(cartItemMapper.toCartItemResponse(freeItem));
+      } else {
+        result.add(cartItemMapper.toCartItemResponse(freeItem));
       }
     }
     return result;

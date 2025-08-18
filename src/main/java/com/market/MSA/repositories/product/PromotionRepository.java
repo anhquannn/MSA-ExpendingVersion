@@ -36,6 +36,17 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
       @Param("status") com.market.MSA.constants.PromocodeStatus status,
       Pageable pageable);
 
+  /** Find active promotions for a list of main products within current date range. */
+  @Query(
+      "SELECT p FROM Promotion p "
+          + "WHERE p.productMain.productId IN :productMainIds "
+          + "AND p.startDate <= :now "
+          + "AND p.endDate >= :now "
+          + "AND p.status = com.market.MSA.constants.PromocodeStatus.ACTIVE")
+  List<Promotion> findActiveByProductMainIn(
+      @Param("productMainIds") List<Long> productMainIds,
+      @Param("now") java.time.LocalDateTime now);
+
   /** Find active promotions for a main product within current date range. */
   @Query(
       """

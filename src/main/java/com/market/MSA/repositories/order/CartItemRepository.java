@@ -54,8 +54,30 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
   List<CartItem> findByCart_CartIdAndIsSelected(
       @Param("cartId") Long cartId, @Param("isSelected") boolean isSelected);
 
-  @Query("SELECT c FROM CartItem c WHERE c.cart.cartId = :cartId")
-  @EntityGraph(attributePaths = {"product", "cart"})
+  /**
+   * Optimized query to fetch cart items along with product images and category in a single SQL
+   * statement, preventing N+1 issues when accessing these lazy relationships later.
+   */
+  @Query(
+      "SELECT DISTINCT c FROM CartItem c "
+          + "JOIN FETCH c.product p "
+          + "LEFT JOIN FETCH p.images imgs "
+          + "LEFT JOIN FETCH p.category cat "
+          + "JOIN FETCH c.cart cart "
+          + "WHERE cart.cartId = :cartId AND c.isSelected = :isSelected")
+  List<CartItem> findWithDetailsByCartIdAndIsSelected(
+      @Param("cartId") Long cartId, @Param("isSelected") boolean isSelected);
+
+  /** Fetch all cart items (selected and unselected) with full details to avoid N+1. */
+  @Query(
+      "SELECT DISTINCT c FROM CartItem c "
+          + "JOIN FETCH c.product p "
+          + "LEFT JOIN FETCH p.images imgs "
+          + "LEFT JOIN FETCH p.category cat "
+          + "JOIN FETCH c.cart cart "
+          + "WHERE cart.cartId = :cartId")
+  List<CartItem> findWithDetailsByCartId(@Param("cartId") Long cartId);
+
   List<CartItem> findByCart_CartId(@Param("cartId") Long cartId);
 
   @Query(

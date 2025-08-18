@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
@@ -392,6 +393,7 @@ public class GoshipService {
   }
 
   // Xử lý webhook từ Goshipvoid
+  @Transactional
   public boolean processWebhook(String payload) {
     try {
       JsonNode root = objectMapper.readTree(payload);
